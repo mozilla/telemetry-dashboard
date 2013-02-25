@@ -9,34 +9,45 @@ function get(url, handler) {
 
 function drawChart(hgrams) {
   var builds = Object.keys(hgrams).sort()
-  var ls = [['build', 'average']]
+  var ls = []
+  var countls = [["Build Id", "Bucket Count"]]
   for each (var b in builds) {
-    console.log(hgrams[b])
+//    console.log(hgrams[b])
     var count = 0;
     var sum = 0;
     for (var filter in hgrams[b]) {
       var hgram = hgrams[b][filter]
-//      console.log(hgram)
       for each(var c in hgram.values) {
         count += c
       }
       sum += hgram.sum;
     }
-    ls.push([b,sum/count])
+    ls.push([b,sum/count
+             //,count
+            ])
+    countls.push([b, count])
   }
-  var data = google.visualization.arrayToDataTable(ls);
-  
-  var options = {
-   // title: 'Company Performance'
-        };
-  
-  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-  chart.draw(data, options);
+    console.log(ls)
+  var data = new google.visualization.DataTable();
+  data.addColumn('string', 'build id'); // Implicit domain label col.
+  data.addColumn('number', 'Average'); // Implicit series 1 data col.
+//  data.addColumn({type:'number', role:'annotation'}); 
+  data.addRows(ls)
 
+  var chart = new google.visualization.LineChart(document.getElementById('main_div'));
+  chart.draw(data, {
+    title: selHistogram.options[selHistogram.selectedIndex].value
+        });
+
+
+  var chart = new google.visualization.LineChart(document.getElementById('count_div'));
+  chart.draw(google.visualization.arrayToDataTable(countls),
+             {title: 'Bucket Count'}
+            );
 }
 
 function onchange() {
-  hgram = selHistogram.options[selHistogram.selectedIndex].value
+  var hgram = selHistogram.options[selHistogram.selectedIndex].value
   get("data/"+hgram+".json", function() {drawChart(JSON.parse(this.responseText))})
 }
 
