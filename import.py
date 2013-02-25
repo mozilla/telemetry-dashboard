@@ -1,3 +1,14 @@
+"""
+Usage ./import.py telemetry_dump outdir/
+
+Will produce outdir/histograms.txt, outdir/filter.json, outdir/<HISOTGRAM_NAME>.json
+
+TODO: 
+
+* switch from json to a binary encoding
+* histograms.json should be replaced/enhanced with db schema reported by client
+* include stddev, percentiles, etc where possible
+"""
 #!/usr/bin/python
 import sys
 import json
@@ -14,7 +25,7 @@ root = {'_id':0, 'name':'reason'}
 key = ['reason', 'channel', 'appName', 'appVersion', 'OS', 'osVersion', 'arch']
 idcount = 1
 
-# schema: filterid:{buildid:, histogram:value,...}
+# schema: histogram_name {build_id:{filter_id:histogram_values},...}
 histogram_data = {}
 
 def getId(*tree_args):
@@ -69,51 +80,55 @@ while True:
         osVersion = osVersion[:3]
     filter_obj = getId(reason, channel, appName, appVersion, OS, osVersion, arch, buildDate)
     filter_id = filter_obj['_id']
-    try:
-        builds = histogram_data[filter_id]
-    except KeyError:
-        builds = {}
-        histogram_data[filter_id] = builds
-
-    try:
-        build = builds[buildDate]
-    except KeyError:
-        build = {}
-        builds[buildDate] = build
-        try:
-            filter_obj['builds'].append(buildDate)
-        except KeyError:
-            filter_obj['builds'] = [buildDate]
 
     for h_name, h_values in data['histograms'].iteritems():
         try:
-            build_hgram = build[h_name]
+            histogram_forks = histogram_data[h_name]
         except KeyError:
-            build_hgram = {'sum':0, 'values':{}}
-            build[h_name] = build_hgram
+            histogram_forks = {}
+            histogram_data[h_name] = histogram_forks
+        
+        try:
+            histograms_by_build = histogram_forks[buildDate]
+        except KeyError:
+            histograms_by_build = {}
+            histogram_forks[buildDate] = histograms_by_build
 
-        build_hgram_values = build_hgram['values']
+
+        try:
+            aggr_histogram = histograms_by_build[filter_id]
+        except KeyError:
+            aggr_histogram = {'values':{}, 'sum':0}
+            histograms_by_build[filter_id] = aggr_histogram
+
+        aggr_hgram_values = aggr_histogram['values']
         for bucket, bucket_value in h_values['values'].iteritems():
             try:
-                build_hgram_values[bucket] += bucket_value
+                aggr_hgram_values[bucket] += bucket_value
             except KeyError:
-                build_hgram_values[bucket] = bucket_value
+                aggr_hgram_values[bucket] = bucket_value
     
-        build_hgram['sum'] += h_values['sum']
+        aggr_histogram['sum'] += h_values['sum']
+
 f.close()
 outdir = sys.argv[2]
 
-keyfile = open("%s/key.json" % outdir, 'w')
-keyfile.write(json.dumps(root))
-keyfile.close()
+filterfile = open("%s/filter.json" % outdir, 'w')
+filterfile.write(json.dumps(root))
+filterfile.close()
 
-for filter_id, builds in histogram_data.iteritems():
-    for buildDate,build in builds.iteritems():
-        name = "%s/%d-%s.json" % (outdir, filter_id, buildDate)
-        buildfile = open(name, 'w')
-        buildfile.write(json.dumps(build))
-        buildfile.close()
-        print "wrote %s" %name
+
+hgramfile = open("%s/histograms.txt" % outdir, 'w')
+hgramfile.write("\n".join(histogram_data.keys()))
+hgramfile.close()
+
+
+for name, data in histogram_data.iteritems():
+    name = "%s/%s.json" % (outdir, name)
+    buildfile = open(name, 'w')
+    buildfile.write(json.dumps(data))
+    buildfile.close()
+    print "wrote %s" %name
 
 print "%d lines decoded\n" % lineno
 print [idcount]
