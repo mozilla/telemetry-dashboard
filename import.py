@@ -119,7 +119,7 @@ filterfile.close()
 
 
 hgramfile = open("%s/histograms.txt" % outdir, 'w')
-hgramfile.write("\n".join(histogram_data.keys()))
+hgramfile.write("\n".join(sorted(histogram_data.keys())))
 hgramfile.close()
 
 
