@@ -1,0 +1,27 @@
+Histogram View:
+There are x fields to narrow query by
+
+have a category table that stores category tree:
+Each node has a unique id
+Level1 Product: Firefox|Fennec|Thunderbird
+Level2 Platform: Windows|Linux
+Level3 etc
+
+
+size of this table can be kept in check by reducing common videocards to a family name, etc
+Can also customize what shows up under different levels..For example we could restrict tb, to have less childnodes.
+
+Store the tree in a table, but keep it read  into memory for queries, inserting new records
+
+Then have a histogram table where
+columns: histogram_id | category_id | value
+where histogram_id is id like SHUTDOWN_OK, category id is a key from category table, value is the sum of histograms in that category...can be represented with some binary value
+
+
+==============
+Evolution can be implemented by adding a build_date field to histogram table
+
+TODO:
+How big would the category tree table be..surely there is a finite size for that
+
+histogram table would be |category_table| * |number of histograms|, pretty compact
