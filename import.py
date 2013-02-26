@@ -78,7 +78,7 @@ while True:
     # todo combine OS + osVersion + santize on crazy platforms like linux to reduce pointless choices
     if OS == "Linux":
         osVersion = osVersion[:3]
-    filter_obj = getId(reason, channel, appName, appVersion, OS, osVersion, arch, buildDate)
+    filter_obj = getId(reason, channel, appName, appVersion, OS, osVersion, arch)
     filter_id = filter_obj['_id']
 
     for h_name, h_values in data['histograms'].iteritems():
@@ -93,7 +93,6 @@ while True:
         except KeyError:
             histograms_by_build = {}
             histogram_forks[buildDate] = histograms_by_build
-
 
         try:
             aggr_histogram = histograms_by_build[filter_id]
@@ -117,11 +116,9 @@ filterfile = open("%s/filter.json" % outdir, 'w')
 filterfile.write(json.dumps(root))
 filterfile.close()
 
-
 hgramfile = open("%s/histograms.txt" % outdir, 'w')
 hgramfile.write("\n".join(sorted(histogram_data.keys())))
 hgramfile.close()
-
 
 for name, data in histogram_data.iteritems():
     name = "%s/%s.json" % (outdir, name)
