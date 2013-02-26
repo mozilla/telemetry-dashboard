@@ -97,7 +97,7 @@ while True:
         try:
             aggr_histogram = histograms_by_build[filter_id]
         except KeyError:
-            aggr_histogram = {'values':{}, 'sum':0}
+            aggr_histogram = {'values':{}, 'sum':0, 'entry_count':0}
             histograms_by_build[filter_id] = aggr_histogram
 
         aggr_hgram_values = aggr_histogram['values']
@@ -108,6 +108,7 @@ while True:
                 aggr_hgram_values[bucket] = bucket_value
     
         aggr_histogram['sum'] += h_values['sum']
+        aggr_histogram['entry_count'] += 1
 
 f.close()
 outdir = sys.argv[2]

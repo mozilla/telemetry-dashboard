@@ -14,26 +14,37 @@ function drawChart(hgrams) {
     hgrams = window._hgrams
   if (!hgrams)
     return
+  window._hgrams = hgrams
   var builds = Object.keys(hgrams).sort()
   var ls = []
-  var countls = [["Build Id", "Bucket Count"]]
+  var countls = [["Build Id", "Count"]]
+  var total_histogram = []
+  var total_count = 0
   for each (var b in builds) {
     var count = 0;
     var sum = 0;
+    var entry_count = 0;
     for (var filter in hgrams[b]) {
       if (!_filter_set.has(filter))
         continue
       var hgram = hgrams[b][filter]
-      for each(var c in hgram.values) {
-        count += c
+      for (var x in hgram.values) {
+        var y = hgram.values[x]
+        if (total_histogram[x] == undefined)
+          total_histogram[x] = 0
+        total_histogram[x] += y
+        count += y
       }
       sum += hgram.sum;
+      entry_count += hgram.entry_count
     }
-    if (count)
+    total_count += entry_count
+    if (count) {
       ls.push([b,sum/count
                //,count
               ])
-    countls.push([b, count])
+      countls.push([b, entry_count])
+    }
   }
   
   var data = new google.visualization.DataTable();
@@ -44,15 +55,29 @@ function drawChart(hgrams) {
 
   var chart = new google.visualization.LineChart(document.getElementById('main_div'));
   chart.draw(data, {
-    title: selHistogram.options[selHistogram.selectedIndex].value
+    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + total_count + " submissions)"
         });
 
 
   var chart = new google.visualization.LineChart(document.getElementById('count_div'));
   chart.draw(google.visualization.arrayToDataTable(countls),
-             {title: 'Bucket Count'}
+             {title: 'Daily Submissions'}
             );
-  window._hgrams = hgrams
+
+  data = new google.visualization.DataTable();
+  data.addColumn('string', 'x');
+  data.addColumn('number', 'y');
+  for(var i = 0;i < total_histogram.length;i++) {
+    var y = total_histogram[i]
+    if (!y)
+      continue
+    data.addRow([""+i, y])
+  }
+  var chart = new google.visualization.SteppedAreaChart(document.getElementById('bar_div'));
+  chart.draw(data,
+             {title: 'Histogram'}
+            );
+
 }
 
 function onchange() {
@@ -77,7 +102,7 @@ function applyFilter(filter) {
     var id = tree['_id']
     if (id == undefined)
       return
-    
+    //TODO:fix this to be a string in import script
     if (Object.keys(tree).length == 1)
       set.add((id).toString())
 
