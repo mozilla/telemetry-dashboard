@@ -13,7 +13,30 @@ TODO:
 import sys
 import json
 
+def readExisting(filename, default):
+    try:
+        f = open(filename)
+        obj = json.loads(f.read())
+        f.close()
+        print "Read " + filename
+        return obj
+    except IOError:
+        return default
+    
+def writeJSON(filename, obj):
+    f = open(filename, 'w')
+    f.write(json.dumps(obj))
+    f.close()
+    print "Wrote " + filename
+    
 f = open(sys.argv[1])
+outdir = sys.argv[2]
+LIMIT = 0
+if len(sys.argv) > 3:
+    LIMIT = int(sys.argv[3])
+
+FILTER_JSON = "%s/filter.json" % outdir
+
 prefix = "	{"
 lineno = 0
 """
@@ -21,9 +44,25 @@ lineno = 0
 Schema: id specifying common filter values looks up list of build dates which contain
 
 """
-root = {'_id':0, 'name':'reason'}
+# root of filter tree
+root = readExisting(FILTER_JSON, {'_id':"0", 'name':'reason'})
+# names for entries in filter tree
 key = ['reason', 'channel', 'appName', 'appVersion', 'OS', 'osVersion', 'arch']
-idcount = 1
+
+"""If we read-in a file from disk, need to traverse the datastructure to fix the next id to continue from"""
+def findMaxId(tree, maxid):
+    id = int(tree['_id'])
+    if id > maxid:
+        maxid = id
+    for subtree in tree.values():
+        if type(subtree) != dict:
+            continue
+        maxid = findMaxId(subtree, maxid)
+    return maxid
+
+idcount = findMaxId(root, 0) + 1
+
+print "idcount=%d" % idcount
 
 # schema: histogram_name {build_id:{filter_id:histogram_values},...}
 histogram_data = {}
@@ -37,7 +76,7 @@ def getId(*tree_args):
         try:
             atm = atm[pvalue]
         except KeyError:
-            tmp = {'_id':idcount}
+            tmp = {'_id':str(idcount)}
             if i < len(key):
                 tmp['name'] = key[i]
             idcount = idcount + 1
@@ -54,12 +93,11 @@ while True:
         else:
             continue
 
-    
-    lineno = lineno + 1
-    """
-    if lineno > 10:
+    if LIMIT and lineno >= LIMIT:
         break
-"""
+
+    lineno = lineno + 1
+
     # strip prefix out
     start = oline.find(prefix) + len(prefix) - 1 ;
     line = oline[start:]
@@ -85,7 +123,7 @@ while True:
         try:
             histogram_forks = histogram_data[h_name]
         except KeyError:
-            histogram_forks = {}
+            histogram_forks = readExisting("%s/%s.json" % (outdir, h_name), {})
             histogram_data[h_name] = histogram_forks
         
         try:
@@ -111,22 +149,24 @@ while True:
         aggr_histogram['entry_count'] += 1
 
 f.close()
-outdir = sys.argv[2]
 
-filterfile = open("%s/filter.json" % outdir, 'w')
-filterfile.write(json.dumps(root))
-filterfile.close()
+writeJSON(FILTER_JSON, root)
 
-hgramfile = open("%s/histograms.txt" % outdir, 'w')
-hgramfile.write("\n".join(sorted(histogram_data.keys())))
-hgramfile.close()
+histograms_filters_key = {}
+for name, filtered_dated_histogram_data in histogram_data.iteritems():
+    writeJSON("%s/%s.json" % (outdir, name), filtered_dated_histogram_data)
+    valid_filters = set()
+    for filtered_histogram_data in filtered_dated_histogram_data.values():
+        valid_filters.update(filtered_histogram_data.keys())
+    histograms_filters_key[name] = list(valid_filters)
 
-for name, data in histogram_data.iteritems():
-    name = "%s/%s.json" % (outdir, name)
-    buildfile = open(name, 'w')
-    buildfile.write(json.dumps(data))
-    buildfile.close()
-    print "wrote %s" %name
+"""
+TODO:
+This file contains a lot similar lists of leaf filter id. This is because those histograms are filtered out on a higher level(eg OS), and all of the child nodes inherit them
+There may be some optimization opportunity here to group histograms by non-leaf nodes
+"""
+writeJSON("%s/histograms.json" % outdir, histograms_filters_key)
+    
 
 print "%d lines decoded\n" % lineno
 print [idcount]

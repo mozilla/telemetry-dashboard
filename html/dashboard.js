@@ -166,7 +166,7 @@ function initFilter(filter_tree) {
 google.load("visualization", "1", {packages:["corechart"]});
 google.setOnLoadCallback(stuffLoaded);
 selHistogram.addEventListener("change", onchange)
-get("data/histograms.txt", function() {window._histograms = this.responseText.split(/\n/)
+get("data/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
                                        stuffLoaded()
                                       });
 
