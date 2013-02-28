@@ -29,7 +29,11 @@ def writeJSON(filename, obj):
     f.close()
     print "Wrote " + filename
     
-f = open(sys.argv[1])
+INFILE = sys.argv[1]
+if INFILE == "stdin":
+    f = sys.stdin
+else:
+    f = open(INFILE)
 outdir = sys.argv[2]
 LIMIT = 0
 if len(sys.argv) > 3:
@@ -99,8 +103,12 @@ while True:
     lineno = lineno + 1
 
     # strip prefix out
-    start = oline.find(prefix) + len(prefix) - 1 ;
-    line = oline[start:]
+    if oline[0:2] == '{"':
+        line = oline
+    else:
+        start = oline.find(prefix) + len(prefix) - 1 ;
+        line = oline[start:]
+
     data = json.loads(line)
     i =  data['info']
     
@@ -120,6 +128,7 @@ while True:
     filter_id = filter_obj['_id']
 
     for h_name, h_values in data['histograms'].iteritems():
+        #todo this causes histograms to be dropped if they are not mentioned in the newer data dump
         try:
             histogram_forks = histogram_data[h_name]
         except KeyError:
