@@ -80,9 +80,31 @@ function drawChart(hgrams) {
 
 }
 
+function updateDescription(descriptions) {
+  var node = document.getElementById("divDescription")
+  while (node.hasChildNodes()) {
+    node.removeChild(node.lastChild);
+  }
+  
+  if (descriptions)
+    window._descriptions = descriptions
+  
+  if (!window._descriptions)
+    return
+
+  var hgram = selHistogram.options[selHistogram.selectedIndex].value
+  var d = window._descriptions[hgram]
+  if (!d)
+    return
+  var text = document.createTextNode(d.description)
+  node.appendChild(text)
+  
+}
+
 function onchange() {
   var hgram = selHistogram.options[selHistogram.selectedIndex].value
   get("data/"+hgram+".json", function() {drawChart(JSON.parse(this.responseText))})
+  updateDescription();
 }
 
 function stuffLoaded() {
@@ -169,5 +191,5 @@ selHistogram.addEventListener("change", onchange)
 get("data/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
                                        stuffLoaded()
                                       });
-
 get("data/filter.json", function() {initFilter(JSON.parse(this.responseText))});
+get("data/histogram_descriptions.json", function() {updateDescription(JSON.parse(this.responseText))});
