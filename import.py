@@ -70,6 +70,8 @@ print "idcount=%d" % idcount
 
 # schema: histogram_name {build_id:{filter_id:histogram_values},...}
 histogram_data = {}
+simpleMeasurements = {}
+maxSimpleMeasurements = {}
 
 def getId(*tree_args):
     global idcount
@@ -157,9 +159,74 @@ while True:
         aggr_histogram['sum'] += h_values['sum']
         aggr_histogram['entry_count'] += 1
 
+    for measure, value in data['simpleMeasurements'].iteritems():
+        # TODO: deal with nested measurements, etc
+        if type(value) != int:
+            continue
+        try:
+            sm_by_buildid = simpleMeasurements[measure]
+        except KeyError:
+            sm_by_buildid = {}
+            simpleMeasurements[measure] = sm_by_buildid
+            maxSimpleMeasurements[measure] = value
+        maxSimpleMeasurements[measure] = max(maxSimpleMeasurements[measure], value)
+        
+        try:
+            sm_by_filter = sm_by_buildid[buildDate]
+        except:
+            sm_by_filter = {}
+            sm_by_buildid[buildDate] = sm_by_filter
+        
+        try:
+            ls = sm_by_filter[filter_id]
+        except KeyError:
+            ls = []
+            sm_by_filter[filter_id] = ls
+        ls.append(value)
 f.close()
 
 writeJSON(FILTER_JSON, root)
+
+
+def arrayToHistogram(a, maximum):
+    histogram = {'values':{0:0}, 'sum':0, 'entry_count':len(a)}
+    # TODO: dont need to sort, division during iteration can achieve the same effect
+    ls = sorted(a)
+    steps = 10
+    bucket_size = maximum/(steps-1)
+    v = histogram['values']
+    if not bucket_size:
+        for value in ls:
+            try:
+                v[value] += 1
+            except KeyError:
+                v[value] = 1
+    else:
+        n = 0
+        for value in ls:
+            histogram['sum'] += value
+            while value >= n + bucket_size:
+                if n > maximum:
+                    break
+                n += bucket_size
+                v[n] = 0
+                v[n+bucket_size] = 0
+            v[n] += 1
+    return histogram
+        
+    
+for name, sm_by_buildid in simpleMeasurements.iteritems():
+    hgram = {}
+    histogram_data["SIMPLE_MEASURES_"+name] = hgram
+    for buildid, sm_by_filterid in sm_by_buildid.iteritems():
+        hgram2 = {}
+        hgram[buildid] = hgram2
+        for filter_id, ls in sm_by_filterid.iteritems():
+            hgram3 = arrayToHistogram(ls, maxSimpleMeasurements[name])
+            hgram2[filter_id] = hgram3
+#    writeJSON("%s/%s.simple.json" % (outdir, measure), sorted(ls))
+#    writeJSON("%s/%s.histogram.json" % (outdir, measure), arrayToHistogram(ls))
+
 
 histograms_filters_key = {}
 for name, filtered_dated_histogram_data in histogram_data.iteritems():
