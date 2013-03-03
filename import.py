@@ -12,6 +12,7 @@ TODO:
 #!/usr/bin/python
 import sys
 import json
+import histogram_tools
 
 def readExisting(filename, default):
     try:
@@ -188,30 +189,28 @@ f.close()
 writeJSON(FILTER_JSON, root)
 
 
+#todo break this up into bucket selection + bucket filling to reduce redundant creation
 def arrayToHistogram(a, maximum):
     histogram = {'values':{0:0}, 'sum':0, 'entry_count':len(a)}
-    # TODO: dont need to sort, division during iteration can achieve the same effect
+    if not maximum:
+        return histogram
     ls = sorted(a)
-    steps = 10
-    bucket_size = maximum/(steps-1)
+    buckets = histogram_tools.exponential_buckets(1, maximum, min(maximum,10));
+    buck_index = 0
+    next = buck_index + 1
     v = histogram['values']
-    if not bucket_size:
-        for value in ls:
-            try:
-                v[value] += 1
-            except KeyError:
-                v[value] = 1
-    else:
-        n = 0
-        for value in ls:
-            histogram['sum'] += value
-            while value >= n + bucket_size:
-                if n > maximum:
-                    break
-                n += bucket_size
-                v[n] = 0
-                v[n+bucket_size] = 0
-            v[n] += 1
+    for i in ls:
+        while next < len(buckets):
+            if buckets[next] > i:
+                break
+            else:
+                buck_index = next
+                next += 1
+            v[buckets[buck_index]] = 0
+        v[buckets[ebuck_index]] += 1
+        histogram['sum'] += i
+            
+    
     return histogram
         
     
