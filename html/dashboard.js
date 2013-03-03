@@ -9,6 +9,25 @@ function get(url, handler) {
   xhr.send(null);
 }
 
+function clone_object(obj) {
+  var copy = {}
+  for (var f in obj) {
+    var v = obj[f]
+    var t = typeof v
+    switch(t) {
+      case 'number':
+      copy[f] = v;
+      break;
+      case 'object':
+      copy[f] = clone_object(v);  
+      break
+      default:
+      throw new Error("Unknown histogram field type "+t+" for " + f)
+    }
+  }
+  return copy
+}
+
 function drawChart(hgrams) {
   if (!hgrams)
     hgrams = window._hgrams
@@ -18,35 +37,37 @@ function drawChart(hgrams) {
   var builds = Object.keys(hgrams).sort()
   var ls = []
   var countls = [["Build Id", "Count"]]
-  var total_histogram = []
-  var total_count = 0
+  var total_histogram = undefined
   for each (var b in builds) {
     var count = 0;
     var sum = 0;
-    var entry_count = 0;
     for (var filter in hgrams[b]) {
       if (!_filter_set.has(filter))
         continue
       var hgram = hgrams[b][filter]
+      if (!total_histogram) {
+        total_histogram = clone_object(hgram)
+        continue
+      }
       for (var x in hgram.values) {
         var y = hgram.values[x]
-        if (total_histogram[x] == undefined)
-          total_histogram[x] = 0
-        total_histogram[x] += y
+        // hack: += non-existent value returns a NaN
+        if (isNaN(total_histogram.values[x] += y)) {
+          total_histogram.values[x] = y
+        }
         count += y
       }
       sum += hgram.sum;
-      entry_count += hgram.entry_count
+      total_histogram.entry_count += hgram.entry_count
     }
-    total_count += entry_count
     if (count) {
       ls.push([b,sum/count
                //,count
               ])
-      countls.push([b, entry_count])
+      countls.push([b, total_histogram.entry_count])
     }
   }
-  
+  title = [ls.length, countls.length]  
   var data = new google.visualization.DataTable();
   data.addColumn('string', 'build id'); // Implicit domain label col.
   data.addColumn('number', 'Average'); // Implicit series 1 data col.
@@ -55,7 +76,7 @@ function drawChart(hgrams) {
 
   var chart = new google.visualization.LineChart(document.getElementById('main_div'));
   chart.draw(data, {
-    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + total_count + " submissions)"
+    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + total_histogram.entry_count + " submissions)"
         });
 
 
@@ -67,11 +88,14 @@ function drawChart(hgrams) {
   data = new google.visualization.DataTable();
   data.addColumn('string', 'x');
   data.addColumn('number', 'y');
-  for(var i = 0;i < total_histogram.length;i++) {
-    var y = total_histogram[i]
+  var keys = Object.keys(total_histogram.values).sort(function(a, b) {
+                                                        return a - b;
+                                                      });
+  for each(var x in keys) {
+    var y = total_histogram.values[x]
     if (!y)
       continue
-    data.addRow([""+i, y])
+    data.addRow([""+x, y])
   }
   var chart = new google.visualization.SteppedAreaChart(document.getElementById('bar_div'));
   chart.draw(data,

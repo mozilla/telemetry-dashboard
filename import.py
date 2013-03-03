@@ -191,11 +191,15 @@ writeJSON(FILTER_JSON, root)
 
 #todo break this up into bucket selection + bucket filling to reduce redundant creation
 def arrayToHistogram(a, maximum):
-    histogram = {'values':{0:0}, 'sum':0, 'entry_count':len(a)}
-    if not maximum:
+    histogram = {'values':{0:0,1:0}, 'sum':0, 'entry_count':len(a)}
+    if maximum < 2:
+        for i in a:
+            histogram['values'][i] += 1
+            histogram['sum'] += i
         return histogram
     ls = sorted(a)
-    buckets = histogram_tools.exponential_buckets(1, maximum, min(maximum,10));
+
+    buckets = histogram_tools.exponential_buckets(1, maximum, min(maximum,30));
     buck_index = 0
     next = buck_index + 1
     v = histogram['values']
@@ -207,7 +211,7 @@ def arrayToHistogram(a, maximum):
                 buck_index = next
                 next += 1
             v[buckets[buck_index]] = 0
-        v[buckets[ebuck_index]] += 1
+        v[buckets[buck_index]] += 1
         histogram['sum'] += i
             
     
