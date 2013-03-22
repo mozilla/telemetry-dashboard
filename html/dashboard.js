@@ -28,6 +28,13 @@ function clone_object(obj) {
   return copy
 }
 
+function nukeChildren(parent) {
+  while (parent.hasChildNodes()) {
+    parent.removeChild(parent.lastChild);
+  }
+
+}
+
 function drawChart(hgrams) {
   if (!hgrams)
     hgrams = window._hgrams
@@ -74,13 +81,26 @@ function drawChart(hgrams) {
 //  data.addColumn({type:'number', role:'annotation'}); 
   data.addRows(ls)
 
+
   var chart = new google.visualization.LineChart(document.getElementById('main_div'));
+  var entry_count = 0;
+  if (total_histogram) {
+    entry_count = total_histogram.entry_count
+  }
+
   chart.draw(data, {
-    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + total_histogram.entry_count + " submissions)"
+    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"
         });
 
+  var count_div = document.getElementById('count_div');
+  var bar_div = document.getElementById('bar_div');
+  if (!entry_count) {
+    nukeChildren(count_div);
+    nukeChildren(bar_div);
+    return;
+  }
 
-  var chart = new google.visualization.LineChart(document.getElementById('count_div'));
+  var chart = new google.visualization.LineChart(count_div);
   chart.draw(google.visualization.arrayToDataTable(countls),
              {title: 'Daily Submissions'}
             );
@@ -88,9 +108,10 @@ function drawChart(hgrams) {
   data = new google.visualization.DataTable();
   data.addColumn('string', 'x');
   data.addColumn('number', 'y');
-  var keys = Object.keys(total_histogram.values).sort(function(a, b) {
-                                                        return a - b;
-                                                      });
+  keys = Object.keys(total_histogram.values).sort(function(a, b) {
+                                                    return a - b;
+                                                  });
+
   for each(var x in keys) {
     var y = total_histogram.values[x]
     if (!y)
