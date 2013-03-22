@@ -111,7 +111,7 @@ function drawChart(hgrams) {
   keys = Object.keys(total_histogram.values).sort(function(a, b) {
                                                     return a - b;
                                                   });
-
+ 
   for each(var x in keys) {
     var y = total_histogram.values[x]
     if (!y)
@@ -127,9 +127,7 @@ function drawChart(hgrams) {
 
 function updateDescription(descriptions) {
   var node = document.getElementById("divDescription")
-  while (node.hasChildNodes()) {
-    node.removeChild(node.lastChild);
-  }
+  nukeChildren(node);
   
   if (descriptions)
     window._descriptions = descriptions
