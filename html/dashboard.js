@@ -183,11 +183,6 @@ function applyFilter(filter) {
 }
 
 function filterChange() {
-  if (!this.selectedIndex) {
-    applyFilter(this.filter_tree)
-    return;
-  }
-
   //clear downstream selects once upstream one changes
   var p = selHistogram.parentNode
   for (var i = p.childNodes.length-1; i>0; i--) {
@@ -196,7 +191,12 @@ function filterChange() {
       break;
     p.removeChild(c)
   }
-  
+
+  if (!this.selectedIndex) {
+    applyFilter(this.filter_tree)
+    return;
+  }
+
   next_filter_tree = this.filter_tree[this.options[this.selectedIndex].text]
   applyFilter(next_filter_tree)
 
