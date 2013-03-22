@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 Usage ./import.py telemetry_dump outdir/
 
@@ -9,7 +10,6 @@ TODO:
 * histograms.json should be replaced/enhanced with db schema reported by client
 * include stddev, percentiles, etc where possible
 """
-#!/usr/bin/python
 import sys
 import json
 import histogram_tools
