@@ -43,8 +43,9 @@ function drawChart(hgrams) {
   window._hgrams = hgrams
   var builds = Object.keys(hgrams).sort()
   var ls = []
-  var countls = [["Build Id", "Count"]]
+  var countls = []
   var total_histogram = undefined
+  var x_axis_builds = []
   for each (var b in builds) {
     var count = 0;
     var sum = 0;
@@ -68,10 +69,12 @@ function drawChart(hgrams) {
       total_histogram.entry_count += hgram.entry_count
     }
     if (count) {
-      ls.push([b,sum/count
+      var i = ls.length;
+      var unixTime =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0
+      ls.push([unixTime,sum/count
                //,count
               ])
-      countls.push([b, total_histogram.entry_count])
+      countls.push([unixTime, total_histogram.entry_count])
     }
   }
   title = [ls.length, countls.length]  
@@ -93,11 +96,12 @@ function drawChart(hgrams) {
     title: selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"
         });
 */
-  $.plot($("#main_div"), [
-           {
-             data: ls,
-             lines: { show: true }
-           }])
+  $.plot($("#main_div"),
+         [{label: 'Average', data: ls}, {label: 'Daily Submissions', data: countls, yaxis:2}],
+        {SERIES: {lines: { show: true }, points: { show: true }},
+         xaxes: [{ mode:"time"}],
+         yaxes: [{}, {position:"right"}]
+        })
 
 
   var count_div = document.getElementById('count_div');
