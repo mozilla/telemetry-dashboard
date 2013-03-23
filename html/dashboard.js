@@ -144,14 +144,63 @@ function updateDescription(descriptions) {
   
 }
 
-function onchange() {
+function onchange(doNotUpdateURL) {
   var hgram = selHistogram.options[selHistogram.selectedIndex].value
   get("data/"+hgram+".json", function() {drawChart(JSON.parse(this.responseText))})
   updateDescription();
+
+  if (doNotUpdateURL) {
+    console.log("was told to not touch anchor")
+    return
+  }
+  updateURL();
+}
+
+function applySelection() {
+  if (window._appliedSelection)
+    return true;
+  window._appliedSelection = true;
+
+  var l = location.href
+  var i = l.indexOf('#')
+
+  if (i == -1)
+    return false
+  var path = decodeURIComponent(l.substr(i+1)).split('/')
+
+  var parent = selHistogram.parentNode
+  var optionI = 0;
+  for each (var p in path) {
+    var select = null;
+    for (;optionI < parent.childNodes.length;optionI++) {
+      select = parent.childNodes[optionI]
+     if (select.tagName != "SELECT");
+       continue;
+    }
+    if (optionI == parent.childNodes.length) {
+      console.log("Ran out of SELECTs in applySelection");
+    }
+    var i = 0;
+    for (;i<select.options.length;i++) {
+      var o = select.options[i]
+      if (o.text == p) {
+        select.selectedIndex = i;
+        //dom should get updated
+        select.onChange();
+      }
+    }
+    if (i == select.options.length) {
+      console.log("Could not find '"+p+"' in select");
+      break;
+    }
+    optionI++;
+  }
+  console.log(path)
+  return true
 }
 
 function stuffLoaded() {
-  if (!window._histograms || !google.visualization)
+  if (!window._histograms || !google.visualization || !window._filtersLoaded)
     return;
 
   for each (var h in window._histograms) {
@@ -159,7 +208,7 @@ function stuffLoaded() {
     o.text = h
     selHistogram.add(o)
   }
-  onchange()
+  onchange(applySelection())
 }
 
 function applyFilter(filter) {
@@ -182,7 +231,22 @@ function applyFilter(filter) {
 //  console.log([v for (v of _filter_set)])
 }
 
-function filterChange() {
+function updateURL() {
+  console.log(new Error().stack)
+  var p = selHistogram.parentNode
+  var path = []
+  for (var i = 0;i < p.childNodes.length;i++) {
+    var c = p.childNodes[i]
+    if (c.tagName != "SELECT")
+      continue;
+    if (c.selectedIndex == -1)
+      break;
+    path.push(c.options[c.selectedIndex].text);
+  }
+  location.href = "#" + path.join("/")
+}
+
+function filterChange(skipURLUpdate) {
   //clear downstream selects once upstream one changes
   var p = selHistogram.parentNode
   for (var i = p.childNodes.length-1; i>0; i--) {
@@ -191,12 +255,14 @@ function filterChange() {
       break;
     p.removeChild(c)
   }
+  if (!skipURLUpdate)
+    updateURL();
 
   if (!this.selectedIndex) {
     applyFilter(this.filter_tree)
     return;
   }
-
+  
   next_filter_tree = this.filter_tree[this.options[this.selectedIndex].text]
   applyFilter(next_filter_tree)
 
@@ -206,6 +272,7 @@ function filterChange() {
 }
 
 function initFilter(filter_tree) {
+  window._filtersLoaded = true;
   var p = selHistogram.parentNode
   var s = document.createElement("select");
   var o = document.createElement("option");
@@ -216,6 +283,7 @@ function initFilter(filter_tree) {
   s.add(o)
   p.appendChild(s);
   s.addEventListener("change", filterChange)
+  s.onChange = filterChange
   for (var opts in filter_tree) {
     if (opts == '_id' || opts == 'name')
       continue;
@@ -224,13 +292,14 @@ function initFilter(filter_tree) {
     s.add(o)
   }  
   if (id == 0)
-    filterChange.apply(s);
+    filterChange.apply(s, [true]);
 }
 
 
 google.load("visualization", "1", {packages:["corechart"]});
 google.setOnLoadCallback(stuffLoaded);
 selHistogram.addEventListener("change", onchange)
+selHistogram.onChange = onchange
 get("data/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
                                        stuffLoaded()
                                       });
