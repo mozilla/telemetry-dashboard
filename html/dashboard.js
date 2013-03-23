@@ -75,7 +75,7 @@ function drawChart(hgrams) {
     }
   }
   title = [ls.length, countls.length]  
-  var data = new google.visualization.DataTable();
+/*  var data = new google.visualization.DataTable();
   data.addColumn('string', 'build id'); // Implicit domain label col.
   data.addColumn('number', 'Average'); // Implicit series 1 data col.
 //  data.addColumn({type:'number', role:'annotation'}); 
@@ -83,14 +83,22 @@ function drawChart(hgrams) {
 
 
   var chart = new google.visualization.LineChart(document.getElementById('main_div'));
+*/
   var entry_count = 0;
   if (total_histogram) {
     entry_count = total_histogram.entry_count
   }
 
-  chart.draw(data, {
+  /*chart.draw(data, {
     title: selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"
         });
+*/
+  $.plot($("#main_div"), [
+           {
+             data: ls,
+             lines: { show: true }
+           }])
+
 
   var count_div = document.getElementById('count_div');
   var bar_div = document.getElementById('bar_div');
@@ -151,7 +159,7 @@ function onchange() {
 }
 
 function stuffLoaded() {
-  if (!window._histograms || !google.visualization)
+  if (!window._histograms)
     return;
 
   for each (var h in window._histograms) {
@@ -227,9 +235,6 @@ function initFilter(filter_tree) {
     filterChange.apply(s);
 }
 
-
-google.load("visualization", "1", {packages:["corechart"]});
-google.setOnLoadCallback(stuffLoaded);
 selHistogram.addEventListener("change", onchange)
 get("data/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
                                        stuffLoaded()
