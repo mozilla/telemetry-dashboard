@@ -78,63 +78,45 @@ function drawChart(hgrams) {
     }
   }
   title = [ls.length, countls.length]  
-/*  var data = new google.visualization.DataTable();
-  data.addColumn('string', 'build id'); // Implicit domain label col.
-  data.addColumn('number', 'Average'); // Implicit series 1 data col.
-//  data.addColumn({type:'number', role:'annotation'}); 
-  data.addRows(ls)
-
-
-  var chart = new google.visualization.LineChart(document.getElementById('main_div'));
-*/
   var entry_count = 0;
   if (total_histogram) {
     entry_count = total_histogram.entry_count
   }
 
-  /*chart.draw(data, {
-    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"
-        });
-*/
+  var node = document.getElementById("divInfo")
+  nukeChildren(node);
+  node.appendChild(document.createTextNode(selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"))
+
   $.plot($("#main_div"),
          [{label: 'Average', data: ls}, {label: 'Daily Submissions', data: countls, yaxis:2}],
         {SERIES: {lines: { show: true }, points: { show: true }},
-         xaxes: [{ mode:"time"}],
-         yaxes: [{}, {position:"right"}]
+         xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
+         yaxes: [{}, {position:"right"}],
         })
 
-
-  var count_div = document.getElementById('count_div');
   var bar_div = document.getElementById('bar_div');
   if (!entry_count) {
-    nukeChildren(count_div);
     nukeChildren(bar_div);
     return;
   }
 
-  var chart = new google.visualization.LineChart(count_div);
-  chart.draw(google.visualization.arrayToDataTable(countls),
-             {title: 'Daily Submissions'}
-            );
-
-  data = new google.visualization.DataTable();
-  data.addColumn('string', 'x');
-  data.addColumn('number', 'y');
   keys = Object.keys(total_histogram.values).sort(function(a, b) {
                                                     return a - b;
                                                   });
- 
+  var barls = []
+  var ticks = []
   for each(var x in keys) {
     var y = total_histogram.values[x]
     if (!y)
       continue
-    data.addRow([""+x, y])
+    var i = barls.length
+    barls.push([i, y])
+    ticks.push([i, x])
   }
-  var chart = new google.visualization.SteppedAreaChart(document.getElementById('bar_div'));
-  chart.draw(data,
-             {title: 'Histogram'}
-            );
-
+  $.plot($("#bar_div"),
+         [{data:barls, bars:{show:true}}],
+         {"xaxis":{"ticks": ticks}}
+        )
 }
 
 function updateDescription(descriptions) {
@@ -153,7 +135,6 @@ function updateDescription(descriptions) {
     return
   var text = document.createTextNode(d.description)
   node.appendChild(text)
-  
 }
 
 function onchange() {
