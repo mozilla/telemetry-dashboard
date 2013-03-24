@@ -43,8 +43,9 @@ function drawChart(hgrams) {
   window._hgrams = hgrams
   var builds = Object.keys(hgrams).sort()
   var ls = []
-  var countls = [["Build Id", "Count"]]
+  var countls = []
   var total_histogram = undefined
+  var x_axis_builds = []
   for each (var b in builds) {
     var count = 0;
     var sum = 0;
@@ -68,61 +69,54 @@ function drawChart(hgrams) {
       total_histogram.entry_count += hgram.entry_count
     }
     if (count) {
-      ls.push([b,sum/count
+      var i = ls.length;
+      var unixTime =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0
+      ls.push([unixTime,sum/count
                //,count
               ])
-      countls.push([b, total_histogram.entry_count])
+      countls.push([unixTime, total_histogram.entry_count])
     }
   }
   title = [ls.length, countls.length]  
-  var data = new google.visualization.DataTable();
-  data.addColumn('string', 'build id'); // Implicit domain label col.
-  data.addColumn('number', 'Average'); // Implicit series 1 data col.
-//  data.addColumn({type:'number', role:'annotation'}); 
-  data.addRows(ls)
-
-
-  var chart = new google.visualization.LineChart(document.getElementById('main_div'));
   var entry_count = 0;
   if (total_histogram) {
     entry_count = total_histogram.entry_count
   }
 
-  chart.draw(data, {
-    title: selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"
-        });
+  var node = document.getElementById("divInfo")
+  nukeChildren(node);
+  node.appendChild(document.createTextNode(selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"))
 
-  var count_div = document.getElementById('count_div');
+  $.plot($("#main_div"),
+         [{label: 'Average', data: ls}, {label: 'Daily Submissions', data: countls, yaxis:2}],
+        {SERIES: {lines: { show: true }, points: { show: true }},
+         xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
+         yaxes: [{}, {position:"right"}],
+        })
+
   var bar_div = document.getElementById('bar_div');
   if (!entry_count) {
-    nukeChildren(count_div);
     nukeChildren(bar_div);
     return;
   }
 
-  var chart = new google.visualization.LineChart(count_div);
-  chart.draw(google.visualization.arrayToDataTable(countls),
-             {title: 'Daily Submissions'}
-            );
-
-  data = new google.visualization.DataTable();
-  data.addColumn('string', 'x');
-  data.addColumn('number', 'y');
   keys = Object.keys(total_histogram.values).sort(function(a, b) {
                                                     return a - b;
                                                   });
- 
+  var barls = []
+  var ticks = []
   for each(var x in keys) {
     var y = total_histogram.values[x]
     if (!y)
       continue
-    data.addRow([""+x, y])
+    var i = barls.length
+    barls.push([i, y])
+    ticks.push([i, x])
   }
-  var chart = new google.visualization.SteppedAreaChart(document.getElementById('bar_div'));
-  chart.draw(data,
-             {title: 'Histogram'}
-            );
-
+  $.plot($("#bar_div"),
+         [{data:barls, bars:{show:true}}],
+         {"xaxis":{"ticks": ticks}}
+        )
 }
 
 function updateDescription(descriptions) {
@@ -141,24 +135,18 @@ function updateDescription(descriptions) {
     return
   var text = document.createTextNode(d.description)
   node.appendChild(text)
-  
 }
 
-function onchange(doNotUpdateURL) {
+function onchange() {
   var hgram = selHistogram.options[selHistogram.selectedIndex].value
   get("data/"+hgram+".json", function() {drawChart(JSON.parse(this.responseText))})
   updateDescription();
-
-  if (doNotUpdateURL) {
-    console.log("was told to not touch anchor")
-    return
-  }
   updateURL();
 }
 
 function applySelection() {
   if (window._appliedSelection)
-    return true;
+    return false;
   window._appliedSelection = true;
 
   var l = location.href
@@ -174,11 +162,12 @@ function applySelection() {
     var select = null;
     for (;optionI < parent.childNodes.length;optionI++) {
       select = parent.childNodes[optionI]
-     if (select.tagName != "SELECT");
-       continue;
+      if (select.tagName == "SELECT")
+        break
     }
     if (optionI == parent.childNodes.length) {
       console.log("Ran out of SELECTs in applySelection");
+      return false;
     }
     var i = 0;
     for (;i<select.options.length;i++) {
@@ -187,11 +176,13 @@ function applySelection() {
         select.selectedIndex = i;
         //dom should get updated
         select.onChange();
+        console.log("selected " + p)
+        break;
       }
     }
     if (i == select.options.length) {
       console.log("Could not find '"+p+"' in select");
-      break;
+      return false;
     }
     optionI++;
   }
@@ -200,7 +191,7 @@ function applySelection() {
 }
 
 function stuffLoaded() {
-  if (!window._histograms || !google.visualization || !window._filtersLoaded)
+  if (!window._histograms || !window._filtersLoaded)
     return;
 
   for each (var h in window._histograms) {
@@ -208,7 +199,11 @@ function stuffLoaded() {
     o.text = h
     selHistogram.add(o)
   }
-  onchange(applySelection())
+  if (!applySelection()) {
+    console.log("applySelection said there is nothing to do, doing the default");
+    onchange()
+  }
+  window._stuffLoaded = true;
 }
 
 function applyFilter(filter) {
@@ -232,7 +227,9 @@ function applyFilter(filter) {
 }
 
 function updateURL() {
-  console.log(new Error().stack)
+  // do not mess with url while loading page
+  if (!window._stuffLoaded)
+    return;
   var p = selHistogram.parentNode
   var path = []
   for (var i = 0;i < p.childNodes.length;i++) {
@@ -246,7 +243,7 @@ function updateURL() {
   location.href = "#" + path.join("/")
 }
 
-function filterChange(skipURLUpdate) {
+function filterChange() {
   //clear downstream selects once upstream one changes
   var p = selHistogram.parentNode
   for (var i = p.childNodes.length-1; i>0; i--) {
@@ -255,8 +252,7 @@ function filterChange(skipURLUpdate) {
       break;
     p.removeChild(c)
   }
-  if (!skipURLUpdate)
-    updateURL();
+  updateURL();
 
   if (!this.selectedIndex) {
     applyFilter(this.filter_tree)
@@ -295,13 +291,10 @@ function initFilter(filter_tree) {
     filterChange.apply(s, [true]);
 }
 
-
-google.load("visualization", "1", {packages:["corechart"]});
-google.setOnLoadCallback(stuffLoaded);
 selHistogram.addEventListener("change", onchange)
 selHistogram.onChange = onchange
 get("data/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
                                        stuffLoaded()
                                       });
-get("data/filter.json", function() {initFilter(JSON.parse(this.responseText))});
+get("data/filter.json", function() {initFilter(JSON.parse(this.responseText)); stuffLoaded()});
 get("data/histogram_descriptions.json", function() {updateDescription(JSON.parse(this.responseText))});
