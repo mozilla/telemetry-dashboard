@@ -11,7 +11,14 @@ TODO:
 * include stddev, percentiles, etc where possible
 """
 import sys
-import json
+import os.path
+import os
+try:
+    import simplejson as json
+    print "Using simplejson for faster json parsing"
+except ImportError:
+    import json
+
 import histogram_tools
 
 def readExisting(filename, default):
@@ -25,20 +32,18 @@ def readExisting(filename, default):
         return default
     
 def writeJSON(filename, obj):
-    f = open(filename, 'w')
+    # try to make a directory if can't open a file for writing
+    try:
+        f = open(filename, 'w')
+    except IOError:
+        os.makedirs(os.path.dirname(filename))
+        f = open(filename, 'w')
     f.write(json.dumps(obj))
     f.close()
     print "Wrote " + filename
-    
-INFILE = sys.argv[1]
-if INFILE == "stdin":
-    f = sys.stdin
-else:
-    f = open(INFILE)
-outdir = sys.argv[2]
-LIMIT = 0
-if len(sys.argv) > 3:
-    LIMIT = int(sys.argv[3])
+
+f = sys.stdin
+outdir = sys.argv[1]
 
 FILTER_JSON = "%s/filter.json" % outdir
 
@@ -100,10 +105,7 @@ while True:
         else:
             continue
 
-    if LIMIT and lineno >= LIMIT:
-        break
-
-    lineno = lineno + 1
+    lineno += 1
 
     # strip prefix out
     if oline[0:2] == '{"':
