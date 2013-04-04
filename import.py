@@ -48,7 +48,7 @@ def writeJSON(filename, obj):
 
 """
 Output format
-{"buckets":[b1, b2, ...] value:{"YYYMMDD":[[filter_id, sum, entry_count, v1, v2, ...],[filter_id2...]]}}
+{"buckets":[b1, b2, ...] value:{"YYYMMDD":[[v1, v2, ..., sum, entry_count, filter_id],[..., filter_id]]}}
 """
 def writeAggHistogram(name, ah):
     buckets = set()
@@ -61,12 +61,15 @@ def writeAggHistogram(name, ah):
         out_filters = []
         out["values"][date] = out_filters
         for filterid, histogram in filters.iteritems():
-            filter_entry = [int(filterid), histogram["sum"], histogram["entry_count"]]
+            filter_entry = []
             v = histogram["values"]
             out_filters.append(filter_entry)
             # append histogram values, insert 0s for omitted entries
             for bucket in out["buckets"]:
                 filter_entry.append(v.get(str(bucket), 0))
+            filter_entry.append(histogram["sum"])
+            filter_entry.append(histogram["entry_count"])
+            filter_entry.append(int(filterid))
     #writeJSON("%s/%s.json.old" % (outdir, name), filtered_dated_histogram_data)
     writeJSON("%s/%s.json" % (outdir, name), out)
 
