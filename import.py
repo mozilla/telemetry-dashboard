@@ -21,6 +21,10 @@ except ImportError:
 
 import histogram_tools
 
+f = sys.stdin
+outdir = sys.argv[1]
+
+
 def readExisting(filename, default):
     try:
         f = open(filename)
@@ -42,8 +46,30 @@ def writeJSON(filename, obj):
     f.close()
     print "Wrote " + filename
 
-f = sys.stdin
-outdir = sys.argv[1]
+"""
+Output format
+{"buckets":[b1, b2, ...] value:{"YYYMMDD":[[filter_id, sum, entry_count, v1, v2, ...],[filter_id2...]]}}
+"""
+def writeAggHistogram(name, ah):
+    buckets = set()
+    for date, filters in ah.iteritems():
+        for filterid, histogram in filters.iteritems():
+            buckets.update(map(int, histogram["values"].keys()))
+
+    out = {"buckets": sorted(list(buckets)), 'values':{}}
+    for date, filters in ah.iteritems():
+        out_filters = []
+        out["values"][date] = out_filters
+        for filterid, histogram in filters.iteritems():
+            filter_entry = [int(filterid), histogram["sum"], histogram["entry_count"]]
+            v = histogram["values"]
+            out_filters.append(filter_entry)
+            # append histogram values, insert 0s for omitted entries
+            for bucket in out["buckets"]:
+                filter_entry.append(v.get(str(bucket), 0))
+    #writeJSON("%s/%s.json.old" % (outdir, name), filtered_dated_histogram_data)
+    writeJSON("%s/%s.json" % (outdir, name), out)
+
 
 FILTER_JSON = "%s/filter.json" % outdir
 
@@ -137,7 +163,7 @@ while True:
         try:
             histogram_forks = histogram_data[h_name]
         except KeyError:
-            histogram_forks = readExisting("%s/%s.json" % (outdir, h_name), {})
+            histogram_forks = {}
             histogram_data[h_name] = histogram_forks
         
         try:
@@ -233,9 +259,10 @@ for name, sm_by_buildid in simpleMeasurements.iteritems():
 #    writeJSON("%s/%s.histogram.json" % (outdir, measure), arrayToHistogram(ls))
 
 
+
 histograms_filters_key = {}
 for name, filtered_dated_histogram_data in histogram_data.iteritems():
-    writeJSON("%s/%s.json" % (outdir, name), filtered_dated_histogram_data)
+    writeAggHistogram(name, filtered_dated_histogram_data)
     valid_filters = set()
     for filtered_histogram_data in filtered_dated_histogram_data.values():
         valid_filters.update(filtered_histogram_data.keys())
