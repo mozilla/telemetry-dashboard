@@ -54,7 +54,7 @@ def writeAggHistogram(name, ah):
     buckets = set()
     for date, filters in ah.iteritems():
         for filterid, histogram in filters.iteritems():
-            buckets.update(map(int, histogram["values"].keys()))
+            buckets.update(histogram["values"].keys())
 
     out = {"buckets": sorted(list(buckets)), 'values':{}}
     for date, filters in ah.iteritems():
@@ -66,10 +66,10 @@ def writeAggHistogram(name, ah):
             out_filters.append(filter_entry)
             # append histogram values, insert 0s for omitted entries
             for bucket in out["buckets"]:
-                filter_entry.append(v.get(str(bucket), 0))
+                filter_entry.append(v.get(bucket, 0))
             filter_entry.append(histogram["sum"])
             filter_entry.append(histogram["entry_count"])
-            filter_entry.append(int(filterid))
+            filter_entry.append(filterid)
     #writeJSON("%s/%s.json.old" % (outdir, name), filtered_dated_histogram_data)
     writeJSON("%s/%s.json" % (outdir, name), out)
 
@@ -117,7 +117,7 @@ def getId(*tree_args):
         try:
             atm = atm[pvalue]
         except KeyError:
-            tmp = {'_id':str(idcount)}
+            tmp = {'_id':idcount}
             if i < len(key):
                 tmp['name'] = key[i]
             idcount = idcount + 1
@@ -183,6 +183,7 @@ while True:
 
         aggr_hgram_values = aggr_histogram['values']
         for bucket, bucket_value in h_values['values'].iteritems():
+            bucket = int(bucket)
             try:
                 aggr_hgram_values[bucket] += bucket_value
             except KeyError:
