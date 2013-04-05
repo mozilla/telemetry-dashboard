@@ -46,16 +46,68 @@ def writeJSON(filename, obj):
     f.close()
     print "Wrote " + filename
 
+def indexFilterArray(hls):
+    out = {}
+    for i in range(0, len(hls)):
+        h = hls[i]
+        filterid = h[-1]
+        out[filterid] = i
+    return out
+
+def mergeFilteredHistograms(hls1, hls2):
+    f1 = indexFilterArray(hls1)
+    f2 = indexFilterArray(hls2)
+    s1 = set(f1.keys())
+    s2 = set(f2.keys())
+    for f in s1.intersection(s2):
+        h1 = hls1[f1[f]]
+        h2 = hls2[f2[f]]
+        #-1 cos last element is the filter id
+        for i in range(0, len(h1) - 1):
+            h1[i] += h2[i]
+
+
+    for f in s2.difference(s2):
+        h2 = hls2[f2[f]]
+        hls1.append(h2)
+    return hls1
+        
+        
+"""merge h2 into h1"""
+def mergeAggHistograms(h1, h2):
+    if h2 == None:
+        return h1
+    if h1['buckets'] != h2['buckets']:
+        print ["old buckets:", h2['buckets']]
+        print ["new buckets:", h1['buckets']]
+        sys.exit(1);
+
+    dates1 = set()
+    dates2 = set()
+    v1 = h1['values']
+    v2 = h2['values']
+    dates1.update(v1.keys())
+    dates2.update(v2.keys())
+    for date in dates2.difference(dates2):
+        v1[date] = v2[date]
+    for date in dates1.intersection(dates2):
+        v1[date] = mergeFilteredHistograms(v1[date], v2[date])
+    return h1
+    
+
 """
 Output format
 {"buckets":[b1, b2, ...] value:{"YYYMMDD":[[v1, v2, ..., sum, entry_count, filter_id],[..., filter_id]]}}
+TODO: sort the inner array by filter_id and do an actual merge in mergeFilteredHistograms
 """
 def writeAggHistogram(name, ah):
     buckets = set()
     for date, filters in ah.iteritems():
         for filterid, histogram in filters.iteritems():
             buckets.update(histogram["values"].keys())
-
+    if len(buckets) == 0:
+        print "Nothing to write for %s" % name
+        return
     out = {"buckets": sorted(list(buckets)), 'values':{}}
     for date, filters in ah.iteritems():
         out_filters = []
@@ -71,12 +123,12 @@ def writeAggHistogram(name, ah):
             filter_entry.append(histogram["entry_count"])
             filter_entry.append(filterid)
     #writeJSON("%s/%s.json.old" % (outdir, name), filtered_dated_histogram_data)
-    writeJSON("%s/%s.json" % (outdir, name), out)
-
+    filename = "%s/%s.json" % (outdir, name)
+    out = mergeAggHistograms(out, readExisting(filename, None))
+    writeJSON(filename, out)
 
 FILTER_JSON = "%s/filter.json" % outdir
 
-prefix = "	{"
 lineno = 0
 """
 
@@ -127,21 +179,14 @@ def getId(*tree_args):
 
 
 while True:
-    oline = f.readline()
-    if len(oline) <= 1:
-        if len(oline) == 0:
+    line = f.readline()
+    if len(line) <= 1:
+        if len(line) == 0:
             break;
         else:
             continue
 
     lineno += 1
-
-    # strip prefix out
-    if oline[0:2] == '{"':
-        line = oline
-    else:
-        start = oline.find(prefix) + len(prefix) - 1 ;
-        line = oline[start:]
 
     data = json.loads(line)
     i =  data['info']
@@ -272,12 +317,31 @@ for name, filtered_dated_histogram_data in histogram_data.iteritems():
         valid_filters.update(filtered_histogram_data.keys())
     histograms_filters_key[name] = list(valid_filters)
 
+
+def merge_histograms_filters_key(h1, h2):
+    if h2 == None:
+        return h1
+    s1 = set(h1.keys());
+    s2 = set(h2.keys());
+    for name in s2.difference(s1):
+        h1[name] = h2[name]
+    
+    for name in s1.intersection(s2):
+        s = set(h1[name])
+        s.update(h2[name])
+        h1[name] = list(s)
+    return h1
+        
+        
 """
 TODO:
 This file contains a lot similar lists of leaf filter id. This is because those histograms are filtered out on a higher level(eg OS), and all of the child nodes inherit them
 There may be some optimization opportunity here to group histograms by non-leaf nodes
 """
-writeJSON("%s/histograms.json" % outdir, histograms_filters_key)
+histogramsfile = "%s/histograms.json" % outdir
+writeJSON(histogramsfile,
+          merge_histograms_filters_key(histograms_filters_key, 
+                                       readExisting(histogramsfile, None)))
     
 
 print "%d lines decoded\n" % lineno

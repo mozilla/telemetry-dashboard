@@ -117,7 +117,7 @@ function updateDescription(descriptions) {
 
 function onchange() {
   var hgram = selHistogram.options[selHistogram.selectedIndex].value
-  var debug = ""/*+new Date()*/;
+  var debug = ""+new Date();
   get("data/"+hgram+".json?"+debug, function() {drawChart(JSON.parse(this.responseText))})
   updateDescription();
   updateURL();
