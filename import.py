@@ -24,6 +24,12 @@ import histogram_tools
 f = sys.stdin
 outdir = sys.argv[1]
 
+histogram_specs = {}
+for h in histogram_tools.from_file(sys.argv[2]):
+    try:
+        histogram_specs[h.name()] = h.ranges()
+    except:
+        print "Could not figure out bucket range for %s" % h.name()
 
 def readExisting(filename, default):
     try:
@@ -105,9 +111,25 @@ def writeAggHistogram(name, ah):
     for date, filters in ah.iteritems():
         for filterid, histogram in filters.iteritems():
             buckets.update(histogram["values"].keys())
+    
     if len(buckets) == 0:
-        print "Nothing to write for %s" % name
+        print "%s is empty" % name
         return
+
+    try:
+        spec_bucket_set = set(histogram_specs[name])
+    except KeyError:
+        print "no validation info for %s, skipping" % name
+        return
+
+    diff = buckets.difference(spec_bucket_set)
+    if len(diff) != 0:
+        print "Non-spec buckets in %s. %d extra len, %s" % (name, len(diff), str(diff))
+        print "supposed to be %s" % str(spec_bucket_set)
+        return
+    
+    buckets = spec_bucket_set
+
     out = {"buckets": sorted(list(buckets)), 'values':{}}
     for date, filters in ah.iteritems():
         out_filters = []
@@ -236,7 +258,8 @@ while True:
     
         aggr_histogram['sum'] += h_values['sum']
         aggr_histogram['entry_count'] += 1
-
+    #skip simple measures
+    continue
     for measure, value in data['simpleMeasurements'].iteritems():
         # TODO: deal with nested measurements, etc
         if type(value) != int:
