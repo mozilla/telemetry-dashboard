@@ -118,7 +118,7 @@ function updateDescription(descriptions) {
 function onchange() {
   var hgram = selHistogram.options[selHistogram.selectedIndex].value
   var debug = ""+new Date();
-  get("data/"+hgram+".json?"+debug, function() {drawChart(JSON.parse(this.responseText))})
+  get(window._path+"/"+hgram+".json?"+debug, function() {drawChart(JSON.parse(this.responseText))})
   updateDescription();
   updateURL();
 }
@@ -270,10 +270,28 @@ function initFilter(filter_tree) {
     filterChange.apply(s, [true]);
 }
 
+function loadData() {
+  var selChannel = document.getElementById("selChannel");
+  window._path = "data/"+selChannel.options[selChannel.selectedIndex].text
+
+  get(_path+"/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
+                                           stuffLoaded()
+                                          });
+  get(_path+"/filter.json", function() {initFilter(JSON.parse(this.responseText)); stuffLoaded()});
+  get(_path+"/histogram_descriptions.json", function() {updateDescription(JSON.parse(this.responseText))});
+}
+
+function buildVersionSelects(ls) {
+  var selChannel = document.getElementById("selChannel");
+  for (var i=0;i<ls.length;i++) {
+    var c = document.createElement("option");  
+    c.text = ls[i];
+    selChannel.add(c)
+    if (c.text.indexOf("nightly/") == 0)
+      selChannel.selectedIndex = i
+  }
+  //selHistogram.addEventListener("change", loadData)
+  loadData()
+}
 selHistogram.addEventListener("change", onchange)
-selHistogram.onChange = onchange
-get("data/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
-                                       stuffLoaded()
-                                      });
-get("data/filter.json", function() {initFilter(JSON.parse(this.responseText)); stuffLoaded()});
-get("data/histogram_descriptions.json", function() {updateDescription(JSON.parse(this.responseText))});
+get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});

@@ -368,8 +368,7 @@ for (channel, version), (histogram_data, filters) in bychannel_root.iteritems():
                                            readExisting(histogramsfile, None)))
     writeJSON("%s/%s/%s/filter.json"%(outdir, channel, version), filters['root'])
     print "%d filters" % filters['idcount']
-    print "%d lines decoded\n" % lineno
-
 
 writeJSON("%s/versions.json" % outdir, outputdirs.keys())
+print "%d records aggregated\n" % lineno
 
