@@ -106,7 +106,7 @@ Output format
 {"buckets":[b1, b2, ...] value:{"YYYMMDD":[[v1, v2, ..., sum, entry_count, filter_id],[..., filter_id]]}}
 TODO: sort the inner array by filter_id and do an actual merge in mergeFilteredHistograms
 """
-def writeAggHistogram(name, ah):
+def writeAggHistogram(name, ah, outdir):
     buckets = set()
     for date, filters in ah.iteritems():
         for filterid, histogram in filters.iteritems():
@@ -149,18 +149,7 @@ def writeAggHistogram(name, ah):
     out = mergeAggHistograms(out, readExisting(filename, None))
     writeJSON(filename, out)
 
-FILTER_JSON = "%s/filter.json" % outdir
-
 lineno = 0
-"""
-
-Schema: id specifying common filter values looks up list of build dates which contain
-
-"""
-# root of filter tree
-root = readExisting(FILTER_JSON, {'_id':"0", 'name':'reason'})
-# names for entries in filter tree
-key = ['reason', 'channel', 'appName', 'appVersion', 'OS', 'osVersion', 'arch']
 
 """If we read-in a file from disk, need to traverse the datastructure to fix the next id to continue from"""
 def findMaxId(tree, maxid):
@@ -173,32 +162,10 @@ def findMaxId(tree, maxid):
         maxid = findMaxId(subtree, maxid)
     return maxid
 
-idcount = findMaxId(root, 0) + 1
-
-print "idcount=%d" % idcount
-
-# schema: histogram_name {build_id:{filter_id:histogram_values},...}
-histogram_data = {}
+#schema {"channel/version":{build_id:{filter_id:histogram_values...}...}...}
+bychannel_root = {}
 simpleMeasurements = {}
 maxSimpleMeasurements = {}
-
-def getId(*tree_args):
-    global idcount
-    atm = root
-    i = 0
-    for pvalue in tree_args:
-        i = i + 1
-        try:
-            atm = atm[pvalue]
-        except KeyError:
-            tmp = {'_id':idcount}
-            if i < len(key):
-                tmp['name'] = key[i]
-            idcount = idcount + 1
-            atm[pvalue] = tmp;
-            atm = tmp
-    return atm
-
 
 while True:
     line = f.readline()
@@ -225,11 +192,20 @@ while True:
     # todo combine OS + osVersion + santize on crazy platforms like linux to reduce pointless choices
     if OS == "Linux":
         osVersion = osVersion[:3]
-    filter_obj = getId(reason, channel, appName, appVersion, OS, osVersion, arch)
-    filter_id = filter_obj['_id']
+    # schema: histogram_name {build_id:{filter_id:histogram_values},...}
+    key = (channel, appVersion)
+    try:
+        (histogram_data, filters) = bychannel_root[key]
+    except KeyError:
+        # root of filter tree
+        filters = {}
+        filters['root'] = readExisting("%s/%s/%s/filter.json"%(outdir, channel, appVersion), {'_id':"0", 'name':'reason'})
+        filters['idcount'] = findMaxId(filters['root'], 0) + 1
+        print "%d filters for %s" % (filters['idcount'], str(key))
+        histogram_data = {}
+        bychannel_root[key] = (histogram_data, filters)
 
     for h_name, h_values in data['histograms'].iteritems():
-        #todo this causes histograms to be dropped if they are not mentioned in the newer data dump
         try:
             histogram_forks = histogram_data[h_name]
         except KeyError:
@@ -241,6 +217,27 @@ while True:
         except KeyError:
             histograms_by_build = {}
             histogram_forks[buildDate] = histograms_by_build
+
+        def getId(*tree_args):
+            atm = filters['root']
+            i = 0
+            for pvalue in tree_args:
+                i = i + 1
+                try:
+                    atm = atm[pvalue]
+                except KeyError:
+                    # names for entries in filter tree
+                    key = ['reason', 'appName', 'OS', 'osVersion', 'arch']
+                    tmp = {'_id':filters['idcount']}
+                    if i < len(key):
+                        tmp['name'] = key[i]
+                    filters['idcount'] += 1
+                    atm[pvalue] = tmp;
+                    atm = tmp
+            return atm
+
+        filter_obj = getId(reason, appName, OS, osVersion, arch)
+        filter_id = filter_obj['_id']
 
         try:
             aggr_histogram = histograms_by_build[filter_id]
@@ -286,9 +283,6 @@ while True:
         ls.append(value)
 f.close()
 
-writeJSON(FILTER_JSON, root)
-
-
 #todo break this up into bucket selection + bucket filling to reduce redundant creation
 def arrayToHistogram(a, maximum):
     histogram = {'values':{0:0,1:0}, 'sum':0, 'entry_count':len(a)}
@@ -331,41 +325,51 @@ for name, sm_by_buildid in simpleMeasurements.iteritems():
 #    writeJSON("%s/%s.histogram.json" % (outdir, measure), arrayToHistogram(ls))
 
 
+outputdirs = {}
+e = readExisting("%s/versions.json" % outdir, None)
+if e:
+    for entry in e:
+        outputdirs[entry] = 1
+for (channel, version), (histogram_data, filters) in bychannel_root.iteritems():
+    subdir = "%s/%s" % (channel, version)
+    channel_dir = "%s/%s" % (outdir, subdir)
+    outputdirs[subdir] = 1
+    histograms_filters_key = {}
+    for name, filtered_dated_histogram_data in histogram_data.iteritems():
+        writeAggHistogram(name, filtered_dated_histogram_data, channel_dir)
+        valid_filters = set()
+        for filtered_histogram_data in filtered_dated_histogram_data.values():
+            valid_filters.update(filtered_histogram_data.keys())
+        histograms_filters_key[name] = list(valid_filters)
 
-histograms_filters_key = {}
-for name, filtered_dated_histogram_data in histogram_data.iteritems():
-    writeAggHistogram(name, filtered_dated_histogram_data)
-    valid_filters = set()
-    for filtered_histogram_data in filtered_dated_histogram_data.values():
-        valid_filters.update(filtered_histogram_data.keys())
-    histograms_filters_key[name] = list(valid_filters)
 
+    def merge_histograms_filters_key(h1, h2):
+        if h2 == None:
+            return h1
+        s1 = set(h1.keys());
+        s2 = set(h2.keys());
+        for name in s2.difference(s1):
+            h1[name] = h2[name]
 
-def merge_histograms_filters_key(h1, h2):
-    if h2 == None:
+        for name in s1.intersection(s2):
+            s = set(h1[name])
+            s.update(h2[name])
+            h1[name] = list(s)
         return h1
-    s1 = set(h1.keys());
-    s2 = set(h2.keys());
-    for name in s2.difference(s1):
-        h1[name] = h2[name]
-    
-    for name in s1.intersection(s2):
-        s = set(h1[name])
-        s.update(h2[name])
-        h1[name] = list(s)
-    return h1
-        
-        
-"""
-TODO:
-This file contains a lot similar lists of leaf filter id. This is because those histograms are filtered out on a higher level(eg OS), and all of the child nodes inherit them
-There may be some optimization opportunity here to group histograms by non-leaf nodes
-"""
-histogramsfile = "%s/histograms.json" % outdir
-writeJSON(histogramsfile,
-          merge_histograms_filters_key(histograms_filters_key, 
-                                       readExisting(histogramsfile, None)))
-    
 
-print "%d lines decoded\n" % lineno
-print [idcount]
+    """
+    TODO:
+    This file contains a lot similar lists of leaf filter id. This is because those histograms are filtered out on a higher level(eg OS), and all of the child nodes inherit them
+    There may be some optimization opportunity here to group histograms by non-leaf nodes
+    """
+    histogramsfile = "%s/histograms.json" % channel_dir
+    writeJSON(histogramsfile,
+              merge_histograms_filters_key(histograms_filters_key, 
+                                           readExisting(histogramsfile, None)))
+    writeJSON("%s/%s/%s/filter.json"%(outdir, channel, version), filters['root'])
+    print "%d filters" % filters['idcount']
+    print "%d lines decoded\n" % lineno
+
+
+writeJSON("%s/versions.json" % outdir, outputdirs.keys())
+
