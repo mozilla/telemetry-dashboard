@@ -146,6 +146,8 @@ function applySelection() {
 
   var parent = selHistogram.parentNode
   var optionI = 0;
+  // hack to skip channel
+  var skipped = 0;
   for each (var p in path) {
     var select = null;
     for (;optionI < parent.childNodes.length;optionI++) {
@@ -162,6 +164,11 @@ function applySelection() {
     for (;i<select.options.length;i++) {
       var o = select.options[i]
       if (o.text == p) {
+        if (skipped = 0 && select.selectedIndex == i) {
+          console.log(p + " is already selected")
+          skipped++;
+          break;
+        }
         //dom should get updated
         if (!select.onChange) {
           console.log("no select handler to apply " + p)  
@@ -286,6 +293,14 @@ function initFilter(filter_tree) {
 }
 
 function loadData() {
+  var selHistogram = document.getElementById("selHistogram")
+  var selChannel = document.getElementById("selChannel");
+  var parent = selHistogram.parentNode
+
+  // hack...if this is after pageload, then wipe url on channel change
+  if (window._appliedSelection)
+    location.href = "#" +selChannel.options[selChannel.selectedIndex].text + "/"
+
   // reset state...TODO: document state
   delete window._histograms
   delete window._filtersLoaded
@@ -293,9 +308,6 @@ function loadData() {
   delete window._hgrams
   delete window._appliedSelection
   delete window._descriptions
-  var selHistogram = document.getElementById("selHistogram")
-  var selChannel = document.getElementById("selChannel");
-  var parent = selHistogram.parentNode
   nukeChildren(selHistogram);
   nukeChildren(parent)
   parent.appendChild(selChannel)
@@ -311,13 +323,21 @@ function loadData() {
 }
 
 function buildVersionSelects(ls) {
+  // hack in order to not have to write async applySelection
+  var urlChannel = /#([^/]+)/.exec(location.href);
+  if (urlChannel) {
+    urlChannel = decodeURIComponent(urlChannel[1])
+  }
+
   var selChannel = document.getElementById("selChannel");
   for (var i=0;i<ls.length;i++) {
     var c = document.createElement("option");  
     c.value = ls[i];
     c.text = c.value.replace('/', ' ');
     selChannel.add(c)
-    if (c.value.indexOf("nightly/") == 0)
+
+    if (c.text == urlChannel
+        || (!selChannel && c.value.indexOf("nightly/") == 0))
       selChannel.selectedIndex = i
   }
   selChannel.addEventListener("change", loadData)
@@ -326,5 +346,5 @@ function buildVersionSelects(ls) {
 }
 
 selHistogram.addEventListener("change", onhistogramchange)
+selHistogram.onChange = onhistogramchange
 get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
-
