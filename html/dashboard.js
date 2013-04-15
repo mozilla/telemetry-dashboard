@@ -3,16 +3,24 @@ var _filter_set = Set()
 
 function get(url, handler) {
   var xhr = new XMLHttpRequest();
-  xhr.onload = handler
-  
-  xhr.open("get", url, true);
+  xhr.onload = function (e) {
+    if (e.target.status == 200) 
+      handler.apply(this, [e])
+    else 
+      console.log("Code "+e.target.status+" while loading "+url)
+  }
+
+  // deal with caching issues
+  var debug = ""
+  //debug += new Date()
+  xhr.open("get", url+"?" + debug, true);
   xhr.send(null);
 }
+
 function nukeChildren(parent) {
   while (parent.hasChildNodes()) {
     parent.removeChild(parent.lastChild);
   }
-
 }
 
 function drawChart(hgrams) {
@@ -22,8 +30,10 @@ function drawChart(hgrams) {
 
   if (!hgrams)
     hgrams = window._hgrams
+  
   if (!hgrams)
     return
+  
   window._hgrams = hgrams
   var builds = Object.keys(hgrams.values).sort()
   var ls = []
@@ -115,10 +125,9 @@ function updateDescription(descriptions) {
   node.appendChild(text)
 }
 
-function onchange() {
+function onhistogramchange() {
   var hgram = selHistogram.options[selHistogram.selectedIndex].value
-  var debug = ""+new Date();
-  get(window._path+"/"+hgram+".json?"+debug, function() {drawChart(JSON.parse(this.responseText))})
+  get(window._path+"/"+hgram+".json?", function() {drawChart(JSON.parse(this.responseText))})
   updateDescription();
   updateURL();
 }
@@ -148,19 +157,25 @@ function applySelection() {
       console.log("Ran out of SELECTs in applySelection");
       return false;
     }
+    var select_id = select.id
     var i = 0;
     for (;i<select.options.length;i++) {
       var o = select.options[i]
       if (o.text == p) {
-        select.selectedIndex = i;
         //dom should get updated
-        select.onChange();
-        console.log("selected " + p)
+        if (!select.onChange) {
+          console.log("no select handler to apply " + p)  
+          return false
+        } else {
+          select.selectedIndex = i;
+          select.onChange();
+          console.log("selected " + p) 
+        }
         break;
       }
     }
     if (i == select.options.length) {
-      console.log("Could not find '"+p+"' in select");
+      console.log("Could not find '"+p+"' in select "+select_id);
       return false;
     }
     optionI++;
@@ -180,7 +195,7 @@ function stuffLoaded() {
   }
   if (!applySelection()) {
     console.log("applySelection said there is nothing to do, doing the default");
-    onchange()
+    onhistogramchange()
   }
   window._stuffLoaded = true;
 }
@@ -271,8 +286,22 @@ function initFilter(filter_tree) {
 }
 
 function loadData() {
+  // reset state...TODO: document state
+  delete window._histograms
+  delete window._filtersLoaded
+  delete window._stuffLoaded
+  delete window._hgrams
+  delete window._appliedSelection
+  delete window._descriptions
+  var selHistogram = document.getElementById("selHistogram")
   var selChannel = document.getElementById("selChannel");
-  window._path = "data/"+selChannel.options[selChannel.selectedIndex].text
+  var parent = selHistogram.parentNode
+  nukeChildren(selHistogram);
+  nukeChildren(parent)
+  parent.appendChild(selChannel)
+  parent.appendChild(selHistogram)
+
+  window._path = "data/"+selChannel.options[selChannel.selectedIndex].value
 
   get(_path+"/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
                                            stuffLoaded()
@@ -285,13 +314,17 @@ function buildVersionSelects(ls) {
   var selChannel = document.getElementById("selChannel");
   for (var i=0;i<ls.length;i++) {
     var c = document.createElement("option");  
-    c.text = ls[i];
+    c.value = ls[i];
+    c.text = c.value.replace('/', ' ');
     selChannel.add(c)
-    if (c.text.indexOf("nightly/") == 0)
+    if (c.value.indexOf("nightly/") == 0)
       selChannel.selectedIndex = i
   }
-  //selHistogram.addEventListener("change", loadData)
+  selChannel.addEventListener("change", loadData)
+  //selChannel.onChange = loadData
   loadData()
 }
-selHistogram.addEventListener("change", onchange)
+
+selHistogram.addEventListener("change", onhistogramchange)
 get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
+

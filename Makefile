@@ -1,7 +1,8 @@
-FILES= histogram_tools.py validation/nightly/23/Histograms.json
+V23=validation/nightly/23.0a1/histogram_descriptions.json
+FILES= histogram_tools.py $(V23)
 download: $(FILES)
 
-validation/nightly/23/Histograms.json:
+$(V23):
 	mkdir -p `dirname $@`
 	wget -c http://hg.mozilla.org/mozilla-central/raw-file/139b6ba547fa/toolkit/components/telemetry/Histograms.json -O $@
 
