@@ -41,14 +41,34 @@ class Context:
         print "%d values produced" % len(self.values)
 
 context = Context()
+
+bytes_read = 0
+try:
+    from java.util import Date
+    start = Date()
+    jython = True
+except ImportError:
+    from datetime import datetime
+    start = datetime.now()
+    jython = False
+
 while True:
     line = f.readline()
-    if len(line) <= 1:
-        if len(line) == 0:
+    l = len(line)
+    if l <= 1:
+        if l == 0:
             break;
         else:
             continue
-
+    bytes_read += l
     data = json.loads(line)
     mapreduce.map(0, data, histogram_specs, context)
+
+if jython:
+    ms = (Date().getTime() - start.getTime())
+else:
+    delta = (datetime.now() - start)
+    ms = delta.seconds * 1000 + delta.microseconds/1000
+
+print str(1000*bytes_read/1024/1024/ms) + " MB/s %d bytes in %s seconds" % (bytes_read, ms/1000)
 context.summarize()

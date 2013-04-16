@@ -34,5 +34,5 @@ def map(uid, json, histogram_specs, context):
         outarray[-2] = h_values['sum']
         outarray[-1] = 1        # count
         key = (path, h_name)
-        #context.write(key, outarray)
+        context.write(key, outarray)
     
