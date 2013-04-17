@@ -25,7 +25,6 @@ for h in histogram_tools.from_file(sys.argv[1]):
         bucket2index = {}
         for i in range(0, len(buckets)):
             bucket2index[buckets[i]] = i
-        bucket2index['exponential'] = h.kind() == 'exponential'
         histogram_specs[h.name()] = bucket2index
     except:
         print "Could not figure out bucket range for %s" % h.name()

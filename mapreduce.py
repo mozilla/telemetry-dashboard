@@ -22,6 +22,7 @@ def map(uid, json, histogram_specs, context):
         
         outarray = [0] * (len(bucket2index) + 2)
         #outarray = array.array('L',(0 for i in range(0,len(bucket2index) + 2)))
+        #outarray = numpy.zeros(((len(bucket2index) + 2),), dtype=numpy.uint64)
         error = False
         for bucket, value in h_values['values'].iteritems():
             index = bucket2index.get(bucket, None)
