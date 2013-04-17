@@ -49,6 +49,15 @@ class Context:
     def summarize(self):
         print "%d values produced" % len(self.values)
 
+
+class OutContext:
+    def __init__(self):
+        self.out = open(sys.argv[2], 'w')
+        
+    def write(self, key, value):
+        total = value[-1]
+        self.out.write("%s\t%s\n" % (key, value))
+    
 context = Context()
 
 bytes_read = 0
@@ -78,12 +87,12 @@ while True:
 
 ms = time_delta(start)
 
-
+context.summarize()
 print  "read %s MB/s %d bytes in %s seconds" % (str(1000*bytes_read/1024/1024/ms), bytes_read, ms/1000)
 
 start = now()
-reduce_context = Context()
+reduce_context = OutContext()
 for key, values in context.iteritems():
     mapreduce.reduce(key, values, reduce_context)
-reduce_context.summarize()
+
 print "reduce in %d ms" % time_delta(start)

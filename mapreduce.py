@@ -45,4 +45,7 @@ def reduce(key, values, context):
         v = values[x]
         for y in range(0, len(out)):
             out[y] += v[y] 
-    context.write(key, out)
+    path = list(key[0])
+    path.append(key[1])
+    context.write("/".join(path), out)
+    
