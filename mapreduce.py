@@ -19,8 +19,9 @@ def map(uid, json, histogram_specs, context):
         bucket2index = histogram_specs.get(h_name, None)
         if bucket2index == None:
             continue
-
+        
         outarray = [0] * (len(bucket2index) + 2)
+        #outarray = array.array('L',(0 for i in range(0,len(bucket2index) + 2)))
         error = False
         for bucket, value in h_values['values'].iteritems():
             index = bucket2index.get(bucket, None)
@@ -31,8 +32,16 @@ def map(uid, json, histogram_specs, context):
             outarray[index] = value
         if error:
             continue
+
         outarray[-2] = h_values['sum']
         outarray[-1] = 1        # count
         key = (path, h_name)
         context.write(key, outarray)
     
+def reduce(key, values, context):
+    out = values[0]
+    for x in range(1, len(values)):
+        v = values[x]
+        for y in range(0, len(out)):
+            out[y] += v[y] 
+    context.write(key, out)

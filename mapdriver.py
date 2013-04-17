@@ -9,6 +9,12 @@ try:
     print "Using simplejson for faster json parsing"
 except ImportError:
     import json
+try:
+    from java.util import Date
+    jython = True
+except ImportError:
+    from datetime import datetime
+    jython = False
 
 
 histogram_specs = {}
@@ -19,6 +25,7 @@ for h in histogram_tools.from_file(sys.argv[1]):
         bucket2index = {}
         for i in range(0, len(buckets)):
             bucket2index[buckets[i]] = i
+        bucket2index['exponential'] = h.kind() == 'exponential'
         histogram_specs[h.name()] = bucket2index
     except:
         print "Could not figure out bucket range for %s" % h.name()
@@ -35,7 +42,10 @@ class Context:
         if ls == None:
             ls = []
             self.values[key] = ls
-        ls.append(key)
+        ls.append(value)
+    
+    def iteritems(self):
+        return self.values.iteritems()
 
     def summarize(self):
         print "%d values produced" % len(self.values)
@@ -43,14 +53,17 @@ class Context:
 context = Context()
 
 bytes_read = 0
-try:
-    from java.util import Date
-    start = Date()
-    jython = True
-except ImportError:
-    from datetime import datetime
-    start = datetime.now()
-    jython = False
+
+now = Date if jython else datetime.now
+
+def time_delta(old):
+    if jython:
+        ms = (Date().getTime() - old.getTime())
+    else:
+        delta = (datetime.now() - old)
+        ms = delta.seconds * 1000 + delta.microseconds/1000
+    return ms
+start = now()
 
 while True:
     line = f.readline()
@@ -64,11 +77,14 @@ while True:
     data = json.loads(line)
     mapreduce.map(0, data, histogram_specs, context)
 
-if jython:
-    ms = (Date().getTime() - start.getTime())
-else:
-    delta = (datetime.now() - start)
-    ms = delta.seconds * 1000 + delta.microseconds/1000
+ms = time_delta(start)
 
-print str(1000*bytes_read/1024/1024/ms) + " MB/s %d bytes in %s seconds" % (bytes_read, ms/1000)
-context.summarize()
+
+print  "read %s MB/s %d bytes in %s seconds" % (str(1000*bytes_read/1024/1024/ms), bytes_read, ms/1000)
+
+start = now()
+reduce_context = Context()
+for key, values in context.iteritems():
+    mapreduce.reduce(key, values, reduce_context)
+reduce_context.summarize()
+print "reduce in %d ms" % time_delta(start)
