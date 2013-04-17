@@ -5,10 +5,14 @@ import os
 import mapreduce
 import histogram_tools
 try:
-    import simplejson as json
-    print "Using simplejson for faster json parsing"
+    import ujson as json
+    print "Using ujson for faster json parsing"
 except ImportError:
-    import json
+    try:
+        import simplejson as json
+        print "Using simplejson for faster json parsing"
+    except ImportError:
+        import json
 try:
     from java.util import Date
     jython = True
@@ -55,7 +59,6 @@ class OutContext:
         self.out = open(sys.argv[2], 'w')
         
     def write(self, key, value):
-        total = value[-1]
         self.out.write("%s\t%s\n" % (key, value))
     
 context = Context()
