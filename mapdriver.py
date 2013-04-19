@@ -5,34 +5,11 @@ import os
 import mapreduce
 import histogram_tools
 try:
-    import ujson as json
-    print "Using ujson for faster json parsing"
-except ImportError:
-    try:
-        import simplejson as json
-        print "Using simplejson for faster json parsing"
-    except ImportError:
-        import json
-try:
     from java.util import Date
     jython = True
 except ImportError:
     from datetime import datetime
     jython = False
-
-
-histogram_specs = {}
-
-for h in histogram_tools.from_file(sys.argv[1]):
-    try:
-        buckets = map(str, h.ranges())
-        bucket2index = {}
-        for i in range(0, len(buckets)):
-            bucket2index[buckets[i]] = i
-        histogram_specs[h.name()] = bucket2index
-    except:
-        print "Could not figure out bucket range for %s" % h.name()
-
 
 f = sys.stdin
 
@@ -56,7 +33,7 @@ class Context:
 
 class OutContext:
     def __init__(self):
-        self.out = open(sys.argv[2], 'w')
+        self.out = open(sys.argv[1], 'w')
         
     def write(self, key, value):
         self.out.write("%s\t%s\n" % (key, value))
@@ -85,8 +62,7 @@ while True:
         else:
             continue
     bytes_read += l
-    data = json.loads(line)
-    mapreduce.map(0, data, histogram_specs, context)
+    mapreduce.map(bytes_read, line, context)
 
 ms = time_delta(start)
 
