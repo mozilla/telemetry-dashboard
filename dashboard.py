@@ -19,24 +19,19 @@ def map(uid, line, context):
         histogram_specs = json.loads(jydoop.getResource("scripts/histogram_specs.json"))
 
     payload = json.loads(line)
-    i = payload['info']
-    channel = i.get('appUpdateChannel', "too_old")
-    OS = i['OS']
-    appName = i['appName']
-    reason = i['reason']
     try:
-        """
-        UnicodeEncodeError: 'ascii' codec can't encode characters in position 7-12: ordinal not in range(128)
-
-        todo: log weirdo stuff like this
-        """
+        i = payload['info']
+        channel = i.get('appUpdateChannel', "too_old")
+        OS = i['OS']
+        appName = i['appName']
+        reason = i['reason']
         osVersion = str(i['version'])
+        appVersion = i['appVersion']
+        arch = i['arch']
+        buildDate = i['appBuildID'][:8]
     except:
         return
-    appVersion = i['appVersion']
-    arch = i['arch']
-    buildDate = i['appBuildID'][:8]
-    #print [buildDate, channel, arch]
+
     # todo combine OS + osVersion + santize on crazy platforms like linux to reduce pointless choices
     if OS == "Linux":
         osVersion = osVersion[:3]
@@ -53,7 +48,10 @@ def map(uid, line, context):
         # most buckets contain 0s, so preallocation is a significant win
         outarray = [0] * (len(bucket2index) + 2)
         error = False
-        for bucket, value in h_values['values'].iteritems():
+        values = h_values.get('values', None)
+        if values == None:
+            continue
+        for bucket, value in values.iteritems():
             index = bucket2index.get(bucket, None)
             if index == None:
                 #print "%s's does not feature %s bucket in schema" % (h_name, bucket)
@@ -63,7 +61,10 @@ def map(uid, line, context):
         if error:
             continue
 
-        outarray[-2] = h_values['sum']
+        histogram_sum = h_values.get('sum', None)
+        if histogram_sum == None:
+            continue
+        outarray[-2] = histogram_sum
         outarray[-1] = 1        # count
         context.write((channel, appVersion, h_name), {path: outarray})
 
