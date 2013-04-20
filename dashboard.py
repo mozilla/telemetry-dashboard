@@ -89,6 +89,6 @@ def reduce(key, values, context):
     final_out = {}
     for (filter_path, histogram) in out.iteritems():
         final_out["/".join(filter_path)] = histogram
-    context.write("/".join(key), final_out)
+    context.write("/".join(key), json.dumps(final_out))
 
 setupjob = telemetryutils.setupjob
