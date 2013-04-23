@@ -5,8 +5,11 @@ try:
 except ImportError:
     import json
 from datetime import datetime
+import specgen
 
-OUTDIR = sys.argv[1]
+SPEC_FILE = sys.argv[1]
+OUTDIR = sys.argv[2]
+gSPECS = specgen.get(SPEC_FILE)
 
 def time_delta(old):
     delta = (datetime.now() - old)
@@ -115,17 +118,33 @@ def flush_histograms(histograms, (channel, version)):
             v1[date] = mergeFilteredHistograms(v1[date], v2[date])
         return h1
 
+    def merge_histograms_filters_key(h1, h2):
+        if h2 == None:
+            return h1
+        s1 = set(h1.keys());
+        s2 = set(h2.keys());
+        for name in s2.difference(s1):
+            h1[name] = h2[name]
+
+        for name in s1.intersection(s2):
+            s = set(h1[name])
+            s.update(h2[name])
+            h1[name] = list(s)
+        return h1
+
     outdir = "%s/%s/%s" % (OUTDIR, channel, version)
     filters = {}
     filters['root'] = readExisting("%s/filter.json" % outdir, {'_id':"0", 'name':'reason'})
     filters['idcount'] = findMaxId(filters['root'], 0) + 1
     # mapping of histogram to useful filter values(no point in showing filters that contain no data)
     histograms_filters_key = {}
-    for h_name, h_contents in histograms.iteritems():
+
+    for h_name, h_body in histograms.iteritems():
         valid_filters = set()
-        for date, values_by_filterpath in h_contents.iteritems():
+        h_values = h_body['values']
+        for date, values_by_filterpath in h_values.iteritems():
             filtered_values = []
-            h_contents[date] = filtered_values
+            h_values[date] = filtered_values
             for filterpath,values in values_by_filterpath.iteritems():
                 #['reason', 'appName', 'OS', 'osVersion', 'arch']
                 ls = filterpath.split('/')
@@ -135,9 +154,9 @@ def flush_histograms(histograms, (channel, version)):
                 # record that this histogram has data for this filter
                 valid_filters.add(id)
         filename = "%s/%s.json" % (outdir, h_name)
-        h_contents = mergeAggHistograms(h_contents, readExisting(filename, None))
-        writeJSON(filename, h_contents)
-        histograms_filters_key[name] = list(valid_filters)
+        h_body = mergeAggHistograms(h_body, readExisting(filename, None))
+        writeJSON(filename, h_body)
+        histograms_filters_key[h_name] = list(valid_filters)
     histogramsfile = "%s/histograms.json" % outdir
     writeJSON(histogramsfile, 
               merge_histograms_filters_key(histograms_filters_key,
@@ -165,8 +184,10 @@ while True:
         histograms = {}
     value = json.loads(value)
     assert(not histogram_name in histograms)
+    global gSPECS
     histogram = {}
-    histograms[histogram_name] = histogram
+    # todo, map/reduce job should output relevant buckets(or relevant info to generate them)
+    histograms[histogram_name] = {'buckets':gSPECS[histogram_name], 'values':histogram}
     for key, values in value.iteritems():
         (date, filterpath) = split(key,'/')
         histogram_values_by_filterpath = histogram.get(date, None)
