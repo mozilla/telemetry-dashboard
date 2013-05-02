@@ -9,7 +9,7 @@ on test data: `python FileDriver.py scripts/dashboard.py json_per_line.txt out.t
 `python mr2disk.py outdir < out.txt`
 
 
-Histogram View:
+#Histogram View
 There are x fields to narrow query by
 
 have a category table that stores category tree:
@@ -29,7 +29,7 @@ columns: histogram_id | category_id | value
 where histogram_id is id like SHUTDOWN_OK, category id is a key from category table, value is the sum of histograms in that category...can be represented with some binary value
 
 
-##############
+#Misc
 Evolution can be implemented by adding a build_date field to histogram table
 
 TODO:
