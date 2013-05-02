@@ -4,6 +4,7 @@
 
 2. Run map/reduce.
 on test data: `python FileDriver.py scripts/dashboard.py json_per_line.txt out.txt`
+on hadoop(after copying histogram_specs.json + dashboard.py into jydoop/scripts): ` time make ARGS="scripts/dashboard.py out.txt 20130429-yyyyMMdd 20130429-yyyyMMdd" hadoop`
 
 3. Output/update ondisk data using out.txt from above.
 `python mr2disk.py outdir < out.txt`
