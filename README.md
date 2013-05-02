@@ -1,3 +1,14 @@
+#How to Run
+
+1. Generate metadata needed to validate incoming histograms `python specgen.py validation/nightly/23.0a1/histogram_descriptions.json > histogram_specs.json`
+
+2. Run map/reduce.
+on test data: `python FileDriver.py scripts/dashboard.py json_per_line.txt out.txt`
+
+3. Output/update ondisk data using out.txt from above.
+`python mr2disk.py outdir < out.txt`
+
+
 Histogram View:
 There are x fields to narrow query by
 
@@ -18,7 +29,7 @@ columns: histogram_id | category_id | value
 where histogram_id is id like SHUTDOWN_OK, category id is a key from category table, value is the sum of histograms in that category...can be represented with some binary value
 
 
-==============
+##############
 Evolution can be implemented by adding a build_date field to histogram table
 
 TODO:
@@ -26,7 +37,7 @@ How big would the category tree table be..surely there is a finite size for that
 
 histogram table would be |category_table| * |number of histograms|, pretty compact
 
-=============== Map + Reduce
+############### Map + Reduce
 Mapper should turn each submission into 
 <key> <data> which looks like 
 buildid/channel/reason/appName/appVersion/OS/osVersion/arch {histograms:{A11Y_CONSUMERS:{histogram_data}, ...} simpleMeasures:{firstPaint:[100,101,1000...]}}

@@ -21,7 +21,7 @@ def mapping(filename):
             bucket2index = {}
             for i in range(0, len(buckets)):
                 bucket2index[buckets[i]] = i
-            histogram_specs[name] = bucket2index
+            histogram_specs[name] = (bucket2index, ranges)
     return histogram_specs
 
 """

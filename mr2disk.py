@@ -7,9 +7,7 @@ except ImportError:
 from datetime import datetime
 import specgen
 
-SPEC_FILE = sys.argv[1]
-OUTDIR = sys.argv[2]
-gSPECS = specgen.get(SPEC_FILE)
+OUTDIR = sys.argv[1]
 
 def time_delta(old):
     delta = (datetime.now() - old)
@@ -182,13 +180,13 @@ while True:
             flush_histograms(histograms, current_release)
         current_release = (channel, version)
         histograms = {}
-    value = json.loads(value)
     assert(not histogram_name in histograms)
-    global gSPECS
     histogram = {}
+    # mrHistogram = histogram from map/reduce job
+    mrHistogram = json.loads(value)
     # todo, map/reduce job should output relevant buckets(or relevant info to generate them)
-    histograms[histogram_name] = {'buckets':gSPECS[histogram_name], 'values':histogram}
-    for key, values in value.iteritems():
+    histograms[histogram_name] = {'buckets':mrHistogram['buckets'], 'values':histogram}
+    for key, values in mrHistogram['values'].iteritems():
         (date, filterpath) = split(key,'/')
         histogram_values_by_filterpath = histogram.get(date, None)
         if histogram_values_by_filterpath == None:

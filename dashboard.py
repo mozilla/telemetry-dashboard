@@ -1,22 +1,15 @@
 try:
-    import ujson as json
-    print "Using ujson for faster json parsing"
+    import simplejson as json
+    print "Using simplejson for faster json parsing"
 except ImportError:
-    try:
-        import simplejson as json
-        print "Using simplejson for faster json parsing"
-    except ImportError:
-        import json
+    import json
 import telemetryutils
 import jydoop
 
-histogram_specs = None
+histogram_specs = json.loads(jydoop.getResource("scripts/histogram_specs.json"))
 
 def map(uid, line, context):
     global histogram_specs
-    if histogram_specs == None:
-        #print "loading specs"
-        histogram_specs = json.loads(jydoop.getResource("scripts/histogram_specs.json"))
 
     payload = json.loads(line)
     try:
@@ -31,6 +24,10 @@ def map(uid, line, context):
         buildDate = i['appBuildID'][:8]
     except:
         return
+    
+    # TODO: histogram_specs should specify the list of versions/channels we care about
+    if not channel in ['release', 'aurora', 'nightly', 'beta', 'nightly-ux']:
+        return
 
     # todo combine OS + osVersion + santize on crazy platforms like linux to reduce pointless choices
     if OS == "Linux":
@@ -44,6 +41,8 @@ def map(uid, line, context):
         bucket2index = histogram_specs.get(h_name, None)
         if bucket2index == None:
             continue
+        else:
+            bucket2index = bucket2index[0]
         
         # most buckets contain 0s, so preallocation is a significant win
         outarray = [0] * (len(bucket2index) + 2)
@@ -86,9 +85,17 @@ def combine(key, values, context):
 
 def reduce(key, values, context):
     out = commonCombine(values)
-    final_out = {}
+    out_values = {}
     for (filter_path, histogram) in out.iteritems():
-        final_out["/".join(filter_path)] = histogram
+        out_values["/".join(filter_path)] = histogram
+    h_name = key[2]
+    # histogram_specs lookup below is guranteed to succeed, because of mapper
+    final_out = {'buckets': histogram_specs.get(h_name)[1], 'values':out_values}
     context.write("/".join(key), json.dumps(final_out))
+
+def output(path, results):
+    f = open(path, 'w')
+    for k, v in results:
+        f.write(k + "\t" + v + "\n")
 
 setupjob = telemetryutils.setupjob
