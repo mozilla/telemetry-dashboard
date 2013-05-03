@@ -19,7 +19,8 @@ def map(uid, line, context):
         appName = i['appName']
         reason = i['reason']
         osVersion = str(i['version'])
-        appVersion = i['appVersion']
+        #only care about major versions
+        appVersion = i['appVersion'].split('.')[0]
         arch = i['arch']
         buildDate = i['appBuildID'][:8]
     except:

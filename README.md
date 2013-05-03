@@ -1,5 +1,7 @@
 #How to Run
 
+0. `make download` to get dependencies
+
 1. Generate metadata needed to validate incoming histograms `python specgen.py validation/nightly/23.0a1/histogram_descriptions.json > histogram_specs.json`
 
 2. Run map/reduce.
@@ -7,8 +9,9 @@ on test data: `python FileDriver.py scripts/dashboard.py json_per_line.txt out.t
 on hadoop(after copying histogram_specs.json + dashboard.py into jydoop/scripts): ` time make ARGS="scripts/dashboard.py out.txt 20130429-yyyyMMdd 20130429-yyyyMMdd" hadoop`
 
 3. Output/update ondisk data using out.txt from above.
-`python mr2disk.py outdir < out.txt`
+`python mr2disk.py html/data/ < out.txt`
 
+4. point http server at html/ dir and enjoy
 
 #Histogram View
 There are x fields to narrow query by

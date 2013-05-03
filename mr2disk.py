@@ -28,6 +28,16 @@ def readExisting(filename, default):
         return obj
     except IOError:
         return default
+def writeJSON(filename, obj):
+    # try to make a directory if can't open a file for writing
+    try:
+        f = open(filename, 'w')
+    except IOError:
+        os.makedirs(os.path.dirname(filename))
+        f = open(filename, 'w')
+    f.write(json.dumps(obj))
+    f.close()
+    print "Wrote " + filename
 
 def flush_histograms(histograms, (channel, version)):
     """If we read-in a file from disk, need to traverse the datastructure to fix the next id to continue from"""
@@ -58,16 +68,6 @@ def flush_histograms(histograms, (channel, version)):
                 atm[pvalue] = tmp;
                 atm = tmp
         return atm['_id']
-    def writeJSON(filename, obj):
-        # try to make a directory if can't open a file for writing
-        try:
-            f = open(filename, 'w')
-        except IOError:
-            os.makedirs(os.path.dirname(filename))
-            f = open(filename, 'w')
-        f.write(json.dumps(obj))
-        f.close()
-        print "Wrote " + filename
     def indexFilterArray(hls):
         out = {}
         for i in range(0, len(hls)):
@@ -159,6 +159,7 @@ def flush_histograms(histograms, (channel, version)):
     writeJSON(histogramsfile, 
               merge_histograms_filters_key(histograms_filters_key,
                                            readExisting(histogramsfile, None)))
+    writeJSON("%s/filter.json" % outdir, filters['root'])
 
 
 start = datetime.now()
@@ -166,11 +167,18 @@ bytes_read = 0
 
 histograms = {}
 current_release = None
+outputdirs = {}
+e = readExisting("%s/versions.json" % OUTDIR, None)
+if e:
+    for entry in e:
+        outputdirs[entry] = 1
+
 while True:
     line = sys.stdin.readline()
     l = len(line)
     if l == 0:
         flush_histograms(histograms, current_release)
+        outputdirs["/".join(current_release)] = 1
         break
     bytes_read += l 
     (key, value) = split(line[:-1], '\t')
@@ -178,6 +186,7 @@ while True:
     if (channel, version) != current_release:
         if current_release != None:
             flush_histograms(histograms, current_release)
+            outputdirs["/".join(current_release)] = 1
         current_release = (channel, version)
         histograms = {}
     assert(not histogram_name in histograms)
@@ -195,5 +204,6 @@ while True:
         assert(not filterpath in histogram_values_by_filterpath)
         histogram_values_by_filterpath[filterpath] = values
 
+writeJSON("%s/versions.json" % OUTDIR, sorted(outputdirs.keys()))
 ms = time_delta(start)
 sys.stderr.write("read %s MB/s %d bytes in %s seconds\n" % (str(1000*bytes_read/1024/1024/ms), bytes_read, ms/1000))
