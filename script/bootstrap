@@ -1,0 +1,41 @@
+#!/bin/sh
+# Make sure all local dependencies are avaialable.
+
+set -e
+
+cd $(dirname "$0")/..
+
+VALIDATION=validation
+VENV=.venv
+
+# get jydoop
+git submodule update --init --recursive
+
+
+if [ ! -d "$VENV/bin" ]; then
+  virtualenv $VENV --no-site-packages
+fi
+
+source $VENV/bin/activate
+pip install -q -r requirements/compiled.txt
+pip install -q -r requirements/prod.txt
+
+# update histogram_tools.py
+rm -rf histogram_tools.py
+wget -qc http://hg.mozilla.org/mozilla-central/raw-file/139b6ba547fa/toolkit/components/telemetry/histogram_tools.py
+
+# clear old branches and download new ones
+rm -rf $VALIDATION
+python fetch_histogram_specs.py
+
+# run specgen
+for I in $(find validation -name '*.json')
+do
+    python specgen.py $I > $(dirname $I)histogram_specs.py
+done
+
+# package up jydoop
+if [ -f jydoop/scripts/dashboard.py ]; then
+    rm jydoop/scripts/dashboard.py
+fi
+cp dashboard.py jydoop/scripts
