@@ -1,16 +1,15 @@
 #!/bin/sh
 # Make sure all local dependencies are avaialable.
+# requires a stable mango connection
 
 set -e
 
 cd $(dirname "$0")/..
 
-VALIDATION=validation
 VENV=.venv
 
 # get jydoop
 git submodule update --init --recursive
-
 
 if [ ! -d "$VENV/bin" ]; then
   virtualenv $VENV --no-site-packages
@@ -25,13 +24,13 @@ rm -rf histogram_tools.py
 wget -qc http://hg.mozilla.org/mozilla-central/raw-file/139b6ba547fa/toolkit/components/telemetry/histogram_tools.py
 
 # clear old branches and download new ones
-rm -rf $VALIDATION
+rm -rf validation
 python fetch_histogram_specs.py
 
 # run specgen
 for I in $(find validation -name '*.json')
 do
-    python specgen.py $I > $(dirname $I)histogram_specs.py
+    python specgen.py $I > $(dirname $I)/histogram_specs.py
 done
 
 # package up jydoop
@@ -39,3 +38,29 @@ if [ -f jydoop/scripts/dashboard.py ]; then
     rm jydoop/scripts/dashboard.py
 fi
 cp dashboard.py jydoop/scripts
+
+# TODO: from here on needs to be done in a loop to support multiple branches
+# right now it will only finish the job for the last specgen created
+if [ -f jydoop/scripts/histogram_specs.json ]; then
+    rm jydoop/scripts/histogram_specs.json
+fi
+cp $I jydoop/scripts/histogram_specs.json
+
+# Copy everything to mango, hop over and run the job, copy the result back
+ssh mango << EOT
+rm -rf jydoop/
+exit
+EOT
+
+scp -r jydoop mango:
+ssh mango << EOT
+cd jydoop/
+time make ARGS="scripts/dashboard.py out.txt 20130429-yyyyMMdd 20130429-yyyyMMdd" hadoop
+exit
+EOT
+scp mango:jydoop/out.txt .
+
+if [ -d html/data ]; then
+    rm -rf html/data
+fi
+python mr2disk.py html/data < out.txt

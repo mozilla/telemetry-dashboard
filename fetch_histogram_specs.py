@@ -12,7 +12,7 @@ build_map = {
     'beta': 'releases/mozilla-beta',
     'nightly': 'integration/mozilla-inbound',
     'release': 'releases/mozilla-release',
-    'ux': 'projects/ux'
+    #'ux': 'projects/ux'
 }
 
 
@@ -34,7 +34,7 @@ def main():
             os.makedirs(directory_path)
         except OSError:
             print directory_path, "already exists. Overwriting."
-        with open(directory_path + "/Histograms.json", 'w') as o:
+        with open(directory_path + "/histogram_specs.json", 'w') as o:
             [o.write(x) for x in response.text]
 
 if __name__ == '__main__':

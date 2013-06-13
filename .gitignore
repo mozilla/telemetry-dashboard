@@ -1,2 +1,9 @@
+*.pyc
+
+histogram_tools.py
 histogram_specs.py
 validation/
+html/data
+out.txt
+
+.venv
