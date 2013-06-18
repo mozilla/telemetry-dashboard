@@ -11,6 +11,10 @@ VENV=.venv
 # get jydoop
 git submodule update --init --recursive
 
+cd jydoop
+make download
+cd ../
+
 if [ ! -d "$VENV/bin" ]; then
   virtualenv $VENV --no-site-packages
 fi
