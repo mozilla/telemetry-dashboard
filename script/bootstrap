@@ -13,23 +13,8 @@ pushd jydoop
 make download
 popd
 
-# use this to override the checked in venv
-if [ "$TEL_DASH_VENV" ]; then
-    VENV=$TEL_DASH_VENV
-else
-    VENV=.venv
-fi
-
-# if $VENV doesn't exist, then create it and install
-if [ ! -d "$VENV/bin" ]; then
-  virtualenv $VENV --no-site-packages
-  source $VENV/bin/activate
-  pip install -q -r requirements/compiled.txt
-  pip install -q -r requirements/prod.txt
-fi
-
-# if $VENV did exist we'll need to activate it
-source $VENV/bin/activate
+# TODO: need a better virtual env solution
+# compiled libs will magically be there in prod
 
 make clean
 make download

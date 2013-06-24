@@ -1,1 +1,0 @@
-/opt/boxen/homebrew/Cellar/python/2.7.3-boxen2/Frameworks/Python.framework/Versions/2.7/lib/python2.7/copy_reg.py
