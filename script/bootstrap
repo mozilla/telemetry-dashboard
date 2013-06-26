@@ -45,7 +45,7 @@ EOT
 scp mango:jydoop/out.txt .
 
 if [ -d html/data ]; then
-    rm -rf html/data
+    rm -rf html/data/*
 fi
 
 python mr2disk.py html/data < out.txt
