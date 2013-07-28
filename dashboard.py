@@ -25,7 +25,7 @@ def map(uid, line, context):
         appVersion = i['appVersion'].split('.')[0]
         arch = i['arch']
         buildDate = i['appBuildID'][:8]
-    except:
+    except (KeyError, IndexError):
         return
 
     # TODO: histogram_specs should specify the list of versions/channels we
@@ -93,6 +93,11 @@ def combine(key, values, context):
 
 
 def reduce(key, values, context):
+    for value in values:
+        if type(value) != int:
+            # no way to log malformed data in m/r
+            # so just discard malformed values
+            return
     out = commonCombine(values)
     out_values = {}
     for (filter_path, histogram) in out.iteritems():
