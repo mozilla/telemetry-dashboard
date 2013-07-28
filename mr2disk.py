@@ -1,23 +1,26 @@
-import sys, os
+import os
+import sys
 try:
     import simplejson as json
     sys.stderr.write("Using simplejson for faster json parsing\n")
 except ImportError:
     import json
 from datetime import datetime
-import specgen
 
 OUTDIR = sys.argv[1]
 
+
 def time_delta(old):
     delta = (datetime.now() - old)
-    ms = delta.seconds * 1000 + delta.microseconds/1000.0
+    ms = delta.seconds * 1000 + delta.microseconds / 1000.0
     return ms
+
 
 def split(str, sep):
     sep = str.find(sep)
     assert(sep != -1)
-    return (str[:sep], str[sep+1:])
+    return (str[:sep], str[sep + 1:])
+
 
 def readExisting(filename, default):
     try:
@@ -28,6 +31,8 @@ def readExisting(filename, default):
         return obj
     except IOError:
         return default
+
+
 def writeJSON(filename, obj):
     # try to make a directory if can't open a file for writing
     try:
@@ -39,8 +44,11 @@ def writeJSON(filename, obj):
     f.close()
     print "Wrote " + filename
 
+
 def flush_histograms(histograms, (channel, version)):
-    """If we read-in a file from disk, need to traverse the datastructure to fix the next id to continue from"""
+    """If we read-in a file from disk, need to traverse the datastructure to
+       fix the next id to continue from
+    """
     def findMaxId(tree, maxid):
         id = int(tree['_id'])
         if id > maxid:
@@ -50,6 +58,7 @@ def flush_histograms(histograms, (channel, version)):
                 continue
             maxid = findMaxId(subtree, maxid)
         return maxid
+
     def getId(tree_args):
         assert(len(tree_args) == 5)
         atm = filters['root']
@@ -61,13 +70,16 @@ def flush_histograms(histograms, (channel, version)):
             except KeyError:
                 # names for entries in filter tree
                 key = ['reason', 'appName', 'OS', 'osVersion', 'arch']
-                tmp = {'_id':filters['idcount']}
+                tmp = {
+                    '_id': filters['idcount']
+                }
                 if i < len(key):
                     tmp['name'] = key[i]
                 filters['idcount'] += 1
-                atm[pvalue] = tmp;
+                atm[pvalue] = tmp
                 atm = tmp
         return atm['_id']
+
     def indexFilterArray(hls):
         out = {}
         for i in range(0, len(hls)):
@@ -88,21 +100,19 @@ def flush_histograms(histograms, (channel, version)):
             for i in range(0, len(h1) - 1):
                 h1[i] += h2[i]
 
-
         for f in s2.difference(s2):
             h2 = hls2[f2[f]]
             hls1.append(h2)
         return hls1
 
-
-    """merge h2 into h1"""
     def mergeAggHistograms(h1, h2):
-        if h2 == None:
+        """merge h2 into h1"""
+        if h2 is None:
             return h1
         if h1['buckets'] != h2['buckets']:
             print ["old buckets:", h2['buckets']]
             print ["new buckets:", h1['buckets']]
-            sys.exit(1);
+            sys.exit(1)
 
         dates1 = set()
         dates2 = set()
@@ -117,10 +127,10 @@ def flush_histograms(histograms, (channel, version)):
         return h1
 
     def merge_histograms_filters_key(h1, h2):
-        if h2 == None:
+        if h2 is None:
             return h1
-        s1 = set(h1.keys());
-        s2 = set(h2.keys());
+        s1 = set(h1.keys())
+        s2 = set(h2.keys())
         for name in s2.difference(s1):
             h1[name] = h2[name]
 
@@ -132,9 +142,15 @@ def flush_histograms(histograms, (channel, version)):
 
     outdir = "%s/%s/%s" % (OUTDIR, channel, version)
     filters = {}
-    filters['root'] = readExisting("%s/filter.json" % outdir, {'_id':"0", 'name':'reason'})
+    filters['root'] = readExisting(
+        "%s/filter.json" % outdir,
+        {
+            '_id': "0",
+            'name': 'reason'
+        })
     filters['idcount'] = findMaxId(filters['root'], 0) + 1
-    # mapping of histogram to useful filter values(no point in showing filters that contain no data)
+    # mapping of histogram to useful filter values (no point in showing filters
+    # that contain no data)
     histograms_filters_key = {}
 
     for h_name, h_body in histograms.iteritems():
@@ -143,7 +159,7 @@ def flush_histograms(histograms, (channel, version)):
         for date, values_by_filterpath in h_values.iteritems():
             filtered_values = []
             h_values[date] = filtered_values
-            for filterpath,values in values_by_filterpath.iteritems():
+            for filterpath, values in values_by_filterpath.iteritems():
                 #['reason', 'appName', 'OS', 'osVersion', 'arch']
                 ls = filterpath.split('/')
                 id = getId(ls)
@@ -156,7 +172,7 @@ def flush_histograms(histograms, (channel, version)):
         writeJSON(filename, h_body)
         histograms_filters_key[h_name] = list(valid_filters)
     histogramsfile = "%s/histograms.json" % outdir
-    writeJSON(histogramsfile, 
+    writeJSON(histogramsfile,
               merge_histograms_filters_key(histograms_filters_key,
                                            readExisting(histogramsfile, None)))
     writeJSON("%s/filter.json" % outdir, filters['root'])
@@ -180,11 +196,11 @@ while True:
         flush_histograms(histograms, current_release)
         outputdirs["/".join(current_release)] = 1
         break
-    bytes_read += l 
+    bytes_read += l
     (key, value) = split(line[:-1], '\t')
     [channel, version, histogram_name] = key.split('/')
     if (channel, version) != current_release:
-        if current_release != None:
+        if current_release is not None:
             flush_histograms(histograms, current_release)
             outputdirs["/".join(current_release)] = 1
         current_release = (channel, version)
@@ -193,12 +209,16 @@ while True:
     histogram = {}
     # mrHistogram = histogram from map/reduce job
     mrHistogram = json.loads(value)
-    # todo, map/reduce job should output relevant buckets(or relevant info to generate them)
-    histograms[histogram_name] = {'buckets':mrHistogram['buckets'], 'values':histogram}
+    # todo, map/reduce job should output relevant buckets(or relevant info to
+    # generate them)
+    histograms[histogram_name] = {
+        'buckets': mrHistogram['buckets'],
+        'values': histogram
+    }
     for key, values in mrHistogram['values'].iteritems():
-        (date, filterpath) = split(key,'/')
+        (date, filterpath) = split(key, '/')
         histogram_values_by_filterpath = histogram.get(date, None)
-        if histogram_values_by_filterpath == None:
+        if histogram_values_by_filterpath is None:
             histogram_values_by_filterpath = {}
             histogram[date] = histogram_values_by_filterpath
         assert(not filterpath in histogram_values_by_filterpath)
@@ -206,4 +226,6 @@ while True:
 
 writeJSON("%s/versions.json" % OUTDIR, sorted(outputdirs.keys()))
 ms = time_delta(start)
-sys.stderr.write("read %s MB/s %d bytes in %s seconds\n" % (str(1000*bytes_read/1024/1024/ms), bytes_read, ms/1000))
+sys.stderr.write("read %s MB/s %d bytes in %s seconds\n"
+                 % (str(1000 * bytes_read / 1024 / 1024 / ms),
+                 bytes_read, ms / 1000))

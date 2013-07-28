@@ -6,7 +6,9 @@ except ImportError:
 import telemetryutils
 import jydoop
 
-histogram_specs = json.loads(jydoop.getResource("scripts/histogram_specs.json"))
+histogram_specs = json.loads(
+    jydoop.getResource("scripts/histogram_specs.json"))
+
 
 def map(uid, line, context):
     global histogram_specs
@@ -23,38 +25,41 @@ def map(uid, line, context):
         appVersion = i['appVersion'].split('.')[0]
         arch = i['arch']
         buildDate = i['appBuildID'][:8]
-    except:
+    except (KeyError, IndexError):
         return
-    
-    # TODO: histogram_specs should specify the list of versions/channels we care about
+
+    # TODO: histogram_specs should specify the list of versions/channels we
+    #       care about
     if not channel in ['release', 'aurora', 'nightly', 'beta', 'nightly-ux']:
         return
 
-    # todo combine OS + osVersion + santize on crazy platforms like linux to reduce pointless choices
+    # todo combine OS + osVersion + santize on crazy platforms like linux to
+    #      reduce pointless choices
     if OS == "Linux":
         osVersion = osVersion[:3]
 
     path = (buildDate, reason, appName, OS, osVersion, arch)
     histograms = payload.get('histograms', None)
-    if histograms == None:
+    if histograms is None:
         return
     for h_name, h_values in histograms.iteritems():
         bucket2index = histogram_specs.get(h_name, None)
-        if bucket2index == None:
+        if bucket2index is None:
             continue
         else:
             bucket2index = bucket2index[0]
-        
+
         # most buckets contain 0s, so preallocation is a significant win
         outarray = [0] * (len(bucket2index) + 2)
         error = False
         values = h_values.get('values', None)
-        if values == None:
+        if values is None:
             continue
         for bucket, value in values.iteritems():
             index = bucket2index.get(bucket, None)
-            if index == None:
-                #print "%s's does not feature %s bucket in schema" % (h_name, bucket)
+            if index is None:
+                #print "%s's does not feature %s bucket in schema"
+                #    % (h_name, bucket)
                 error = True
                 break
             outarray[index] = value
@@ -62,37 +67,49 @@ def map(uid, line, context):
             continue
 
         histogram_sum = h_values.get('sum', None)
-        if histogram_sum == None:
+        if histogram_sum is None:
             continue
         outarray[-2] = histogram_sum
         outarray[-1] = 1        # count
         context.write((channel, appVersion, h_name), {path: outarray})
+
 
 def commonCombine(values):
     out = {}
     for d in values:
         for filter_path, histogram in d.iteritems():
             existing = out.get(filter_path, None)
-            if existing == None:
+            if existing is None:
                 out[filter_path] = histogram
                 continue
             for y in range(0, len(histogram)):
-                existing[y] += histogram[y] 
+                existing[y] += histogram[y]
     return out
+
 
 def combine(key, values, context):
     out = commonCombine(values)
     context.write(key, out)
 
+
 def reduce(key, values, context):
+    for value in values:
+        if type(value) != int:
+            # no way to log malformed data in m/r
+            # so just discard malformed values
+            return
     out = commonCombine(values)
     out_values = {}
     for (filter_path, histogram) in out.iteritems():
         out_values["/".join(filter_path)] = histogram
     h_name = key[2]
     # histogram_specs lookup below is guranteed to succeed, because of mapper
-    final_out = {'buckets': histogram_specs.get(h_name)[1], 'values':out_values}
+    final_out = {
+        'buckets': histogram_specs.get(h_name)[1],
+        'values': out_values
+    }
     context.write("/".join(key), json.dumps(final_out))
+
 
 def output(path, results):
     f = open(path, 'w')
