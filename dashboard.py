@@ -3,6 +3,7 @@ try:
     print "Using simplejson for faster json parsing"
 except ImportError:
     import json
+import sys
 import telemetryutils
 import jydoop
 
@@ -93,14 +94,16 @@ def combine(key, values, context):
 
 
 def reduce(key, values, context):
-    for value in values:
-        if type(value) != int:
-            # no way to log malformed data in m/r
-            # so just discard malformed values
-            return
     out = commonCombine(values)
     out_values = {}
     for (filter_path, histogram) in out.iteritems():
+        # first, discard any malformed (non int) entries
+        malformed_data = [type(_) for _ in histogram if type(_) is not int]
+        if len(malformed_data):
+            msg = ("discarding %s. contrained malformed type(s): %s" %
+                   ('/'.join(filter_path), set(malformed_data)))
+            print >> sys.stderr, msg
+            return
         out_values["/".join(filter_path)] = histogram
     h_name = key[2]
     # histogram_specs lookup below is guranteed to succeed, because of mapper
