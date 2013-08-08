@@ -53,6 +53,9 @@ def map(uid, line, context):
         # most buckets contain 0s, so preallocation is a significant win
         outarray = [0] * (len(bucket2index) + 2)
         error = False
+        if h_values is None:
+            continue
+
         values = h_values.get('values', None)
         if values is None:
             continue
