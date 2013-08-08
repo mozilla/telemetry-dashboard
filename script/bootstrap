@@ -39,14 +39,10 @@ EOT
 scp -r jydoop mango:
 ssh mango << EOT
 cd jydoop/
-time make ARGS="scripts/dashboard.py out.txt 20130806-yyyyMMdd 20130806-yyyyMMdd" hadoop
+time make ARGS="scripts/dashboard.py out.txt 20130808-yyyyMMdd 20130808-yyyyMMdd" hadoop
 exit
 EOT
 scp mango:jydoop/out.txt .
-
-if [ -d html/data ]; then
-    rm -rf html/data/*
-fi
 
 python mr2disk.py html/data < out.txt
 
