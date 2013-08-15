@@ -87,7 +87,7 @@ def commonCombine(values):
                 out[filter_path] = histogram
                 continue
             for y in range(0, len(histogram)):
-                existing[y] += histogram[y]
+                existing[y] += (histogram[y] or 0)
     return out
 
 
