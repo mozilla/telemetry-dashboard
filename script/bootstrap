@@ -1,17 +1,51 @@
-#!/bin/sh
-# Make sure all local dependencies are avaialable.
-# requires a stable mango connection
+#!/bin/bash
+# Ensures all local dependencies are available, including data extracted from
+# Hadoop.
+#
+# usage: ./bootstrap {startdate:options} {enddate:optional}
+# usage: ./bootstrap 20130101 20131231
+# usage: ./bootstrap 20131231
+# usage: ./bootstrap
+#
+# with no arguments, bootstrap will pull down yesterday's data
+# with one argument, bootstrap will pull down that date's data
+# with two arguments, bootstrap will pull down data between those dates,
+#   inclusive
+#
+# it is poor form to pull down data for days that are not complete (today)
+# execution depends on a connection to "mango" aliased in known_hosts
 
 set -e
 
 cd $(dirname "$0")/..
 
-# get jydoop
+if [ ! -z $1 ]
+then
+    STARTDATE=$1
+else
+    STARTDATE=`python -c "from datetime import date, timedelta; print (date.today() - timedelta(1)).strftime('%Y%m%d')"`
+fi
+
+if [ ! -z $2 ]
+then
+    ENDDATE=$2
+else
+    ENDDATE=$STARTDATE
+fi
+
+function puts-step (){
+    echo "--> $@"
+}
+
+puts-step "Fetching and building Jydoop..."
+
 git submodule update --init --recursive
 
-pushd jydoop
+cd jydoop
 make download
-popd
+cd ..
+
+puts-step "Fetching dependencies..."
 
 # TODO: need a better virtual env solution
 # compiled libs will magically be there in prod
@@ -19,7 +53,7 @@ popd
 make clean
 make download
 
-# package up jydoop
+puts-step "Loading local files into Jydoop..."
 if [ -f jydoop/scripts/dashboard.py ]; then
     rm jydoop/scripts/dashboard.py
 fi
@@ -30,21 +64,27 @@ if [ -f jydoop/scripts/histogram_specs.json ]; then
 fi
 cp histogram_specs.json jydoop/scripts
 
-# Copy everything to mango, hop over and run the job, copy the result back
+
+puts-step "Cleaning out Mango..."
+# clear out any old files on mango
 ssh mango << EOT
 rm -rf jydoop/
 exit
 EOT
 
+puts-step "Transferring new payload..."
 scp -r jydoop mango:
+puts-step "Executing job on Mango..."
 ssh mango << EOT
 cd jydoop/
-time make ARGS="scripts/dashboard.py out.txt 20130815-yyyyMMdd 20130815-yyyyMMdd" hadoop
+time make ARGS="scripts/dashboard.py out.txt $STARTDATE-yyyyMMdd $ENDDATE-yyyyMMdd" hadoop
 exit
 EOT
 scp mango:jydoop/out.txt .
 
-python mr2disk.py html/data < out.txt
 
+puts-step "Integrating job output with local dataset..."
+python mr2disk.py html/data < out.txt
 rm out.txt
+
 #shutitdown
