@@ -4,9 +4,9 @@ var _filter_set = Set()
 function get(url, handler) {
   var xhr = new XMLHttpRequest();
   xhr.onload = function (e) {
-    if (e.target.status == 200) 
+    if (e.target.status == 200)
       handler.apply(this, [e])
-    else 
+    else
       console.log("Code "+e.target.status+" while loading "+url)
   }
 
@@ -30,10 +30,10 @@ function drawChart(hgrams) {
 
   if (!hgrams)
     hgrams = window._hgrams
-  
+
   if (!hgrams)
     return
-  
+
   window._hgrams = hgrams
   var builds = Object.keys(hgrams.values).sort()
   var ls = []
@@ -45,7 +45,7 @@ function drawChart(hgrams) {
       filter = data[data.length - FILTERID]
       if (!_filter_set.has(filter))
         continue
-      
+
       if (!total_histogram) {
         total_histogram = data.slice()
         continue
@@ -110,10 +110,10 @@ function drawChart(hgrams) {
 function updateDescription(descriptions) {
   var node = document.getElementById("divDescription")
   nukeChildren(node);
-  
+
   if (descriptions)
     window._descriptions = descriptions
-  
+
   if (!window._descriptions)
     return
 
@@ -171,12 +171,12 @@ function applySelection() {
         }
         //dom should get updated
         if (!select.onChange) {
-          console.log("no select handler to apply " + p)  
+          console.log("no select handler to apply " + p)
           return false
         } else {
           select.selectedIndex = i;
           select.onChange();
-          console.log("selected " + p) 
+          console.log("selected " + p)
         }
         break;
       }
@@ -259,7 +259,7 @@ function filterChange() {
     applyFilter(this.filter_tree)
     return;
   }
-  
+
   next_filter_tree = this.filter_tree[this.options[this.selectedIndex].text]
   applyFilter(next_filter_tree)
 
@@ -284,10 +284,10 @@ function initFilter(filter_tree) {
   for (var opts in filter_tree) {
     if (opts == '_id' || opts == 'name')
       continue;
-    var o = document.createElement("option");  
-    o.text = opts;                               
+    var o = document.createElement("option");
+    o.text = opts;
     s.add(o)
-  }  
+  }
   if (id == 0)
     filterChange.apply(s, [true]);
 }
@@ -331,7 +331,7 @@ function buildVersionSelects(ls) {
 
   var selChannel = document.getElementById("selChannel");
   for (var i=0;i<ls.length;i++) {
-    var c = document.createElement("option");  
+    var c = document.createElement("option");
     c.value = ls[i];
     c.text = c.value.replace('/', ' ');
     selChannel.add(c)
@@ -348,3 +348,12 @@ function buildVersionSelects(ls) {
 selHistogram.addEventListener("change", onhistogramchange)
 selHistogram.onChange = onhistogramchange
 get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
+
+// set latest nightly on load
+(function selectLatestNightly() {
+  var nightlyElements = $('#selChannel')
+                          .children()
+                          .filter(function(index){ return this.value.contains('nightly/') });
+  var latestNightlyValue = nightlyElements[nightlyElements.length-1].value;
+  $('#selChannel')[0].value = latestNightlyValue;
+})();
