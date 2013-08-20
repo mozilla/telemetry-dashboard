@@ -345,14 +345,13 @@ function buildVersionSelects(ls) {
   loadData()
 }
 
-selHistogram.addEventListener("change", onhistogramchange)
-selHistogram.onChange = onhistogramchange
-get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
-
-// set latest nightly on load
+// set latest nightly on load, before we fetch the data from the server
 (function selectLatestNightly() {
   $('#selChannel')[0].value = $('#selChannel')
                       .children()
                       .filter(function(index){ return this.value.contains('nightly/') })
                       .slice(-1)[0].value;
 })();
+selHistogram.addEventListener("change", onhistogramchange)
+selHistogram.onChange = onhistogramchange
+get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
