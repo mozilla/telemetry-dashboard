@@ -351,10 +351,8 @@ get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.respon
 
 // set latest nightly on load
 (function selectLatestNightly() {
-  var nightlyElements, latestNightlyValue
-  nightlyElements = $('#selChannel')
+  $('#selChannel')[0].value = $('#selChannel')
                       .children()
-                      .filter(function(index){ return this.value.contains('nightly/') });
-  latestNightlyValue = nightlyElements[nightlyElements.length-1].value;
-  $('#selChannel')[0].value = latestNightlyValue;
+                      .filter(function(index){ return this.value.contains('nightly/') })
+                      .slice(-1)[0].value;
 })();
