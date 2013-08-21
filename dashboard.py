@@ -42,10 +42,14 @@ def map(uid, line, context):
     path = (buildDate, reason, appName, OS, osVersion, arch)
     histograms = payload.get('histograms', None)
     if histograms is None:
+        msg = "histograms is None in map"
+        print >> sys.stderr, msg
         return
     for h_name, h_values in histograms.iteritems():
         bucket2index = histogram_specs.get(h_name, None)
         if bucket2index is None:
+            msg = "bucket2index is None in map"
+            print >> sys.stderr, msg
             continue
         else:
             bucket2index = bucket2index[0]
@@ -54,6 +58,8 @@ def map(uid, line, context):
         outarray = [0] * (len(bucket2index) + 2)
         error = False
         if h_values is None:
+            msg = "h_values is None in map"
+            print >> sys.stderr, msg
             continue
 
         values = h_values.get('values', None)
@@ -68,14 +74,31 @@ def map(uid, line, context):
                 break
             outarray[index] = value
         if error:
+            msg = "index is None in map"
+            print >> sys.stderr, msg
             continue
 
         histogram_sum = h_values.get('sum', None)
         if histogram_sum is None:
+            msg = "histogram_sum is None in map"
+            print >> sys.stderr, msg
             continue
         outarray[-2] = histogram_sum
         outarray[-1] = 1        # count
-        context.write((channel, appVersion, h_name), {path: outarray})
+        try:
+            context.write((channel, appVersion, h_name), {path: outarray})
+        except TypeError:
+            dict_locations = [p for p, t in enumerate(path) if type(t) is dict]
+            if dict_locations:
+                field_names = ["buildDate", "reason", "appName", "OS",
+                               "osVersion", "arch"]
+                dict_field_names = [field_names[i] for i in dict_locations]
+                msg = ("unable to hash the following `path` fields: %s" %
+                       (' '.join(dict_field_names)))
+            else:
+                msg = "TypeError when writing map output."
+            print >> sys.stderr, msg
+            return
 
 
 def commonCombine(values):
