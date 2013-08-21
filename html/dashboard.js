@@ -324,35 +324,43 @@ function loadData() {
 
 function buildVersionSelects(ls) {
   // hack in order to not have to write async applySelection
-  var urlChannel = /#([^/]+)/.exec(location.href);
+  var urlChannel = /#([^/]+)/.exec(location.href),
+      latestNightly = 0,
+      desiredChannel;
   if (urlChannel) {
-    urlChannel = decodeURIComponent(urlChannel[1])
+    desiredChannel = decodeURIComponent(urlChannel[1]);
   }
 
+  for (var i=0; i < ls.length; i++) {
+    var chan = ls[i].split('/'),
+        channel = chan[0],
+        version = chan[1];
+
+    if (channel == "nightly") {
+      if (version > latestNightly) {
+        latestNightly = version;
+      }
+    }
+  }
+
+  desiredChannel = urlChannel || "nightly " + latestNightly;
+
   var selChannel = document.getElementById("selChannel");
-  for (var i=0;i<ls.length;i++) {
+  for (i=0; i<ls.length; i++) {
     var c = document.createElement("option");
     c.value = ls[i];
     c.text = c.value.replace('/', ' ');
     selChannel.add(c)
 
-    if (c.text == urlChannel
-        || (!selChannel && c.value.indexOf("nightly/") == 0))
-      selChannel.selectedIndex = i
+    if (c.text == desiredChannel) {
+      selChannel.selectedIndex = i;
+    }
   }
-  selChannel.addEventListener("change", loadData)
-  //selChannel.onChange = loadData
-  loadData()
+
+  selChannel.addEventListener("change", loadData);
+  loadData();
 }
 
 selHistogram.addEventListener("change", onhistogramchange)
 selHistogram.onChange = onhistogramchange
 get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
-
-// set latest nightly on load
-(function selectLatestNightly() {
-  $('#selChannel')[0].value = $('#selChannel')
-                      .children()
-                      .filter(function(index){ return this.value.contains('nightly/') })
-                      .slice(-1)[0].value;
-})();
