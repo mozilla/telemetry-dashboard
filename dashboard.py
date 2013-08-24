@@ -26,7 +26,9 @@ def map(uid, line, context):
         appVersion = i['appVersion'].split('.')[0]
         arch = i['arch']
         buildDate = i['appBuildID'][:8]
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, UnicodeEncodeError):
+        msg = "error while unpacking the payload"
+        print >> sys.stderr, msg
         return
 
     # TODO: histogram_specs should specify the list of versions/channels we
