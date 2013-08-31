@@ -78,14 +78,14 @@ function drawChart(hgrams) {
   nukeChildren(node);
   node.appendChild(document.createTextNode(selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"))
 
-  $.plot($("#main_div"),
+  plots['main_chart'] = $.plot($("#main_chart"),
          [{label: 'Average', data: ls}, {label: 'Daily Submissions', data: countls, yaxis:2}],
         {SERIES: {lines: { show: true }, points: { show: true }},
          xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
          yaxes: [{}, {position:"right"}],
         })
 
-  var bar_div = document.getElementById('bar_div');
+  var bar_div = document.getElementById('histogram');
   if (!entry_count) {
     nukeChildren(bar_div);
     return;
@@ -101,7 +101,7 @@ function drawChart(hgrams) {
     barls.push([i, y])
     ticks.push([i, x])
   }
-  $.plot($("#bar_div"),
+  plots['histogram'] = $.plot($("#histogram"),
          [{data:barls, bars:{show:true}}],
          {"xaxis":{"ticks": ticks}}
         )
@@ -361,6 +361,23 @@ function buildVersionSelects(ls) {
   loadData();
 }
 
+var plots = {};
+
 selHistogram.addEventListener("change", onhistogramchange)
 selHistogram.onChange = onhistogramchange
 get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
+
+var resizeTimeout;
+
+function resizeAllPlots() {
+  for (var id in plots) {
+    plots[id].resize();
+    plots[id].setupGrid();
+    plots[id].draw();
+  }
+}
+
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(resizeAllPlots, 100);
+});
