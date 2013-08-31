@@ -1,0 +1,65 @@
+* {
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+a {
+  margin: 1em 2em;
+}
+body, html {
+  font-family: sans-serif;
+  margin: 0;
+  height: 100%;
+  background: rgb(247, 249, 255);
+}
+header {
+  height: 50px;
+  line-height: 50px;
+  background: rgb(37, 39, 49);
+  padding-left: 10px;
+  color: rgb(255, 204, 153);
+  font-size: 17px;
+  letter-spacing: -1px;
+  display: flex;
+}
+footer {
+  padding: 1em;
+}
+article {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+}
+nav {
+  white-space: nowrap;
+  text-align: right;
+  flex: 1;
+  display:flex;
+  align-items: center;
+  margin-left: 1em;
+}
+section {
+  padding: 1em;
+}
+select {
+  margin: 0 2px 2px 2px;
+  padding: 1px 0 2px 0;
+  flex: 1;
+}
+.flex {
+  width: 100%;
+  flex: 1;
+  padding: 1em;
+}
+.graph {
+  width: 100%;
+}
+#main_chart {
+  height: 100%;
+}
+#submissions {
+  height: 30%;
+}
+#histogram {
+  height: 100%;
+}

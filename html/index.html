@@ -1,31 +1,37 @@
 <!DOCTYPE html>
-<!-- python -m SimpleHTTPServer  --->
 <html>
 <head>
-<title>
-Static Telemetry Dashboard
-</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+    <title>Static Telemetry Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css">
 </head>
 <body>
-<div>
-<select id=selChannel>
-</select>
-<select id=selHistogram>
-</select>
-</div>
-<div id=divInfo>
-</div>
-<div id=divDescription>
-</div>
-<p>
-<div id="main_div" style="width: 100%; height: 400px;"></div>
-<div id="bar_div" style="width: 100%; height: 400px;"></div>
-<p>
-<a href="https://github.com/mozilla/telemetry-dashboard">Source Code</a>
+    <article>
+    <header>
+        <span>Telemetry Dashboard</span>
+        <nav>
+            <select id="selChannel"></select>
+            <select id="selHistogram"></select>
+        </nav>
+    </header>
+    <section>
+        <div id="divInfo"></div>
+        <div id="divDescription"></div>
+    </section>
+    <section class="flex">
+        <div id="main_chart" class="graph"></div>
+        <!--<div id="submissions" class="graph"></div>-->
+    </section>
+    <section class="flex">
+        <div id="histogram" class="graph"></div>
+    </section>
+        <footer>
+            <a href="https://github.com/mozilla/telemetry-dashboard">Source Code</a>
+        </footer>
+    </article>
 </body>
-<script language="javascript" type="text/javascript" src="lib/jquery.js"></script>
-<script language="javascript" type="text/javascript" src="lib/jquery.flot.js"></script>
-<script  type="application/javascript;version=1.8" src="dashboard.js">
-</script>
+<script src="js/jquery.js"></script>
+<script src="js/jquery.flot.js"></script>
+<script src="js/dashboard.js" type="application/javascript;version=1.8"></script>
 <html>
