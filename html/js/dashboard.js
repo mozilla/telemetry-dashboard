@@ -166,7 +166,6 @@ function estimatePercentile(buckets, values, percentile) {
       break;
     }
     counted += values[i];
-    start = buckets[i];
   }
 
   // The bucket which starts at `start` and ends at `buckets[i]`. We need
