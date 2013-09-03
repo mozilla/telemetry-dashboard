@@ -36,6 +36,7 @@ function drawChart(hgrams) {
 
   window._hgrams = hgrams
   var builds = Object.keys(hgrams.values).sort()
+  var p50 = []
   var ls = []
   var countls = []
   var total_histogram = undefined
@@ -61,11 +62,29 @@ function drawChart(hgrams) {
       var i = ls.length;
       var unixTime =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0
       var sum = total_histogram[total_histogram.length - SUM]
-
       ls.push([unixTime,sum/count
                //,count
               ])
       countls.push([unixTime, total_histogram[total_histogram.length - ENTRY_COUNT]])
+    }
+    // Sum histograms for b (date)
+    if (total_histogram) {
+      var tothistg = undefined;
+      for each(var data in hgrams.values[b]) {
+        filter = data[data.length - FILTERID]
+        if (!_filter_set.has(filter))
+          continue
+        if (!tothistg) {
+          tothistg = data.slice();
+          continue;
+        }
+        for(var i = 0; i < tothistg.length; i++) {
+          tothistg[i] += data[i];
+        }
+      }
+      var ps = estimatePercentile(hgrams.buckets, tothistg, 50);
+      var ts =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0
+      p50.push([ts, ps]);
     }
   }
 
@@ -79,7 +98,11 @@ function drawChart(hgrams) {
   node.appendChild(document.createTextNode(selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"))
 
   plots['main_chart'] = $.plot($("#main_chart"),
-         [{label: 'Average', data: ls}, {label: 'Daily Submissions', data: countls, yaxis:2}],
+          [
+            {label: 'Average', data: ls},
+            {label: 'Daily Submissions', data: countls, yaxis:2},
+            {label: 'Median', data: p50}
+          ],
         {SERIES: {lines: { show: true }, points: { show: true }},
          xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
          yaxes: [{}, {position:"right"}],
@@ -91,6 +114,9 @@ function drawChart(hgrams) {
     return;
   }
 
+  var p50 = estimatePercentile(hgrams.buckets, total_histogram, 50)
+  var p50tick = null;
+  var start = 0;
   var barls = []
   var ticks = []
   for (var i = 0;i<hgrams.buckets.length;i++) {
@@ -100,12 +126,59 @@ function drawChart(hgrams) {
       continue
     barls.push([i, y])
     ticks.push([i, x])
+    if(p50tick === null && x > p50) {
+      // Estimate tick for median
+      p50tick = i + (p50 - start) / (x - start);
+    }
+    start = x;
   }
+
   plots['histogram'] = $.plot($("#histogram"),
          [{data:barls, bars:{show:true}}],
-         {"xaxis":{"ticks": ticks}}
-        )
+         {
+          "xaxis":{"ticks": ticks},
+          "grid":{
+            "markings": [
+            {xaxis: {from: p50tick, to: p50tick}, color: "#0000bb"}
+            ]
+          }
+        }
+  )
 }
+
+/**
+ * Estimate a percentile
+ * Given list of bucket end values and histogram values
+ */
+function estimatePercentile(buckets, values, percentile) {
+  var i;
+  // First count number occurences
+  var count = 0;
+  for(i = 0; i < buckets.length; i++) {
+    count += values[i];
+  }
+
+  // Now, find bucket containing the percentile by counting up
+  var counted = 0;
+  for(i = 0; i < buckets.length; i++) {
+    if(counted + values[i] > count * (percentile / 100)) {
+      break;
+    }
+    counted += values[i];
+    start = buckets[i];
+  }
+
+  // The bucket which starts at `start` and ends at `buckets[i]`. We need
+  // `need` extra occurences from this bucket before we're at the percentile of
+  // intersted. Assuming these extra occurences are uniformly distributed this
+  // can be done as follows. We add one to the number of occurences `values[i]`
+  // to ensure an even distribution of occurences at bucket start and end.
+  // (This also fixes the special case where the bucket contains one occurence)
+  var start = (i == 0 ? 0 : buckets[i - 1]);
+  var need  = count * (percentile / 100) - counted;
+  return start + (buckets[i] - start) * (need / (values[i] + 1))
+}
+
 
 function updateDescription(descriptions) {
   var node = document.getElementById("divDescription")
