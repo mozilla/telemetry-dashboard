@@ -72,8 +72,9 @@ function drawChart(hgrams) {
       var tothistg = undefined;
       for each(var data in hgrams.values[b]) {
         filter = data[data.length - FILTERID]
-        if (!_filter_set.has(filter))
-          continue
+        if (!_filter_set.has(filter)) {
+          continue;
+        }
         if (!tothistg) {
           tothistg = data.slice();
           continue;
@@ -83,7 +84,7 @@ function drawChart(hgrams) {
         }
       }
       var ps = estimatePercentile(hgrams.buckets, tothistg, 50);
-      var ts =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0
+      var ts =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0;
       p50.push([ts, ps]);
     }
   }
@@ -176,7 +177,7 @@ function estimatePercentile(buckets, values, percentile) {
   // (This also fixes the special case where the bucket contains one occurence)
   var start = (i == 0 ? 0 : buckets[i - 1]);
   var need  = count * (percentile / 100) - counted;
-  return start + (buckets[i] - start) * (need / (values[i] + 1))
+  return start + (buckets[i] - start) * (need / (values[i] + 1));
 }
 
 
