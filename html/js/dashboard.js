@@ -98,16 +98,24 @@ function drawChart(hgrams) {
   nukeChildren(node);
   node.appendChild(document.createTextNode(selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"))
 
-  plots['main_chart'] = $.plot($("#main_chart"),
-          [
-            {label: 'Average', data: ls},
-            {label: 'Daily Submissions', data: countls, yaxis:2},
-            {label: 'Median', data: p50}
-          ],
-        {SERIES: {lines: { show: true }, points: { show: true }},
-         xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
-         yaxes: [{}, {position:"right"}],
-        })
+  plots['main_chart'] = $.plot(
+    $("#main_chart"),
+    [
+      {label: 'Average', data: ls},
+      {label: 'Daily Submissions', data: countls, yaxis:2},
+      {label: 'Median', data: p50}
+    ],
+    {
+      grid: {
+        hoverable: true
+      },
+      series: {
+        lines: { show: true },
+        points: { show: true },
+      },
+      xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
+      yaxes: [{min: 0}, {min:0, position:"right"}],
+    });
 
   var bar_div = document.getElementById('histogram');
   if (!entry_count) {
@@ -139,6 +147,7 @@ function drawChart(hgrams) {
          {
           "xaxis":{"ticks": ticks},
           "grid":{
+            "hoverable": true,
             "markings": [
             {xaxis: {from: p50tick, to: p50tick}, color: "#0000bb"}
             ]
@@ -454,3 +463,25 @@ window.addEventListener('resize', function() {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(resizeAllPlots, 100);
 });
+
+for (var id of ["#main_chart", "#histogram"]) {
+  var previousPoint;
+  $(id).bind("plothover", function(event, pos, item){
+    if (!item) {
+      $("#tooltip").remove();
+      previousPoint = null;
+      return;
+    }
+    if (previousPoint == item.dataIndex) {
+      return;
+    }
+    previousPoint = item.dataIndex;
+    $("#tooltip").remove();
+    $('<div id="tooltip">' + item.datapoint[1].toFixed(2) + '</div>')
+      .css({
+        top: item.pageY + 5,
+        left: item.pageX + 5,
+      })
+      .appendTo("body").fadeIn(200);
+  });
+}
