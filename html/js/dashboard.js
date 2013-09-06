@@ -40,7 +40,7 @@ function drawChart(hgrams) {
   var p50 = [];
   var ls = [];
   var countls = [];
-  var total_histogram = undefined;
+  var total_histogram;
   for each (var b in builds) {
     var count = 0;
     for each(var data in hgrams.values[b]) {
@@ -70,7 +70,7 @@ function drawChart(hgrams) {
     }
     // Sum histograms for b (date)
     if (total_histogram) {
-      var tothistg = undefined;
+      var tothistg;
       for each(var data in hgrams.values[b]) {
         filter = data[data.length - FILTERID];
         if (!_filter_set.has(filter)) {
