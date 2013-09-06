@@ -63,3 +63,14 @@ select {
 #histogram {
   height: 100%;
 }
+#tooltip {
+  white-space: nowrap;
+  padding: 3px 8px;
+  background:#fff;
+  font-size:12px;
+  position: absolute;
+  display: none;
+  background-color: rgb(257, 259, 265);
+  color:  rgb(84, 84, 84);
+  opacity: 0.9;
+}
