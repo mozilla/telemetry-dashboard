@@ -41,9 +41,11 @@ function drawChart(hgrams) {
   var ls = [];
   var countls = [];
   var total_histogram;
-  for each (var b in builds) {
+  for (var b_ in builds) {
+    var b = builds[b_];
     var count = 0;
-    for each(var data in hgrams.values[b]) {
+    for (var data_ in hgrams.values[b]) {
+      var data = hgrams.values[b][data_];
       filter = data[data.length - FILTERID];
       if (!_filter_set.has(filter))
         continue;
@@ -57,8 +59,9 @@ function drawChart(hgrams) {
       }
     }
     if (total_histogram)
-      for (var i = 0;i<hgrams.buckets.length;i++)
+      for (var i = 0;i<hgrams.buckets.length;i++) {
         count += total_histogram[i];
+      }
     if (count) {
       var i = ls.length;
       var unixTime =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0;
@@ -71,7 +74,8 @@ function drawChart(hgrams) {
     // Sum histograms for b (date)
     if (total_histogram) {
       var tothistg;
-      for each(var data in hgrams.values[b]) {
+      for (var data_ in hgrams.values[b]) {
+        var data = hgrams.values[b][data_];
         filter = data[data.length - FILTERID];
         if (!_filter_set.has(filter)) {
           continue;
@@ -184,7 +188,7 @@ function estimatePercentile(buckets, values, percentile) {
   // can be done as follows. We add one to the number of occurences `values[i]`
   // to ensure an even distribution of occurences at bucket start and end.
   // (This also fixes the special case where the bucket contains one occurence)
-  var start = (i == 0 ? 0 : buckets[i - 1]);
+  var start = (i === 0 ? 0 : buckets[i - 1]);
   var need  = count * (percentile / 100) - counted;
   return start + (buckets[i] - start) * (need / (values[i] + 1));
 }
@@ -216,8 +220,9 @@ function onhistogramchange() {
 }
 
 function applySelection() {
-  if (window._appliedSelection);
+  if (window._appliedSelection) {
     return false;
+  }
   window._appliedSelection = true;
 
   var l = location.href;
@@ -231,7 +236,8 @@ function applySelection() {
   var optionI = 0;
   // hack to skip channel
   var skipped = 0;
-  for each (var p in path) {
+  for (var p_ in path) {
+    var p = path[p_];
     var select = null;
     for (;optionI < parent.childNodes.length;optionI++) {
       select = parent.childNodes[optionI];
@@ -247,7 +253,7 @@ function applySelection() {
     for (;i<select.options.length;i++) {
       var o = select.options[i];
       if (o.text == p) {
-        if (skipped = 0 && select.selectedIndex == i) {
+        if (skipped == 0 && select.selectedIndex == i) {
           console.log(p + " is already selected");
           skipped++;
           break;
@@ -270,7 +276,6 @@ function applySelection() {
     }
     optionI++;
   }
-  console.log(path);
   return true;
 }
 
@@ -278,7 +283,8 @@ function stuffLoaded() {
   if (!window._histograms || !window._filtersLoaded)
     return;
 
-  for each (var h in window._histograms) {
+  for (var h_ in window._histograms) {
+    var h = window._histograms[h_];
     var o = document.createElement("option");
     o.text = h;
     selHistogram.add(o);
@@ -293,13 +299,14 @@ function stuffLoaded() {
 function applyFilter(filter) {
   function getleafkeys(tree, set) {
     var id = tree['_id'];
-    if (id == undefined)
+    if (id === undefined)
       return;
 
     if (Object.keys(tree).length == 1)
       set.add(id);
 
-    for each(var subtree in tree) {
+    for (var subtree_ in tree) {
+      var subtree = tree[subtree_];
       getleafkeys(subtree, set);
     }
     return set;
@@ -365,13 +372,14 @@ function initFilter(filter_tree) {
   s.addEventListener("change", filterChange);
   s.onChange = filterChange;
   for (var opts in filter_tree) {
-    if (opts == '_id' || opts == 'name')
+    if (opts == '_id' || opts == 'name') {
       continue;
+    }
     var o = document.createElement("option");
     o.text = opts;
     s.add(o);
   }
-  if (id == 0)
+  if (id === 0)
     filterChange.apply(s, [true]);
 }
 
@@ -482,6 +490,7 @@ window.addEventListener('resize', function() {
 });
 
 function showPlotTooltip(event, pos, item){
+  var previousPoint;
   if (!item) {
     $("#tooltip").remove();
     previousPoint = null;
@@ -500,7 +509,8 @@ function showPlotTooltip(event, pos, item){
     .appendTo("body").fadeIn(200);
 }
 
-for (var id of ["#main_chart", "#histogram"]) {
-  var previousPoint;
+plotElements = ["#main_chart", "#histogram"];
+for (var id_ in plotElements) {
+  var id = plotElements[id_];
   $(id).bind("plothover", showPlotTooltip);
 }
