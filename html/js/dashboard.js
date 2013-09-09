@@ -83,7 +83,7 @@ function drawChart(hgrams) {
           tothistg[i] += data[i];
         }
       }
-      var ps = estimatePercentile(hgrams.buckets, tothistg, 50);
+      var ps = estimatePercentile(hgrams.buckets, tothistg, total_histogram[hgrams.buckets.length - SUM] / total_histogram[hgrams.buckets.length - ENTRY_COUNT], 50);
       var ts =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0;
       p50.push([ts, ps]);
     }
@@ -123,9 +123,10 @@ function drawChart(hgrams) {
     return;
   }
 
-  var p50 = estimatePercentile(hgrams.buckets, total_histogram, 50)
+  var p50 = estimatePercentile(
+    hgrams.buckets, total_histogram,
+    total_histogram[hgrams.buckets.length - SUM] / entry_count, 50);
   var p50tick = null;
-  var start = 0;
   var barls = []
   var ticks = []
   for (var i = 0;i<hgrams.buckets.length;i++) {
@@ -135,12 +136,14 @@ function drawChart(hgrams) {
       continue
     barls.push([i, y])
     ticks.push([i, x])
-    if(p50tick === null && x > p50) {
+    if(p50tick === null && i + 1 != hgrams.buckets.length && hgrams.buckets[i+1] > p50) {
       // Estimate tick for median
-      p50tick = i + (p50 - start) / (x - start);
+      p50tick = i + (p50 - hgrams.buckets[i]) / (hgrams.buckets[i+1] - hgrams.buckets[i]);
     }
-    start = x;
   }
+  // TODO: Handle case for last bucket better...
+  if(p50tick === null)
+    p50tick = hgrams.buckets.length - 1;
 
   plots['histogram'] = $.plot($("#histogram"),
          [{data:barls, bars:{show:true}}],
@@ -158,9 +161,9 @@ function drawChart(hgrams) {
 
 /**
  * Estimate a percentile
- * Given list of bucket end values and histogram values
+ * Given list of bucket start values, histogram values and mean value
  */
-function estimatePercentile(buckets, values, percentile) {
+function estimatePercentile(buckets, values, mean, percentile) {
   var i;
   // First count number occurences
   var count = 0;
@@ -168,24 +171,41 @@ function estimatePercentile(buckets, values, percentile) {
     count += values[i];
   }
 
+  // Number of occurences to count before we have the median
+  to_count = count * (percentile / 100)
+
   // Now, find bucket containing the percentile by counting up
   var counted = 0;
   for(i = 0; i < buckets.length; i++) {
-    if(counted + values[i] > count * (percentile / 100)) {
+    if(counted + values[i] > to_count) {
       break;
     }
     counted += values[i];
   }
 
-  // The bucket which starts at `start` and ends at `buckets[i]`. We need
-  // `need` extra occurences from this bucket before we're at the percentile of
-  // intersted. Assuming these extra occurences are uniformly distributed this
-  // can be done as follows. We add one to the number of occurences `values[i]`
-  // to ensure an even distribution of occurences at bucket start and end.
-  // (This also fixes the special case where the bucket contains one occurence)
-  var start = (i == 0 ? 0 : buckets[i - 1]);
-  var need  = count * (percentile / 100) - counted;
-  return start + (buckets[i] - start) * (need / (values[i] + 1));
+  // Bucket i start at buckets[i]
+  var start = buckets[i];
+
+  // However, the end of bucket i is a little be more tricky
+  var end;
+  if(i < buckets.length) {
+    // If there's a next bucket, then obviously that's the end
+    end = buckets[i + 1];
+  } else {
+    // If there is no next bucket, then we sum the values of all buckets below
+    // the end bucket (bucket i). We use the middle bucket value as an estimate
+    // for each of the occurrences.
+    var sum = 0;
+    for(var j = 0; j < buckets.length - 1; j++) {
+      sum += values[j] * (buckets[j] + (buckets[j] - buckets[j+1]) / 2);
+    }
+    var sum_of_end_bucket = (mean * count) - (sum / counted);
+    // We estimate the end as 2 times mean of values in the end bucket
+    end = 2 * (sum_of_end_bucket / values[i]);
+  }
+
+  // Interpolate median assuming a uniform distribution between start and end.
+  return start + (end - start) * ((to_count - counted) / (values[i] + 1));
 }
 
 

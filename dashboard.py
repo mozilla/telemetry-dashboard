@@ -56,13 +56,22 @@ def map(uid, line, context):
         else:
             bucket2index = bucket2index[0]
 
-        # most buckets contain 0s, so preallocation is a significant win
-        outarray = [0] * (len(bucket2index) + 2)
         error = False
         if h_values is None:
             msg = "h_values is None in map"
             print >> sys.stderr, msg
             continue
+        
+        stat_slots_needed = 0
+        if (('sum_squares_hi' in h_values and 'sum_squares_lo' in h_values) or
+           ('log_sum' in h_values and 'log_sum_squares' in h_values)):
+            stat_slots_needed = 2
+        if not stat_slots_needed:
+            print >> sys.stderr, "Skipping this due to statistics"
+            continue
+
+        # most buckets contain 0s, so preallocation is a significant win
+        outarray = [0] * (len(bucket2index) + 2 + stat_slots_needed)
 
         values = h_values.get('values', None)
         if values is None:
@@ -80,11 +89,18 @@ def map(uid, line, context):
             print >> sys.stderr, msg
             continue
 
+        # TODO log_sum and log_sum_squares or sum_squares_hi/lo
         histogram_sum = h_values.get('sum', None)
         if histogram_sum is None:
             msg = "histogram_sum is None in map"
             print >> sys.stderr, msg
             continue
+        if 'sum_squares_hi' in h_values and 'sum_squares_lo' in h_values:
+            outarray[-4] = h_values.get('sum_squares_hi', None)
+            outarray[-3] = h_values.get('sum_squares_lo', None)
+        elif 'log_sum' in h_values and 'log_sum_squares' in h_values:
+            outarray[-4] = h_values.get('log_sum', None)
+            outarray[-3] = h_values.get('log_sum_squares', None)
         outarray[-2] = histogram_sum
         outarray[-1] = 1        # count
         try:
@@ -125,13 +141,18 @@ def reduce(key, values, context):
     out = commonCombine(values)
     out_values = {}
     for (filter_path, histogram) in out.iteritems():
-        # first, discard any malformed (non int) entries
-        malformed_data = [type(_) for _ in histogram if type(_) is not int]
-        if len(malformed_data):
-            msg = ("discarding %s. contrained malformed type(s): %s" %
-                   ('/'.join(filter_path), set(malformed_data)))
-            print >> sys.stderr, msg
-            return
+        # first, discard any malformed (non int) entries, while allowing floats
+        # in the statistics
+        for i, val in enumerate(histogram):
+            T = type(val)
+            if T is not int:
+                if T is float:
+                    if i is len(histogram) - 3 or i is len(histogram) - 4:
+                        continue # allow elements of stats to be floats
+                msg = ("discarding %s. contrained malformed type(s): %s" %
+                       ('/'.join(filter_path), set(malformed_data)))
+                print >> sys.stderr, msg
+                return
         out_values["/".join(filter_path)] = histogram
     h_name = key[2]
     # histogram_specs lookup below is guranteed to succeed, because of mapper
