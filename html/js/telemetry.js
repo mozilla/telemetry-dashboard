@@ -1,5 +1,7 @@
 (function(exports){
 
+"use strict";
+
 /** Namespace for this module */
 var Telemetry = {};
 
@@ -16,13 +18,13 @@ var _specifications = null;
 function _get(path, cb) {
   // Check that we've been initialized
   if(_data_folder === null) {
-    throw new Error("Telemetry._get: Telemetry module haven't been "
+    throw new Error("Telemetry._get: Telemetry module haven't been " +
                     "initialized, please call Telemetry.init()");
   }
 
   // Create path from array, if that's what we're giving
   if (path instanceof Array) {
-    path = "/".join(path);
+    path = path.join("/");
   }
 
   // Create HTTP request
@@ -67,7 +69,7 @@ Telemetry.init = function Telemetry_load(data_folder, cb) {
   });
 
   // Get list of histogram specifications from histogram_descriptions.json
-  _get("histogram_descriptions.json", function(data) {
+  _get("Histograms.json", function(data) {
     _specifications = data;
     count_down();
   });
@@ -75,7 +77,7 @@ Telemetry.init = function Telemetry_load(data_folder, cb) {
 
 /** Get list of channel/version */
 Telemetry.versions = function Telemetry_versions() {
-  if (_data_folder !== null) {
+  if (_data_folder === null) {
     throw new Error("Telemetry.versions: Telemetry module isn't initialized!");
   }
   return _versions;
@@ -100,8 +102,8 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
  * Invoke cb(histogramEvolution) with an instance of HistogramEvolution for the
  * given measure under channel/version.
  */
-Telemetry.loadHistogram function Telemetry_loadHistogram(channel_version,
-                                                         measure, cb) {
+Telemetry.loadHistogram =
+                function Telemetry_loadHistogram(channel_version, measure, cb) {
   var load_count = 2;
   var data, filter_tree;
   function count_down() {
@@ -109,7 +111,7 @@ Telemetry.loadHistogram function Telemetry_loadHistogram(channel_version,
     if (load_count == 0) {
       cb(
         new Telemetry.HistogramEvolution(
-          measure,
+          [measure],
           data,
           filter_tree,
           _specifications[measure]
@@ -127,19 +129,6 @@ Telemetry.loadHistogram function Telemetry_loadHistogram(channel_version,
   });
 }
 
-/** Representation of histogram under possible filter application */
-Telemetry.Histogram = (function(){
-
-// Offset relative to length for special elements in arrays of raw data
-var DataOffsets = {
-  SUM_SQ_HI:      4,
-  SUM_SQ_LO:      3,
-  LOG_SUM_SQ:     4,
-  LOG_SUM:        3,
-  SUM:            2,
-  COUNT:          1
-};
-
 /** Auxiliary function to find all filter_ids in a filter_tree */
 function _listFilterIds(filter_tree){
   var ids = [];
@@ -155,6 +144,19 @@ function _listFilterIds(filter_tree){
   return ids;
 }
 
+/** Representation of histogram under possible filter application */
+Telemetry.Histogram = (function(){
+
+// Offset relative to length for special elements in arrays of raw data
+var DataOffsets = {
+  SUM_SQ_HI:      -4,
+  SUM_SQ_LO:      -3,
+  LOG_SUM_SQ:     -4,
+  LOG_SUM:        -3,
+  SUM:            -2,
+  SUBMISSIONS:    -1
+};
+
 /**
  * Auxiliary function to aggregate values of index from histogram dataset
  * TODO: Consider taking a look at all applications, maybe cache some of them.
@@ -166,8 +168,13 @@ function _aggregate(index, histogram) {
   }
   // Aggregate index as sum over histogram
   var sum = 0;
-  for(var i = 0; i < histogram._filterIds.length; i++) {
-    sum += histogram._dataset[histogram._filterIds[i]][index];
+  var n = histogram._filterIds.length;
+  for(var i = 0; i < n; i++) {
+    var filter_id   = histogram._filterIds[i];
+    var data_array  = histogram._dataset[filter_id];
+    if (data_array) {
+      sum += data_array[index >= 0 ? index : data_array.length + index];
+    }
   }
   return sum;
 }
@@ -215,7 +222,7 @@ Histogram.prototype.filterOptions = function Histogram_filterOptions() {
       options.push(key);
     }
   }
-  return options;
+  return options.sort();
 }
 
 /** Get the histogram kind */
@@ -225,7 +232,17 @@ Histogram.prototype.kind = function Histogram_kind() {
 
 /** Get number of data points in this histogram */
 Histogram.prototype.count = function Histogram_count() {
-  return _aggregate(DataOffsets.COUNT, this);
+  var count = 0;
+  var n = this._buckets.length;
+  for(var i = 0; i < n; i++) {
+    count += _aggregate(i, this);
+  }
+  return count;
+}
+
+/** Number of telemetry pings aggregated in this histogram */
+Histogram.prototype.submissions = function Histogram_submissions() {
+  return _aggregate(DataOffsets.SUBMISSIONS, this);
 }
 
 /** Get the mean of all data points in this histogram, null if N/A */
@@ -255,7 +272,7 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
     return null;
   }
   var sum       = new Big(_aggregate(DataOffsets.SUM, this));
-  var count     = new Big(_aggregate(DataOffsets.COUNT, this));
+  var count     = new Big(this.count());
   var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));
   var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));
   var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));
@@ -274,13 +291,13 @@ Histogram.prototype.geometricStandardDeviation =
   if (this.kind() != 'exponential') {
     return null;
   }
-  var count       = _aggregate(DataOffsets.COUNT, this);
+  var count       = this.count();
   var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);
   var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);
 
   // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation
   // using wxmaxima... just make sure to look at 
-  return Math.exp(
+  /*return Math.exp(
     Math.sqrt(
       (
         count * Math.pow(Math.log(log_sum / count), 2) +
@@ -288,9 +305,9 @@ Histogram.prototype.geometricStandardDeviation =
         2 * log_sum * Math.log(log_sum / count)
       ) / count
     )
-  );
+  );*/
   // Alternative definition, but this more of guess :)
-  // return Math.sqrt(count * log_sum_sq - Math.pow(log_sum, 2)) / count;
+  return Math.sqrt(count * log_sum_sq - Math.pow(log_sum, 2)) / count;
 }
 
 /** Estimate value of a percentile, returns null, if not applicable */
@@ -307,7 +324,7 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
   var i, n = this._buckets.length;
   for (i = 0; i < n; i++) {
     var nb_points = _aggregate(i, this);
-    if (to_count - nb_points >= 0) {
+    if (to_count - nb_points <= 0) {
       break;
     }
     to_count -= nb_points;
@@ -378,22 +395,22 @@ return Histogram;
 Telemetry.HistogramEvolution = (function(){
 
 /** Auxiliary function to parse a date string from JSON data format */
-function _parseDateString(date) {
+function _parseDateString(d) {
   return new Date(d.substr(0,4) + "/" + d.substr(4,2) + "/"+ d.substr(6,2));
 }
 
 /**
  * Create a histogram evolution, where
- *  - name          is the name of the measure,
+ *  - filter_path   is a list of [name, date-range, filter1, filter2...]
  *  - data          is the JSON data loaded from file,
  *  - filter_tree   is the filter_tree root, and
  *  - spec          is the histogram specification.
  */
-function HistogramEvolution(name, data, filter_tree, spec) {
-  this._name = name;
-  this._data = data;
+function HistogramEvolution(filter_path, data, filter_tree, spec) {
+  this._filter_path = filter_path;
+  this._data        = data;
   this._filter_tree = filter_tree;
-  this._spec = spec;
+  this._spec        = spec;
 }
 
 /** Get the histogram kind */
@@ -401,15 +418,49 @@ HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
   return this._spec.kind;
 }
 
+/** Get new HistogramEvolution representation filtered with option */
+HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
+  if (!(this._filter_tree[opt] instanceof Object)) {
+    throw new Error("filter option: \"" + opt +"\" is not available");
+  }
+  return new HistogramEvolution(
+    this._filter_path.concat(opt),
+    this._data,
+    this._filter_tree[opt],
+    this._spec
+  );
+}
+
+/** Name of filter available, null if none */
+HistogramEvolution.prototype.filterName =
+                                      function HistogramEvolution_filterName() {
+  return this._filter_tree.name || null;
+}
+
+/** List of options available for current filter */
+HistogramEvolution.prototype.filterOptions =
+                                  function HistogramEvolution_filterOptions() {
+  var options = [];
+  for (var key in this._filter_tree) {
+    if (key != "name" && key != "_id") {
+      options.push(key);
+    }
+  }
+  return options.sort();
+}
+
 /**
  * Get merged histogram for the interval [start; end], ie. start and end dates
  * are inclusive. Omitting start and/or end will give you the merged histogram
  * for the open-ended interval.
  */
-HistogramEvolution.prototype.range = function HistogramEvolution_range(start,
-                                                                       end) {
+HistogramEvolution.prototype.range =
+                                function HistogramEvolution_range(start, end) {
   // Construct a dataset by merging all datasets/histograms in the range
   var merged_dataset = {}
+
+  // List of filter_ids we care about, instead of just merging all filters
+  var filter_ids = _listFilterIds(this._filter_tree);
 
   // For each date we have to merge the filter_ids into merged_dataset
   for (var datekey in this._data.values) {
@@ -421,8 +472,15 @@ HistogramEvolution.prototype.range = function HistogramEvolution_range(start,
       // Find dataset of this datekey, merge filter_ids for this dataset into
       // merged_dataset.
       var dataset = this._data.values[datekey];
-      for(var filter_id in dataset) {
+      var n = filter_ids.length;
+      for(var i = 0; i < n; i++) {
+        var filter_id = filter_ids[i];
         var data_array = dataset[filter_id];
+
+        // Skip if current datekey doesn't have information about this filter_id
+        if (!data_array) {
+          continue;
+        }
 
         // if no data for given filter_id exists, just clone this array
         if (merged_dataset[filter_id] === undefined) {
@@ -432,12 +490,12 @@ HistogramEvolution.prototype.range = function HistogramEvolution_range(start,
           // with it, by adding each entry.
           var merged_array = merged_dataset[filter_id];
           if (merged_array.length != data_array.length) {
-            console.log("For \"" + this._name + "\" merged_array and "
+            console.log("For \"" + this._name + "\" merged_array and " + 
                         "data_array have different lengths!");
           }
-          var n = Math.min(merged_array.length, data_array.length);
-          for(var i = 0; i < n; i++) {
-            merged_array[i] += data_array[i];
+          var m = Math.min(merged_array.length, data_array.length);
+          for(var j = 0; j < m; j++) {
+            merged_array[j] += data_array[j];
           }
         }
       }
@@ -446,7 +504,7 @@ HistogramEvolution.prototype.range = function HistogramEvolution_range(start,
 
   // Create merged histogram
   return new Telemetry.Histogram(
-    [this._name],
+    this._filter_path,
     this._data.buckets,
     merged_dataset,
     this._filter_tree,
@@ -477,7 +535,7 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb) {
     cb(
       _parseDateString(dates[i]),
       new Telemetry.Histogram(
-        [this._name],
+        this._filter_path,
         this._data.buckets,
         this._data.values[dates[i]],
         this._filter_tree,
