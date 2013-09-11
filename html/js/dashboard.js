@@ -1,507 +1,459 @@
-var selHistogram = document.getElementById("selHistogram")
-var _filter_set = Set()
+(function(exports){
 
-function get(url, handler) {
-  var xhr = new XMLHttpRequest();
-  xhr.onload = function (e) {
-    if (e.target.status == 200)
-      handler.apply(this, [e])
-    else
-      console.log("Code "+e.target.status+" while loading "+url)
+"use strict";
+
+/** Namespace for this module */
+var Dashboard = {};
+
+var _plots = null;
+
+/** Initialize the dashboard, load state from window.location.hash, etc. */
+Dashboard.init = function Dashboard_init() {
+  if (_plots !== null) {
+    throw new Error("Dashboard.init(): Dashboard already initialized!");
   }
 
-  // deal with caching issues
-  var debug = ""
-  //debug += new Date()
-  xhr.open("get", url+"?" + debug, true);
-  xhr.send(null);
+  // Initialize list of plots
+  _plots = [];
+
+  // Allow for creation of new plots
+  $("#add-plot").click(function() { Dashboard.addPlotArea(); });
+
+  // Parse current hash and restore state from it
+  Dashboard.hashChanged();
+
+  // If not state was restored from hash, we create a little state
+  if (_plots.length == 0) {
+    // Create an initial plot area
+    Dashboard.addPlotArea();
+  }
+
+  // Listen for hash changed events
+  $(window).bind("hashchange", Dashboard.hashChanged);
+
+  // Update plot sizes on resize
+  var resizeTimeout;
+  $(window).resize(function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      var n = _plots.length;
+      for(var i = 0; i < n; i++) {
+        _plots[i].resize();
+      }
+    }, 100);
+  });
 }
 
-function nukeChildren(parent) {
-  while (parent.hasChildNodes()) {
-    parent.removeChild(parent.lastChild);
-  }
+/** Add a new PlotArea to the dashboard */
+Dashboard.addPlotArea = function Dashboard_addPlotArea(state) {
+  var plot = new Dashboard.PlotArea(state);
+  _plots.push(plot);
+  $("article").append(plot.element());
 }
 
-function drawChart(hgrams) {
-  const FILTERID = 1
-  const ENTRY_COUNT = 2
-  const SUM = 3
+// Last updated hash
+var _lastUpdatedHash = null;
 
-  if (!hgrams)
-    hgrams = window._hgrams
+/**
+ * Update window.location.hash to have the form #<state1>|<state2>, where
+ * <state1>, <state2> are PlotArea.state() values from current plot areas
+ */
+Dashboard.updateHash = function Dashboard_updateHash() {
+  // Create a list of states
+  var states = [];
 
-  if (!hgrams)
-    return
+  // For each plot
+  var n = _plots.length;
+  for (var i = 0; i < n; i++) {
+    var plot  = _plots[i];
 
-  window._hgrams = hgrams
-  var builds = Object.keys(hgrams.values).sort()
-  var p50 = []
-  var ls = []
-  var countls = []
-  var total_histogram = undefined
-  for each (var b in builds) {
-    var count = 0;
-    for each(var data in hgrams.values[b]) {
-      filter = data[data.length - FILTERID]
-      if (!_filter_set.has(filter))
-        continue
-
-      if (!total_histogram) {
-        total_histogram = data.slice()
-        continue
+    // Get the state
+    var state = plot.state();
+    // Ignore null and empty states, allowing for loading plots to be ignored
+    if (state) {
+      // TODO: Handle cases where state contains a pipe | character.
+      if (state.indexOf("|") != -1) {
+        console.log("State string \"" + state + "\" contains a pipe character");
       }
-      for(var i = 0;i<total_histogram.length;i++) {
-        total_histogram[i] += data[i]
-      }
-    }
-    if (total_histogram)
-      for (var i = 0;i<hgrams.buckets.length;i++)
-        count += total_histogram[i];
-    if (count) {
-      var i = ls.length;
-      var unixTime =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0
-      var sum = total_histogram[total_histogram.length - SUM]
-      ls.push([unixTime,sum/count
-               //,count
-              ])
-      countls.push([unixTime, total_histogram[total_histogram.length - ENTRY_COUNT]])
-    }
-    // Sum histograms for b (date)
-    if (total_histogram) {
-      var tothistg = undefined;
-      for each(var data in hgrams.values[b]) {
-        filter = data[data.length - FILTERID]
-        if (!_filter_set.has(filter)) {
-          continue;
-        }
-        if (!tothistg) {
-          tothistg = data.slice();
-          continue;
-        }
-        for(var i = 0; i < tothistg.length; i++) {
-          tothistg[i] += data[i];
-        }
-      }
-      var ps = estimatePercentile(hgrams.buckets, tothistg, total_histogram[hgrams.buckets.length - SUM] / total_histogram[hgrams.buckets.length - ENTRY_COUNT], 50);
-      var ts =  new Date(b.substr(0,4) + "/" + b.substr(4,2) + "/"+ b.substr(6,2)) - 0;
-      p50.push([ts, ps]);
+      states.push(state);
     }
   }
+  _lastUpdatedHash     = "#" + states.join("|");
+  window.location.hash = _lastUpdatedHash;
+}
 
-  var entry_count = 0;
-  if (total_histogram) {
-    entry_count = total_histogram[total_histogram.length - ENTRY_COUNT]
-  }
-
-  var node = document.getElementById("divInfo")
-  nukeChildren(node);
-  node.appendChild(document.createTextNode(selHistogram.options[selHistogram.selectedIndex].value + " (" + entry_count + " submissions)"))
-
-  plots['main_chart'] = $.plot(
-    $("#main_chart"),
-    [
-      {label: 'Average', data: ls},
-      {label: 'Daily Submissions', data: countls, yaxis:2},
-      {label: 'Median', data: p50}
-    ],
-    {
-      grid: {
-        hoverable: true
-      },
-      series: {
-        lines: { show: true },
-        points: { show: true },
-      },
-      xaxes: [{ mode:"time", timeformat: "%y%0m%0d"}],
-      yaxes: [{min: 0}, {min:0, position:"right"}],
-    });
-
-  var bar_div = document.getElementById('histogram');
-  if (!entry_count) {
-    nukeChildren(bar_div);
+/** Restored state from hash */
+Dashboard.hashChanged = function Dashboard_hashChanged() {
+  // Ignore hash change events we're caused ourselves...
+  if (_lastUpdatedHash == window.location.hash) {
     return;
   }
 
-  var p50 = estimatePercentile(
-    hgrams.buckets, total_histogram,
-    total_histogram[hgrams.buckets.length - SUM] / entry_count, 50);
-  var p50tick = null;
-  var barls = []
-  var ticks = []
-  for (var i = 0;i<hgrams.buckets.length;i++) {
-    var x = hgrams.buckets[i]
-    var y = total_histogram[i]
-    if (!y)
-      continue
-    barls.push([i, y])
-    ticks.push([i, x])
-    if(p50tick === null && i + 1 != hgrams.buckets.length && hgrams.buckets[i+1] > p50) {
-      // Estimate tick for median
-      p50tick = i + (p50 - hgrams.buckets[i]) / (hgrams.buckets[i+1] - hgrams.buckets[i]);
-    }
-  }
-  // TODO: Handle case for last bucket better...
-  if(p50tick === null)
-    p50tick = hgrams.buckets.length - 1;
+  // Get the current hash without the # character
+  var hash = window.location.hash.substr(1);
+  // Split hash into states
+  var states = hash.split(/\|/);
 
-  plots['histogram'] = $.plot($("#histogram"),
-         [{data:barls, bars:{show:true}}],
-         {
-          "xaxis":{"ticks": ticks},
-          "grid":{
-            "hoverable": true,
-            "markings": [
-            {xaxis: {from: p50tick, to: p50tick}, color: "#0000bb"}
-            ]
-          }
-        }
-  )
+  // Remove existing plots
+  while(_plots.length) {
+    var plot = _plots.pop();
+    plot.element().remove();
+  }
+
+  // For each state
+  var n = states.length;
+  for(var i = 0; i < n; i++) {
+    var state = states[i];
+
+    // Create plot for state
+    Dashboard.addPlotArea(state);
+  }
 }
 
 /**
- * Estimate a percentile
- * Given list of bucket start values, histogram values and mean value
+ * A PlotArea instance creates elements necessary to choose version, measure and
+ * various filters. It then fetches the histogram and plots the evolution over
+ * time as well as the aggregated histogram.
+ * Offering various options to plot percentiles, mean, number of submissions and
+ * shows standard deviation as well as histogram description.
+ *
+ * The state() function gets the state of the PlotArea as a string, designed for
+ * use with window.location.hash
  */
-function estimatePercentile(buckets, values, mean, percentile) {
-  var i;
-  // First count number occurences
-  var count = 0;
-  for(i = 0; i < buckets.length; i++) {
-    count += values[i];
-  }
+Dashboard.PlotArea = (function(){
 
-  // Number of occurences to count before we have the median
-  to_count = count * (percentile / 100)
-
-  // Now, find bucket containing the percentile by counting up
-  var counted = 0;
-  for(i = 0; i < buckets.length; i++) {
-    if(counted + values[i] > to_count) {
-      break;
-    }
-    counted += values[i];
-  }
-
-  // Bucket i start at buckets[i]
-  var start = buckets[i];
-
-  // However, the end of bucket i is a little be more tricky
-  var end;
-  if(i < buckets.length) {
-    // If there's a next bucket, then obviously that's the end
-    end = buckets[i + 1];
+// Auxiliary function to populate a select element and add options to it
+function _populateSelect(options, select) {
+  if (select === undefined) {
+    select = $("<select>");
   } else {
-    // If there is no next bucket, then we sum the values of all buckets below
-    // the end bucket (bucket i). We use the middle bucket value as an estimate
-    // for each of the occurrences.
-    var sum = 0;
-    for(var j = 0; j < buckets.length - 1; j++) {
-      sum += values[j] * (buckets[j] + (buckets[j] - buckets[j+1]) / 2);
-    }
-    var sum_of_end_bucket = (mean * count) - (sum / counted);
-    // We estimate the end as 2 times mean of values in the end bucket
-    end = 2 * (sum_of_end_bucket / values[i]);
+    select.empty();
   }
 
-  // Interpolate median assuming a uniform distribution between start and end.
-  return start + (end - start) * ((to_count - counted) / (values[i] + 1));
+  // for each option
+  var n = options.length;
+  for(var i = 0; i < n; i++) {
+    var option = options[i];
+
+    // Add <option>
+    select.append($("<option>", {value: option, text: option}));
+  }
+
+  // Select first option
+  select.val(options[0]);
+
+  return select;
 }
 
+/** Create new PlotArea, where state is an optional state to restore from */
+function PlotArea(state) {
+  // Current HistogramEvolution, null, while loading
+  this._hgramEvo = null;
 
-function updateDescription(descriptions) {
-  var node = document.getElementById("divDescription")
-  nukeChildren(node);
+  // Create section
+  this._element = $("<section>");
 
-  if (descriptions)
-    window._descriptions = descriptions
+  // Create nav area
+  this._nav = $("<nav>")
+  this._element.append(this._nav);
+  //this._nav.bind("change", $.proxy(this._optionChanged, this));
 
-  if (!window._descriptions)
-    return
+  // Create selectors
+  this._versionSelector = _populateSelect(Telemetry.versions());
+  this._measureSelector = _populateSelect([]);
 
-  var hgram = selHistogram.options[selHistogram.selectedIndex].value
-  var d = window._descriptions[hgram]
-  if (!d)
-    return
-  var text = document.createTextNode(d.description)
-  node.appendChild(text)
+  // Append selectors
+  this._nav.append(this._versionSelector);
+  this._nav.append(this._measureSelector);
+
+  // Listen for selector changes
+  this._versionSelector.bind("change", $.proxy(this._versionChanged, this));
+  this._measureSelector.bind("change", $.proxy(this._measureChanged, this));
+
+  // Create span for filter selectors
+  this._filterSelectors = $("<span>");
+  this._nav.append(this._filterSelectors);
+  this._filterSelectors.bind("change", $.proxy(this._filterChanged, this));
+
+  // Creat div for description and other text
+  this._descDiv = $("<div>", {class: "info"});
+  this._element.append(this._descDiv);
+
+  // Create divs for plotting
+  this._hgEvoPlotDiv = $("<div>", {class: "graph"});
+  this._hgramPlotDiv = $("<div>", {class: "graph"});
+  this._element.append(this._hgEvoPlotDiv);
+  this._element.append(this._hgramPlotDiv);
+
+  // Place holders for plot objects
+  this._hgEvoPlot = null;    
+  this._hgramPlot = null;
+
+  // Restore from existing state
+  this.restore(state);
 }
 
-function onhistogramchange() {
-  var hgram = selHistogram.options[selHistogram.selectedIndex].value
-  get(window._path+"/"+hgram+".json?", function() {drawChart(JSON.parse(this.responseText))})
-  updateDescription();
-  updateURL();
-}
+PlotArea.prototype.restore = function PlotArea_restore(state) {
+  var that = this;
+  var stateFragments = (state || "").split("/");
+  
+  // Create version selector
+  var versions = Telemetry.versions();
+  var version = versions[0];
+  if (stateFragments.length >= 2) {
+    version = stateFragments.shift() + "/" + stateFragments.shift();
+  }
 
-function applySelection() {
-  if (window._appliedSelection)
-    return false;
-  window._appliedSelection = true;
+  // Select version
+  this._versionSelector.val(version);
 
-  var l = location.href
-  var i = l.indexOf('#')
+  // Fetch measures
+  var that = this;
+  Telemetry.measures(version, function(measures) {
+    _populateSelect(measures, that._measureSelector);
 
-  if (i == -1)
-    return false
-  var path = decodeURIComponent(l.substr(i+1)).split('/')
+    // Select measure
+    var measure = stateFragments.shift() || measures[0];
+    that._measureSelector.val(measure);
 
-  var parent = selHistogram.parentNode
-  var optionI = 0;
-  // hack to skip channel
-  var skipped = 0;
-  for each (var p in path) {
-    var select = null;
-    for (;optionI < parent.childNodes.length;optionI++) {
-      select = parent.childNodes[optionI]
-      if (select.tagName == "SELECT")
-        break
-    }
-    if (optionI == parent.childNodes.length) {
-      console.log("Ran out of SELECTs in applySelection");
-      return false;
-    }
-    var select_id = select.id
-    var i = 0;
-    for (;i<select.options.length;i++) {
-      var o = select.options[i]
-      if (o.text == p) {
-        if (skipped = 0 && select.selectedIndex == i) {
-          console.log(p + " is already selected")
-          skipped++;
-          break;
+    // Load histogram
+    Telemetry.loadHistogram(version, measure, function(hgramEvo) {
+      function applyFilterOptions() {
+        // Create next filter
+        var filterName = hgramEvo.filterName();
+        if (filterName != null) {
+          var options = [filterName + "*"].concat(hgramEvo.filterOptions());
+          var nextSelector = _populateSelect(options);
+          nextSelector.data("hgramEvo", hgramEvo);
+
+          // Try to restore option from stateFragments
+          var option = stateFragments.shift();
+          if (options.indexOf(option) != -1 && option != filterName + "*") {
+            nextSelector.val(option);
+            hgramEvo = hgramEvo.filter(option);
+          }
+
+          // Append selector, after option have been selected
+          that._filterSelectors.append(nextSelector);
+
+          // Restore further filter options, once next selector have been
+          // appended
+          if (options.indexOf(option) != -1 && option != filterName + "*") {
+            applyFilterOptions();
+          }
         }
-        //dom should get updated
-        if (!select.onChange) {
-          console.log("no select handler to apply " + p)
-          return false
-        } else {
-          select.selectedIndex = i;
-          select.onChange();
-          console.log("selected " + p)
-        }
-        break;
       }
-    }
-    if (i == select.options.length) {
-      console.log("Could not find '"+p+"' in select "+select_id);
-      return false;
-    }
-    optionI++;
-  }
-  console.log(path)
-  return true
-}
 
-function stuffLoaded() {
-  if (!window._histograms || !window._filtersLoaded)
-    return;
+      // Restore filter options
+      applyFilterOptions(stateFragments);
 
-  for each (var h in window._histograms) {
-    var o = document.createElement("option")
-    o.text = h
-    selHistogram.add(o)
-  }
-  if (!applySelection()) {
-    console.log("applySelection said there is nothing to do, doing the default");
-    onhistogramchange()
-  }
-  window._stuffLoaded = true;
-}
-
-function applyFilter(filter) {
-  function getleafkeys(tree, set) {
-    var id = tree['_id']
-    if (id == undefined)
-      return
-
-    if (Object.keys(tree).length == 1)
-      set.add(id)
-
-    for each(var subtree in tree) {
-      getleafkeys(subtree, set)
-    }
-    return set
-  }
-
-  _filter_set = getleafkeys(filter, Set())
-  drawChart()
-//  console.log([v for (v of _filter_set)])
-}
-
-function updateURL() {
-  // do not mess with url while loading page
-  if (!window._stuffLoaded)
-    return;
-  var p = selHistogram.parentNode
-  var path = []
-  for (var i = 0;i < p.childNodes.length;i++) {
-    var c = p.childNodes[i]
-    if (c.tagName != "SELECT")
-      continue;
-    if (c.selectedIndex == -1)
-      break;
-    path.push(c.options[c.selectedIndex].text);
-  }
-  location.href = "#" + path.join("/")
-}
-
-function filterChange() {
-  //clear downstream selects once upstream one changes
-  var p = selHistogram.parentNode
-  for (var i = p.childNodes.length-1; i>0; i--) {
-    var c = p.childNodes[i]
-    if (c == this)
-      break;
-    p.removeChild(c)
-  }
-  updateURL();
-
-  if (!this.selectedIndex) {
-    applyFilter(this.filter_tree)
-    return;
-  }
-
-  next_filter_tree = this.filter_tree[this.options[this.selectedIndex].text]
-  applyFilter(next_filter_tree)
-
-  // only nodes that have an _id are valid filters
-  if (next_filter_tree['name'])
-    initFilter(next_filter_tree)
-}
-
-function initFilter(filter_tree) {
-  window._filtersLoaded = true;
-  var p = selHistogram.parentNode
-  var s = document.createElement("select");
-  var o = document.createElement("option");
-  var id = filter_tree['_id']
-  s.id = "selFilter" + id
-  s.filter_tree = filter_tree
-  o.text = filter_tree['name'] + " *";
-  s.add(o)
-  p.appendChild(s);
-  s.addEventListener("change", filterChange)
-  s.onChange = filterChange
-  for (var opts in filter_tree) {
-    if (opts == '_id' || opts == 'name')
-      continue;
-    var o = document.createElement("option");
-    o.text = opts;
-    s.add(o)
-  }
-  if (id == 0)
-    filterChange.apply(s, [true]);
-}
-
-function loadData() {
-  var selHistogram = document.getElementById("selHistogram")
-  var selChannel = document.getElementById("selChannel");
-  var parent = selHistogram.parentNode
-
-  // hack...if this is after pageload, then wipe url on channel change
-  if (window._appliedSelection)
-    location.href = "#" +selChannel.options[selChannel.selectedIndex].text + "/"
-
-  // reset state...TODO: document state
-  delete window._histograms
-  delete window._filtersLoaded
-  delete window._stuffLoaded
-  delete window._hgrams
-  delete window._appliedSelection
-  delete window._descriptions
-  nukeChildren(selHistogram);
-  nukeChildren(parent)
-  parent.appendChild(selChannel)
-  parent.appendChild(selHistogram)
-
-  window._path = "data/"+selChannel.options[selChannel.selectedIndex].value
-
-  get(_path+"/histograms.json", function() {window._histograms = Object.keys(JSON.parse(this.responseText)).sort()
-                                           stuffLoaded()
-                                          });
-  get(_path+"/filter.json", function() {initFilter(JSON.parse(this.responseText)); stuffLoaded()});
-  get(_path+"/histogram_descriptions.json", function() {updateDescription(JSON.parse(this.responseText))});
-}
-
-function buildVersionSelects(ls) {
-  // hack in order to not have to write async applySelection
-  var urlChannel = /#([^/]+)/.exec(location.href),
-      latestNightly = 0,
-      desiredChannel;
-  if (urlChannel) {
-    desiredChannel = decodeURIComponent(urlChannel[1]);
-  }
-
-  for (var i=0; i < ls.length; i++) {
-    var chan = ls[i].split('/'),
-        channel = chan[0],
-        version = chan[1];
-
-    if (channel == "nightly") {
-      if (version > latestNightly) {
-        latestNightly = version;
-      }
-    }
-  }
-
-  desiredChannel = urlChannel || "nightly " + latestNightly;
-
-  var selChannel = document.getElementById("selChannel");
-  for (i=0; i<ls.length; i++) {
-    var c = document.createElement("option");
-    c.value = ls[i];
-    c.text = c.value.replace('/', ' ');
-    selChannel.add(c)
-
-    if (c.text == desiredChannel) {
-      selChannel.selectedIndex = i;
-    }
-  }
-
-  selChannel.addEventListener("change", loadData);
-  loadData();
-}
-
-var plots = {};
-
-selHistogram.addEventListener("change", onhistogramchange)
-selHistogram.onChange = onhistogramchange
-get("data/versions.json", function() {buildVersionSelects(JSON.parse(this.responseText))});
-
-var resizeTimeout;
-
-function resizeAllPlots() {
-  for (var id in plots) {
-    plots[id].resize();
-    plots[id].setupGrid();
-    plots[id].draw();
-  }
-}
-
-window.addEventListener('resize', function() {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(resizeAllPlots, 100);
-});
-
-for (var id of ["#main_chart", "#histogram"]) {
-  var previousPoint;
-  $(id).bind("plothover", function(event, pos, item){
-    if (!item) {
-      $("#tooltip").remove();
-      previousPoint = null;
-      return;
-    }
-    if (previousPoint == item.dataIndex) {
-      return;
-    }
-    previousPoint = item.dataIndex;
-    $("#tooltip").remove();
-    $('<div id="tooltip">' + item.datapoint[1].toFixed(2) + '</div>')
-      .css({
-        top: item.pageY + 5,
-        left: item.pageX + 5,
-      })
-      .appendTo("body").fadeIn(200);
+      // Update histogram
+      that._hgramEvo = hgramEvo;
+      that.updatePlots();
+    });
   });
 }
+
+/** Get element from PlotArea */
+PlotArea.prototype.element = function PlotArea_element(){
+  return this._element;
+}
+
+/** Serialize this PlotArea to a minimalistic string */
+PlotArea.prototype.state = function PlotArea_state(){
+  var stateFragments = [
+    this._versionSelector.val(),
+    this._measureSelector.val()
+  ];
+  this._filterSelectors.children().each(function() {
+    var hgramEvo = $(this).data("hgramEvo");
+    var option = $(this).val();
+    if (option != hgramEvo.filterName() + "*") {
+      stateFragments.push(option);
+    }
+  });
+  // Check for slashes
+  // if (stateFragment.indexOf("/") != -1) {
+  //  // TODO: Handle corner cases where state fragments contains a slash
+  //  console.log("PlotArea.state: State fragment \"" + stateFragment + "\"" +
+  //              "contains a slash \"/\"!");
+  //}
+  return stateFragments.join("/");
+}
+
+/** Event handler for when selected version is changed */
+PlotArea.prototype._versionChanged = function PlotArea__versionChanged() {
+  var version = this._versionSelector.val();
+
+  var that = this;
+  Telemetry.measures(version, function(measures) {
+    // Store old measure, so we can restore it under new version...
+    var measure = that._measureSelector.val();
+
+    // Repopulate measure selector
+    _populateSelect(measures, that._measureSelector);
+
+    // Clear filter selectors
+    that._filterSelectors.empty();
+
+    // Now update measure
+    that._measureChanged();
+  });
+}
+
+/** Event handler for when selected measure is changed */
+PlotArea.prototype._measureChanged = function PlotArea__measureChanged() {
+  var version = this._versionSelector.val();
+  var measure = this._measureSelector.val();
+
+  var that = this;
+  Telemetry.loadHistogram(version, measure, function(hgramEvo) {
+    // Clear filter selectors
+    that._filterSelectors.empty();
+
+    // Create next filter
+    var filterName = hgramEvo.filterName();
+    if (filterName != null) {
+      var options = [filterName + "*"].concat(hgramEvo.filterOptions());
+      var nextSelector = _populateSelect(options);
+      nextSelector.data("hgramEvo", hgramEvo);
+      that._filterSelectors.append(nextSelector);
+    }
+
+    // Update histogram
+    that._hgramEvo = hgramEvo;
+    that.updatePlots();
+  });
+}
+
+PlotArea.prototype._filterChanged = function PlotArea__filterChanged(e) {
+  var filterSelector = $(e.target);
+
+  filterSelector.nextAll().remove();
+
+  // Get filtered HistogramEvolution
+  var hgramEvo = filterSelector.data("hgramEvo");
+  if (!hgramEvo) throw new Error("Missing hgramEvo!!!");
+
+  // Check if option is selected
+  var option = filterSelector.val();
+  if (option != hgramEvo.filterName() + "*") {
+    // Filter histogram
+    hgramEvo = hgramEvo.filter(option);
+
+    // Create next filter
+    var filterName = hgramEvo.filterName();
+    if (filterName != null) {
+      var options = [filterName + "*"].concat(hgramEvo.filterOptions());
+      var nextSelector = _populateSelect(options);
+      nextSelector.data("hgramEvo", hgramEvo);
+      this._filterSelectors.append(nextSelector);
+    }
+  }
+
+  // Update histogram
+  this._hgramEvo = hgramEvo;
+  this.updatePlots();
+}
+
+/** Update plots to reflect filtered data */
+PlotArea.prototype.updatePlots = function PlotArea_updatePlots(){
+  // When we update plots, let's just notify dashboard of state changes
+  Dashboard.updateHash();
+
+  // Data for evolution series
+  var mean        = [],
+      submissions = [],
+      median      = [];
+
+  // Collect data from histogram evolution
+  this._hgramEvo.each(function(date, histogram) {
+    // Get Unix time-stamp
+    var ts = date - 0;
+
+    // Add data-points
+    mean.push([ts, histogram.mean()]);
+    submissions.push([ts, histogram.submissions()]);
+    median.push([ts, histogram.median()]);
+  });
+
+  // Evolution series
+  var evoSeries = [
+    {label: "Average", data: mean },
+    {label: "Daily submissions", data: submissions, yaxis: 2},
+    {label: "Median", data: median}
+  ];
+
+  // Plot evolution
+  this._hgEvoPlot = $.plot(this._hgEvoPlotDiv, evoSeries, {
+    grid: {
+      hoverable: true
+    },
+    series: {
+      lines:  { show: true },
+      points: { show: true },
+    },
+    xaxes: [
+      { mode: "time", timeformat: "%y%0m%0d"}
+    ],
+    yaxes: [
+      {min: 0},
+      {min: 0, position: "right"}
+    ],
+  });
+
+  // Aggregated histogram data
+  var aggregated_histogram = [],
+      aggregated_ticks = [];
+  var i = 0;
+
+  // Create aggregated histogram, with an opened interval in both ends...
+  var hgram = this._hgramEvo.range();
+
+  // Collect data from histogram
+  hgram.each(function(count, start, end){
+    console.log(count);
+    aggregated_histogram.push([i, count]);
+    aggregated_ticks.push([i, start]);
+    i++;
+  });
+
+  // Aggregated histogram series
+  var hgramSeries = [{data:aggregated_histogram, bars: {show: true}}];
+
+  // Plot aggregated histogram
+  this._hgramPlot = $.plot(this._hgramPlotDiv, hgramSeries, {
+    "xaxis": { 
+      "ticks": aggregated_ticks
+    },
+    "grid": {
+      "hoverable":  true,
+    }
+  });
+
+  // Update histogram information
+  this._descDiv.text(hgram.description() + " (submissions: " +
+                     hgram.submissions() + ")");
+}
+
+/** Resize plot area */
+PlotArea.prototype.resize = function PlotArea_resize() {
+  if (this._hgEvoPlot) {
+    this._hgEvoPlot.resize();
+    this._hgEvoPlot.setupGrid();
+    this._hgEvoPlot.draw();
+  }
+  if (this._hgramPlot) {
+    this._hgramPlot.resize();
+    this._hgramPlot.setupGrid();
+    this._hgramPlot.draw();
+  }
+}
+
+return PlotArea;
+
+})();
+
+return exports.Dashboard = Dashboard;
+
+})(this);

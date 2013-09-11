@@ -27,12 +27,10 @@ footer {
 article {
   display: flex;
   width: 100%;
-  height: 100%;
   flex-direction: column;
 }
 nav {
   white-space: nowrap;
-  text-align: right;
   flex: 1;
   display:flex;
   align-items: center;
@@ -73,4 +71,18 @@ select {
   background-color: rgb(257, 259, 265);
   color:  rgb(84, 84, 84);
   opacity: 0.9;
+}
+.graph {
+  height: 300px;
+}
+select {
+  max-width:  50ex;
+}
+.info{
+  padding: 10px;
+} 
+#add-plot{
+  right:    20px;
+  position: absolute;
+  cursor: pointer;
 }

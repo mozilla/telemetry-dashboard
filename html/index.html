@@ -10,29 +10,17 @@
     <article>
     <header>
         <span>Telemetry Dashboard</span>
-        <nav>
-            <select id="selChannel"></select>
-            <select id="selHistogram"></select>
-        </nav>
+        <span id="add-plot">Add plot</span>
     </header>
-    <section>
-        <div id="divInfo"></div>
-        <div id="divDescription"></div>
-    </section>
-    <section class="flex">
-        <div id="main_chart" class="graph"></div>
-        <!--<div id="submissions" class="graph"></div>-->
-    </section>
-    <section class="flex">
-        <div id="histogram" class="graph"></div>
-    </section>
-        <footer>
-            <a href="https://github.com/mozilla/telemetry-dashboard">Source Code</a>
-        </footer>
-    </article>
 </body>
 <script src="js/jquery.js"></script>
 <script src="js/jquery.flot.js"></script>
-<script src="js/jquery.flot.tooltip.js"></script>
-<script src="js/dashboard.js" type="application/javascript;version=1.8"></script>
+<script src="js/big.js"></script>
+<script src="js/telemetry.js"></script>
+<script src="js/dashboard.js"></script>
+<script>
+    Telemetry.init("data", function(){
+      Dashboard.init();
+    });
+</script>
 <html>

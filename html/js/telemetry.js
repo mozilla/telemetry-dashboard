@@ -149,12 +149,13 @@ Telemetry.Histogram = (function(){
 
 // Offset relative to length for special elements in arrays of raw data
 var DataOffsets = {
-  SUM_SQ_HI:      -4,
-  SUM_SQ_LO:      -3,
+  SUM_SQ_HI:      -5,
+  SUM_SQ_LO:      -4,
+  LOG_SUM:        -5,
   LOG_SUM_SQ:     -4,
-  LOG_SUM:        -3,
-  SUM:            -2,
-  SUBMISSIONS:    -1
+  SUM:            -3,
+  SUBMISSIONS:    -2,
+  FILTER_ID:      -1
 };
 
 /**
@@ -168,14 +169,17 @@ function _aggregate(index, histogram) {
   }
   // Aggregate index as sum over histogram
   var sum = 0;
-  var n = histogram._filterIds.length;
+  var n = histogram._dataset.length;
   for(var i = 0; i < n; i++) {
-    var filter_id   = histogram._filterIds[i];
-    var data_array  = histogram._dataset[filter_id];
-    if (data_array) {
+    var data_array = histogram._dataset[i];
+
+    // Check if filter_id is filtered
+    var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;
+    if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
       sum += data_array[index >= 0 ? index : data_array.length + index];
     }
   }
+
   return sum;
 }
 
@@ -230,6 +234,11 @@ Histogram.prototype.kind = function Histogram_kind() {
   return this._spec.kind;
 }
 
+/** Get a description of the measure in this histogram */
+Histogram.prototype.description = function Histogram_description() {
+  return this._spec.description;
+}
+
 /** Get number of data points in this histogram */
 Histogram.prototype.count = function Histogram_count() {
   var count = 0;
@@ -247,7 +256,7 @@ Histogram.prototype.submissions = function Histogram_submissions() {
 
 /** Get the mean of all data points in this histogram, null if N/A */
 Histogram.prototype.mean = function Histogram_mean() {
-  if (this.kind() != "linear" || this.kind() != "exponential") {
+  if (this.kind() != "linear" && this.kind() != "exponential") {
     return null;
   }
   var sum = _aggregate(DataOffsets.SUM, this);
@@ -296,8 +305,8 @@ Histogram.prototype.geometricStandardDeviation =
   var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);
 
   // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation
-  // using wxmaxima... just make sure to look at 
-  /*return Math.exp(
+  // using wxmaxima... who knows maybe it's correct...
+  return Math.exp(
     Math.sqrt(
       (
         count * Math.pow(Math.log(log_sum / count), 2) +
@@ -305,9 +314,7 @@ Histogram.prototype.geometricStandardDeviation =
         2 * log_sum * Math.log(log_sum / count)
       ) / count
     )
-  );*/
-  // Alternative definition, but this more of guess :)
-  return Math.sqrt(count * log_sum_sq - Math.pow(log_sum, 2)) / count;
+  );
 }
 
 /** Estimate value of a percentile, returns null, if not applicable */
@@ -379,8 +386,8 @@ Histogram.prototype.median = function Histogram_median() {
 Histogram.prototype.each = function Histogram_each(cb) {
   var n = this._buckets.length;
   for(var i = 0; i < n; i++) {
-    var count = _aggregate(i, this._dataset, this._filter_tree),
-        start = this._buckets[i];
+    var count = _aggregate(i, this),
+        start = this._buckets[i],
         end   = this._buckets[i+1];
     //TODO: End for the last bucket should be estimated, not null as is now
     cb(count, start, end);
@@ -457,7 +464,7 @@ HistogramEvolution.prototype.filterOptions =
 HistogramEvolution.prototype.range =
                                 function HistogramEvolution_range(start, end) {
   // Construct a dataset by merging all datasets/histograms in the range
-  var merged_dataset = {}
+  var merged_dataset = []
 
   // List of filter_ids we care about, instead of just merging all filters
   var filter_ids = _listFilterIds(this._filter_tree);
@@ -472,33 +479,9 @@ HistogramEvolution.prototype.range =
       // Find dataset of this datekey, merge filter_ids for this dataset into
       // merged_dataset.
       var dataset = this._data.values[datekey];
-      var n = filter_ids.length;
-      for(var i = 0; i < n; i++) {
-        var filter_id = filter_ids[i];
-        var data_array = dataset[filter_id];
 
-        // Skip if current datekey doesn't have information about this filter_id
-        if (!data_array) {
-          continue;
-        }
-
-        // if no data for given filter_id exists, just clone this array
-        if (merged_dataset[filter_id] === undefined) {
-          merged_dataset[filter_id] = data_array.slice();
-        } else {
-          // if merged array already exists for this filter_id we have to merge
-          // with it, by adding each entry.
-          var merged_array = merged_dataset[filter_id];
-          if (merged_array.length != data_array.length) {
-            console.log("For \"" + this._name + "\" merged_array and " + 
-                        "data_array have different lengths!");
-          }
-          var m = Math.min(merged_array.length, data_array.length);
-          for(var j = 0; j < m; j++) {
-            merged_array[j] += data_array[j];
-          }
-        }
-      }
+      // Copy all data arrays over... we'll filter and aggregate later
+      merged_dataset = merged_dataset.concat(dataset);
     }
   }
 
