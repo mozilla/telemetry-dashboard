@@ -182,8 +182,10 @@ function PlotArea(state) {
   // Create divs for plotting
   this._hgEvoPlotDiv = $("<div>", {class: "graph"});
   this._hgramPlotDiv = $("<div>", {class: "graph"});
-  this._element.append(this._hgEvoPlotDiv);
-  this._element.append(this._hgramPlotDiv);
+  var plots = $("<div>", {class: "plots"});
+  plots.append(this._hgEvoPlotDiv);
+  plots.append(this._hgramPlotDiv);
+  this._element.append(plots);
 
   // Place holders for plot objects
   this._hgEvoPlot = null;    
