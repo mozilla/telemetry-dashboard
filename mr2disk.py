@@ -229,8 +229,7 @@ sys.stderr.write("read %s MB/s %d bytes in %s seconds\n"
                  % (str(1000 * bytes_read / 1024 / 1024 / ms),
                  bytes_read, ms / 1000))
 
-# Download specs to data/ folder
-import urllib2
-specs = "http://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/components/telemetry/Histograms.json"
-specs = urllib2.urlopen(specs).read()
+# Upload Histograms.json to data/ folder
+# (this file should be downloaded by makefile)
+specs = open("Histograms.json").read()
 open("%s/Histograms.json" % OUTDIR, "w").write(specs)
