@@ -414,7 +414,6 @@ PlotArea.prototype.updatePlots = function PlotArea_updatePlots(){
 
   // Collect data from histogram
   hgram.each(function(count, start, end){
-    console.log(count);
     aggregated_histogram.push([i, count]);
     aggregated_ticks.push([i, start]);
     i++;

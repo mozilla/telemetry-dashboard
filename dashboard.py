@@ -6,10 +6,50 @@ except ImportError:
 import sys
 import telemetryutils
 import jydoop
+import math
 
+
+verbose = True
+
+# Auxiliary method for computing bucket offsets from parameters, it is stolen
+# from histogram_tools.py, though slightly modified...
+def exponential_buckets(dmin, dmax, n_buckets):
+    log_max = math.log(dmax);
+    ret_array = [0] * n_buckets
+    current = dmin
+    ret_array[1] = current
+    for bucket_index in range(2, n_buckets):
+        log_current = math.log(current)
+        log_ratio = (log_max - log_current) / (n_buckets - bucket_index)
+        log_next = log_current + log_ratio
+        next_value = int(math.floor(math.exp(log_next) + 0.5))
+        if next_value > current:
+            current = next_value
+        else:
+            current = current + 1
+        ret_array[bucket_index] = current
+    return ret_array
+
+# Create buckets from buckets2index from ranges... snippet pretty much stolen
+# from specgen.py
+def buckets2index_from_ranges(ranges):
+    buckets = map(str, ranges)
+    bucket2index = {}
+    for i in range(0, len(buckets)):
+        bucket2index[buckets[i]] = i
+    return bucket2index
+
+# Bucket offsets for simple measures
+simple_measures_buckets = (
+                           buckets2index_from_ranges(
+                                            exponential_buckets(1, 30000, 50)),
+                           exponential_buckets(1, 30000, 50)
+                           )
+
+
+SPECS = "scripts/histogram_specs.json"
 histogram_specs = json.loads(
-    jydoop.getResource("scripts/histogram_specs.json"))
-
+    jydoop.getResource(SPECS))
 
 def map(uid, line, context):
     global histogram_specs
@@ -44,14 +84,16 @@ def map(uid, line, context):
     path = (buildDate, reason, appName, OS, osVersion, arch)
     histograms = payload.get('histograms', None)
     if histograms is None:
-        msg = "histograms is None in map"
-        print >> sys.stderr, msg
-        return
+        histograms = {}
+        if verbose:
+            msg = "histograms is None in map"
+            print >> sys.stderr, msg
     for h_name, h_values in histograms.iteritems():
         bucket2index = histogram_specs.get(h_name, None)
         if bucket2index is None:
-            msg = "bucket2index is None in map"
-            print >> sys.stderr, msg
+            if verbose:
+                msg = "bucket2index is None in map"
+                print >> sys.stderr, msg
             continue
         else:
             bucket2index = bucket2index[0]
@@ -77,8 +119,9 @@ def map(uid, line, context):
                 break
             outarray[index] = value
         if error:
-            msg = "index is None in map"
-            print >> sys.stderr, msg
+            if verbose:
+                msg = "index is None in map"
+                print >> sys.stderr, msg
             continue
 
         histogram_sum = h_values.get('sum', None)
@@ -114,7 +157,51 @@ def map(uid, line, context):
             else:
                 msg = "TypeError when writing map output."
             print >> sys.stderr, msg
-            return
+            continue
+
+    # Now read and output simple measures
+    simple_measures = payload.get('simpleMeasurements', None)
+    if simple_measures is None:
+        msg = "SimpleMeasures are missing..."
+        print >> sys.stderr, msg
+        return
+    for sm_name, sm_value in simple_measures.iteritems():
+        # Handle cases where the value is a dictionary of simple measures
+        if type(sm_value) == dict:
+            for sub_name, sub_value in sm_value.iteritems():
+                map_simplemeasure(channel, appVersion, path,
+                                  sm_name + "_" + sub_name, sub_value, context)
+        else:
+            map_simplemeasure(channel, appVersion, path, sm_name, sm_value,
+                              context)
+
+
+# Map a simple measure
+def map_simplemeasure(channel, appVersion, path, name, value, context):
+    # Sanity check value
+    if type(value) != int:
+        if verbose:
+            msg = ("%s is not a value type for simpleMeasurements \"%s\"" %
+                   (type(value), name))
+            print >> sys.stderr, msg
+        return
+
+    bucket = simple_measures_buckets[1]
+    outarray = [0] * (len(bucket) + 5)
+    for i in reversed(range(0, len(bucket))):
+        if value >= bucket[i]:
+            outarray[i] = 1
+            break
+
+    log_val = math.log(math.fabs(value) + 1)
+    outarray[-4] = log_val              # log_sum
+    outarray[-3] = log_val * log_val    # log_sum_squares
+    outarray[-2] = value                # sum
+    outarray[-1] = 1                    # count
+
+    # Output result array
+    context.write((channel, appVersion, "SIMPLE_MEASURES_" + name.upper()), 
+                  {path: outarray})
 
 
 def commonCombine(values):
@@ -138,6 +225,7 @@ def combine(key, values, context):
 def reduce(key, values, context):
     out = commonCombine(values)
     out_values = {}
+    h_name = key[2]
     for (filter_path, histogram) in out.iteritems():
         # first, discard any malformed (non int) entries, while allowing floats
         # in the statistics
@@ -147,15 +235,19 @@ def reduce(key, values, context):
                 if T is float:
                     if i is len(histogram) - 3 or i is len(histogram) - 4:
                         continue # allow elements of stats to be floats
-                msg = ("discarding %s. contrained malformed type: %s" %
-                       ('/'.join(filter_path), T))
+                msg = ("discarding %s - %s malformed type: %s on index %i" %
+                       ('/'.join(filter_path), h_name, T, i))
                 print >> sys.stderr, msg
                 return
         out_values["/".join(filter_path)] = histogram
-    h_name = key[2]
-    # histogram_specs lookup below is guranteed to succeed, because of mapper
+
+    if h_name.startswith("SIMPLE_MEASURES_"):
+        buckets = simple_measures_buckets[1];
+    else:
+        # histogram_specs lookup below is guaranteed to succeed, because of mapper
+        buckets = histogram_specs.get(h_name)[1]
     final_out = {
-        'buckets': histogram_specs.get(h_name)[1],
+        'buckets': buckets,
         'values': out_values
     }
     context.write("/".join(key), json.dumps(final_out))
