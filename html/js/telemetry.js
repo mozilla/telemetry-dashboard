@@ -425,6 +425,12 @@ HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
   return this._spec.kind;
 }
 
+/** Get a description of the measure in this histogram */
+HistogramEvolution.prototype.description =
+                                    function HistogramEvolution_description() {
+  return this._spec.description;
+}
+
 /** Get new HistogramEvolution representation filtered with option */
 HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
   if (!(this._filter_tree[opt] instanceof Object)) {
