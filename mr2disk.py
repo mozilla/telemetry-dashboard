@@ -177,7 +177,6 @@ def flush_histograms(histograms, (channel, version)):
                                            readExisting(histogramsfile, None)))
     writeJSON("%s/filter.json" % outdir, filters['root'])
 
-
 start = datetime.now()
 bytes_read = 0
 
@@ -229,3 +228,8 @@ ms = time_delta(start)
 sys.stderr.write("read %s MB/s %d bytes in %s seconds\n"
                  % (str(1000 * bytes_read / 1024 / 1024 / ms),
                  bytes_read, ms / 1000))
+
+# Upload Histograms.json to data/ folder
+# (this file should be downloaded by makefile)
+specs = open("Histograms.json").read()
+open("%s/Histograms.json" % OUTDIR, "w").write(specs)
