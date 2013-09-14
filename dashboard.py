@@ -42,6 +42,18 @@ def map(uid, line, context):
         osVersion = osVersion[:3]
 
     path = (buildDate, reason, appName, OS, osVersion, arch)
+    # Sanitize path
+    for val in path:
+        if not isinstance(val, basestring) and type(val) in (int, float, long):
+            print >> sys.stderr, "Found type %s in path" % type(val)
+            return
+
+    # Sanitize channel and appVersion
+    for val in (channel, appVersion):
+        if not isinstance(val, basestring) and type(val) in (int, float, long):
+            print >> sys.stderr, "Found type %s in channel or appVersion" % type(val)
+            return
+
     histograms = payload.get('histograms', None)
     if histograms is None:
         msg = "histograms is None in map"
@@ -57,9 +69,10 @@ def map(uid, line, context):
             bucket2index = bucket2index[0]
 
         # most buckets contain 0s, so preallocation is a significant win
-        outarray = [0] * (len(bucket2index) + 5)
+        outarray = [0] * (len(bucket2index) + 4)
 
-        error = False
+        index_error = False
+        type_error = False
         if h_values is None:
             msg = "h_values is None in map"
             print >> sys.stderr, msg
@@ -73,17 +86,29 @@ def map(uid, line, context):
             if index is None:
                 #print "%s's does not feature %s bucket in schema"
                 #    % (h_name, bucket)
-                error = True
+                index_error = True
+                break
+            if type(value) not in (int, long, float):
+                type_error = True
+                print >> sys.stderr, "Bad value out to kill us: %s " % repr(value)
                 break
             outarray[index] = value
-        if error:
+        if index_error:
             msg = "index is None in map"
+            print >> sys.stderr, msg
+            continue
+        if type_error:
+            msg = "value is not int, long or float"
             print >> sys.stderr, msg
             continue
 
         histogram_sum = h_values.get('sum', None)
         if histogram_sum is None:
             msg = "histogram_sum is None in map"
+            print >> sys.stderr, msg
+            continue
+        if type(histogram_sum) not in (int, long, float):
+            msg = "histogram_sum is not int, long or float, but: %s" % type(histogram_sum)
             print >> sys.stderr, msg
             continue
         # if statistics isn't available we just leave the two slots as zeroes
@@ -93,11 +118,13 @@ def map(uid, line, context):
         elif 'log_sum' in h_values and 'log_sum_squares' in h_values:
             outarray[-4] = h_values.get('log_sum', 0)
             outarray[-3] = h_values.get('log_sum_squares', 0)
-        if not isinstance(outarray[-4], (int, long, float)):
-            print >> sys.stderr, "=======> 4 isn't numeric!!"
+        if type(outarray[-4]) not in (int, long, float):
+            print >> sys.stderr, ("sum_squares_hi or log_sum is type %s" %
+                                  type(outarray[-4]))
             continue
-        if not isinstance(outarray[-3], (int, long, float)):
-            print >> sys.stderr, "=======> 3 isn't numeric!!"
+        if type(outarray[-3]) not in (int, long, float):
+            print >> sys.stderr, ("sum_squares_lo or log_sum_squares is type %s" %
+                                  type(outarray[-3]))
             continue
         outarray[-2] = histogram_sum
         outarray[-1] = 1        # count
