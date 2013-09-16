@@ -17,7 +17,7 @@ Dashboard.init = function Dashboard_init() {
   _plots = [];
 
   // Allow for creation of new plots
-  $("#add-plot").click(function() { Dashboard.addPlotArea(); });
+  //$("#add-plot").click(function() { Dashboard.addPlotArea(); });
 
   // Parse current hash and restore state from it
   Dashboard.hashChanged();
