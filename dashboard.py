@@ -119,9 +119,9 @@ def map(uid, line, context):
 
         index_error = False
         type_error = False
-        if h_values is None:
+        if not isinstance(h_values, dict):
             if verbose:
-                msg = "h_values is None in map"
+                msg = "h_values is not a dictionary"
                 print >> sys.stderr, msg
             continue
 
