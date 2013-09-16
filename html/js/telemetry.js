@@ -84,26 +84,57 @@ Telemetry.versions = function Telemetry_versions() {
 }
 
 /**
- * Invoke cb(list) with a list of measures available for the channel/version
- * given. Note, channel/version must be a string from Telemetry.versions()
+ * Request measures available for channel/version given. Once fetched the
+ * callback with invoked as cb(measures) where measures a list of JSON objects
+ * as follows:
+ *  {
+ *    measure:      "A_TELEMETRY_MEASURE_ID",
+ *    kind:         "linear|exponential|flag|enumerated|boolean",
+ *    description:  "A human readable description"
+ *  }
+ * 
+ * Note, channel/version must be a string from Telemetry.versions()
  */
 Telemetry.measures = function Telemetry_measures(channel_version, cb) {
   _get([channel_version, "histograms.json"], function(data) {
     var measures = [];
     for(var key in data) {
-      measures.push(key);
+
+      // Find specification
+      var spec = _specifications[key];
+
+      // Create measures dictionary
+      measures.push({
+        measure:      key,
+        kind:         spec.kind,
+        description:  spec.description
+      });
     }
-    measures.sort();
+
+    // Sort measures alphabetically
+    measures.sort(function(m1, m2) {
+      return m1.measure > m2.measure ? 1 : -1;
+    });
+
+    // Return measures by callback
     cb(measures);
   });
 }
 
 /**
- * Invoke cb(histogramEvolution) with an instance of HistogramEvolution for the
- * given measure under channel/version.
+ * Request HistogramEvolution instance for a given channel/version and measure,
+ * once fetched cb(histogramEvolution) will be invoked with the histogram.
+ * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
 Telemetry.loadHistogram =
                 function Telemetry_loadHistogram(channel_version, measure, cb) {
+  // Unpack measure, if a dictionary from Telemetry.measures was provided
+  // instead of just a measure id.
+  if (measure instanceof Object && measure.measure !== undefined) {
+    measure = measure.measure;
+  }
+
+  // Number of files to load, and what to do when done
   var load_count = 2;
   var data, filter_tree;
   function count_down() {
@@ -119,10 +150,12 @@ Telemetry.loadHistogram =
       );
     }
   }
+  // Load data for measure
   _get([channel_version, measure + ".json"], function(json) {
     data = json;
     count_down();
   });
+  // Load filter data
   _get([channel_version, "filter.json"], function(json) {
     filter_tree = json;
     count_down();
@@ -144,9 +177,6 @@ function _listFilterIds(filter_tree){
   return ids;
 }
 
-/** Representation of histogram under possible filter application */
-Telemetry.Histogram = (function(){
-
 // Offset relative to length for special elements in arrays of raw data
 var DataOffsets = {
   SUM_SQ_HI:      -5,
@@ -157,6 +187,9 @@ var DataOffsets = {
   SUBMISSIONS:    -2,
   FILTER_ID:      -1
 };
+
+/** Representation of histogram under possible filter application */
+Telemetry.Histogram = (function(){
 
 /**
  * Auxiliary function to aggregate values of index from histogram dataset
@@ -181,6 +214,27 @@ function _aggregate(index, histogram) {
   }
 
   return sum;
+}
+
+/** Auxiliary function for estimating the end of the last bucket */
+function _estimateLastBucketEnd(histogram) {
+  // As there is no next bucket for the last bucket, we sometimes need to
+  // estimate one. First we estimate the sum of all data-points in buckets
+  // below the last bucket
+  var sum_before_last = 0;
+  var n = histogram._buckets.length;
+  for (var i = 0; i < n - 1; i++) {
+    var bucket_center = (histogram._buckets[i+1] - histogram._buckets[i]) / 2 +
+                         histogram._buckets[i]; 
+    sum_before_last += _aggregate(i, histogram) * bucket_center;
+  }
+  // We estimate the sum of data-points in the last bucket by subtracting the
+  // estimate of sum of data-points before the last bucket...
+  var sum_last = _aggregate(DataOffsets.SUM, histogram) - sum_before_last;
+  // We estimate the mean of the last bucket as follows
+  var last_bucket_mean = sum_last / _aggregate(n - 1, histogram);
+  // Now estimate the lat bucket end by 2 * last_bucket_mean
+  return last_bucket_mean * 2;
 }
 
 /**
@@ -340,24 +394,10 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
   // Bucket start and end
   var start = this._buckets[i];
   var end   = this._buckets[i+1];
-  if(i >= n) {
+  if(i >= n - 1) {
     // If we're at the end bucket, then there's no next bucket, hence, no upper
-    // bound and we estimate one. First we estimate the sum of all data-points
-    // in buckets below i
-    var sum_before_i = 0;
-    for (var j = 0; j < i; j++) {
-      var nb_points = _aggregate(j, this);
-      var bucket_center_value = (this._buckets[j+1] - this._buckets[j]) / 2 +
-                                this._buckets[j]; 
-      sum_before_i += nb_points * bucket_center_value;
-    }
-    // We estimate the sum of data-points in i by subtracting the estimate of
-    // sum of data-points before i...
-    var sum_i = _aggregate(DataOffsets.SUM, this) - sum_before_i;
-    // We estimate the mean of bucket i as follows
-    var bucket_i_mean = sum_i / _aggregate(i, this);
-    // Now estimate bucket i end by 2 * bucket_i_mean
-    end = bucket_i_mean * 2;
+    // bound, so we estimate one.
+    end = _estimateLastBucketEnd(this);
   }
 
   // Fraction indicating where in bucket i the percentile is located 
@@ -380,18 +420,57 @@ Histogram.prototype.median = function Histogram_median() {
 }
 
 /**
- * Invoke cb(count, start, end) for every bucket in this histogram, the
+ * Invoke cb(count, start, end, index) for every bucket in this histogram, the
  * cb is invoked for each bucket ordered from low to high.
+ * Note, if context is provided it will be given as this parameter to cb().
  */
-Histogram.prototype.each = function Histogram_each(cb) {
+Histogram.prototype.each = function Histogram_each(cb, context) {
+  // Set context if none is provided
+  if (context === undefined) {
+    context = this;
+  }
+
+  // For each bucket
   var n = this._buckets.length;
   for(var i = 0; i < n; i++) {
+
+    // Find count, start and end of bucket
     var count = _aggregate(i, this),
         start = this._buckets[i],
         end   = this._buckets[i+1];
-    //TODO: End for the last bucket should be estimated, not null as is now
-    cb(count, start, end);
+
+    // If we're at the last bucket, then there's no next upper bound so we
+    // estimate one
+    if (i >= n - 1) {
+      end = _estimateLastBucketEnd(this);
+    }
+
+    // Invoke callback as promised
+    cb.call(context, count, start, end, i);
   }
+}
+
+/**
+ * Returns a bucket ordered array of results from invocation of 
+ * cb(count, start, end, index) for each bucket, ordered low to high.
+ * Note, if context is provided it will be given as this parameter to cb().
+ */
+Histogram.prototype.map = function Histogram_map(cb, context) {
+  // Set context if none is provided
+  if (context === undefined) {
+    context = this;
+  }
+
+  // Array of return values
+  var results = [];
+
+  // For each, invoke cb and push the result
+  this.each(function(count, start, end, index) {
+    results.push(cb.call(context, count, start, end, index));
+  });
+
+  // Return values from cb
+  return results;
 }
 
 return Histogram;
@@ -510,28 +589,83 @@ HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
   return dates.sort();
 }
 
-/** Invoke cb(date, histogram) with each date, histogram pair ordered by date */
-HistogramEvolution.prototype.each = function HistogramEvolution_each(cb) {
+/**
+ * Invoke cb(date, histogram, index) with each date, histogram pair, ordered by
+ * date. Note, if provided cb() will be invoked with ctx as this argument.
+ */
+HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
+  // Set this as context if none is provided
+  if (ctx === undefined) {
+    ctx = this;
+  }
+
   // Find and sort all date strings
   var dates = [];
   for(var date in this._data.values) {
     dates.push(date);
   }
   dates.sort();
+
+  // Find filter ids
+  var filterIds = _listFilterIds(this._filter_tree);
+
+  // Pair index, this is not equal to i as we may have filtered something out
+  var index = 0;
+
   // Now invoke cb with each histogram
   var n = dates.length;
   for(var i = 0; i < n; i++) {
-    cb(
+    // Get dataset for date
+    var dataset = this._data.values[dates[i]];
+
+    // Filter for data_arrays with relevant filterId
+    dataset = dataset.filter(function(data_array) {
+      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];
+      return filterIds.indexOf(filterId) != -1;
+    });
+
+    // Skip this date if there was not data_array after filtering as applied
+    if (dataset.length == 0) {
+      continue;
+    }
+
+    // Invoke callback with date and histogram
+    cb.call(
+      ctx,
       _parseDateString(dates[i]),
       new Telemetry.Histogram(
         this._filter_path,
         this._data.buckets,
-        this._data.values[dates[i]],
+        dataset,
         this._filter_tree,
         this._spec
-      )
-    )
+      ),
+      index++
+    );
   }
+}
+
+/**
+ * Returns a date ordered array of results from invocation of 
+ * cb(date, histogram, index) for each date, histogram pair.
+ * Note, if provided cb() will be invoked with ctx as this argument.
+ */
+HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {
+  // Set this as context if none is provided
+  if (ctx === undefined) {
+    ctx = this;
+  }
+
+  // Return value array
+  var results = [];
+
+  // For each date, histogram pair invoke cb() and add result to results
+  this.each(function(date, histogram, index) {
+    results.push(cb.call(ctx, date, histogram, index));
+  });
+
+  // Return array of computed values
+  return results;
 }
 
 return HistogramEvolution;
