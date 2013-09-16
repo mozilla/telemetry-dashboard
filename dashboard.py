@@ -179,7 +179,7 @@ def map(uid, line, context):
 # Map a simple measure
 def map_simplemeasure(channel, appVersion, path, name, value, context):
     # Sanity check value
-    if type(value) != int:
+    if type(value) not in (int, long):
         if verbose:
             msg = ("%s is not a value type for simpleMeasurements \"%s\"" %
                    (type(value), name))
