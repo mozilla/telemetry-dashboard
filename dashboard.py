@@ -42,6 +42,18 @@ def map(uid, line, context):
         osVersion = osVersion[:3]
 
     path = (buildDate, reason, appName, OS, osVersion, arch)
+    # Sanitize path
+    for val in path:
+        if not isinstance(val, basestring) and type(val) in (int, float, long):
+            print >> sys.stderr, "Found type %s in path" % type(val)
+            return
+
+    # Sanitize channel and appVersion
+    for val in (channel, appVersion):
+        if not isinstance(val, basestring) and type(val) in (int, float, long):
+            print >> sys.stderr, "Found type %s in channel or appVersion" % type(val)
+            return
+
     histograms = payload.get('histograms', None)
     if histograms is None:
         msg = "histograms is None in map"
@@ -57,8 +69,10 @@ def map(uid, line, context):
             bucket2index = bucket2index[0]
 
         # most buckets contain 0s, so preallocation is a significant win
-        outarray = [0] * (len(bucket2index) + 2)
-        error = False
+        outarray = [0] * (len(bucket2index) + 4)
+
+        index_error = False
+        type_error = False
         if h_values is None:
             msg = "h_values is None in map"
             print >> sys.stderr, msg
@@ -72,11 +86,19 @@ def map(uid, line, context):
             if index is None:
                 #print "%s's does not feature %s bucket in schema"
                 #    % (h_name, bucket)
-                error = True
+                index_error = True
+                break
+            if type(value) not in (int, long, float):
+                type_error = True
+                print >> sys.stderr, "Bad value out to kill us: %s " % repr(value)
                 break
             outarray[index] = value
-        if error:
+        if index_error:
             msg = "index is None in map"
+            print >> sys.stderr, msg
+            continue
+        if type_error:
+            msg = "value is not int, long or float"
             print >> sys.stderr, msg
             continue
 
@@ -84,6 +106,25 @@ def map(uid, line, context):
         if histogram_sum is None:
             msg = "histogram_sum is None in map"
             print >> sys.stderr, msg
+            continue
+        if type(histogram_sum) not in (int, long, float):
+            msg = "histogram_sum is not int, long or float, but: %s" % type(histogram_sum)
+            print >> sys.stderr, msg
+            continue
+        # if statistics isn't available we just leave the two slots as zeroes
+        if 'sum_squares_hi' in h_values and 'sum_squares_lo' in h_values:
+            outarray[-4] = h_values.get('sum_squares_hi', 0)
+            outarray[-3] = h_values.get('sum_squares_lo', 0)
+        elif 'log_sum' in h_values and 'log_sum_squares' in h_values:
+            outarray[-4] = h_values.get('log_sum', 0)
+            outarray[-3] = h_values.get('log_sum_squares', 0)
+        if type(outarray[-4]) not in (int, long, float):
+            print >> sys.stderr, ("sum_squares_hi or log_sum is type %s" %
+                                  type(outarray[-4]))
+            continue
+        if type(outarray[-3]) not in (int, long, float):
+            print >> sys.stderr, ("sum_squares_lo or log_sum_squares is type %s" %
+                                  type(outarray[-3]))
             continue
         outarray[-2] = histogram_sum
         outarray[-1] = 1        # count
@@ -125,13 +166,18 @@ def reduce(key, values, context):
     out = commonCombine(values)
     out_values = {}
     for (filter_path, histogram) in out.iteritems():
-        # first, discard any malformed (non int) entries
-        malformed_data = [type(_) for _ in histogram if type(_) is not int]
-        if len(malformed_data):
-            msg = ("discarding %s. contrained malformed type(s): %s" %
-                   ('/'.join(filter_path), set(malformed_data)))
-            print >> sys.stderr, msg
-            return
+        # first, discard any malformed (non int) entries, while allowing floats
+        # in the statistics
+        for i, val in enumerate(histogram):
+            T = type(val)
+            if T is not int:
+                if T is float:
+                    if i is len(histogram) - 3 or i is len(histogram) - 4:
+                        continue # allow elements of stats to be floats
+                msg = ("discarding %s. contrained malformed type: %s" %
+                       ('/'.join(filter_path), T))
+                print >> sys.stderr, msg
+                return
         out_values["/".join(filter_path)] = histogram
     h_name = key[2]
     # histogram_specs lookup below is guranteed to succeed, because of mapper

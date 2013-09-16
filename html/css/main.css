@@ -14,9 +14,7 @@ body, html {
 header {
   height: 50px;
   line-height: 50px;
-  background: rgb(37, 39, 49);
   padding-left: 10px;
-  color: rgb(255, 204, 153);
   font-size: 17px;
   letter-spacing: -1px;
   display: flex;
@@ -27,19 +25,28 @@ footer {
 article {
   display: flex;
   width: 100%;
-  height: 100%;
   flex-direction: column;
 }
 nav {
+  padding-left: 1em;
+  margin-top: 1em;
+  height: 50px;
+  line-height: 50px;
+  background: rgb(37, 39, 49);
+  color: rgb(255, 204, 153);
+  font-size: 17px;
+  letter-spacing: -1px;
+  display: flex;
   white-space: nowrap;
-  text-align: right;
   flex: 1;
   display:flex;
   align-items: center;
-  margin-left: 1em;
 }
+nav span {line-height: normal;}
 section {
-  padding: 1em;
+}
+.plots{
+  padding: 0em 1em 0em 1em;
 }
 select {
   margin: 0 2px 2px 2px;
@@ -73,4 +80,23 @@ select {
   background-color: rgb(257, 259, 265);
   color:  rgb(84, 84, 84);
   opacity: 0.9;
+}
+.graph {
+  margin-bottom: 2em;
+  height: 300px;
+}
+select {
+  max-width:  50ex;
+}
+.info{
+  font-size: 14px;
+  padding: 10px;
+} 
+#add-plot{
+  right:    20px;
+  position: absolute;
+  cursor: pointer;
+}
+#add-plot:hover{
+  text-decoration: underline;
 }
