@@ -109,12 +109,19 @@ Telemetry.loadHistogram =
   function count_down() {
     load_count--;
     if (load_count == 0) {
+      var spec = _specifications[measure];
+      if (spec === undefined) {
+        spec = {
+          kind:           "exponential",
+          description:    "Histogram of simple measure"
+        };
+      }
       cb(
         new Telemetry.HistogramEvolution(
           [measure],
           data,
           filter_tree,
-          _specifications[measure]
+          spec
         )
       );
     }
