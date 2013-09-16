@@ -78,7 +78,12 @@ def map(uid, line, context):
             print >> sys.stderr, msg
             continue
 
-        values = h_values.get('values', None)
+        try:
+            values = h_values.get('values', None)
+        except AttributeError:
+            msg = "h_values was not a dict"
+            print >> sys.stderr, msg
+            return
         if values is None:
             continue
         for bucket, value in values.iteritems():
