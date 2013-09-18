@@ -36,7 +36,7 @@ function _get(path, cb) {
       console.log("Telemetry._get: Failed loading " + path + " with " +
                   e.target.status);
     }
-  }
+  };
   xhr.open("get", _data_folder + "/" + path, true);
   xhr.send();
 }
@@ -57,7 +57,7 @@ Telemetry.init = function Telemetry_load(data_folder, cb) {
   // Count down files loaded
   function count_down(){
     load_count--;
-    if (load_count == 0) {
+    if (load_count === 0) {
       cb();
     }
   }
@@ -73,7 +73,7 @@ Telemetry.init = function Telemetry_load(data_folder, cb) {
     _specifications = data;
     count_down();
   });
-}
+};
 
 /** Get list of channel/version */
 Telemetry.versions = function Telemetry_versions() {
@@ -81,7 +81,7 @@ Telemetry.versions = function Telemetry_versions() {
     throw new Error("Telemetry.versions: Telemetry module isn't initialized!");
   }
   return _versions;
-}
+};
 
 /**
  * Request measures available for channel/version given. Once fetched the
@@ -119,7 +119,7 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
     // Return measures by callback
     cb(measures);
   });
-}
+};
 
 /**
  * Request HistogramEvolution instance for a given channel/version and measure,
@@ -139,13 +139,20 @@ Telemetry.loadHistogram =
   var data, filter_tree;
   function count_down() {
     load_count--;
-    if (load_count == 0) {
+    if (load_count === 0) {
+      var spec = _specifications[measure];
+      if (spec === undefined) {
+        spec = {
+          kind:           "exponential",
+          description:    "Histogram of simple measure"
+        };
+      }
       cb(
         new Telemetry.HistogramEvolution(
           [measure],
           data,
           filter_tree,
-          _specifications[measure]
+          spec
         )
       );
     }
@@ -160,7 +167,7 @@ Telemetry.loadHistogram =
     filter_tree = json;
     count_down();
   });
-}
+};
 
 /** Auxiliary function to find all filter_ids in a filter_tree */
 function _listFilterIds(filter_tree){
@@ -265,12 +272,12 @@ Histogram.prototype.filter = function Histogram_filter(option) {
     this._filter_tree[option],
     this._spec
   );
-}
+};
 
 /** Name of filter available, null if none */
 Histogram.prototype.filterName = function Histogram_filterName() {
   return this._filter_tree.name || null;
-}
+};
 
 /** List of options available for current filter */
 Histogram.prototype.filterOptions = function Histogram_filterOptions() {
@@ -281,17 +288,17 @@ Histogram.prototype.filterOptions = function Histogram_filterOptions() {
     }
   }
   return options.sort();
-}
+};
 
 /** Get the histogram kind */
 Histogram.prototype.kind = function Histogram_kind() {
   return this._spec.kind;
-}
+};
 
 /** Get a description of the measure in this histogram */
 Histogram.prototype.description = function Histogram_description() {
   return this._spec.description;
-}
+};
 
 /** Get number of data points in this histogram */
 Histogram.prototype.count = function Histogram_count() {
@@ -301,12 +308,12 @@ Histogram.prototype.count = function Histogram_count() {
     count += _aggregate(i, this);
   }
   return count;
-}
+};
 
 /** Number of telemetry pings aggregated in this histogram */
 Histogram.prototype.submissions = function Histogram_submissions() {
   return _aggregate(DataOffsets.SUBMISSIONS, this);
-}
+};
 
 /** Get the mean of all data points in this histogram, null if N/A */
 Histogram.prototype.mean = function Histogram_mean() {
@@ -315,7 +322,7 @@ Histogram.prototype.mean = function Histogram_mean() {
   }
   var sum = _aggregate(DataOffsets.SUM, this);
   return sum / this.count();
-}
+};
 
 /** Get the geometric mean of all data points in this histogram, null if N/A */
 Histogram.prototype.geometricMean = function Histogram_geometricMean() {
@@ -324,7 +331,7 @@ Histogram.prototype.geometricMean = function Histogram_geometricMean() {
   }
   var log_sum = _aggregate(DataOffsets.LOG_SUM, this);
   return log_sum / this.count();
-}
+};
 
 /**
  * Get the standard deviation over all data points in this histogram,
@@ -339,11 +346,11 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
   var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));
   var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));
   var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));
-  
+
   // std. dev. = sqrt(count * sum_squares - sum * sum) / count
   // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
   return count.times(sum_sq).minus(sum.pow(2)).divide(count).toFixed(3);
-}
+};
 
 /**
  * Get the geometric standard deviation over all data points in this histogram,
@@ -369,7 +376,7 @@ Histogram.prototype.geometricStandardDeviation =
       ) / count
     )
   );
-}
+};
 
 /** Estimate value of a percentile, returns null, if not applicable */
 Histogram.prototype.percentile = function Histogram_percentile(percent) {
@@ -400,24 +407,24 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
     end = _estimateLastBucketEnd(this);
   }
 
-  // Fraction indicating where in bucket i the percentile is located 
+  // Fraction indicating where in bucket i the percentile is located
   var bucket_fraction = to_count / (_aggregate(i, this) + 1);
 
   if (this.kind() == "linear") {
     // Interpolate median assuming a uniform distribution between start and end.
     return start + (end - start) * bucket_fraction;
-  
+
   } else if (this.kind() == "exponential") {
     // Interpolate median assuming an exponential distribution
     return Math.exp(Math.log(start) + Math.log(end - start) * bucket_fraction);
   }
   return null;
-}
+};
 
 /** Estimate the median, returns null, if not applicable */
 Histogram.prototype.median = function Histogram_median() {
   return this.percentile(50);
-}
+};
 
 /**
  * Invoke cb(count, start, end, index) for every bucket in this histogram, the
@@ -448,7 +455,7 @@ Histogram.prototype.each = function Histogram_each(cb, context) {
     // Invoke callback as promised
     cb.call(context, count, start, end, i);
   }
-}
+};
 
 /**
  * Returns a bucket ordered array of results from invocation of 
@@ -471,7 +478,7 @@ Histogram.prototype.map = function Histogram_map(cb, context) {
 
   // Return values from cb
   return results;
-}
+};
 
 return Histogram;
 
@@ -502,13 +509,13 @@ function HistogramEvolution(filter_path, data, filter_tree, spec) {
 /** Get the histogram kind */
 HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
   return this._spec.kind;
-}
+};
 
 /** Get a description of the measure in this histogram */
 HistogramEvolution.prototype.description =
                                     function HistogramEvolution_description() {
   return this._spec.description;
-}
+};
 
 /** Get new HistogramEvolution representation filtered with option */
 HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
@@ -521,13 +528,13 @@ HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
     this._filter_tree[opt],
     this._spec
   );
-}
+};
 
 /** Name of filter available, null if none */
 HistogramEvolution.prototype.filterName =
                                       function HistogramEvolution_filterName() {
   return this._filter_tree.name || null;
-}
+};
 
 /** List of options available for current filter */
 HistogramEvolution.prototype.filterOptions =
@@ -539,7 +546,7 @@ HistogramEvolution.prototype.filterOptions =
     }
   }
   return options.sort();
-}
+};
 
 /**
  * Get merged histogram for the interval [start; end], ie. start and end dates
@@ -549,7 +556,7 @@ HistogramEvolution.prototype.filterOptions =
 HistogramEvolution.prototype.range =
                                 function HistogramEvolution_range(start, end) {
   // Construct a dataset by merging all datasets/histograms in the range
-  var merged_dataset = []
+  var merged_dataset = [];
 
   // List of filter_ids we care about, instead of just merging all filters
   var filter_ids = _listFilterIds(this._filter_tree);
@@ -560,7 +567,7 @@ HistogramEvolution.prototype.range =
     // Check that date is between start and end (if start and end is defined)
     var date = _parseDateString(datekey);
     if((!start || start <= date) && (!end || date <= end)) {
-    
+
       // Find dataset of this datekey, merge filter_ids for this dataset into
       // merged_dataset.
       var dataset = this._data.values[datekey];
@@ -578,7 +585,7 @@ HistogramEvolution.prototype.range =
     this._filter_tree,
     this._spec
   );
-}
+};
 
 /** Get the list of dates in the evolution sorted by date */
 HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
@@ -587,7 +594,7 @@ HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
     dates.push(_parseDateString(date));
   }
   return dates.sort();
-}
+};
 
 /**
  * Invoke cb(date, histogram, index) with each date, histogram pair, ordered by
@@ -643,7 +650,7 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
       index++
     );
   }
-}
+};
 
 /**
  * Returns a date ordered array of results from invocation of 
@@ -666,12 +673,13 @@ HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {
 
   // Return array of computed values
   return results;
-}
+};
 
 return HistogramEvolution;
 
 })(); /* HistogramEvolution */
 
-return exports.Telemetry = Telemetry;
+exports.Telemetry = Telemetry;
+return exports.Telemetry;
 
 })(this);
