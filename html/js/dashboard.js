@@ -23,7 +23,7 @@ Dashboard.init = function Dashboard_init() {
   Dashboard.hashChanged();
 
   // If not state was restored from hash, we create a little state
-  if (_plots.length == 0) {
+  if (_plots.length === 0) {
     // Create an initial plot area
     Dashboard.addPlotArea();
   }
@@ -42,14 +42,36 @@ Dashboard.init = function Dashboard_init() {
       }
     }, 100);
   });
-}
+};
 
 /** Add a new PlotArea to the dashboard */
 Dashboard.addPlotArea = function Dashboard_addPlotArea(state) {
   var plot = new Dashboard.PlotArea(state);
   _plots.push(plot);
+
+  // set up plot hover
+  var previousPoint;
+  $(plot.element()).bind("plothover", function(event, pos, item) {
+    if (!item) {
+      $("#tooltip").remove();
+      previousPoint = null;
+      return;
+    }
+    if (previousPoint == item.dataIndex) {
+      return;
+    }
+    previousPoint = item.dataIndex;
+    $("#tooltip").remove();
+    $('<div id="tooltip">' + item.datapoint[1].toFixed(2) + '</div>')
+      .css({
+        top: item.pageY + 5,
+        left: item.pageX + 5,
+      })
+      .appendTo("body").fadeIn(200);
+  });
+
   $("article").append(plot.element());
-}
+};
 
 // Last updated hash
 var _lastUpdatedHash = null;
@@ -80,7 +102,7 @@ Dashboard.updateHash = function Dashboard_updateHash() {
   }
   _lastUpdatedHash     = "#" + states.join("|");
   window.location.hash = _lastUpdatedHash;
-}
+};
 
 /** Restored state from hash */
 Dashboard.hashChanged = function Dashboard_hashChanged() {
@@ -108,7 +130,7 @@ Dashboard.hashChanged = function Dashboard_hashChanged() {
     // Create plot for state
     Dashboard.addPlotArea(state);
   }
-}
+};
 
 /**
  * A PlotArea instance creates elements necessary to choose version, measure and
@@ -136,7 +158,9 @@ function _populateSelect(options, select) {
     var option = options[i];
 
     // Add <option>
-    select.append($("<option>", {value: option, text: option}));
+    select.append(
+      $("<option>",
+      {value: option, text: option.replace('/', ' ')}));
   }
 
   // Select first option
@@ -154,7 +178,7 @@ function PlotArea(state) {
   this._element = $("<section>");
 
   // Create nav area
-  this._nav = $("<nav>")
+  this._nav = $("<nav>");
   this._element.append(this._nav);
   //this._nav.bind("change", $.proxy(this._optionChanged, this));
 
@@ -188,7 +212,7 @@ function PlotArea(state) {
   this._element.append(plots);
 
   // Place holders for plot objects
-  this._hgEvoPlot = null;    
+  this._hgEvoPlot = null;
   this._hgramPlot = null;
 
   // Restore from existing state
@@ -198,7 +222,7 @@ function PlotArea(state) {
 PlotArea.prototype.restore = function PlotArea_restore(state) {
   var that = this;
   var stateFragments = (state || "").split("/");
-  
+
   // Create version selector
   var versions = Telemetry.versions();
   var version = versions[0];
@@ -210,7 +234,6 @@ PlotArea.prototype.restore = function PlotArea_restore(state) {
   this._versionSelector.val(version);
 
   // Fetch measures
-  var that = this;
   Telemetry.measures(version, function(measures) {
     _populateSelect(measures, that._measureSelector);
 
@@ -223,7 +246,7 @@ PlotArea.prototype.restore = function PlotArea_restore(state) {
       function applyFilterOptions() {
         // Create next filter
         var filterName = hgramEvo.filterName();
-        if (filterName != null) {
+        if (filterName !== null) {
           var options = [filterName + "*"].concat(hgramEvo.filterOptions());
           var nextSelector = _populateSelect(options);
           nextSelector.data("hgramEvo", hgramEvo);
@@ -254,12 +277,12 @@ PlotArea.prototype.restore = function PlotArea_restore(state) {
       that.updatePlots();
     });
   });
-}
+};
 
 /** Get element from PlotArea */
 PlotArea.prototype.element = function PlotArea_element(){
   return this._element;
-}
+};
 
 /** Serialize this PlotArea to a minimalistic string */
 PlotArea.prototype.state = function PlotArea_state(){
@@ -281,7 +304,7 @@ PlotArea.prototype.state = function PlotArea_state(){
   //              "contains a slash \"/\"!");
   //}
   return stateFragments.join("/");
-}
+};
 
 /** Event handler for when selected version is changed */
 PlotArea.prototype._versionChanged = function PlotArea__versionChanged() {
@@ -301,7 +324,7 @@ PlotArea.prototype._versionChanged = function PlotArea__versionChanged() {
     // Now update measure
     that._measureChanged();
   });
-}
+};
 
 /** Event handler for when selected measure is changed */
 PlotArea.prototype._measureChanged = function PlotArea__measureChanged() {
@@ -315,7 +338,7 @@ PlotArea.prototype._measureChanged = function PlotArea__measureChanged() {
 
     // Create next filter
     var filterName = hgramEvo.filterName();
-    if (filterName != null) {
+    if (filterName !== null) {
       var options = [filterName + "*"].concat(hgramEvo.filterOptions());
       var nextSelector = _populateSelect(options);
       nextSelector.data("hgramEvo", hgramEvo);
@@ -326,7 +349,7 @@ PlotArea.prototype._measureChanged = function PlotArea__measureChanged() {
     that._hgramEvo = hgramEvo;
     that.updatePlots();
   });
-}
+};
 
 PlotArea.prototype._filterChanged = function PlotArea__filterChanged(e) {
   var filterSelector = $(e.target);
@@ -345,7 +368,7 @@ PlotArea.prototype._filterChanged = function PlotArea__filterChanged(e) {
 
     // Create next filter
     var filterName = hgramEvo.filterName();
-    if (filterName != null) {
+    if (filterName !== null) {
       var options = [filterName + "*"].concat(hgramEvo.filterOptions());
       var nextSelector = _populateSelect(options);
       nextSelector.data("hgramEvo", hgramEvo);
@@ -356,7 +379,7 @@ PlotArea.prototype._filterChanged = function PlotArea__filterChanged(e) {
   // Update histogram
   this._hgramEvo = hgramEvo;
   this.updatePlots();
-}
+};
 
 /** Update plots to reflect filtered data */
 PlotArea.prototype.updatePlots = function PlotArea_updatePlots(){
@@ -424,7 +447,7 @@ PlotArea.prototype.updatePlots = function PlotArea_updatePlots(){
 
   // Plot aggregated histogram
   this._hgramPlot = $.plot(this._hgramPlotDiv, hgramSeries, {
-    "xaxis": { 
+    "xaxis": {
       "ticks": aggregated_ticks
     },
     "grid": {
@@ -435,7 +458,7 @@ PlotArea.prototype.updatePlots = function PlotArea_updatePlots(){
   // Update histogram information
   this._descDiv.text(hgram.description() + " (submissions: " +
                      hgram.submissions() + ")");
-}
+};
 
 /** Resize plot area */
 PlotArea.prototype.resize = function PlotArea_resize() {
@@ -449,12 +472,13 @@ PlotArea.prototype.resize = function PlotArea_resize() {
     this._hgramPlot.setupGrid();
     this._hgramPlot.draw();
   }
-}
+};
 
 return PlotArea;
 
 })();
 
-return exports.Dashboard = Dashboard;
+exports.Dashboard = Dashboard;
+return exports.Dashboard;
 
 })(this);

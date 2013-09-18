@@ -12,12 +12,13 @@ body, html {
   background: rgb(247, 249, 255);
 }
 header {
-  height: 50px;
-  line-height: 50px;
+  line-height: 2em;
   padding-left: 10px;
   font-size: 17px;
   letter-spacing: -1px;
   display: flex;
+  color: rgb(255, 204, 153);
+  background: rgb(37, 39, 49);
 }
 footer {
   padding: 1em;
@@ -28,14 +29,10 @@ article {
   flex-direction: column;
 }
 nav {
-  padding-left: 1em;
-  margin-top: 1em;
-  height: 50px;
-  line-height: 50px;
+  padding-left: 10px;
+  height: 35px;
   background: rgb(37, 39, 49);
   color: rgb(255, 204, 153);
-  font-size: 17px;
-  letter-spacing: -1px;
   display: flex;
   white-space: nowrap;
   flex: 1;
@@ -91,7 +88,7 @@ select {
 .info{
   font-size: 14px;
   padding: 10px;
-} 
+}
 #add-plot{
   right:    20px;
   position: absolute;
