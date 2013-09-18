@@ -85,12 +85,15 @@ Telemetry.versions = function Telemetry_versions() {
 
 /**
  * Request measures available for channel/version given. Once fetched the
- * callback with invoked as cb(measures) where measures a list of JSON objects
- * as follows:
+ * callback with invoked as cb(measures, measureInfo) where measures a list of
+ * measure ids and measureInfo is mapping from measure id to kind and
+ * description, i.e. a JSON object on the following form:
  *  {
- *    measure:      "A_TELEMETRY_MEASURE_ID",
- *    kind:         "linear|exponential|flag|enumerated|boolean",
- *    description:  "A human readable description"
+ *    "A_TELEMETRY_MEASURE_ID": {
+ *      kind:         "linear|exponential|flag|enumerated|boolean",
+ *      description:  "A human readable description"
+ *    },
+ *    ...
  *  }
  * 
  * Note, channel/version must be a string from Telemetry.versions()
@@ -98,26 +101,28 @@ Telemetry.versions = function Telemetry_versions() {
 Telemetry.measures = function Telemetry_measures(channel_version, cb) {
   _get([channel_version, "histograms.json"], function(data) {
     var measures = [];
+    var measureInfo = {};
+
     for(var key in data) {
 
+      // Add measure id
+      measures.push(key);
+      
       // Find specification
       var spec = _specifications[key];
-
-      // Create measures dictionary
-      measures.push({
-        measure:      key,
+      
+      // Add measure info
+      measureInfo[key] = {
         kind:         spec.kind,
         description:  spec.description
-      });
+      };
     }
 
     // Sort measures alphabetically
-    measures.sort(function(m1, m2) {
-      return m1.measure > m2.measure ? 1 : -1;
-    });
+    measures.sort();
 
     // Return measures by callback
-    cb(measures);
+    cb(measures, measureInfo);
   });
 };
 
@@ -240,8 +245,10 @@ function _estimateLastBucketEnd(histogram) {
   var sum_last = _aggregate(DataOffsets.SUM, histogram) - sum_before_last;
   // We estimate the mean of the last bucket as follows
   var last_bucket_mean = sum_last / _aggregate(n - 1, histogram);
-  // Now estimate the lat bucket end by 2 * last_bucket_mean
-  return last_bucket_mean * 2;
+  // We find the start of the last bucket
+  var last_bucket_start = histogram._buckets[n - 1];
+  // Now estimate the last bucket end
+  return last_bucket_start + (last_bucket_mean - last_bucket_start) * 2;
 }
 
 /**
@@ -317,9 +324,10 @@ Histogram.prototype.submissions = function Histogram_submissions() {
 
 /** Get the mean of all data points in this histogram, null if N/A */
 Histogram.prototype.mean = function Histogram_mean() {
-  if (this.kind() != "linear" && this.kind() != "exponential") {
-    return null;
-  }
+  // if (this.kind() != "linear" && this.kind() != "exponential") {
+  //   throw new Error("Histogram.geometricMean() is only available for " + 
+  //                   "linear and exponential histograms");
+  // }
   var sum = _aggregate(DataOffsets.SUM, this);
   return sum / this.count();
 };
@@ -327,7 +335,8 @@ Histogram.prototype.mean = function Histogram_mean() {
 /** Get the geometric mean of all data points in this histogram, null if N/A */
 Histogram.prototype.geometricMean = function Histogram_geometricMean() {
   if (this.kind() != "exponential") {
-    return null;
+    throw new Error("Histogram.geometricMean() is only available for " + 
+                    "exponential histograms");
   }
   var log_sum = _aggregate(DataOffsets.LOG_SUM, this);
   return log_sum / this.count();
@@ -339,7 +348,8 @@ Histogram.prototype.geometricMean = function Histogram_geometricMean() {
  */
 Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
   if (this.kind() != "linear") {
-    return null;
+    throw new Error("Histogram.standardDeviation() is only available for " + 
+                    "linear histograms");
   }
   var sum       = new Big(_aggregate(DataOffsets.SUM, this));
   var count     = new Big(this.count());
@@ -359,7 +369,10 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
 Histogram.prototype.geometricStandardDeviation =
                               function Histogram_geometricStandardDeviation() {
   if (this.kind() != 'exponential') {
-    return null;
+    throw new Error(
+      "Histogram.geometricStandardDeviation() is only " + 
+      "available for exponential histograms"
+    );
   }
   var count       = this.count();
   var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);
@@ -378,11 +391,12 @@ Histogram.prototype.geometricStandardDeviation =
   );
 };
 
-/** Estimate value of a percentile, returns null, if not applicable */
+/** Estimate value of a percentile */
 Histogram.prototype.percentile = function Histogram_percentile(percent) {
-  if (this.kind() != "linear" && this.kind() != "exponential") {
-    return null;
-  }
+  // if (this.kind() != "linear" && this.kind() != "exponential") {
+  //   throw new Error("Histogram.percentile() is only available for linear " +
+  //                   "and exponential histograms");
+  // }
 
   var frac  = percent / 100;
   var count = this.count();
@@ -410,15 +424,13 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
   // Fraction indicating where in bucket i the percentile is located
   var bucket_fraction = to_count / (_aggregate(i, this) + 1);
 
-  if (this.kind() == "linear") {
-    // Interpolate median assuming a uniform distribution between start and end.
-    return start + (end - start) * bucket_fraction;
-
-  } else if (this.kind() == "exponential") {
+  if (this.kind() == "exponential") {
     // Interpolate median assuming an exponential distribution
-    return Math.exp(Math.log(start) + Math.log(end - start) * bucket_fraction);
+    return start + Math.exp(Math.log(end - start) * bucket_fraction);
   }
-  return null;
+  
+  // Interpolate median assuming a uniform distribution between start and end.
+  return start + (end - start) * bucket_fraction;
 };
 
 /** Estimate the median, returns null, if not applicable */

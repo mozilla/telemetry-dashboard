@@ -85,15 +85,13 @@ select {
 select {
   max-width:  50ex;
 }
-.info{
+#info{
   font-size: 14px;
   padding: 10px;
 }
-#add-plot{
-  right:    20px;
-  position: absolute;
-  cursor: pointer;
-}
-#add-plot:hover{
-  text-decoration: underline;
+.box{
+  margin-left: 50px;
+  display: inline-block;
+  width: 2ex;
+  height: 2ex;
 }

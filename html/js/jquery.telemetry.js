@@ -49,7 +49,8 @@ $.widget("telemetry.histogramfilter", {
     defaultVersion:                 null,
 
     /**
-     * Default measure, or function that takes a list of measure ids and returns
+     * Default measure, or function that takes a list of measure ids and a
+     * measureInfo object as created by Telemetry.measures() and returns
      * a measure id from that list.
      */
     defaultMeasure:                 null,
@@ -71,7 +72,10 @@ $.widget("telemetry.histogramfilter", {
      * this is useful if your dashboard is specialized in a specific kind of
      * histograms: linear, exponential, flag, boolean, enumerated
      */
-    allowedHistogramKinds:          null
+    allowedHistogramKinds:          null,
+
+    /** Prefix for state() if synchronizeStateWithHash is true */
+    windowHashPrefix:               "",
   },
 
   /** Create new histogramfilter */
@@ -111,7 +115,8 @@ $.widget("telemetry.histogramfilter", {
     // Setup window.location.hash synchronization
     if(this.options.synchronizeStateWithHash) {
       // Get hash from window, if not provided by
-      state = state || window.location.hash.substr(1);
+      var prefixLength = this.options.windowHashPrefix.length;
+      state = state || window.location.hash.substr(1 + prefixLength);
 
       // Listen for hashchange events
       $(window).bind("hashchange", this._windowHashChanged);
@@ -255,7 +260,8 @@ $.widget("telemetry.histogramfilter", {
    */
   _windowHashChanged: function histogramfilter__windowHashChanged() {
     // Get state from hash
-    var hashState = window.location.hash.substr(1);
+    var prefixLength = this.options.windowHashPrefix.length;
+    var hashState = window.location.hash.substr(1 + prefixLength);
 
     // Update if it doesn't match current state
     if (this.state() != hashState) {
@@ -281,7 +287,7 @@ $.widget("telemetry.histogramfilter", {
     this._triggerChange();
 
     // Load measures for selected version
-    Telemetry.measures(version, $.proxy(function(measures) {
+    Telemetry.measures(version, $.proxy(function(measures, measureInfo) {
       // Abort if another version have been selected while we loaded
       if (this._versionSelector.val() != version) {
         return;
@@ -291,23 +297,21 @@ $.widget("telemetry.histogramfilter", {
       // measures under consideration to these measures
       if (this.options.allowedHistogramKinds !== null) {
         measures = measures.filter(function(m) {
-          return this.options.allowedHistogramKinds.indexOf(m.kind) != -1;
+          // Lookup measure kind
+          var kind = measureInfo[m].kind;
+          // Check if kind is allowed
+          return this.options.allowedHistogramKinds.indexOf(kind) != -1;
         }, this);
       }
 
-      // Make a list of measure ids
-      var measureIds = measures.map(function(m) {
-        return m.measure;
-      });
-
       // Choose default measure if desired isn't available
-      if(measureIds.indexOf(measure) == -1) {
-        measure = this._defaultMeasure(measures);
+      if(measures.indexOf(measure) == -1) {
+        measure = this._defaultMeasure(measures, measureInfo);
       }
 
       // Populate measures selector while ignoring changes in event handlers
       this._ignoreChanges = true;
-      this._populateSelect(measureIds, this._measureSelector);
+      this._populateSelect(measures, this._measureSelector);
       this._ignoreChanges = false;
 
       // Restore things at measure level
@@ -429,29 +433,25 @@ $.widget("telemetry.histogramfilter", {
   },
 
   /** 
-   * Select default measure from a list of measure objects as provided by
-   * Telemetry.measures(), if you need kind and description you can overwrite
-   * this method, but otherwise just use options.defaultMeasure to specify
-   * the default measure or function to choose it.
+   * Select default measure given values as provided by Telemetry.measures(),
+   * note, you shouldn't have to overwrite this method. The same functionality
+   * is exposed through options.defaultMeasure which can also be specified as
+   * a function.
    */
-  _defaultMeasure: function histogramfilter__defaultMeasure(measures) {
+  _defaultMeasure:
+              function histogramfilter__defaultMeasure(measures, measureInfo) {
     // Get default measure
     var measure = this.options.defaultMeasure;
-
-    // Make a list of measure ids
-    var measureIds = measures.map(function(m) {
-      return m.measure;
-    });
     
     // If function, use it to choose a measure
     if (measure instanceof Function) {
-      measure = measure.call(this.element, measureIds);
+      measure = measure.call(this.element, measures, measureInfo);
     }
 
     // Validate selected measure
-    if (measureIds.indexOf(measure) == -1) {
+    if (measures.indexOf(measure) == -1) {
       // Now resort to choose the first measure available
-      measure = measureIds[0];
+      measure = measures[0];
     }
     
     return measure;
@@ -638,9 +638,10 @@ $.widget("telemetry.histogramfilter", {
 
     // If window.location.hash synchronization is active and we have altered
     // the current state, we should update window.location.hash
+    var hashWithPrefix = this.options.windowHashPrefix  + this.options.state;
     if (this.options.synchronizeStateWithHash &&
-        this.options.state != window.location.hash.substr(1)) {
-      window.location.hash = "#" + this.options.state;
+        hashWithPrefix != window.location.hash.substr(1)) {
+      window.location.hash = "#" + hashWithPrefix;
     }
 
     // Now trigger the histogramfilterchange event
