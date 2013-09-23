@@ -110,6 +110,14 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
       
       // Find specification
       var spec = _specifications[key];
+
+      // Hack to provide specification of simple measures
+      if (spec === undefined) {
+        spec = {
+          kind:           "exponential",
+          description:    "Histogram of simple measure"
+        };
+      }
       
       // Add measure info
       measureInfo[key] = {
@@ -428,7 +436,7 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
     // Interpolate median assuming an exponential distribution
     return start + Math.exp(Math.log(end - start) * bucket_fraction);
   }
-  
+
   // Interpolate median assuming a uniform distribution between start and end.
   return start + (end - start) * bucket_fraction;
 };

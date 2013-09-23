@@ -136,7 +136,7 @@ Dashboard.plotEvolution = function Dashboard_plotEvolution(hgramEvo) {
       points: { show: true },
     },
     xaxes: [
-      { mode: "time", timeformat: "%y%m%d" }
+      { mode: "time", timeformat: "%Y%m%d" }
     ],
     yaxes: [
       {min: 0},
