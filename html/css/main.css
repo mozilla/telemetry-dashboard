@@ -98,3 +98,6 @@ select {
 #show-percentiles{
   margin-left: 50px;
 }
+#percentile-legend{
+  transition: 250ms;
+}

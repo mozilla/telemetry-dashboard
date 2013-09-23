@@ -35,6 +35,11 @@ Dashboard.init = function Dashboard_init() {
   $("#show-percentiles").change(function() {
     Dashboard.plotEvolution();
     Dashboard.plotHistogram();
+    if ($("#show-percentiles").prop('checked')) {
+      $("#percentile-legend").css("opacity", "1");
+    } else {
+      $("#percentile-legend").css("opacity", "0");
+    }
   });
 
   // Setup plot hover
