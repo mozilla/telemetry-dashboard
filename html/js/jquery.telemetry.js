@@ -87,7 +87,7 @@ $.widget("telemetry.histogramfilter", {
     this._windowHashChanged = $.proxy(this._windowHashChanged,  this);    
 
     // Create version and measure selectors
-    this._versionSelector = this._populateSelect(Telemetry.versions());
+    this._populateVersionSelect();
     this._measureSelector = this._populateSelect();
 
     // Append version and measure selectors
@@ -251,6 +251,38 @@ $.widget("telemetry.histogramfilter", {
     this._ignoreChanges = false;
 
     return select;
+  },
+
+  /**
+   * Auxiliary function to create/populate and style the <select> element for
+   * selection of versions
+   */
+  _populateVersionSelect: function histogramfilter__populateVersionSelect() {
+    // Create and style select if not provided
+    if (this._versionSelector === undefined) {
+      this._versionSelector = $("<select>");
+      this._versionSelector.addClass(this.options.selectClass);
+    } else {
+      this._versionSelector.empty();
+    }
+    var options = Telemetry.versions();
+
+    // for each option
+    var n = options.length;
+    for(var i = 0; i < n; i++) {
+      var option = options[i];
+
+      // Add <option>
+      this._versionSelector.append($("<option>", {
+        value:  option,
+        text:   option.replace("/", " ")
+      }));
+    }
+
+    // Select first option, ignoring this change in event handlers
+    this._ignoreChanges = true;
+    this._versionSelector.val(options[0]);
+    this._ignoreChanges = false;
   },
 
   /**
