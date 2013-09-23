@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "dimensions": [
+    {
+      "field_name": "reason",
+      "allowed_values": "*"
+    },
+    {
+      "field_name": "appName",
+      "allowed_values": "*"
+    },
+    {
+      "field_name": "appUpdateChannel",
+      "allowed_values": "*"
+    },
+    {
+      "field_name": "appVersion",
+      "allowed_values": "*"
+    },
+    {
+      "field_name": "appBuildID",
+     "allowed_values": "*"
+    },
+    {
+      "field_name": "submission_date",
+      "allowed_values": "*"
+    }
+  ]
+}

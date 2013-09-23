@@ -4,8 +4,6 @@ try:
 except ImportError:
     import json
 import sys
-import telemetryutils
-import jydoop
 import math
 
 
@@ -305,5 +303,3 @@ def output(path, results):
     f = open(path, 'w')
     for k, v in results:
         f.write(k + "\t" + v + "\n")
-
-setupjob = telemetryutils.setupjob
