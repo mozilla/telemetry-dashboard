@@ -10,13 +10,33 @@
     <article>
     <header>
         <span>Telemetry Dashboard</span>
-        <!-- <span id="add-plot">Add plot</span> -->
     </header>
+    <section id="plot-area">
+        <nav id="filters"></nav>
+        <div id="info"></div>
+        <div class="plots">
+            <div id="evolution-plot" class="graph"></div>
+            <div id="histogram-plot" class="graph"></div>
+        </div>
+        <div>
+            <span id="percentile-legend">
+                <div style="background-color: #000;" class="box"></div> 5th Percentile
+                <div style="background-color: #0f0;" class="box"></div> 25th Percentile
+                <div style="background-color: #00f;" class="box"></div> Median
+                <div style="background-color: #f00;" class="box"></div> 75th Percentile
+                <div style="background-color: #f0f;" class="box"></div> 95th Percentile
+            </span>
+            <input type="checkbox" id="show-percentiles" checked="checked"> Plot percentiles
+        </div>
+    </section>
 </body>
 <script src="js/jquery.js"></script>
 <script src="js/jquery.flot.js"></script>
+<script src="js/jquery.flot.time.js"></script>
 <script src="js/big.js"></script>
 <script src="js/telemetry.js"></script>
+<script src="js/jquery.ui.widget.js"></script>
+<script src="js/jquery.telemetry.js"></script>
 <script src="js/dashboard.js"></script>
 <script>
     Telemetry.init("data", function(){
