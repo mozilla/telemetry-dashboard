@@ -84,7 +84,7 @@ $.widget("telemetry.histogramfilter", {
     this._versionChanged    = $.proxy(this._versionChanged,     this);
     this._measureChanged    = $.proxy(this._measureChanged,     this);
     this._filterChanged     = $.proxy(this._filterChanged,      this);
-    this._windowHashChanged = $.proxy(this._windowHashChanged,  this);    
+    this._windowHashChanged = $.proxy(this._windowHashChanged,  this);
 
     // Create version and measure selectors
     this._populateVersionSelect();
@@ -111,7 +111,7 @@ $.widget("telemetry.histogramfilter", {
 
     // State to restore from
     var state = this.options.state;
-    
+
     // Setup window.location.hash synchronization
     if(this.options.synchronizeStateWithHash) {
       // Get hash from window, if not provided by
