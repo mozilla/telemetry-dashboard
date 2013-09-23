@@ -135,12 +135,14 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
 };
 
 /**
- * Request HistogramEvolution instance for a given channel/version and measure,
- * once fetched cb(histogramEvolution) will be invoked with the histogram.
+ * Request HistogramEvolution instance over builds for a given channel/version
+ * and measure, once fetched cb(histogramEvolution) will be invoked with the 
+ * HistogramEvolution instance. The dates in the HistogramEvolution instance
+ * fetched will be build dates, not telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
-Telemetry.loadHistogram =
-                function Telemetry_loadHistogram(channel_version, measure, cb) {
+Telemetry.loadEvolutionOverBuilds =
+      function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {
   // Unpack measure, if a dictionary from Telemetry.measures was provided
   // instead of just a measure id.
   if (measure instanceof Object && measure.measure !== undefined) {
@@ -181,6 +183,15 @@ Telemetry.loadHistogram =
     count_down();
   });
 };
+
+/** Place holder for when bug 916217 is implemented */
+Telemetry.loadEvolutionOverTime =
+      function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
+  throw new Error(
+    "Telemetry.loadEvolutionOverTime() is not implemented yet, " +
+    "server-side data aggregation is still missing! (See bug 916217)"
+  );
+}
 
 /** Auxiliary function to find all filter_ids in a filter_tree */
 function _listFilterIds(filter_tree){

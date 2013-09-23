@@ -366,7 +366,8 @@ $.widget("telemetry.histogramfilter", {
     this._triggerChange();
 
     // Load histogram for desired measure
-    Telemetry.loadHistogram(version, measure, $.proxy(function(hgram) {
+    Telemetry.loadEvolutionOverBuilds(version, measure,
+                                      $.proxy(function(hgram) {
       // Abort if another version or measure have been selected while we loaded
       if (this._versionSelector.val() != version ||
           this._measureSelector.val() != measure) {
