@@ -186,12 +186,12 @@ Telemetry.loadEvolutionOverBuilds =
 
 /** Place holder for when bug 916217 is implemented */
 Telemetry.loadEvolutionOverTime =
-      function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
+        function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
   throw new Error(
     "Telemetry.loadEvolutionOverTime() is not implemented yet, " +
     "server-side data aggregation is still missing! (See bug 916217)"
   );
-}
+};
 
 /** Auxiliary function to find all filter_ids in a filter_tree */
 function _listFilterIds(filter_tree){
@@ -225,6 +225,7 @@ Telemetry.Histogram = (function(){
 /**
  * Auxiliary function to aggregate values of index from histogram dataset
  * TODO: Consider taking a look at all applications, maybe cache some of them.
+ *       See bug 919607 for details.
  */
 function _aggregate(index, histogram) {
   // Cache the list of filter ids

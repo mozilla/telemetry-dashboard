@@ -632,10 +632,11 @@ $.widget("telemetry.histogramfilter", {
     fragments.push(this._measureSelector.val());
 
     // For each filter with exception of the last one append selected value
+    var filter;
     var n = this._filterList.length;
     for (var i = 0; i < n - 1; i++) {
       // Get i'th filter
-      var filter = this._filterList[i];
+      filter = this._filterList[i];
 
       // Append select option
       fragments.push(filter.select.val());
@@ -645,7 +646,7 @@ $.widget("telemetry.histogramfilter", {
     // select option, if not default
     var histogram = null;
     if (n !== 0) {
-      var filter = this._filterList[n - 1];
+      filter = this._filterList[n - 1];
 
       // Get histogram
       histogram = filter.histogram;
