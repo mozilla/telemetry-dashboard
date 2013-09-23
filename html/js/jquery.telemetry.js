@@ -159,7 +159,7 @@ $.widget("telemetry.histogramfilter", {
     // If there is a last filter, get the histogram from it and apply the
     // select option, if not default
     var histogram = null;
-    if (n != 0) {
+    if (n !== 0) {
       // Get last filter
       var filter = this._filterList[n - 1];
 
@@ -404,7 +404,7 @@ $.widget("telemetry.histogramfilter", {
       var filter = {
         select:         this._populateSelect(options),
         histogram:      hgram
-      }
+      };
 
       // Set next index from _filterList on <select> element to we can find it
       filter.select.data("telemetry.histogramfilter.index",
@@ -643,8 +643,7 @@ $.widget("telemetry.histogramfilter", {
     // If there is a last filter, get the histogram from it and apply the
     // select option, if not default
     var histogram = null;
-    if (n != 0) {
-      // Get last filter
+    if (n !== 0) {
       var filter = this._filterList[n - 1];
 
       // Get histogram

@@ -245,7 +245,7 @@ function _estimateLastBucketEnd(histogram) {
   var n = histogram._buckets.length;
   for (var i = 0; i < n - 1; i++) {
     var bucket_center = (histogram._buckets[i+1] - histogram._buckets[i]) / 2 +
-                         histogram._buckets[i]; 
+                         histogram._buckets[i];
     sum_before_last += _aggregate(i, histogram) * bucket_center;
   }
   // We estimate the sum of data-points in the last bucket by subtracting the
@@ -333,7 +333,7 @@ Histogram.prototype.submissions = function Histogram_submissions() {
 /** Get the mean of all data points in this histogram, null if N/A */
 Histogram.prototype.mean = function Histogram_mean() {
   // if (this.kind() != "linear" && this.kind() != "exponential") {
-  //   throw new Error("Histogram.geometricMean() is only available for " + 
+  //   throw new Error("Histogram.geometricMean() is only available for " +
   //                   "linear and exponential histograms");
   // }
   var sum = _aggregate(DataOffsets.SUM, this);
@@ -343,7 +343,7 @@ Histogram.prototype.mean = function Histogram_mean() {
 /** Get the geometric mean of all data points in this histogram, null if N/A */
 Histogram.prototype.geometricMean = function Histogram_geometricMean() {
   if (this.kind() != "exponential") {
-    throw new Error("Histogram.geometricMean() is only available for " + 
+    throw new Error("Histogram.geometricMean() is only available for " +
                     "exponential histograms");
   }
   var log_sum = _aggregate(DataOffsets.LOG_SUM, this);
@@ -356,7 +356,7 @@ Histogram.prototype.geometricMean = function Histogram_geometricMean() {
  */
 Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
   if (this.kind() != "linear") {
-    throw new Error("Histogram.standardDeviation() is only available for " + 
+    throw new Error("Histogram.standardDeviation() is only available for " +
                     "linear histograms");
   }
   var sum       = new Big(_aggregate(DataOffsets.SUM, this));
@@ -378,7 +378,7 @@ Histogram.prototype.geometricStandardDeviation =
                               function Histogram_geometricStandardDeviation() {
   if (this.kind() != 'exponential') {
     throw new Error(
-      "Histogram.geometricStandardDeviation() is only " + 
+      "Histogram.geometricStandardDeviation() is only " +
       "available for exponential histograms"
     );
   }
@@ -636,6 +636,12 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
   // Find filter ids
   var filterIds = _listFilterIds(this._filter_tree);
 
+  // Auxiliary function to filter data arrays by filter_id
+  function filterByFilterId(data_array) {
+      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];
+      return filterIds.indexOf(filterId) != -1;
+  }
+
   // Pair index, this is not equal to i as we may have filtered something out
   var index = 0;
 
@@ -646,13 +652,10 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
     var dataset = this._data.values[dates[i]];
 
     // Filter for data_arrays with relevant filterId
-    dataset = dataset.filter(function(data_array) {
-      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];
-      return filterIds.indexOf(filterId) != -1;
-    });
+    dataset = dataset.filter(filterByFilterId);
 
     // Skip this date if there was not data_array after filtering as applied
-    if (dataset.length == 0) {
+    if (dataset.length === 0) {
       continue;
     }
 
