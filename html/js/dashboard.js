@@ -5,6 +5,9 @@
 /** Namespace for this module */
 var Dashboard = {};
 
+/** Histogram currently displayed */
+var _hgramEvo = null;
+
 /** Initialize the dashboard, load state from window.location.hash, etc. */
 Dashboard.init = function Dashboard_init() {
 
@@ -27,6 +30,11 @@ Dashboard.init = function Dashboard_init() {
         histogramPlot.draw();
       }
     }, 100);
+  });
+
+  $("#show-percentiles").change(function() {
+    Dashboard.plotEvolution();
+    Dashboard.plotHistogram();
   });
 
   // Setup plot hover
@@ -75,11 +83,13 @@ Dashboard.init = function Dashboard_init() {
       return;
     }
 
+    _hgramEvo = hgramEvo;
+
     // Plot histogram evolution
-    Dashboard.plotEvolution(hgramEvo);
+    Dashboard.plotEvolution();
 
     // Plot aggregated histogram for all dates
-    Dashboard.plotHistogram(hgramEvo.range());
+    Dashboard.plotHistogram();
 
     // Update info text
     $("#info").text(
@@ -90,41 +100,44 @@ Dashboard.init = function Dashboard_init() {
 };
 
 /** Plot instance of HistogramEvolution */
-Dashboard.plotEvolution = function Dashboard_plotEvolution(hgramEvo) {
+Dashboard.plotEvolution = function Dashboard_plotEvolution() {
+  if(!_hgramEvo) {
+    return;
+  }
+
   // Plot series
   var series = [
     {
       label:  "submissions",
-      data:   hgramEvo.map(function(date, hgram) {
+      data:   _hgramEvo.map(function(date, hgram) {
         return [date.getTime(), hgram.submissions()];
       }),
       yaxis:  2
     },
     {
       label:  "mean",
-      data:   hgramEvo.map(function(date, hgram) {
+      data:   _hgramEvo.map(function(date, hgram) {
         return [date.getTime(), hgram.mean()];
-      })
-    },
-    {
-      label:  "median",
-      data:   hgramEvo.map(function(date, hgram) {
-        return [date.getTime(), hgram.median()];
       })
     }
   ];
 
-  // Add percentiles
-  [5, 25, 75, 95].forEach(function(percent) {
-    series.push(
-      {
-        label:  percent + "th percentile",
-        data:   hgramEvo.map(function(date, hgram) {
-          return [date.getTime(), hgram.percentile(percent)];
-        })
-      }
-    );
-  })
+
+  if ($("#show-percentiles").prop('checked')) {
+    // Add percentiles
+    var percentileColor = ["#000", "#0f0", "#00f", "#f00", "#f0f"];
+    [5, 25, 50, 75, 95].forEach(function(percent, index) {
+      series.push(
+        {
+          label:  percent + "th percentile",
+          color:  percentileColor[index],
+          data:   _hgramEvo.map(function(date, hgram) {
+            return [date.getTime(), hgram.percentile(percent)];
+          })
+        }
+      );
+    });
+  }
 
   // Plot options
   var options = {
@@ -149,7 +162,12 @@ Dashboard.plotEvolution = function Dashboard_plotEvolution(hgramEvo) {
 };
 
 /** Plot instance of Histogram */
-Dashboard.plotHistogram = function Dashboard_plotHistogram(hgram) {
+Dashboard.plotHistogram = function Dashboard_plotHistogram() {
+  if (!_hgramEvo) {
+    return;
+  }
+  var hgram = _hgramEvo.range();
+
   // Plot series
   var series = [
     {
@@ -173,12 +191,18 @@ Dashboard.plotHistogram = function Dashboard_plotHistogram(hgram) {
     return tick;
   }
 
-  // Find tick for percentiles
-  var p05 = value2tick(hgram.percentile(5));
-  var p25 = value2tick(hgram.percentile(25));
-  var p50 = value2tick(hgram.percentile(50));
-  var p75 = value2tick(hgram.percentile(75));
-  var p95 = value2tick(hgram.percentile(95));
+  var markings = [];
+  if ($("#show-percentiles").prop('checked')) {
+    // Add percentiles
+    var percentileColor = ["#000", "#0f0", "#00f", "#f00", "#f0f"];
+    [5, 25, 50, 75, 95].forEach(function(percent, index) {
+      var tick = value2tick(hgram.percentile(percent));
+      markings.push({
+        xaxis: {from: tick, to: tick},
+        color: percentileColor[index]
+      });
+    });
+  }
 
   // Plot options
   var options = {
@@ -189,13 +213,7 @@ Dashboard.plotHistogram = function Dashboard_plotHistogram(hgram) {
     },
     "grid": {
       "hoverable":  true,
-      "markings": [
-        {xaxis: {from: p05, to: p05}, color: "#000"},
-        {xaxis: {from: p25, to: p25}, color: "#0f0"},
-        {xaxis: {from: p50, to: p50}, color: "#00f"},
-        {xaxis: {from: p75, to: p75}, color: "#f00"},
-        {xaxis: {from: p95, to: p95}, color: "#f0f"}
-      ]
+      "markings": markings
     }
   };
     

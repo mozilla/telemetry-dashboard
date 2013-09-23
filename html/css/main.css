@@ -95,3 +95,6 @@ select {
   width: 2ex;
   height: 2ex;
 }
+#show-percentiles{
+  margin-left: 50px;
+}
