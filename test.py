@@ -102,7 +102,7 @@ def map(key, dims, value, context):
         # Abort if bucket length doesn't match
         if len(hgramValues) == len(bucket2index[0]) + 5:
             context.write((channel, majorVersion, hgramName),
-                          {filterPath: hgramValues + (1,)})
+                          {filterPath: hgramValues + [1]})
     
     # Now read and output simple measures
     for name, value in payload.get('simpleMeasurements', {}).iteritems():
