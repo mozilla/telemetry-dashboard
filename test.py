@@ -53,4 +53,4 @@ def commonCombine(values):
     return output
 
 def reduce(key, values, context):
-    context.write(key, commonCombine(values))
+    context.write("/".join(key), json.dumps(commonCombine(values)))
