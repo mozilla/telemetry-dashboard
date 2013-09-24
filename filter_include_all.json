@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dimensions": [ ////aurora/22.0
+  "dimensions": [
     {
       "field_name": "reason",
       "allowed_values": ["idle_daily"]
@@ -11,7 +11,7 @@
     },
     {
       "field_name": "appUpdateChannel",
-      "allowed_values": ["aurora"] //["release", "aurora", "nightly", "beta", "nightly-ux"]
+      "allowed_values": ["aurora"]
     },
     {
       "field_name": "appVersion",
