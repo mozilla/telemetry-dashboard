@@ -57,4 +57,7 @@ def commonCombine(values):
     return output
 
 def reduce(key, values, context):
-    context.write("/".join(key), json.dumps(commonCombine(values)))
+    output = {}
+    for filterPath, hgramValues in commonCombine(values).iteritems();
+        output["/".join(key)] = hgramValues
+    context.write("/".join(key), json.dumps(output))
