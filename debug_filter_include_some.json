@@ -3,19 +3,19 @@
   "dimensions": [
     {
       "field_name": "reason",
-      "allowed_values": "*"
+      "allowed_values": ["idle_daily", "saved_session"]
     },
     {
       "field_name": "appName",
-      "allowed_values": "*"
+      "allowed_values": ["Firefox"]
     },
     {
       "field_name": "appUpdateChannel",
-      "allowed_values": ["release", "aurora", "nightly", "beta", "nightly-ux"]
+      "allowed_values": ["aurora"]
     },
     {
       "field_name": "appVersion",
-      "allowed_values": "*"
+      "allowed_values": ["22.0"]
     },
     {
       "field_name": "appBuildID",
