@@ -11,7 +11,7 @@
     },
     {
       "field_name": "appUpdateChannel",
-      "allowed_values": "*"
+      "allowed_values": ["release", "aurora", "nightly", "beta", "nightly-ux"]
     },
     {
       "field_name": "appVersion",
