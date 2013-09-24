@@ -156,13 +156,13 @@ Telemetry.Histogram = (function(){
 
 // Offset relative to length for special elements in arrays of raw data
 var DataOffsets = {
-  SUM_SQ_HI:      -5,
-  SUM_SQ_LO:      -4,
-  LOG_SUM:        -5,
-  LOG_SUM_SQ:     -4,
-  SUM:            -3,
-  SUBMISSIONS:    -2,
-  FILTER_ID:      -1
+  SUM:            -7,   // The following keys are documented in StorageFormat.md
+  LOG_SUM:        -6,   // See the docs/ folder of the telemetry-server
+  LOG_SUM_SQ:     -5,   // Repository. They are essentially part of the
+  SUM_SQ_LO:      -4,   // validated telemetry histogram format
+  SUM_SQ_HI:      -3,
+  SUBMISSIONS:    -2,   // Added in deashboard.py
+  FILTER_ID:      -1    // Added in mr2disk.py
 };
 
 /**
