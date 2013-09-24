@@ -1,3 +1,7 @@
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 # Auxiliary method to write log messages
 def log(msg):
