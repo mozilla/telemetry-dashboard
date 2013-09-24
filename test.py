@@ -6,7 +6,7 @@ def log(msg):
 
 def map(key, dims, value, context):
     # Unpack dimensions
-    reason, appName, channel, version, buildId, submissionDate = dim
+    reason, appName, channel, version, buildId, submissionDate = dims
 
     # Get the major version
     majorVersion = version.split('.')[0]
