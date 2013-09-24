@@ -2,6 +2,7 @@
 
 histogram_tools.py
 histogram_specs.py
+specs.py
 histogram_specs.json
 validation/
 html/data

@@ -1,4 +1,4 @@
-FILES= histogram_tools.py Histograms.json histogram_specs.json
+FILES= histogram_tools.py Histograms.json specs.py
 download: $(FILES)
 
 Histograms.json:
@@ -7,7 +7,7 @@ Histograms.json:
 histogram_tools.py:
 	wget -c http://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/components/telemetry/histogram_tools.py -O $@
 
-histogram_specs.json: Histograms.json
+specs.py: Histograms.json
 	python specgen.py $< > $@
 
 clean:
