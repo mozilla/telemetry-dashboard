@@ -138,17 +138,18 @@ def map(key, dims, value, context):
         if type(value) == dict:
             for subName, subValue in value.iteritems():
                 map_simplemeasure(channel, majorVersion, filterPath,
-                                  name + "_" + subName, subValue, context)
+                                  name + "_" + str(subName), subValue, context)
         else:
-            map_simplemeasure(channel, majorVersion, filterPath, name, value,
-                              context)
+            map_simplemeasure(channel, majorVersion, filterPath, str(name),
+                              value, context)
 
 # Map a simple measure
 def map_simplemeasure(channel, majorVersion, filterPath, name, value, context):
     # Sanity check value
-    if type(value) not in (int, long):
+    if type(value) not in (int, long, float):
         log("%s is not a value type for simpleMeasurements \"%s\"" %
             (type(value), name))
+        return
 
     bucket = simple_measures_buckets[1]
     outarray = [0] * (len(bucket) + 6)
