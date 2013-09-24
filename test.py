@@ -50,7 +50,7 @@ def commonCombine(values):
         for filterPath, hgramValues in d.iteritems():
             existing = output.get(filterPath, None)
             if existing is None:
-                output[filter_path] = hgramValues
+                output[filterPath] = hgramValues
                 continue
             for y in xrange(0, len(hgramValues)):
                 existing[y] += (hgramValues[y] or 0)
