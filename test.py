@@ -56,6 +56,7 @@ simple_measures_buckets = (
 cache = {}
 
 def map_finished(context):
+    global cache
     for key, value in cache.iteritems():
         context.write(key, value)
     cache = {}
@@ -63,6 +64,7 @@ def map_finished(context):
 # Auxiliary function for aggregating a result to the cache, we pass in context
 # so we can skip caching here should we ever want to do this
 def write_to_cache(key, value, context):
+    global cache
     cachedValue = cache.get(key, None)
     if cachedValue is None:
         cache[key] = value
