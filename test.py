@@ -50,6 +50,31 @@ simple_measures_buckets = (
                            exponential_buckets(1, 30000, 50)
                            )
 
+# Cache of all output values, we do a linear scan so we won't write any thing
+# until map_finished() gets called... This is hack that makes linear scans
+# a lot faster :)
+cache = {}
+
+def map_finished(context):
+    for key, value in cache.iteritems():
+        context.write(key, value)
+    cache = {}
+
+# Auxiliary function for aggregating a result to the cache, we pass in context
+# so we can skip caching here should we ever want to do this
+def write_to_cache(key, value, context):
+    cachedValue = cache.get(key, None)
+    if cachedValue is None:
+        cache[key] = value
+    else:
+        for filterPath, hgramValues in value.iteritems():
+            existing = cachedValue.get(filterPath, None)
+            if existing is None:
+                cachedValue[filterPath] = hgramValues
+                continue
+            for y in xrange(0, len(hgramValues)):
+                existing[y] += (hgramValues[y] or 0)
+
 # histogram incoming format:
 #   [
 #       bucket0, bucket1, ..., bucketN,
@@ -102,8 +127,8 @@ def map(key, dims, value, context):
             continue
         # Abort if bucket length doesn't match
         if len(hgramValues) == len(bucket2index[0]) + 5:
-            context.write((channel, majorVersion, hgramName),
-                          {filterPath: hgramValues + [1]})
+            write_to_cache((channel, majorVersion, hgramName),
+                          {filterPath: hgramValues + [1]}, context)
     
     # Now read and output simple measures
     for name, value in payload.get('simpleMeasurements', {}).iteritems():
@@ -139,12 +164,8 @@ def map_simplemeasure(channel, majorVersion, filterPath, name, value, context):
     outarray[-1] = 1                    # count
 
     # Output result array
-    context.write((channel, majorVersion, "SIMPLE_MEASURES_" + name.upper()), 
-                  {filterPath: outarray})
-
-
-def map_finished(context):
-    log("Finally got to map_finished!!!")
+    write_to_cache((channel, majorVersion, "SIMPLE_MEASURES_" + name.upper()), 
+                   {filterPath: outarray}, context)
 
 def commonCombine(values):
     output = {}
