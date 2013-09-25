@@ -4,8 +4,6 @@
   "ssl_key_path":       "~/.ssh/id_rsa",
   "ssl_retries":        10,
   "base_dir":           "/mnt/telemetry",
-  "aws_key":            "...",
-  "aws_secret_key":     "...",
   "region":             "us-west-2",
   "instance_type":      "c1.xlarge",
   "image":              "ami-bf1d8a8f",
