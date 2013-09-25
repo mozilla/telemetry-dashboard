@@ -1,7 +1,7 @@
 {
   "ssl_user":           "ubuntu",
   "ssl_key_name":       "jonasfj",
-  "ssl_key_path":       "~/.ssh/jojensen.pub",
+  "ssl_key_path":       "~/.ssh/id_rsa",
   "ssl_retries":        10,
   "base_dir":           "/mnt/telemetry",
   "aws_key":            "...",
