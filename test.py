@@ -2,7 +2,6 @@ try:
     import simplejson as json
 except ImportError:
     import json
-import cjson
 import math
 import sys
 
@@ -106,7 +105,7 @@ def map(key, dims, value, context):
     buildDate = buildId[:8]
 
     # Load JSON payload
-    payload = cjson.decode(value)
+    payload = json.loads(value)
 
     # Get OS, osVersion and architecture information
     try:
