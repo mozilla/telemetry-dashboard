@@ -61,8 +61,8 @@ simple_measures_buckets = (
 cache = {}
 
 def map_finished(context):
-    log("map_finished outputing: %s keys", len(cache))
     global cache
+    log("map_finished outputing: %s keys", len(cache))
     for key, value in cache.iteritems():
         context.write(key, value)
     cache = {}
