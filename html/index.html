@@ -19,7 +19,7 @@
 <script src="js/telemetry.js"></script>
 <script src="js/dashboard.js"></script>
 <script>
-    Telemetry.init("data", function(){
+    Telemetry.init("https://s3.amazonaws.com/telemetry-dashboard-data/v1", function(){
       Dashboard.init();
     });
 </script>
