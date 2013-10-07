@@ -224,27 +224,31 @@ Telemetry.Histogram = (function(){
 
 /**
  * Auxiliary function to aggregate values of index from histogram dataset
- * TODO: Consider taking a look at all applications, maybe cache some of them.
- *       See bug 919607 for details.
  */
 function _aggregate(index, histogram) {
-  // Cache the list of filter ids
-  if (histogram._filterIds === undefined) {
-    histogram._filterIds = _listFilterIds(histogram._filter_tree);
+  if (histogram._aggregated === undefined) {
+    histogram._aggregated = [];
   }
-  // Aggregate index as sum over histogram
-  var sum = 0;
-  var n = histogram._dataset.length;
-  for(var i = 0; i < n; i++) {
-    var data_array = histogram._dataset[i];
-
-    // Check if filter_id is filtered
-    var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;
-    if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
-      sum += data_array[index >= 0 ? index : data_array.length + index];
+  var sum = histogram._aggregated[index];
+  if (sum === undefined) {
+    // Cache the list of filter ids
+    if (histogram._filterIds === undefined) {
+      histogram._filterIds = _listFilterIds(histogram._filter_tree);
     }
-  }
+    // Aggregate index as sum over histogram
+    sum = 0;
+    var n = histogram._dataset.length;
+    for(var i = 0; i < n; i++) {
+      var data_array = histogram._dataset[i];
 
+      // Check if filter_id is filtered
+      var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;
+      if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
+        sum += data_array[index >= 0 ? index : data_array.length + index];
+      }
+    }
+    histogram._aggregated[index] = sum;
+  }
   return sum;
 }
 
