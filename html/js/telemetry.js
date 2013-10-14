@@ -210,13 +210,13 @@ function _listFilterIds(filter_tree){
 
 // Offset relative to length for special elements in arrays of raw data
 var DataOffsets = {
-  SUM_SQ_HI:      -5,
-  SUM_SQ_LO:      -4,
-  LOG_SUM:        -5,
-  LOG_SUM_SQ:     -4,
-  SUM:            -3,
-  SUBMISSIONS:    -2,
-  FILTER_ID:      -1
+  SUM:            -7,   // The following keys are documented in StorageFormat.md
+  LOG_SUM:        -6,   // See the docs/ folder of the telemetry-server
+  LOG_SUM_SQ:     -5,   // Repository. They are essentially part of the
+  SUM_SQ_LO:      -4,   // validated telemetry histogram format
+  SUM_SQ_HI:      -3,
+  SUBMISSIONS:    -2,   // Added in deashboard.py
+  FILTER_ID:      -1    // Added in mr2disk.py
 };
 
 /** Representation of histogram under possible filter application */
@@ -224,27 +224,31 @@ Telemetry.Histogram = (function(){
 
 /**
  * Auxiliary function to aggregate values of index from histogram dataset
- * TODO: Consider taking a look at all applications, maybe cache some of them.
- *       See bug 919607 for details.
  */
 function _aggregate(index, histogram) {
-  // Cache the list of filter ids
-  if (histogram._filterIds === undefined) {
-    histogram._filterIds = _listFilterIds(histogram._filter_tree);
+  if (histogram._aggregated === undefined) {
+    histogram._aggregated = [];
   }
-  // Aggregate index as sum over histogram
-  var sum = 0;
-  var n = histogram._dataset.length;
-  for(var i = 0; i < n; i++) {
-    var data_array = histogram._dataset[i];
-
-    // Check if filter_id is filtered
-    var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;
-    if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
-      sum += data_array[index >= 0 ? index : data_array.length + index];
+  var sum = histogram._aggregated[index];
+  if (sum === undefined) {
+    // Cache the list of filter ids
+    if (histogram._filterIds === undefined) {
+      histogram._filterIds = _listFilterIds(histogram._filter_tree);
     }
-  }
+    // Aggregate index as sum over histogram
+    sum = 0;
+    var n = histogram._dataset.length;
+    for(var i = 0; i < n; i++) {
+      var data_array = histogram._dataset[i];
 
+      // Check if filter_id is filtered
+      var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;
+      if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
+        sum += data_array[index >= 0 ? index : data_array.length + index];
+      }
+    }
+    histogram._aggregated[index] = sum;
+  }
   return sum;
 }
 
