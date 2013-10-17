@@ -1,0 +1,29 @@
+{
+  "ssl_user":           "ubuntu",
+  "ssl_key_name":       "jonasfj",
+  "ssl_key_path":       "~/.ssh/id_rsa",
+  "ssl_retries":        10,
+  "base_dir":           "/mnt/telemetry",
+  "region":             "us-west-2",
+  "instance_type":      "c1.xlarge",
+  "image":              "ami-bf1d8a8f",
+  "placement":          "us-west-2c",
+  "shutdown_behavior":  "terminate",
+  "security_groups":    ["telemetry"],
+  "name":               "telemetry-dashboard-map-reduce-job",
+  "default_tags": {
+    "Owner":            "jonasfj",
+    "Application":      "telemetry-dashboard",
+    "Comment":          "If you see a lot of these machines, ping jonasfj"
+  },
+  "skip_termination":   false,
+  "mapreduce": {
+    "job_script":       "dashboard.zip",
+    "input_filter":     "filter_include_single_day.json",
+    "output_filename":  "~/telemetry-mapreduce-result.txt",
+    "data_bucket":      "mreid-telemetry-published",
+    "compress_output":  false,
+    "num-mappers":      8,
+    "num-reducers":     1
+  }
+}

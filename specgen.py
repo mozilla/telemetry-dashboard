@@ -25,6 +25,6 @@ def mapping(filename):
             histogram_specs[name] = (bucket2index, ranges)
     return histogram_specs
 
-"""Generate a datafile we can use from jydoop"""
+"""Generate a python script we can import from map/reduce"""
 if __name__ == '__main__':
-    print json.dumps(mapping(sys.argv[1]))
+    print "histograms = " + repr(mapping(sys.argv[1]))
