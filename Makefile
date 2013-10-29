@@ -10,7 +10,7 @@ histogram_tools.py:
 specs.py: Histograms.json
 	python specgen.py $< > $@
 
-dashboard.zip: specs.py dashboard.py
+dashboard.zip: specs.py processor.py
 	zip $@ $?
 
 clean:
