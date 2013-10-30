@@ -14,4 +14,4 @@ dashboard.zip: specs.py processor.py
 	zip $@ $?
 
 clean:
-	rm -f $(FILES)
+	rm -f $(FILES) *.pyc
