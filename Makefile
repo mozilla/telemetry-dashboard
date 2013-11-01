@@ -1,4 +1,4 @@
-FILES= histogram_tools.py Histograms.json specs.py dashboard.zip
+FILES = histogram_tools.py Histograms.json specs.py dashboard.zip
 all: $(FILES)
 
 Histograms.json:
@@ -10,7 +10,7 @@ histogram_tools.py:
 specs.py: Histograms.json
 	python specgen.py $< > $@
 
-dashboard.zip: specs.py processor.py
+dashboard.zip: specs.py processor.py auxiliary.py
 	zip $@ $?
 
 clean:
