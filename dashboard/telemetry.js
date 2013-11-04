@@ -5,20 +5,19 @@
 /** Namespace for this module */
 var Telemetry = {};
 
-// Data folder from which data will be loaded, another level indicating current
-// folder will be initialized by Telemetry.init()
-var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v3';
-
-// Boolean tracks if we've initialized
-var _initialized = false;
+// Data folder from which data will be loaded, initialized by Telemetry.init()
+var _data_folder = null;
 
 // List of channel/version, loaded by Telemetry.init()
 var _versions = null;
 
+// Dictionary of histogram specifications, loaded by Telemetry.init()
+var _specifications = null;
+
 /** Auxiliary function to GET files from _data_folder */
 function _get(path, cb) {
   // Check that we've been initialized
-  if(!_initialized && path != "latest-current.json") {
+  if(_data_folder === null) {
     throw new Error("Telemetry._get: Telemetry module haven't been " +
                     "initialized, please call Telemetry.init()");
   }
@@ -43,16 +42,36 @@ function _get(path, cb) {
 }
 
 /**
- * Initialize telemetry module by fetching meta-data from server
+ * Initialize telemetry module by fetching meta-data from data_folder
  * cb() will be invoked when Telemetry module is ready for use.
  */
-Telemetry.init = function Telemetry_load(cb) {
-  // Get list of channels/version as most recent folder from latest-current.json
-  _get("latest-current.json", function(data) {
-    _data_folder += '/current/' + data.current
-    _versions = data.versions.sort();
-    _initialized = true;
-    cb();
+Telemetry.init = function Telemetry_load(data_folder, cb) {
+  if (_data_folder !== null) {
+    throw new Error("Telemetry.init: Telemetry module is initialized!");
+  }
+  _data_folder = data_folder;
+
+  // Number of files to load
+  var load_count = 2;
+
+  // Count down files loaded
+  function count_down(){
+    load_count--;
+    if (load_count === 0) {
+      cb();
+    }
+  }
+
+  // Get list of channels/version in data folder from versions.json
+  _get("versions.json", function(data) {
+    _versions = data;
+    count_down();
+  });
+
+  // Get list of histogram specifications from histogram_descriptions.json
+  _get("Histograms.json", function(data) {
+    _specifications = data;
+    count_down();
   });
 };
 
@@ -66,8 +85,9 @@ Telemetry.versions = function Telemetry_versions() {
 
 /**
  * Request measures available for channel/version given. Once fetched the
- * callback with invoked as cb(measures) where measures a dictionary on the
- * following form:
+ * callback with invoked as cb(measures, measureInfo) where measures a list of
+ * measure ids and measureInfo is mapping from measure id to kind and
+ * description, i.e. a JSON object on the following form:
  *  {
  *    "A_TELEMETRY_MEASURE_ID": {
  *      kind:         "linear|exponential|flag|enumerated|boolean",
@@ -80,19 +100,37 @@ Telemetry.versions = function Telemetry_versions() {
  */
 Telemetry.measures = function Telemetry_measures(channel_version, cb) {
   _get([channel_version, "histograms.json"], function(data) {
-    var measures = {};
+    var measures = [];
+    var measureInfo = {};
 
-    // For each measure fetched
-    for(var measure in data) {
+    for(var key in data) {
+
       // Add measure id
-      measures[measure] = {
-        kind:         data[measure].kind,
-        description:  data[measure].description
+      measures.push(key);
+      
+      // Find specification
+      var spec = _specifications[key];
+
+      // Hack to provide specification of simple measures
+      if (spec === undefined) {
+        spec = {
+          kind:           "exponential",
+          description:    "Histogram of simple measure"
+        };
       }
+      
+      // Add measure info
+      measureInfo[key] = {
+        kind:         spec.kind,
+        description:  spec.description
+      };
     }
 
+    // Sort measures alphabetically
+    measures.sort();
+
     // Return measures by callback
-    cb(measures);
+    cb(measures, measureInfo);
   });
 };
 
@@ -105,81 +143,54 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
  */
 Telemetry.loadEvolutionOverBuilds =
       function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {
+  // Unpack measure, if a dictionary from Telemetry.measures was provided
+  // instead of just a measure id.
+  if (measure instanceof Object && measure.measure !== undefined) {
+    measure = measure.measure;
+  }
+
   // Number of files to load, and what to do when done
-  var load_count = 3;
-  var data, filter_tree, specifications;
+  var load_count = 2;
+  var data, filter_tree;
   function count_down() {
     load_count--;
     if (load_count === 0) {
+      var spec = _specifications[measure];
+      if (spec === undefined) {
+        spec = {
+          kind:           "exponential",
+          description:    "Histogram of simple measure"
+        };
+      }
       cb(
         new Telemetry.HistogramEvolution(
-          measure,
           [measure],
           data,
           filter_tree,
-          specifications[measure]
+          spec
         )
       );
     }
   }
   // Load data for measure
-  _get([channel_version, measure + "-by-build-date.json"], function(json) {
+  _get([channel_version, measure + ".json"], function(json) {
     data = json;
     count_down();
   });
   // Load filter data
-  _get([channel_version, "filter-tree.json"], function(json) {
+  _get([channel_version, "filter.json"], function(json) {
     filter_tree = json;
-    count_down();
-  });
-  // Load histogram specifications
-  _get([channel_version, "histograms.json"], function(json) {
-    specifications = json;
     count_down();
   });
 };
 
-/**
- * Request HistogramEvolution instance over time for a given channel/version
- * and measure, once fetched cb(histogramEvolution) will be invoked with the
- * HistogramEvolution instance. The dates in the HistogramEvolution instance
- * fetched will be telemetry ping submission dates.
- * Note, measure must be a valid measure identifier from Telemetry.measures()
- */
- Telemetry.loadEvolutionOverTime =
+/** Place holder for when bug 916217 is implemented */
+Telemetry.loadEvolutionOverTime =
         function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
-  // Number of files to load, and what to do when done
-  var load_count = 3;
-  var data, filter_tree, specifications;
-  function count_down() {
-    load_count--;
-    if (load_count === 0) {
-      cb(
-        new Telemetry.HistogramEvolution(
-          measure,
-          [measure],
-          data,
-          filter_tree,
-          specifications[measure]
-        )
-      );
-    }
-  }
-  // Load data for measure
-  _get([channel_version, measure + "-by-submission-date.json"], function(json) {
-    data = json;
-    count_down();
-  });
-  // Load filter data
-  _get([channel_version, "filter-tree.json"], function(json) {
-    filter_tree = json;
-    count_down();
-  });
-  // Load histogram specifications
-  _get([channel_version, "histograms.json"], function(json) {
-    specifications = json;
-    count_down();
-  });
+  throw new Error(
+    "Telemetry.loadEvolutionOverTime() is not implemented yet, " +
+    "server-side data aggregation is still missing! (See bug 916217)"
+  );
 };
 
 /** Auxiliary function to find all filter_ids in a filter_tree */
@@ -205,7 +216,7 @@ var DataOffsets = {
   SUM_SQ_LO:      -4,   // validated telemetry histogram format
   SUM_SQ_HI:      -3,
   SUBMISSIONS:    -2,   // Added in deashboard.py
-  FILTER_ID:      -1    // Added in results2disk.py
+  FILTER_ID:      -1    // Added in mr2disk.py
 };
 
 /** Representation of histogram under possible filter application */
@@ -266,15 +277,13 @@ function _estimateLastBucketEnd(histogram) {
 
 /**
  * Create a new histogram, where
- *  - measure       is the name of the histogram,
  *  - filter_path   is a list of [name, date-range, filter1, filter2...]
  *  - buckets       is a list of bucket start values,
  *  - dataset       is a mapping from filter ids to arrays of raw data
  *  - filter_tree   is a node in filter tree structure, and
  *  - spec          is the histogram specification.
  */
-function Histogram(measure, filter_path, buckets, dataset, filter_tree, spec) {
-  this._measure     = measure;
+function Histogram(filter_path, buckets, dataset, filter_tree, spec) {
   this._filter_path = filter_path;
   this._buckets     = buckets;
   this._dataset     = dataset;
@@ -288,7 +297,6 @@ Histogram.prototype.filter = function Histogram_filter(option) {
     throw new Error("filter option: \"" + option +"\" is not available");
   }
   return new Histogram(
-    this._measure,
     this._filter_path.concat(option),
     this._buckets,
     this._dataset,
@@ -311,11 +319,6 @@ Histogram.prototype.filterOptions = function Histogram_filterOptions() {
     }
   }
   return options.sort();
-};
-
-/** Get the histogram measure */
-Histogram.prototype.measure = function Histogram_measure() {
-  return this._measure;
 };
 
 /** Get the histogram kind */
@@ -526,76 +529,18 @@ function _parseDateString(d) {
 }
 
 /**
- * Auxiliary function to compute all bucket ends from a specification
- * This returns a list [b0, b1, ..., bn] where b0 is the separator value between
- * entries in bucket index 0 and bucket index 1. Such that all values less than
- * b0 was counted in bucket 0, values greater than counted in bucket 1.
- */
-function _computeBuckets(spec){
-  // Find bounds from specification
-  var low = 1, high, nbuckets;
-  if(spec.kind == 'boolean' || spec.kind == 'flag') {
-    high      = 2;
-    nbuckets  = 3;
-  } else if (spec.kind == 'enumerated') {
-    high      = eval(spec.n_values);
-    nbuckets  = eval(spec.n_values) + 1;
-  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {
-    low       = eval(spec.low) || 1;
-    high      = eval(spec.high);
-    nbuckets  = eval(spec.n_buckets)
-  }
-  // Compute buckets
-  var buckets = null;
-  if(spec.kind == 'exponential') {
-    // Exponential buckets is a special case
-    var log_max = Math.log(high);
-    buckets = [0, low];
-    var current = low;
-    for(var i = 2; i < nbuckets; i++) {
-      var log_current = Math.log(current);
-      var log_ratio   = (log_max - log_current) / (nbuckets - i);
-      var log_next    = log_current + log_ratio;
-      var next_value  = Math.floor(Math.exp(log_next) + 0.5);
-      if (next_value > current) {
-        current = next_value;
-      } else {
-        current = current + 1;
-      }
-      buckets.push(current);
-    }
-  } else {
-    // Linear buckets are computed as follows
-    buckets = [0];
-    for(var i = 1; i < nbuckets; i++) {
-      var range = (low * (nbuckets - 1 - i) + high * (i - 1));
-      buckets.push(Math.floor(range / (nbuckets - 2) + 0.5));
-    }
-  }
-  return buckets;
-}
-
-/**
  * Create a histogram evolution, where
- *  - measure       is the name of this histogram,
  *  - filter_path   is a list of [name, date-range, filter1, filter2...]
  *  - data          is the JSON data loaded from file,
  *  - filter_tree   is the filter_tree root, and
  *  - spec          is the histogram specification.
  */
-function HistogramEvolution(measure, filter_path, data, filter_tree, spec) {
-  this._measure     = measure
+function HistogramEvolution(filter_path, data, filter_tree, spec) {
   this._filter_path = filter_path;
   this._data        = data;
   this._filter_tree = filter_tree;
   this._spec        = spec;
-  this._buckets     = _computeBuckets(spec);
 }
-
-/** Get the histogram measure */
-HistogramEvolution.prototype.measure = function HistogramEvolution_measure() {
-  return this._measure;
-};
 
 /** Get the histogram kind */
 HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
@@ -614,7 +559,6 @@ HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
     throw new Error("filter option: \"" + opt +"\" is not available");
   }
   return new HistogramEvolution(
-    this._measure,
     this._filter_path.concat(opt),
     this._data,
     this._filter_tree[opt],
@@ -654,7 +598,7 @@ HistogramEvolution.prototype.range =
   var filter_ids = _listFilterIds(this._filter_tree);
 
   // For each date we have to merge the filter_ids into merged_dataset
-  for (var datekey in this._data) {
+  for (var datekey in this._data.values) {
 
     // Check that date is between start and end (if start and end is defined)
     var date = _parseDateString(datekey);
@@ -662,7 +606,7 @@ HistogramEvolution.prototype.range =
 
       // Find dataset of this datekey, merge filter_ids for this dataset into
       // merged_dataset.
-      var dataset = this._data[datekey];
+      var dataset = this._data.values[datekey];
 
       // Copy all data arrays over... we'll filter and aggregate later
       merged_dataset = merged_dataset.concat(dataset);
@@ -671,9 +615,8 @@ HistogramEvolution.prototype.range =
 
   // Create merged histogram
   return new Telemetry.Histogram(
-    this._measure,
     this._filter_path,
-    this._buckets,
+    this._data.buckets,
     merged_dataset,
     this._filter_tree,
     this._spec
@@ -683,7 +626,7 @@ HistogramEvolution.prototype.range =
 /** Get the list of dates in the evolution sorted by date */
 HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
   var dates = [];
-  for(var date in this._data) {
+  for(var date in this._data.values) {
     dates.push(_parseDateString(date));
   }
   return dates.sort();
@@ -701,7 +644,7 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
 
   // Find and sort all date strings
   var dates = [];
-  for(var date in this._data) {
+  for(var date in this._data.values) {
     dates.push(date);
   }
   dates.sort();
@@ -722,7 +665,7 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
   var n = dates.length;
   for(var i = 0; i < n; i++) {
     // Get dataset for date
-    var dataset = this._data[dates[i]];
+    var dataset = this._data.values[dates[i]];
 
     // Filter for data_arrays with relevant filterId
     dataset = dataset.filter(filterByFilterId);
@@ -737,9 +680,8 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
       ctx,
       _parseDateString(dates[i]),
       new Telemetry.Histogram(
-        this._measure,
         this._filter_path,
-        this._buckets,
+        this._data.buckets,
         dataset,
         this._filter_tree,
         this._spec

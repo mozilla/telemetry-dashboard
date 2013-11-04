@@ -49,9 +49,8 @@ $.widget("telemetry.histogramfilter", {
     defaultVersion:                 null,
 
     /**
-     * Default measure, or function that takes a list of measure ids and a
-     * measureInfo object as created by Telemetry.measures() and returns
-     * a measure id from that list.
+     * Default measure, or function that takes a JSON object of measure ids as
+     * created by Telemetry.measures() and returns a measure id.
      */
     defaultMeasure:                 null,
 
@@ -319,7 +318,7 @@ $.widget("telemetry.histogramfilter", {
     this._triggerChange();
 
     // Load measures for selected version
-    Telemetry.measures(version, $.proxy(function(measures, measureInfo) {
+    Telemetry.measures(version, $.proxy(function(measures) {
       // Abort if another version have been selected while we loaded
       if (this._versionSelector.val() != version) {
         return;
@@ -328,22 +327,23 @@ $.widget("telemetry.histogramfilter", {
       // If there is a list of allowed histogram kinds, we limit the list of
       // measures under consideration to these measures
       if (this.options.allowedHistogramKinds !== null) {
-        measures = measures.filter(function(m) {
-          // Lookup measure kind
-          var kind = measureInfo[m].kind;
-          // Check if kind is allowed
-          return this.options.allowedHistogramKinds.indexOf(kind) != -1;
-        }, this);
+        var allowedMeasures = {};
+        for(var m in measures) {
+          var kind = measures[m].kind;
+          if (this.options.allowedHistogramKinds.indexOf(kind) != -1) {
+            allowedMeasures[m] = measures[m];
+          }
+        }
       }
 
       // Choose default measure if desired isn't available
-      if(measures.indexOf(measure) == -1) {
-        measure = this._defaultMeasure(measures, measureInfo);
+      if(measures[measure] === undefined) {
+        measure = this._defaultMeasure(measures);
       }
 
       // Populate measures selector while ignoring changes in event handlers
       this._ignoreChanges = true;
-      this._populateSelect(measures, this._measureSelector);
+      this._populateSelect(Object.keys(measures).sort(), this._measureSelector);
       this._ignoreChanges = false;
 
       // Restore things at measure level
@@ -472,19 +472,19 @@ $.widget("telemetry.histogramfilter", {
    * a function.
    */
   _defaultMeasure:
-              function histogramfilter__defaultMeasure(measures, measureInfo) {
+              function histogramfilter__defaultMeasure(measures) {
     // Get default measure
     var measure = this.options.defaultMeasure;
     
     // If function, use it to choose a measure
     if (measure instanceof Function) {
-      measure = measure.call(this.element, measures, measureInfo);
+      measure = measure.call(this.element, measures);
     }
 
     // Validate selected measure
-    if (measures.indexOf(measure) == -1) {
+    if (measures[measure] === undefined) {
       // Now resort to choose the first measure available
-      measure = measures[0];
+      measure = Object.keys(measures).sort()[0]
     }
     
     return measure;

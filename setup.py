@@ -16,8 +16,11 @@ setup(
             'processor = dashboard.analysis:DashboardProcessor'
         ],
         'console_scripts': [
-            'result2disk = dashboard.result2disk:main',
-            'aggregate_results = dashboard.aggregate_results:main'
+            'results2disk = dashboard.results2disk:main',
+            'aggregator = dashboard.aggregator:main',
+            'gzipclone = dashboard.gzipclone:main',
+            's3put = dashboard.s3put:main',
+            's3get = dashboard.s3get:main'
         ]
     }
 )

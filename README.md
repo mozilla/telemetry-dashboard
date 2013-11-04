@@ -1,57 +1,42 @@
-#Telemetry Dashboard
+Telemetry Dashboard
+===================
+Telemetry dashboard is an analysis job that aggregates telemetry histograms and
+simple measures, and offers an decent presentation. The default dashboard
+developed in this repository is hosted at
+(telemetry.mozilla.com)[http://telemetry.mozilla.com]. But the aggregated data
+is also available for consumption by third-party applications, so you don't need
+to do the aggregation on your own.
 
-Generate static files for a telemetry dashboard.
-
-
-#How to Run
-
-You'll need to have `mango` set up in your .ssh_config to connect you to the hadoop node where you'll run jydoop from.
-
-```
-Run `script/bootstrap`
-Serve the `html/` dir
-```
-
-##Histogram View
-There are x fields to narrow query by
-
-have a category table that stores category tree:
-Each node has a unique id
-Level1 Product: Firefox|Fennec|Thunderbird
-Level2 Platform: Windows|Linux
-Level3 etc
+Consuming Telemetry Aggregations
+--------------------------------
+Include into your code `http://telemetry.mozilla.com/js/telemetry.js` feel free
+to use the other modules too.
+Don't go about reading the raw JSON files, they are not designed for human
+consumption!
 
 
-size of this table can be kept in check by reducing common videocards to a family name, etc
-Can also customize what shows up under different levels..For example we could restrict tb, to have less childnodes.
+Hacking Telemetry Dashboard
+---------------------------
+If you want to improve the user-interface for telemetry dashboard, clone this
+repository, setup a static server that hosts the `html/` folder on our localhost
+and start hacking. This is easy!
 
-Store the tree in a table, but keep it read  into memory for queries, inserting new records
+If you want to add new aggregations, or improve upon existing aggregations,
+change the storage format, take a look at `Formats.mkd`. Talk to the guy who is
+maintaining telemetry dashboard.
 
-Then have a histogram table where
-columns: histogram_id | category_id | value
-where histogram_id is id like SHUTDOWN_OK, category id is a key from category table, value is the sum of histograms in that category...can be represented with some binary value
-
-
-##Misc
-Evolution can be implemented by adding a build_date field to histogram table
-
-TODO:
-How big would the category tree table be..surely there is a finite size for that
-
-histogram table would be |category_table| * |number of histograms|, pretty compact
-
-### Map + Reduce
-Mapper should turn each submission into
-<key> <data> which looks like
-buildid/channel/reason/appName/appVersion/OS/osVersion/arch {histograms:{A11Y_CONSUMERS:{histogram_data}, ...} simpleMeasures:{firstPaint:[100,101,1000...]}}
-Where key identifies where in the filter tree the data should live..Note a single packet could produce more than 1 such entry if we want to get into detailed breakdowns of gfxCard vs some FX UI animation histogram
-
-Reducer would then take above data and sum up histograms + append to simple measure lists based on key
-
-
-This should produce a fairly small file per day per channel(~200 records). Which will then be quick to pull out and merge into the per-build-per-histogram-json that can be rsynced to some webserver. This basically a final iterative REDUCE on top of map-reduce for new data. Hadoop does not feel like the right option for that, but I could be wrong.
-
-###todo:
-
-* oneline local testing using Jython's FileDriver.py
-
+Basic flow is as follows:
+  1. An `.egg` file is generated with `make egg`
+  2. Analysis tasks are created with telemetry-server
+  3. `DashboardProcessor` from `analysis.py` aggregated telemetry submissions,
+     this process is driven by telemetry-server.
+  4. `Aggregator` from `aggregator.py` collects results from analysis tasks, by:
+    1. Downloads existing data from s3
+    2. Fetch task finished messages from SQS
+    3. Download `result.txt` files in parallel
+    4. Updates results on disk
+    5. Publishes updated results in a new subfolder of `current/` on s3, every
+       once in a while.
+    6. Check points all aggregated data to a subfolder of `check-points/` on s3,
+       every once in a while.
+    7. Repeat

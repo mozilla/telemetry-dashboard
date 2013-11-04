@@ -1,0 +1,99 @@
+File Format used for Telemetry Dashboard
+========================================
+_All format described here are internal, not for external consumption._
+
+External users should include `telemetry.js` and consume data through this
+interface. Reading the raw data is hard and these data format may change, but
+the javascript interface is designed to be reasonably stable.
+
+
+
+
+
+
+Processor Output Format
+-----------------------
+
+/my/dim/../ JSON
+
+JSON:
+  revision:
+  buildid:
+  histogram:
+
+
+
+Web Facing Bucket Layout
+------------------------
+
+LATEST_VERSION = v2
+v1/
+  data
+v2/
+  check-points.json
+  check-points/ (one for every week)
+    YYYYMMDDhhmmss/
+      versions.json
+      FILES_PROCESSED
+      FILES_MISSING
+      <channel>/<version>/
+        MEASURE-by-build-date.json
+        MEASURE-by-submission-date.json
+        filter-tree.json
+        histograms.json
+        revisions.json
+  latest-current.json = most recent current, contents of versions.json
+  current/
+    YYYYMMDDhhmmss/
+      versions.json
+      FILES_PROCESSED
+      FILES_MISSING
+      <channel>/<version>/
+        MEASURE-by-build-date.json
+        MEASURE-by-submission-date.json
+        filter-tree.json
+        histograms.json
+        revisions.json
+
+
+Web Facing Format
+-----------------
+
+
+/<channel>/<version>
+
+MEASURE.json
+{
+  <filter_id>: [
+                bucket0,
+                bucket1,
+                ...,
+                bucketN,
+                sum,                # -1, if missing
+                log_sum,            # -1, if missing
+                log_sum_squares,    # -1, if missing
+                sum_squares_lo,     # -1, if missing
+                sum_squares_hi,     # -1, if missing
+                count
+              ],
+  <filter_id>...
+}
+
+filters.json
+{
+  _id:    filter_id,
+  name:   "filter-name",
+  <option>: {
+      <subtree>
+    }
+}
+
+histograms.json
+
+{
+  MEASURE: {
+    description: ...
+    ...
+  }
+}
+
