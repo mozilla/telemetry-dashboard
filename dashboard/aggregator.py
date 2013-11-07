@@ -5,7 +5,7 @@ from boto.sqs import connect_to_region as sqs_connect
 from boto.s3 import connect_to_region as s3_connect
 from boto.s3.key import Key
 from boto.sqs.jsonmessage import JSONMessage
-from multiprocessing import Process, Queue, cpu_count
+from multiprocessing import Queue, cpu_count
 from time import sleep
 import os, sys, shutil, gzip
 import json
@@ -16,6 +16,7 @@ from utils import mkdirp
 from results2disk import results2disk
 from s3put import s3put
 from s3get import s3get, Downloader
+from mergeresults import ResultContext, ResultMergingProcess
 
 class Aggregator:
     def __init__(self, input_queue, work_folder, bucket, prefix, region, aws_cred):
@@ -121,6 +122,7 @@ class Aggregator:
         return (datetime.utcnow() - last_checkpoint).days
 
     def publish_results(self):
+        print "Uploading Results"
         # s3put compressed to current/...
         date = datetime.utcnow().strftime("%Y%m%d%H%M%S")
         current_prefix = self.prefix + 'current/%s/' % date
@@ -144,17 +146,19 @@ class Aggregator:
         processed_msgblocks = []
         last_flush = datetime.utcnow()
         while True:
-            # get 10 new_messages from sqs
-            msgs = queue.get_messages(
-                num_messages = 10,
-                wait_time_seconds   = 20
-            )
-            print "Fetched %i messages" % len(msgs)
+            # get new_messages from sqs
+            messages = []
+            for i in xrange(0, 2):
+                msgs = queue.get_messages(num_messages = 10)
+                messages += msgs
+                if len(msgs) > 0:
+                    processed_msgblocks.append(msgs)
+                else:
+                    break
+            print "Fetched %i messages" % len(messages)
             # process msgs
-            self.process_messages(msgs)
-            if len(msgs) > 0:
-                processed_msgblocks.append(msgs)
-            else:
+            self.process_messages(messages)
+            if len(messages) == 0:
                 sleep(120)
             # Publish if necessary
             if (datetime.utcnow() - last_flush).seconds > 60 * 25:
@@ -220,6 +224,79 @@ class Aggregator:
                 downloader.join()
                 if downloader.exitcode != 0:
                     sys.exit(1)
+
+        # Update FILES_PROCESSED and FILES_MISSING
+        for msg in msgs:
+            # If there's no target-prefix the message failed
+            if msg['target-prefix'] is None:
+                # If target-prefix is None, then the message failed... we add the
+                # input files to list of missing files
+                files_missing_path = os.path.join(self.data_folder, 'FILES_MISSING')
+                with open(files_missing_path, 'a+') as files_missing:
+                    for f in msg['files']:
+                        files_missing.write(f + "\n")
+            else:
+                # Update FILES_PROCESSED
+                files_processed_path = os.path.join(self.data_folder, 'FILES_PROCESSED')
+                with open(files_processed_path, 'a+') as files_processed:
+                    for f in msg['files']:
+                        files_processed.write(f + "\n")
+
+    def process_messages_merging(self, msgs):
+        # Find results to download
+        results = []
+        for msg in msgs:
+            if msg['target-prefix'] != None:
+                results.append(msg['target-prefix'] + 'result.txt')
+
+        # Download results
+        if len(results) > 0:
+            target_paths = []
+            download_queue = Queue()
+            result_queue = Queue()
+            # Make a job queue
+            i = 0
+            for result in results:
+                i += 1
+                result_path = os.path.join(self.work_folder, "result-%i.txt" % i)
+                download_queue.put((result, result_path))
+                target_paths.append(result_path)
+
+            # Start downloaders
+            downloaders = []
+            for i in xrange(0, 16):
+                downloader = Downloader(download_queue, result_queue,
+                                        self.analysis_bucket_name, False, False,
+                                        self.region, self.aws_cred)
+                downloaders.append(downloader)
+                downloader.start()
+                download_queue.put(None)
+
+            # Wait and process results as they are downloaded
+            result_merged_path = os.path.join(self.work_folder, "result-merged.txt")
+            worker = ResultMergingProcess(result_queue, target_paths, result_merged_path)
+            worker.start()
+            #ctx = ResultContext()
+            #while len(target_paths) > 0:
+            #    result_path = result_queue.get(timeout = 20 * 60)
+            #    ctx.merge_result_file(result_path)
+            #    os.remove(result_path)
+            #    target_paths.remove(result_path)
+            #    print " - Merged result, % i left" % len(target_paths)
+
+            # Check that downloaders downloaded correctly
+            for downloader in downloaders:
+                downloader.join()
+                if downloader.exitcode != 0:
+                    sys.exit(1)
+
+            worker.join()
+            if worker.exitcode != 0:
+                    sys.exit(1)
+
+            results2disk(result_merged_path, self.data_folder, False, False)
+            print " - Processed results"
+
 
         # Update FILES_PROCESSED and FILES_MISSING
         for msg in msgs:

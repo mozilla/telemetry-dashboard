@@ -7,7 +7,7 @@ var Telemetry = {};
 
 // Data folder from which data will be loaded, another level indicating current
 // folder will be initialized by Telemetry.init()
-var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v3';
+var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v2';
 
 // Boolean tracks if we've initialized
 var _initialized = false;

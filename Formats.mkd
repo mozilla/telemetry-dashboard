@@ -6,20 +6,16 @@ External users should include `telemetry.js` and consume data through this
 interface. Reading the raw data is hard and these data format may change, but
 the javascript interface is designed to be reasonably stable.
 
-
-
-
-
-
-Processor Output Format
------------------------
+Analysis Tasks Output Format
+----------------------------
+The analysis task writes a single file to disk called `result.txt`.
 
 /my/dim/../ JSON
 
-JSON:
-  revision:
-  buildid:
-  histogram:
+  filtrerPath:
+    revision:
+    buildid:
+    histogram:
 
 
 
@@ -56,28 +52,28 @@ v2/
         revisions.json
 
 
-Web Facing Format
+Web Facing JSON Format:
 -----------------
 
 
 /<channel>/<version>
 
 MEASURE.json
-{
-  <filter_id>: [
-                bucket0,
-                bucket1,
-                ...,
-                bucketN,
-                sum,                # -1, if missing
-                log_sum,            # -1, if missing
-                log_sum_squares,    # -1, if missing
-                sum_squares_lo,     # -1, if missing
-                sum_squares_hi,     # -1, if missing
-                count
-              ],
-  <filter_id>...
-}
+[
+  [
+    bucket0,
+    bucket1,
+    ...,
+    bucketN,
+    sum,                # -1, if missing
+    log_sum,            # -1, if missing
+    log_sum_squares,    # -1, if missing
+    sum_squares_lo,     # -1, if missing
+    sum_squares_hi,     # -1, if missing
+    count,
+    filter_id,
+  ],
+]
 
 filters.json
 {

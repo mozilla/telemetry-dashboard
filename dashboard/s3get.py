@@ -1,6 +1,6 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import sys, os, gzip
-from cStringIO import StringIO
+from StringIO import StringIO
 from utils import mkdirp
 from multiprocessing import Process, Queue, cpu_count
 from boto.s3 import connect_to_region as s3_connect

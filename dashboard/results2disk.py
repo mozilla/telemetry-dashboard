@@ -40,12 +40,15 @@ def save_json_to_file(path, value, compress, pretty_print):
 
 class ChannelVersionManager:
     """ Manages data stored for a specific channel / version """
-    def __init__(self, root_folder, channel, version, compress, pretty_print):
+    def __init__(self, root_folder, channel, version, compress, pretty_print, cached = False):
         self.data_folder = os.path.join(root_folder, channel, version)
         mkdirp(self.data_folder)
         self.compress = compress
         self.pretty_print = pretty_print
         self.max_filter_id = None
+        self.cached = cached
+        if cached:
+            self.cache = {}
 
         # Load filter-tree
         self.filter_tree = self.json_from_file(
@@ -61,13 +64,23 @@ class ChannelVersionManager:
 
     def json_from_file(self, filename, fallback_value):
         """ Load json from file, return fallback_value if no file exists """
+        if self.cached:
+            data = self.cache.get(filename, None)
+            if data is None:
+                path = os.path.join(self.data_folder, filename)
+                data = load_json_from_file(path, self.compress, fallback_value)
+                self.cache[filename] = data
+            return data
         path = os.path.join(self.data_folder, filename)
         return load_json_from_file(path, self.compress, fallback_value)
 
     def json_to_file(self, filename, value):
         """ Write JSON to file """
-        path = os.path.join(self.data_folder, filename)
-        save_json_to_file(path, value, self.compress, self.pretty_print)
+        if self.cached:
+            self.cache[filename] = value
+        else:
+            path = os.path.join(self.data_folder, filename)
+            save_json_to_file(path, value, self.compress, self.pretty_print)
 
     def get_next_filter_id(self):
         """ Get the next filter id available """
@@ -103,6 +116,12 @@ class ChannelVersionManager:
 
     def flush(self):
         """ Output cache values """
+        # Output all files
+        if self.cached:
+            for filename, value in self.cache.iteritems():
+                path = os.path.join(self.data_folder, filename)
+                save_json_to_file(path, value, self.compress, self.pretty_print)
+
         # Output filter tree
         self.json_to_file('filter-tree.json', self.filter_tree)
 
@@ -245,7 +264,7 @@ def results2disk(result_file, output_folder, compress, pretty_print):
             if manager is None:
                 manager = ChannelVersionManager(output_folder,
                                                 channel, majorVersion,
-                                                compress, pretty_print)
+                                                compress, pretty_print, False)
                 cache[(channel, majorVersion)] = manager
             manager.merge_in_blob(measure, byDateType, blob)
 
