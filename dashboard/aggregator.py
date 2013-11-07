@@ -157,11 +157,11 @@ class Aggregator:
                     break
             print "Fetched %i messages" % len(messages)
             # process msgs
-            self.process_messages(messages)
+            self.process_messages_merging(messages)
             if len(messages) == 0:
                 sleep(120)
             # Publish if necessary
-            if (datetime.utcnow() - last_flush).seconds > 60 * 25:
+            if (datetime.utcnow() - last_flush).seconds > 60 * 55:
                 last_flush = datetime.utcnow()
                 # Skip publishing if there are no new results
                 if len(processed_msgblocks) == 0:
@@ -264,7 +264,7 @@ class Aggregator:
 
             # Start downloaders
             downloaders = []
-            for i in xrange(0, 16):
+            for i in xrange(0, 4):
                 downloader = Downloader(download_queue, result_queue,
                                         self.analysis_bucket_name, False, False,
                                         self.region, self.aws_cred)

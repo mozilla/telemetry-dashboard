@@ -74,7 +74,7 @@ $.widget("telemetry.histogramfilter", {
     allowedHistogramKinds:          null,
 
     /** Prefix for state() if synchronizeStateWithHash is true */
-    windowHashPrefix:               "",
+    windowHashPrefix:               ""
   },
 
   /** Create new histogramfilter */
