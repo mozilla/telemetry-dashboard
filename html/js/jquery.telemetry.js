@@ -77,6 +77,17 @@ $.widget("telemetry.histogramfilter", {
     windowHashPrefix:               "",
 
     /**
+     * Load histogram evolution over "Builds" or "Time".
+     *
+     * If "Builds" is chosen the HistogramEvolution instances returned by this
+     * filter will have dates corresponding to build dates.
+     * If "Time" is chosen, dates in the HistogramEvolution instances returned
+     * will be telemetry ping submission dates. See telemetry.js for more
+     * information.
+     */
+    evolutionOver:                  "Builds",
+
+    /**
      * Constructor for type to use for selectors. The default constructor
      * creates a type that wraps a <select> element.
      *
@@ -254,7 +265,7 @@ $.widget("telemetry.histogramfilter", {
    */
   histogram: function histogramfilter_histogram() {
     // Get filter list length
-    var n = this._FilterList.length;
+    var n = this._filterList.length;
 
     // If there is a last filter, get the histogram from it and apply the
     // select option, if not default
@@ -288,6 +299,13 @@ $.widget("telemetry.histogramfilter", {
       // Set state option using state setter
       this.state(value);
     
+    } else if (option == "evolutionOver") {
+      // Change what we load evolution over
+      this.options.evolutionOver = value;
+
+      // Reload state, this should refresh and reload as best possible
+      this.state(this.state());
+
     } else if (option == "selectorClass") {
 
       // Change class for each selector
@@ -434,8 +452,8 @@ $.widget("telemetry.histogramfilter", {
     this._triggerChange();
 
     // Load histogram for desired measure
-    Telemetry.loadEvolutionOverBuilds(version, measure,
-                                      $.proxy(function(hgram) {
+    var loader = "loadEvolutionOver" + this.options.evolutionOver;
+    Telemetry[loader](version, measure, $.proxy(function(hgram) {
       // Abort if another version or measure have been selected while we loaded
       if (this._versionSelector.val() !== version ||
           this._measureSelector.val() !== measure) {
