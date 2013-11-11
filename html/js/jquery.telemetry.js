@@ -37,7 +37,7 @@ $.widget("telemetry.histogramfilter", {
   /** Default options */
   options: {
     /** Class use to style <select> elements */
-    selectClass:                    "histogram-filter",
+    selectorClass:                  "histogram-filter",
 
     /** Initial state of histogram filter */
     state:                          null,
@@ -74,7 +74,89 @@ $.widget("telemetry.histogramfilter", {
     allowedHistogramKinds:          null,
 
     /** Prefix for state() if synchronizeStateWithHash is true */
-    windowHashPrefix:               ""
+    windowHashPrefix:               "",
+
+
+    selectorType: (function(){
+      /**
+       * Construct a selector given a filter name, valid filter names are:
+       *  - 'version', 'measure', 'reason', 'appName', 'OS', 'osVersion', 'arch'
+       *  Default value, if supported, is filterName + '*'
+       */
+      function DefaultSelector(filterName) {
+        this._filterName = filterName;
+        this._select = $("<select>");
+        this._options = [];
+        this._select.bind("change", $.proxy(function() {
+          if (this._callback !== undefined) {
+            this._callback(this, this.val());
+          }
+        }, this));
+      }
+
+      // Methods for selector strategy
+      $.extend(DefaultSelector.prototype, {
+        /** Returns a jQuery wrapper for the underlying DOM element */
+        element: function DefaultSelector_element() {
+          return this._select;
+        },
+
+        /** Get/set selectable options */
+        options: function DefaultSelector_options(options) {
+          if (options !== undefined) {
+            // Clear existing options
+            this._select.empty();
+
+            var n = options.length;
+            for(var i = 0; i < n; i++) {
+              var option = options[i];
+
+              var label = option;
+              // Special label if we're displaying versions
+              if (this._filterName === "version") {
+                label = option.replace("/", " ");
+              }
+
+              // Add <option>
+              this._select.append($("<option>", {
+                text:       label,
+                value:      option
+              }));
+            }
+
+            // Store options for another time
+            this._options = options;
+          }
+          return this._options;
+        },
+
+        /** Get/set selected value */
+        val: function DefaultSelector_value(value) {
+          if (value !== undefined) {
+            this._select.val(value);
+          }
+          return this._select.val();
+        },
+
+        /**
+         * Set change callback, only one callback supported, invocation without
+         * the callback argument unbinds previous callback. The callback is
+         * invoked as: callback(this, selectedValue)
+         */
+        change: function DefaultSelector_change(callback) {
+          this._callback = callback;
+        },
+
+        /** Clean up, after element() being detached */
+        destroy: function DefaultSelector_remove() {
+          this._callback = null;
+          this._options = null;
+          this._select.remove();
+        }
+      });
+
+      return DefaultSelector;
+    })()
   },
 
   /** Create new histogramfilter */
@@ -86,23 +168,26 @@ $.widget("telemetry.histogramfilter", {
     this._windowHashChanged = $.proxy(this._windowHashChanged,  this);
 
     // Create version and measure selectors
-    this._populateVersionSelect();
-    this._measureSelector = this._populateSelect();
+    this._versionSelector = new this.options.selectorType('version');
+    this._measureSelector = new this.options.selectorType('measure');
+    this._versionSelector.options(Telemetry.versions());
+    this._versionSelector.element().addClass(this.options.selectorClass);
+    this._measureSelector.element().addClass(this.options.selectorClass);
 
     // Append version and measure selectors
-    this.element.append(this._versionSelector);
-    this.element.append(this._measureSelector);
+    this.element.append(this._versionSelector.element());
+    this.element.append(this._measureSelector.element());
 
     // Flag to ignore changes to select elements
     this._ignoreChanges = false;
 
     // Listen for selector changes
-    this._versionSelector.bind("change", this._versionChanged);
-    this._measureSelector.bind("change", this._measureChanged);
+    this._versionSelector.change(this._versionChanged);
+    this._measureSelector.change(this._measureChanged);
 
     // List of filters where each filter is represented by:
     //  {
-    //    select:       $("<select>"),      // jQuery wrapped <select> element
+    //    select:       selectorType,       // selectorType instance
     //    histogram:    HistogramEvolution  // HistogramEvolution instance to be
     //                                      // filtered by selected option
     //  }
@@ -170,7 +255,7 @@ $.widget("telemetry.histogramfilter", {
 
       // If selected option isn't the default option and the option is available
       if (option != histogram.filterName() + "*" &&
-          histogram.filterOptions().indexOf(option) != -1) {
+          histogram.filterOptions().indexOf(option) !== -1) {
         
         // Filter the histogram
         histogram = histogram.filter(option);
@@ -187,23 +272,52 @@ $.widget("telemetry.histogramfilter", {
       // Set state option using state setter
       this.state(value);
     
-    } else if (option == "selectClass") {
+    } else if (option == "selectorClass") {
 
       // Change class for each selector
-      var oldValue = this.options.selectClass;
+      var oldValue = this.options.selectorClass;
 
       // Restyle version and measure selectors
-      this._versionSelector.removeClass(oldValue).addClass(value);
-      this._measureSelector.removeClass(oldValue).addClass(value);
-
-      // Restyle all filter selectors
-      var n = this._filterList.length;
-      for (var i = 0; i < n; i++) {
-        this._filterList[i].select.removeClass(oldValue).addClass(value);
-      }
+      this._versionSelector.element()
+        .removeClass(oldValue)
+        .addClass(value);
+      this._measureSelector.element()
+        .removeClass(oldValue)
+        .addClass(value);
 
       // Update options
-      this.options.selectClass = value;
+      this.options.selectorClass = value;
+
+      // Restyle filters by recreating them using set state(get state)
+      this.state(this.state());
+
+    } else if (option == "selectorType") {
+      // Save current state
+      var state = this.state();
+
+      // Clear existing filters
+      this._clearFilterList()
+
+      // Remove version and measure selectors
+      this._versionSelector.destroy();
+      this._measureSelector.destroy();
+
+      // Update options
+      this.options.selectorType = value;
+
+      // Create version and measure selectors
+      this._versionSelector = new this.options.selectorType('version');
+      this._measureSelector = new this.options.selectorType('measure');
+      this._versionSelector.options(Telemetry.versions());
+      this._versionSelector.element().addClass(this.options.selectorClass);
+      this._measureSelector.element().addClass(this.options.selectorClass);
+
+      // Append version and measure selectors
+      this.element.append(this._versionSelector.element());
+      this.element.append(this._measureSelector.element());
+
+      // Restore state and filters with their new type
+      this.state(this.state());
 
     } else if (option == "synchronizeStateWithHash") {
 
@@ -220,68 +334,6 @@ $.widget("telemetry.histogramfilter", {
     } else {
       this.options[option] = value;
     }
-  },
-
-  /** Auxiliary function to create/populate and style a <select> element */
-  _populateSelect: function histogramfilter__populateSelect(options, select) {
-    // Create and style select if not provided
-    if (select === undefined) {
-      select = $("<select>");
-      select.addClass(this.options.selectClass);
-    } else {
-      select.empty();
-    }
-    if (options === undefined) {
-      options = [];
-    }
-
-    // for each option
-    var n = options.length;
-    for(var i = 0; i < n; i++) {
-      var option = options[i];
-
-      // Add <option>
-      select.append($("<option>", {value: option, text: option}));
-    }
-
-    // Select first option, ignoring this change in event handlers
-    this._ignoreChanges = true;
-    select.val(options[0]);
-    this._ignoreChanges = false;
-
-    return select;
-  },
-
-  /**
-   * Auxiliary function to create/populate and style the <select> element for
-   * selection of versions
-   */
-  _populateVersionSelect: function histogramfilter__populateVersionSelect() {
-    // Create and style select if not provided
-    if (this._versionSelector === undefined) {
-      this._versionSelector = $("<select>");
-      this._versionSelector.addClass(this.options.selectClass);
-    } else {
-      this._versionSelector.empty();
-    }
-    var options = Telemetry.versions();
-
-    // for each option
-    var n = options.length;
-    for(var i = 0; i < n; i++) {
-      var option = options[i];
-
-      // Add <option>
-      this._versionSelector.append($("<option>", {
-        value:  option,
-        text:   option.replace("/", " ")
-      }));
-    }
-
-    // Select first option, ignoring this change in event handlers
-    this._ignoreChanges = true;
-    this._versionSelector.val(options[0]);
-    this._ignoreChanges = false;
   },
 
   /**
@@ -305,7 +357,7 @@ $.widget("telemetry.histogramfilter", {
                                                             fragments) {
     // Validate selected version
     var versions = Telemetry.versions();
-    if (versions.indexOf(version) == -1) {
+    if (versions.indexOf(version) === -1) {
       version = this._defaultVersion(versions);
     }
 
@@ -320,7 +372,7 @@ $.widget("telemetry.histogramfilter", {
     // Load measures for selected version
     Telemetry.measures(version, $.proxy(function(measures) {
       // Abort if another version have been selected while we loaded
-      if (this._versionSelector.val() != version) {
+      if (this._versionSelector.val() !== version) {
         return;
       }
 
@@ -343,7 +395,7 @@ $.widget("telemetry.histogramfilter", {
 
       // Populate measures selector while ignoring changes in event handlers
       this._ignoreChanges = true;
-      this._populateSelect(Object.keys(measures).sort(), this._measureSelector);
+      this._measureSelector.options(Object.keys(measures).sort());
       this._ignoreChanges = false;
 
       // Restore things at measure level
@@ -369,8 +421,8 @@ $.widget("telemetry.histogramfilter", {
     Telemetry.loadEvolutionOverBuilds(version, measure,
                                       $.proxy(function(hgram) {
       // Abort if another version or measure have been selected while we loaded
-      if (this._versionSelector.val() != version ||
-          this._measureSelector.val() != measure) {
+      if (this._versionSelector.val() !== version ||
+          this._measureSelector.val() !== measure) {
         return;
       }
 
@@ -403,13 +455,13 @@ $.widget("telemetry.histogramfilter", {
 
       // Create a filter entry for the _filterList
       var filter = {
-        select:         this._populateSelect(options),
+        select:         new this.options.selectorType(filterName),
         histogram:      hgram
       };
 
-      // Set next index from _filterList on <select> element to we can find it
-      filter.select.data("telemetry.histogramfilter.index",
-                         this._filterList.length);
+      // Populate select with options and style it
+      filter.select.options(options);
+      filter.select.element().addClass(this.options.selectorClass);
 
       // Now add filter to _filterList so it gets index we assigned above
       this._filterList.push(filter);
@@ -427,8 +479,8 @@ $.widget("telemetry.histogramfilter", {
       filter.select.val(option);
 
       // Listen for changes and append to root element
-      filter.select.bind("change", this._filterChanged);
-      this.element.append(filter.select);
+      filter.select.change(this._filterChanged);
+      this.element.append(filter.select.element());
 
       if (option != defaultOption) {
         // If we didn't select the default option, filter histogram and continue
@@ -544,23 +596,29 @@ $.widget("telemetry.histogramfilter", {
   },
 
   /** Filter changed event handler */
-  _filterChanged: function histogramfilter__filterChanged(e) {
+  _filterChanged: function histogramfilter__filterChanged(select, option) {
     // If flagged to ignore changes in event handler, then we comply. This is
     // usually done to avoid recursion and interference from event handlers
     if (this._ignoreChanges) {
       return;
     }
 
-    // Get <select> element and selected option
-    var select = $(e.target);
-    var option = select.val();
+    // Find filter index in _filterList
+    var i, n = this._filterList.length;
+    for (i = 0; i < n; i++) {
+      if (this._filterList[i].select === select) {
+        break;
+      }
+    }
+    if (i >= n) {
+      throw new Error("Select not in _filterList");
+    }
 
-    // Get index of filter and find filter
-    var index = select.data("telemetry.histogramfilter.index");
-    var filter = this._filterList[index];
+    // Find filter
+    var filter = this._filterList[i];
 
     // Clear lower level filters
-    var clearedFilters = this._clearFilterList(index + 1);
+    var clearedFilters = this._clearFilterList(i + 1);
 
     // If we're not supposed to restore from cleared filters we forget them
     if(!this.options.attemptFilterAutoRestore) {
@@ -569,7 +627,7 @@ $.widget("telemetry.histogramfilter", {
 
     // If we haven't chosen the default option, restore filters, or at least
     // create next filter and trigger change event
-    if(filter.histogram.filterName() + "*" != option) {
+    if(filter.histogram.filterName() + "*" !== option) {
       this._restoreFilters(filter.histogram.filter(option), clearedFilters);
     } else {
       // Otherwise, trigger the change event
@@ -606,7 +664,7 @@ $.widget("telemetry.histogramfilter", {
       }
 
       // Remove filter
-      filter.select.remove();
+      filter.select.destroy();
     }
 
     // Return list of removed options, for any body remotely interested in
