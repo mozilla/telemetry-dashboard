@@ -76,12 +76,28 @@ $.widget("telemetry.histogramfilter", {
     /** Prefix for state() if synchronizeStateWithHash is true */
     windowHashPrefix:               "",
 
-
+    /**
+     * Constructor for type to use for selectors. The default constructor
+     * creates a type that wraps a <select> element.
+     *
+     * Objects constructed with `selectorType` should have following methods:
+     *  - element()       Get jQuery wrapped element to add to container
+     *  - options(opts)   Get/set list of options.
+     *  - val(v)          Get/set currently selected option
+     *  - change(cb)      Set value changed callback, invoked as
+     *                    cb(selectorTypeInstance, value)
+     *  - destroy()       Remove jQuery wrapped element, unbind event listeners,
+     *                    and release resources held.
+     *
+     * The constructor `selectorType` will be given filterName as argument,
+     * which may take one of the following values:
+     *  - 'version', 'measure', 'reason', 'appName', 'OS', 'osVersion', 'arch'
+     */
     selectorType: (function(){
       /**
        * Construct a selector given a filter name, valid filter names are:
        *  - 'version', 'measure', 'reason', 'appName', 'OS', 'osVersion', 'arch'
-       *  Default value, if supported, is filterName + '*'
+       *  Default option, if supported, is filterName + '*'
        */
       function DefaultSelector(filterName) {
         this._filterName = filterName;
