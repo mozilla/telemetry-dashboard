@@ -6,6 +6,7 @@ from urllib2 import urlopen, HTTPError
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import sys, os, gzip
 from utils import mkdirp
+from auxiliary import replace_nan_inf
 
 def get_simple_measures_definition(measure):
     return {
@@ -247,7 +248,11 @@ class ChannelVersionManager:
                     values[i] += new_values[i]
                 # Last entry (count) cannot be negative
                 values[-2] += new_values[-1]
+
+                # Replace nan and friends
+                replace_nan_inf(values)
             else:
+                replace_nan_inf(new_values)
                 data.append(new_values + [fid])
 
         # Store dataset

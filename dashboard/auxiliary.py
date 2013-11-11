@@ -1,3 +1,5 @@
+import sys, math
+
 class HistogramAggregator:
     """ Object that accumulates a single histogram, ie. it aggregates histograms
         Format of values is
@@ -25,6 +27,7 @@ class HistogramAggregator:
         aggregator1.merge(**aggregator2.dump())
     """
     def __init__(self, values = [], buildId = "", revision = None):
+        replace_nan_inf(values)
         self.values = values
         self.buildId = buildId
         self.revision = revision
@@ -51,6 +54,8 @@ class HistogramAggregator:
                 self.values[i] += values[i]
             # Last entry cannot be negative
             self.values[-1] += values[-1]
+        # Remove Nan and Inf
+        replace_nan_inf(self.values)
 
     def dump(self):
         return {
@@ -58,3 +63,17 @@ class HistogramAggregator:
             'buildId':      self.buildId,
             'values':       self.values
         }
+
+def replace_nan_inf(values):
+    """ Replace NaN and Inf with null and float.max respectively """
+    for i in xrange(0, len(values)):
+        val = values[i]
+        if math.isinf(val):
+            if val < 0:
+                values[i] = - sys.float_info.max
+            else:
+                values[i] = sys.float_info.max
+        elif math.isnan(val):
+            # this isn't good... but we can't handle all possible corner cases
+            # NaN shouldn't be possible... besides it's not known to happen
+            values[i] = null
