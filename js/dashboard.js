@@ -153,6 +153,10 @@ Dashboard.plotEvolution = function Dashboard_plotEvolution() {
       lines:  { show: true },
       points: { show: true },
     },
+    legend: {
+      noColumns: series.length,
+      container: $("#evolution-legend")
+    },
     xaxes: [
       { mode: "time", timeformat: "%Y%m%d" }
     ],
@@ -211,7 +215,7 @@ Dashboard.plotHistogram = function Dashboard_plotHistogram() {
 
   // Plot options
   var options = {
-    "xaxis": { 
+    "xaxis": {
       "ticks": hgram.map(function(count, start, end, index) {
         return [index, start];
       })
@@ -221,7 +225,7 @@ Dashboard.plotHistogram = function Dashboard_plotHistogram() {
       "markings": markings
     }
   };
-    
+
   // Plot histogram
   $("#histogram-plot").plot(series, options);
 };

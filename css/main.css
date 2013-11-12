@@ -58,6 +58,12 @@ select {
 .graph {
   width: 100%;
 }
+.graph-legend {
+  padding: .5rem .5rem .5rem 1.5rem;
+}
+.graph-legend tbody tr td:nth-child(even) {
+  padding-right: 1rem;
+}
 #main_chart {
   height: 100%;
 }
