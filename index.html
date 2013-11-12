@@ -34,29 +34,13 @@
 <script src="js/jquery.flot.js"></script>
 <script src="js/jquery.flot.time.js"></script>
 <script src="js/big.js"></script>
-<script src="js/telemetry.js"></script>
+<script src="http://telemetry.mozilla.org/js/telemetry.js"></script>
 <script src="js/jquery.ui.widget.js"></script>
 <script src="js/jquery.telemetry.js"></script>
 <script src="js/dashboard.js"></script>
 <script>
     Telemetry.init(function(){
         Dashboard.init();
-        /*$("#plot-area").html("<pre id='log' style='padding: 10px'></pre>");
-        function print(msg) { $("#log").append(msg + "\n"); }
-        print("Loaded");
-
-        var count = 0;
-        Telemetry.measures('nightly/27', function(measures) {
-            for(var measure in measures) {
-                (function(measure){
-                    Telemetry.loadEvolutionOverBuilds('nightly/27', measure,
-                                                      function(hgram) {
-                        print("Loaded:  " + measure);
-                        print(hgram.());
-                    });
-                })(measure);
-            }
-        });*/
     });
 </script>
 <html>
