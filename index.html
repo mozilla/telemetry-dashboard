@@ -1,46 +1,77 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
-    <title>Static Telemetry Dashboard</title>
-    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <title>Telemetry Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap, Awesome Font, nvd3 and Bootstrap-Select -->
+    <link rel="stylesheet"
+          href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="//netdna.bootstrapcdn.com/font-awesome/4.0.2/css/font-awesome.min.css">
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.css">
+    <link rel="stylesheet" href="css/bootstrap-select.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
-    <article>
     <header>
-        <span>Telemetry Dashboard</span>
+        <h1>Telemetry Dashboard</h1>
     </header>
-    <section id="plot-area">
-        <nav id="filters"></nav>
-        <div id="info"></div>
-        <div class="plots">
-            <div id="evolution-plot" class="graph"></div>
-            <div id="histogram-plot" class="graph"></div>
-        </div>
-        <div>
-            <span id="percentile-legend">
-                <div style="background-color: #000;" class="box"></div> 5th Percentile
-                <div style="background-color: #0f0;" class="box"></div> 25th Percentile
-                <div style="background-color: #00f;" class="box"></div> Median
-                <div style="background-color: #f00;" class="box"></div> 75th Percentile
-                <div style="background-color: #f0f;" class="box"></div> 95th Percentile
-            </span>
-            <label><input type="checkbox" id="show-percentiles" checked="checked"> Plot percentiles</label>
+
+    <nav data-spy="affix" data-offset-top="70" class="navbar navbar-default navbar-affix-top" role="navigation">
+      <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
+      </form>
+    </nav>
+
+    <section>
+        <div id="state-loaded" class="row">
+            <div class="col-md-8">
+                <div>
+                    <h2 id="measure">My measure</h2>
+                    <i id="description">My description</i>
+                    <figure><svg id="evolution"></figure>
+                    <figure><svg id="histogram"></svg></figure>
+                </div>
+            </div>
+            <aside class="col-md-4">
+                <h2>Preferences</h2>
+            </aside>
         </div>
     </section>
+    <div id="state-loading" class="col-md-12">
+            <i class="fa fa-spinner fa-spin"></i>
+    </div>
+    <!-- jQuery, Bootstrap and d3 -->
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js">
+    </script>
+    <script src="js/bootstrap-select.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.9/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.js">
+    </script>
+    
+    <!-- 
+        big.js and telemetry.js from telemetry.mozilla.org
+        (we'll try to keep it backwards compatible)
+        Note: Some auxiliary methods are still buggy and big.js dependency may
+              disappear some day.
+     -->
+    <script src="//telemetry.mozilla.org/js/big.js"></script>
+    <script src="//telemetry.mozilla.org/js/telemetry.js"></script>
+    
+    <!-- 
+        telemetry.jquery.js and jQuery UI widget factory for stateful plugins.
+        These are not required for using telemtry.js, but they make filtering
+        very easy, and come in handy for custom dashboards.
+    -->
+    <script src="//telemetry.mozilla.org/js/jquery.ui.widget.js"></script>
+    <script src="//mozilla.github.io/telemetry-dashboard/js/jquery.telemetry.js">
+    </script>
+
+    <!-- Dashboard specific Javascript -->
+    <script src="dashboard.js"></script>    
 </body>
-<script src="js/jquery.js"></script>
-<script src="js/jquery.flot.js"></script>
-<script src="js/jquery.flot.time.js"></script>
-<script src="js/big.js"></script>
-<script src="http://telemetry.mozilla.org/js/telemetry.js"></script>
-<script src="js/jquery.ui.widget.js"></script>
-<script src="js/jquery.telemetry.js"></script>
-<script src="js/dashboard.js"></script>
-<script>
-    Telemetry.init(function(){
-        Dashboard.init();
-    });
-</script>
 <html>

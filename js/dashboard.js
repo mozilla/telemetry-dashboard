@@ -1,71 +1,90 @@
-(function(exports){
-
-"use strict";
-
-/** Namespace for this module */
-var Dashboard = {};
-
-/** Histogram currently displayed */
-var _hgramEvo = null;
-
-/** Initialize the dashboard, load state from window.location.hash, etc. */
-Dashboard.init = function Dashboard_init() {
-
-  // Update plot sizes on resize
-  var resizeTimeout;
-  $(window).resize(function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(function() {
-      // Resize plots
-      var evolutionPlot = $("#evolution-plot").data("plot");
-      if (evolutionPlot !== null) {
-        evolutionPlot.resize();
-        evolutionPlot.setupGrid();
-        evolutionPlot.draw();
+var BootstrapSelector = (function($){
+  function BootstrapSelector(filterName) {
+    this._filterName = filterName;
+    this._span = $("<span>");
+    this._select = $("<select>");
+    this._span.append(this._select);
+    this._options = [];
+    this._select.bind("change", $.proxy(function() {
+      if (this._callback !== undefined) {
+        this._callback(this, this.val());
       }
-      var histogramPlot = $("#histogram-plot").data("plot");
-      if (histogramPlot !== null) {
-        histogramPlot.resize();
-        histogramPlot.setupGrid();
-        histogramPlot.draw();
+    }, this));
+    this._select.addClass("show-tick");
+    if (this._filterName === "version" || this._filterName === "measure") {
+      this._select.data("live-search", true);
+    }
+    this._select.addClass("filter-" + this._filterName);
+    this._select.selectpicker();
+  }
+
+  $.extend(BootstrapSelector.prototype, {
+    element: function BootstrapSelector_element() {
+      return this._span;
+    },
+    
+    options: function BootstrapSelector_options(options) {
+      if (options !== undefined) {
+        // Clear existing options
+        this._select.empty();
+
+        var parent = this._select;
+        var n = options.length;
+        for(var i = 0; i < n; i++) {
+          var option = options[i];
+
+          var label = option;
+          // Special label if we're displaying versions
+          if (this._filterName === "version") {
+            var opts = option.split("/");
+            if (opts[0] !== parent.attr("label")) {
+              parent = $("<optgroup>", {label: opts[0]});
+              this._select.append(parent);
+            }
+            var label = label.replace("/", " ");
+          }
+
+          // Add <option>
+          parent.append($("<option>", {
+            text:       label,
+            value:      option
+          }));
+        }
+
+        // Store options for another time
+        this._options = options;
+
+        // Update bootstrap select
+        this._select.selectpicker('refresh');
       }
-    }, 100);
+      return this._options;
+    },
+
+    val: function BootstrapSelector_val(value) {
+      if (value !== undefined) {
+        this._select.val(value);
+        this._select.selectpicker('render');
+      }
+      return this._select.val();
+    },
+
+    change: function BootstrapSelector_change(cb) {
+      this._callback = cb;
+    },
+
+    destroy: function BootstrapSelector_destroy() {
+      this._callback = null;
+      this._options = null;
+      this._select.remove();
+      this._span.remove();
+    },
   });
 
-  $("#show-percentiles").change(function() {
-    Dashboard.plotEvolution();
-    Dashboard.plotHistogram();
-    if ($("#show-percentiles").prop('checked')) {
-      $("#percentile-legend").css("opacity", "1");
-    } else {
-      $("#percentile-legend").css("opacity", "0");
-    }
-  });
+  return BootstrapSelector;
+})(jQuery);
 
-  // Setup plot hover
-  var previousPoint;
-  $("#plot-area").bind("plothover", function(event, pos, item) {
-    if (!item) {
-      $("#tooltip").remove();
-      previousPoint = null;
-      return;
-    }
-    if (previousPoint == item.dataIndex) {
-      return;
-    }
-    previousPoint = item.dataIndex;
-    $("#tooltip").remove();
-    $('<div id="tooltip">' + item.datapoint[1].toFixed(2) + '</div>')
-      .css({
-        top: item.pageY + 5,
-        left: item.pageX + 5,
-      })
-      .appendTo("body").fadeIn(200);
-  });
-
-  // Create histogram filter
-  $("#filters").histogramfilter({
-    windowHashPrefix:           "path=",
+Telemetry.init(function(){
+  $("#histogram-filter").histogramfilter({
     synchronizeStateWithHash:   true,
     defaultVersion:             function(versions) {
       var nightlies = versions.filter(function(version) {
@@ -73,160 +92,84 @@ Dashboard.init = function Dashboard_init() {
       });
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
-    }
+    },
+    selectorType: BootstrapSelector
   });
 
-  // Plot histogram, whenever filtering changes
-  $("#filters").bind("histogramfilterchange", function(event, data) {
+  $("#histogram-filter").bind("histogramfilterchange", function(event, data) {
 
     // Get HistogramEvolution instance
     var hgramEvo = data.histogram;
 
-    // Don't plot anything if we're loading
-    if (!hgramEvo) {
-      $("#info").text("Loading...");
-      return;
+    if (hgramEvo !== null) {
+      render(hgramEvo);
+      $("#state-loaded").fadeIn();
+      $("#state-loading").fadeOut();
+    } else {
+      $("#state-loaded").fadeOut();
+      $("#state-loading").fadeIn();
     }
-
-    _hgramEvo = hgramEvo;
-
-    // Plot histogram evolution
-    Dashboard.plotEvolution();
-
-    // Plot aggregated histogram for all dates
-    Dashboard.plotHistogram();
-
-    // Update info text
-    $("#info").text(
-      hgramEvo.description() + " (submissions " +
-      hgramEvo.range().submissions() + ")"
-    );
   });
-};
+});
 
-/** Plot instance of HistogramEvolution */
-Dashboard.plotEvolution = function Dashboard_plotEvolution() {
-  if(!_hgramEvo) {
-    return;
-  }
+function render(hgramEvo) {
+  $("#measure").text(hgramEvo.measure());
+  $("#description").text(hgramEvo.description());
 
-  // Plot series
-  var series = [
-    {
-      label:  "submissions",
-      data:   _hgramEvo.map(function(date, hgram) {
-        return [date.getTime(), hgram.submissions()];
-      }),
-      yaxis:  2
-    },
-    {
-      label:  "mean",
-      data:   _hgramEvo.map(function(date, hgram) {
-        return [date.getTime(), hgram.mean()];
-      })
-    }
-  ];
-
-
-  if ($("#show-percentiles").prop('checked')) {
-    // Add percentiles
-    var percentileColor = ["#000", "#0f0", "#00f", "#f00", "#f0f"];
-    [5, 25, 50, 75, 95].forEach(function(percent, index) {
-      series.push(
-        {
-          label:  percent + "th percentile",
-          color:  percentileColor[index],
-          data:   _hgramEvo.map(function(date, hgram) {
-            return [date.getTime(), hgram.percentile(percent)];
-          })
-        }
-      );
+  nv.addGraph(function() {
+    var vals = hgramEvo.map(function(date, hgram) {
+      return {x: date.getTime(), y: hgram.submissions()};
     });
-  }
 
-  // Plot options
-  var options = {
-    grid: {
-      hoverable: true
-    },
-    series: {
-      lines:  { show: true },
-      points: { show: true },
-    },
-    xaxes: [
-      { mode: "time", timeformat: "%Y%m%d" }
-    ],
-    yaxes: [
-      {min: 0},
-      {min: 0, position: "right"}
-    ],
-  };
+    var data = [{
+      key:      "Submissions",
+      values:   vals,
+      color:    "#0000ff"
+    }];
 
-  // Plot evolution
-  $("#evolution-plot").plot(series, options);
-};
+    var chart = nv.models.lineChart()
+     .tooltips(false);
 
-/** Plot instance of Histogram */
-Dashboard.plotHistogram = function Dashboard_plotHistogram() {
-  if (!_hgramEvo) {
-    return;
-  }
-  var hgram = _hgramEvo.range();
-
-  // Plot series
-  var series = [
-    {
-      bars: {show: true},
-      data: hgram.map(function(count, start, end, index) {
-        return [index, count];
-      })
-    }
-  ];
-
-  // Auxiliary function for converting value to a tick offset
-  function value2tick(value) {
-    var tick = 0;
-    hgram.each(function(count, start, end, index) {
-      // If this the bucket that contains the value
-      if (start < value && value <= end) {
-        // Value tick is index, plus ratio of value between start and end
-        tick = index + (value - start) / (end - start);
-      }
-    });
-    return tick;
-  }
-
-  var markings = [];
-  if ($("#show-percentiles").prop('checked')) {
-    // Add percentiles
-    var percentileColor = ["#000", "#0f0", "#00f", "#f00", "#f0f"];
-    [5, 25, 50, 75, 95].forEach(function(percent, index) {
-      var tick = value2tick(hgram.percentile(percent));
-      markings.push({
-        xaxis: {from: tick, to: tick},
-        color: percentileColor[index]
+    chart.xAxis
+      .tickFormat(function(d) {
+        return d3.time.format('%Y%m%d')(new Date(d));
       });
+
+    d3.select("#evolution")
+      .datum(data)
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(
+      function() {
+        chart.update();
+      }
+    );
+    return chart;
+  });
+
+  nv.addGraph(function() {
+    var vals = hgramEvo.range().map(function(count, start, end, index) {
+                  return {x: end, y: count};
     });
-  }
 
-  // Plot options
-  var options = {
-    "xaxis": { 
-      "ticks": hgram.map(function(count, start, end, index) {
-        return [index, start];
-      })
-    },
-    "grid": {
-      "hoverable":  true,
-      "markings": markings
-    }
-  };
-    
-  // Plot histogram
-  $("#histogram-plot").plot(series, options);
-};
+    var data = [{
+      key:      "Count",
+      values:   vals,
+      color:    "#0000ff"
+    }];
 
-exports.Dashboard = Dashboard;
-return exports.Dashboard;
+    var chart = nv.models.discreteBarChart()
+     .tooltips(false);
 
-})(this);
+    d3.select("#histogram")
+      .datum(data)
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(
+      function() {
+        chart.update();
+      }
+    );
+    return chart;
+  });
+}
