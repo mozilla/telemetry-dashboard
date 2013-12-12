@@ -26,7 +26,7 @@
     </nav>
 
     <section>
-        <div id="state-loaded" class="row">
+        <div id="content" class="row">
             <div class="col-md-8">
                 <div>
                     <h2 id="measure">My measure</h2>
@@ -36,12 +36,47 @@
                 </div>
             </div>
             <aside class="col-md-4">
-                <h2>Information</h2>
                 <h2>Preferences</h2>
+                <h2>Summary</h2>
+                <dl class="dl-horizontal">
+                    <dt>Kind</dt>
+                        <dd id="prop-kind"></dd>
+                    <dt>Submissions</dt>
+                        <dd id="prop-submissions"></dd>
+                    <dt>Count</dt>
+                        <dd id="prop-count"></dd>
+                    <span class="linear-only">
+                        <hr>
+                        <dt>Mean</dt>
+                            <dd id="prop-mean"></dd>
+                        <dt>Std. dev.</dt>
+                            <dd id="prop-standardDeviation"></dd>
+                    </span>
+                    <span class="exponential-only">
+                        <hr>
+                        <dt>Geo. mean</dt>
+                            <dd id="prop-geometricMean"></dd>
+                        <dt>Geo. std. dev.</dt>
+                            <dd id="prop-geometricStandardDeviation"></dd>
+                    </span>
+                    <span class="linear-only exponential-only">
+                        <hr>
+                        <dt>5th Percentile</dt>
+                            <dd id="prop-p5"></dd>
+                        <dt>25th Percentile</dt>
+                            <dd id="prop-p25"></dd>
+                        <dt>Median</dt>
+                            <dd id="prop-p50"></dd>
+                        <dt>75th Percentile</dt>
+                            <dd id="prop-p75"></dd>
+                        <dt>95th Percentile</dt>
+                            <dd id="prop-p95"></dd>
+                    </span>
+                </dl>
             </aside>
         </div>
     </section>
-    <div id="state-loading" class="col-md-12">
+    <div id="spinner" class="col-md-12">
             <i class="fa fa-spinner fa-spin"></i>
     </div>
     <!-- jQuery, Bootstrap and d3 -->
@@ -60,13 +95,14 @@
               disappear some day.
      -->
     <script src="js/big.js"></script>
-    <script src="//telemetry.mozilla.org/js/telemetry.js"></script>
+    <script src="js/telemetry.js"></script>
     
     <!-- 
         telemetry.jquery.js and jQuery UI widget factory for stateful plugins.
         These are not required for using telemtry.js, but they make filtering
         very easy, and come in handy for custom dashboards.
     -->
+    <script src="js/bootstrap-selector.js"></script>
     <script src="js/jquery.ui.widget.js"></script>
     <script src="js/jquery.telemetry.js">
     </script>

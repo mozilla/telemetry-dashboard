@@ -11,11 +11,11 @@ section {
   padding:            52px 15px;
 }
 
-#state-loaded {
+#content {
   display:            none;
 }
 
-#state-loading {
+#spinner {
   font-size:          20px;
   position:           fixed;
   top:                50%;
@@ -28,7 +28,7 @@ section {
 }
 
 .filter-version {
-  width:  100px !important;
+  width:  120px !important;
 }
 
 .filter-measure {
@@ -63,4 +63,23 @@ section {
 
 #histogram, #evolution {
   height:       400px;
+}
+
+.linear-only, .exponential-only {
+  display: none;
+}
+
+#content.show-linear .linear-only {
+  display:  initial;
+}
+
+#content.show-exponential .exponential-only {
+  display:  initial;
+}
+
+.dl-horizontal hr{
+  margin-top:     5px;
+  margin-bottom:  5px;
+  margin-left:    30px;
+  margin-right:   30px;
 }

@@ -122,7 +122,7 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
  * fetched will be build dates, not telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
-Telemetry.loadEvolutionOverBuilds = \
+Telemetry.loadEvolutionOverBuilds =
       function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
   var load_count = 3;
@@ -167,7 +167,7 @@ Telemetry.loadEvolutionOverBuilds = \
  * fetched will be telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
- Telemetry.loadEvolutionOverTime = \
+ Telemetry.loadEvolutionOverTime =
         function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
   var load_count = 3;
@@ -410,7 +410,7 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
  * Get the geometric standard deviation over all data points in this histogram,
  * null if not applicable as this is only available for some histograms.
  */
-Histogram.prototype.geometricStandardDeviation = \
+Histogram.prototype.geometricStandardDeviation =
                               function Histogram_geometricStandardDeviation() {
   if (this.kind() != 'exponential') {
     throw new Error(
@@ -558,6 +558,9 @@ function _computeBuckets(spec){
   // Find bounds from specification
   var low = 1, high, nbuckets;
   if(spec.kind == 'boolean' || spec.kind == 'flag') {
+    // This is how boolean bucket indexes are generated in mozilla-central we
+    // might look into whether or not there is a bug, as it seems rather weird
+    // that boolean histograms have 3 buckets.
     high      = 2;
     nbuckets  = 3;
   } else if (spec.kind == 'enumerated') {
@@ -592,7 +595,7 @@ function _computeBuckets(spec){
     buckets = [0];
     for(var i = 1; i < nbuckets; i++) {
       var range = (low * (nbuckets - 1 - i) + high * (i - 1));
-      buckets.push(Math.floor(range / (nbuckets - 2) + 0.5));
+      buckets[i] = (Math.floor(range / (nbuckets - 2) + 0.5));
     }
   }
   return buckets;
@@ -626,7 +629,7 @@ HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
 };
 
 /** Get a description of the measure in this histogram */
-HistogramEvolution.prototype.description = \
+HistogramEvolution.prototype.description =
                                     function HistogramEvolution_description() {
   return this._spec.description;
 };
@@ -646,13 +649,13 @@ HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
 };
 
 /** Name of filter available, null if none */
-HistogramEvolution.prototype.filterName = \
+HistogramEvolution.prototype.filterName =
                                       function HistogramEvolution_filterName() {
   return this._filter_tree.name || null;
 };
 
 /** List of options available for current filter */
-HistogramEvolution.prototype.filterOptions = \
+HistogramEvolution.prototype.filterOptions =
                                   function HistogramEvolution_filterOptions() {
   var options = [];
   for (var key in this._filter_tree) {
@@ -668,7 +671,7 @@ HistogramEvolution.prototype.filterOptions = \
  * are inclusive. Omitting start and/or end will give you the merged histogram
  * for the open-ended interval.
  */
-HistogramEvolution.prototype.range = \
+HistogramEvolution.prototype.range =
                                 function HistogramEvolution_range(start, end) {
   // Construct a dataset by merging all datasets/histograms in the range
   var merged_dataset = [];

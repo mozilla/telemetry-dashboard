@@ -243,7 +243,7 @@ $.get("telemetry-js.json", function(data) {
         });
         $('#desc').html(node.desc);
         $('#code').find('code').text(node.code);
-        $($('#desc').find('code')[0]).addClass('language-javascript');
+        $('#desc').find('code').addClass('language-javascript');
         Prism.highlightAll(false);
     }
 
