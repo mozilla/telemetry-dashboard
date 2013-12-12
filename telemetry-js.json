@@ -1,0 +1,729 @@
+[
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Namespace for this module, this will be exported into the global scope.</p>",
+      "summary": "<p>Namespace for this module, this will be exported into the global scope.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "var Telemetry = {};\n\n// Data folder from which data will be loaded, another level indicating current\n// folder will be initialized by Telemetry.init()\nvar _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v3';\n\n// Map from channel/version to data prefix, loaded by Telemetry.init()\nvar _dataFolderMap = null;\n\n// List of versions present in _dataFolderMap\nvar _versions = null;",
+    "ctx": {
+      "type": "declaration",
+      "name": "Telemetry",
+      "value": "{}",
+      "string": "Telemetry"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to GET files from _data_folder</p>",
+      "summary": "<p>Auxiliary function to GET files from _data_folder</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _get(path, cb) {\n  // Check that we've been initialized\n  if(!_versions && path != \"versions.json\") {\n    throw new Error(\"Telemetry._get: Telemetry module haven't been \" +\n                    \"initialized, please call Telemetry.init()\");\n  }\n\n  // Create path from array, if that's what we're giving\n  if (path instanceof Array) {\n    path = path.join(\"/\");\n  }\n\n  // Create HTTP request\n  var xhr = new XMLHttpRequest();\n  xhr.onload = function (e) {\n    if (e.target.status == 200) {\n      cb.apply(this, [JSON.parse(this.responseText)]);\n    } else {\n      console.log(\"Telemetry._get: Failed loading \" + path + \" with \" +\n                  e.target.status);\n    }\n  };\n  xhr.open(\"get\", _data_folder + \"/\" + path, true);\n  xhr.send();\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_get",
+      "string": "_get()"
+    }
+  },
+  {
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "cb",
+        "description": "Callback to be invoked after loading"
+      }
+    ],
+    "description": {
+      "full": "<p>Initialize telemetry module by fetching meta-data from server, <code>cb()</code> will be<br />invoked when Telemetry module is ready for use.</p>\n\n<p>You cannot use any of the methods in the <code>Telemetry</code> module before you have<br />initialized the module with this function.</p>",
+      "summary": "<p>Initialize telemetry module by fetching meta-data from server, <code>cb()</code> will be<br />invoked when Telemetry module is ready for use.</p>",
+      "body": "<p>You cannot use any of the methods in the <code>Telemetry</code> module before you have<br />initialized the module with this function.</p>"
+    },
+    "isPrivate": false,
+    "ignore": false,
+    "code": "Telemetry.init = function Telemetry_load(cb) {\n  // Get map from channels/version to data folders from versions.json\n  _get(\"versions.json\", function(data) {\n    _dataFolderMap = data;\n    _versions = Object.keys(data).sort();\n    cb();\n  });\n};",
+    "ctx": {
+      "type": "method",
+      "receiver": "Telemetry",
+      "name": "init",
+      "string": "Telemetry.init()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get list of channel, version combinations available. This function returns<br />a list of strings on the form <code>'&lt;channel&gt;/&lt;version&gt;'</code>.</p>\n\n<p><strong>Example:</strong></p>\n\n<pre><code>    ['release/24', 'release/25', 'release/26', ..., 'nightly/28']\n</code></pre>\n\n<p>The strings returned here can be passed to <code>Telemetry.measures()</code> in order<br />to get a list of measures available for the specific channel and version.</p>",
+      "summary": "<p>Get list of channel, version combinations available. This function returns<br />a list of strings on the form <code>'&lt;channel&gt;/&lt;version&gt;'</code>.</p>",
+      "body": "<p><strong>Example:</strong></p>\n\n<pre><code>    ['release/24', 'release/25', 'release/26', ..., 'nightly/28']\n</code></pre>\n\n<p>The strings returned here can be passed to <code>Telemetry.measures()</code> in order<br />to get a list of measures available for the specific channel and version.</p>"
+    },
+    "ignore": false,
+    "code": "Telemetry.versions = function Telemetry_versions() {\n  if (_versions === null) {\n    throw new Error(\"Telemetry.versions: Telemetry module isn't initialized!\");\n  }\n  return _versions;\n};",
+    "ctx": {
+      "type": "method",
+      "receiver": "Telemetry",
+      "name": "versions",
+      "string": "Telemetry.versions()"
+    }
+  },
+  {
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "channel_version",
+        "description": "Channel/version string"
+      },
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "cb",
+        "description": "Callback to be invoked with result"
+      }
+    ],
+    "description": {
+      "full": "<p>Request measures available for a given <code>'&lt;channel&gt;/&lt;version&gt;'</code> string. The<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> must originate from the list returned by<br /><code>Telemetry.versions()</code>. Once the measures have been loaded the callback <code>cb</code><br />will be invoked as <code>cb(measures)</code> where <code>measures</code> a dictionary on the<br />following form:</p>\n\n<pre><code>    {\n       \"A_TELEMETRY_MEASURE_ID\": {\n         kind:         \"linear|exponential|flag|enumerated|boolean\",\n         description:  \"A human readable description\"\n       },\n       ...\n     }\n</code></pre>",
+      "summary": "<p>Request measures available for a given <code>'&lt;channel&gt;/&lt;version&gt;'</code> string. The<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> must originate from the list returned by<br /><code>Telemetry.versions()</code>. Once the measures have been loaded the callback <code>cb</code><br />will be invoked as <code>cb(measures)</code> where <code>measures</code> a dictionary on the<br />following form:</p>",
+      "body": "<pre><code>    {\n       \"A_TELEMETRY_MEASURE_ID\": {\n         kind:         \"linear|exponential|flag|enumerated|boolean\",\n         description:  \"A human readable description\"\n       },\n       ...\n     }\n</code></pre>"
+    },
+    "isPrivate": false,
+    "ignore": false,
+    "code": "Telemetry.measures = function Telemetry_measures(channel_version, cb) {\n  var data_folder = _dataFolderMap[channel_version];\n  _get([data_folder, \"histograms.json\"], function(data) {\n    var measures = {};\n\n    // For each measure fetched\n    for(var measure in data) {\n      // Add measure id\n      measures[measure] = {\n        kind:         data[measure].kind,\n        description:  data[measure].description\n      }\n    }\n\n    // Return measures by callback\n    cb(measures);\n  });\n};",
+    "ctx": {
+      "type": "method",
+      "receiver": "Telemetry",
+      "name": "measures",
+      "string": "Telemetry.measures()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Request HistogramEvolution instance over builds for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the <br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be build dates, not telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
+      "summary": "<p>Request HistogramEvolution instance over builds for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the <br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be build dates, not telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Telemetry.loadEvolutionOverBuilds = \\\n      function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-build-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
+    "ctx": {
+      "type": "property",
+      "receiver": "Telemetry",
+      "name": "loadEvolutionOverBuilds",
+      "value": "\\",
+      "string": "Telemetry.loadEvolutionOverBuilds"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Request HistogramEvolution instance over time for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the<br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
+      "summary": "<p>Request HistogramEvolution instance over time for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the<br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Telemetry.loadEvolutionOverTime = \\\n        function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-submission-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
+    "ctx": {
+      "type": "property",
+      "receiver": "Telemetry",
+      "name": "loadEvolutionOverTime",
+      "value": "\\",
+      "string": "Telemetry.loadEvolutionOverTime"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to find all filter_ids in a filter_tree</p>",
+      "summary": "<p>Auxiliary function to find all filter_ids in a filter_tree</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _listFilterIds(filter_tree){\n  var ids = [];\n  function visitFilterNode(filter_node){\n    ids.push(filter_node._id);\n    for (var key in filter_node) {\n      if (key != \"name\" && key != \"_id\") {\n        visitFilterNode(filter_node[key]);\n      }\n    }\n  }\n  visitFilterNode(filter_tree);\n  return ids;\n}\n\n// Offset relative to length for special elements in arrays of raw data\nvar DataOffsets = {\n  SUM:            -7,   // The following keys are documented in StorageFormat.md\n  LOG_SUM:        -6,   // See the docs/ folder of the telemetry-server\n  LOG_SUM_SQ:     -5,   // Repository. They are essentially part of the\n  SUM_SQ_LO:      -4,   // validated telemetry histogram format\n  SUM_SQ_HI:      -3,\n  SUBMISSIONS:    -2,   // Added in deashboard.py\n  FILTER_ID:      -1    // Added in results2disk.py\n};",
+    "ctx": {
+      "type": "function",
+      "name": "_listFilterIds",
+      "string": "_listFilterIds()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Representation of histogram under possible filter application</p>",
+      "summary": "<p>Representation of histogram under possible filter application</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Telemetry.Histogram = (function(){",
+    "ctx": {
+      "type": "property",
+      "receiver": "Telemetry",
+      "name": "Histogram",
+      "value": "(function(){",
+      "string": "Telemetry.Histogram"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to aggregate values of index from histogram dataset</p>",
+      "summary": "<p>Auxiliary function to aggregate values of index from histogram dataset</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _aggregate(index, histogram) {\n  if (histogram._aggregated === undefined) {\n    histogram._aggregated = [];\n  }\n  var sum = histogram._aggregated[index];\n  if (sum === undefined) {\n    // Cache the list of filter ids\n    if (histogram._filterIds === undefined) {\n      histogram._filterIds = _listFilterIds(histogram._filter_tree);\n    }\n    // Aggregate index as sum over histogram\n    sum = 0;\n    var n = histogram._dataset.length;\n    for(var i = 0; i < n; i++) {\n      var data_array = histogram._dataset[i];\n\n      // Check if filter_id is filtered\n      var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;\n      if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {\n        sum += data_array[index >= 0 ? index : data_array.length + index];\n      }\n    }\n    histogram._aggregated[index] = sum;\n  }\n  return sum;\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_aggregate",
+      "string": "_aggregate()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function for estimating the end of the last bucket</p>",
+      "summary": "<p>Auxiliary function for estimating the end of the last bucket</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _estimateLastBucketEnd(histogram) {\n  // As there is no next bucket for the last bucket, we sometimes need to\n  // estimate one. First we estimate the sum of all data-points in buckets\n  // below the last bucket\n  var sum_before_last = 0;\n  var n = histogram._buckets.length;\n  for (var i = 0; i < n - 1; i++) {\n    var bucket_center = (histogram._buckets[i+1] - histogram._buckets[i]) / 2 +\n                         histogram._buckets[i];\n    sum_before_last += _aggregate(i, histogram) * bucket_center;\n  }\n  // We estimate the sum of data-points in the last bucket by subtracting the\n  // estimate of sum of data-points before the last bucket...\n  var sum_last = _aggregate(DataOffsets.SUM, histogram) - sum_before_last;\n  // We estimate the mean of the last bucket as follows\n  var last_bucket_mean = sum_last / _aggregate(n - 1, histogram);\n  // We find the start of the last bucket\n  var last_bucket_start = histogram._buckets[n - 1];\n  // Now estimate the last bucket end\n  return last_bucket_start + (last_bucket_mean - last_bucket_start) * 2;\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_estimateLastBucketEnd",
+      "string": "_estimateLastBucketEnd()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Create a new histogram, where<br /> - measure       is the name of the histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - buckets       is a list of bucket start values,<br /> - dataset       is a mapping from filter ids to arrays of raw data<br /> - filter_tree   is a node in filter tree structure, and<br /> - spec          is the histogram specification.</p>",
+      "summary": "<p>Create a new histogram, where<br /> - measure       is the name of the histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - buckets       is a list of bucket start values,<br /> - dataset       is a mapping from filter ids to arrays of raw data<br /> - filter_tree   is a node in filter tree structure, and<br /> - spec          is the histogram specification.</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function Histogram(measure, filter_path, buckets, dataset, filter_tree, spec) {\n  this._measure     = measure;\n  this._filter_path = filter_path;\n  this._buckets     = buckets;\n  this._dataset     = dataset;\n  this._filter_tree = filter_tree;\n  this._spec        = spec;\n}",
+    "ctx": {
+      "type": "function",
+      "name": "Histogram",
+      "string": "Histogram()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get new histogram representation of this histogram filter for option</p>",
+      "summary": "<p>Get new histogram representation of this histogram filter for option</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.filter = function Histogram_filter(option) {\n  if (!(this._filter_tree[option] instanceof Object)) {\n    throw new Error(\"filter option: \\\"\" + option +\"\\\" is not available\");\n  }\n  return new Histogram(\n    this._measure,\n    this._filter_path.concat(option),\n    this._buckets,\n    this._dataset,\n    this._filter_tree[option],\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "filter",
+      "string": "Histogram.prototype.filter()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Name of filter available, null if none</p>",
+      "summary": "<p>Name of filter available, null if none</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.filterName = function Histogram_filterName() {\n  return this._filter_tree.name || null;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "filterName",
+      "string": "Histogram.prototype.filterName()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>List of options available for current filter</p>",
+      "summary": "<p>List of options available for current filter</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.filterOptions = function Histogram_filterOptions() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "filterOptions",
+      "string": "Histogram.prototype.filterOptions()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the histogram measure</p>",
+      "summary": "<p>Get the histogram measure</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.measure = function Histogram_measure() {\n  return this._measure;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "measure",
+      "string": "Histogram.prototype.measure()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the histogram kind</p>",
+      "summary": "<p>Get the histogram kind</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.kind = function Histogram_kind() {\n  return this._spec.kind;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "kind",
+      "string": "Histogram.prototype.kind()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get a description of the measure in this histogram</p>",
+      "summary": "<p>Get a description of the measure in this histogram</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.description = function Histogram_description() {\n  return this._spec.description;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "description",
+      "string": "Histogram.prototype.description()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get number of data points in this histogram</p>",
+      "summary": "<p>Get number of data points in this histogram</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.count = function Histogram_count() {\n  var count = 0;\n  var n = this._buckets.length;\n  for(var i = 0; i < n; i++) {\n    count += _aggregate(i, this);\n  }\n  return count;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "count",
+      "string": "Histogram.prototype.count()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Number of telemetry pings aggregated in this histogram</p>",
+      "summary": "<p>Number of telemetry pings aggregated in this histogram</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.submissions = function Histogram_submissions() {\n  return _aggregate(DataOffsets.SUBMISSIONS, this);\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "submissions",
+      "string": "Histogram.prototype.submissions()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the mean of all data points in this histogram, null if N/A</p>",
+      "summary": "<p>Get the mean of all data points in this histogram, null if N/A</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.mean = function Histogram_mean() {\n  // if (this.kind() != \"linear\" && this.kind() != \"exponential\") {\n  //   throw new Error(\"Histogram.geometricMean() is only available for \" +\n  //                   \"linear and exponential histograms\");\n  // }\n  var sum = _aggregate(DataOffsets.SUM, this);\n  return sum / this.count();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "mean",
+      "string": "Histogram.prototype.mean()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the geometric mean of all data points in this histogram, null if N/A</p>",
+      "summary": "<p>Get the geometric mean of all data points in this histogram, null if N/A</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.geometricMean = function Histogram_geometricMean() {\n  if (this.kind() != \"exponential\") {\n    throw new Error(\"Histogram.geometricMean() is only available for \" +\n                    \"exponential histograms\");\n  }\n  var log_sum = _aggregate(DataOffsets.LOG_SUM, this);\n  return log_sum / this.count();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "geometricMean",
+      "string": "Histogram.prototype.geometricMean()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
+      "summary": "<p>Get the standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {\n  if (this.kind() != \"linear\") {\n    throw new Error(\"Histogram.standardDeviation() is only available for \" +\n                    \"linear histograms\");\n  }\n  var sum       = new Big(_aggregate(DataOffsets.SUM, this));\n  var count     = new Big(this.count());\n  var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));\n  var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));\n  var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));\n\n  // std. dev. = sqrt(count * sum_squares - sum * sum) / count\n  // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods\n  return count.times(sum_sq).minus(sum.pow(2)).divide(count).toFixed(3);\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "standardDeviation",
+      "string": "Histogram.prototype.standardDeviation()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the geometric standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
+      "summary": "<p>Get the geometric standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.geometricStandardDeviation = \\\n                              function Histogram_geometricStandardDeviation() {\n  if (this.kind() != 'exponential') {\n    throw new Error(\n      \"Histogram.geometricStandardDeviation() is only \" +\n      \"available for exponential histograms\"\n    );\n  }\n  var count       = this.count();\n  var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);\n  var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);\n\n  // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation\n  // using wxmaxima... who knows maybe it's correct...\n  return Math.exp(\n    Math.sqrt(\n      (\n        count * Math.pow(Math.log(log_sum / count), 2) +\n        log_sum_sq -\n        2 * log_sum * Math.log(log_sum / count)\n      ) / count\n    )\n  );\n};",
+    "ctx": {
+      "type": "property",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "geometricStandardDeviation",
+      "value": "\\",
+      "string": "Histogram.prototype.geometricStandardDeviation"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Estimate value of a percentile</p>",
+      "summary": "<p>Estimate value of a percentile</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.percentile = function Histogram_percentile(percent) {\n  // if (this.kind() != \"linear\" && this.kind() != \"exponential\") {\n  //   throw new Error(\"Histogram.percentile() is only available for linear \" +\n  //                   \"and exponential histograms\");\n  // }\n\n  var frac  = percent / 100;\n  var count = this.count();\n\n  // Count until we have the bucket containing the percentile\n  var to_count = count * frac;\n  var i, n = this._buckets.length;\n  for (i = 0; i < n; i++) {\n    var nb_points = _aggregate(i, this);\n    if (to_count - nb_points <= 0) {\n      break;\n    }\n    to_count -= nb_points;\n  }\n\n  // Bucket start and end\n  var start = this._buckets[i];\n  var end   = this._buckets[i+1];\n  if(i >= n - 1) {\n    // If we're at the end bucket, then there's no next bucket, hence, no upper\n    // bound, so we estimate one.\n    end = _estimateLastBucketEnd(this);\n  }\n\n  // Fraction indicating where in bucket i the percentile is located\n  var bucket_fraction = to_count / (_aggregate(i, this) + 1);\n\n  if (this.kind() == \"exponential\") {\n    // Interpolate median assuming an exponential distribution\n    return start + Math.exp(Math.log(end - start) * bucket_fraction);\n  }\n\n  // Interpolate median assuming a uniform distribution between start and end.\n  return start + (end - start) * bucket_fraction;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "percentile",
+      "string": "Histogram.prototype.percentile()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Estimate the median, returns null, if not applicable</p>",
+      "summary": "<p>Estimate the median, returns null, if not applicable</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.median = function Histogram_median() {\n  return this.percentile(50);\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "median",
+      "string": "Histogram.prototype.median()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Invoke cb(count, start, end, index) for every bucket in this histogram, the<br />cb is invoked for each bucket ordered from low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
+      "summary": "<p>Invoke cb(count, start, end, index) for every bucket in this histogram, the<br />cb is invoked for each bucket ordered from low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.each = function Histogram_each(cb, context) {\n  // Set context if none is provided\n  if (context === undefined) {\n    context = this;\n  }\n\n  // For each bucket\n  var n = this._buckets.length;\n  for(var i = 0; i < n; i++) {\n\n    // Find count, start and end of bucket\n    var count = _aggregate(i, this),\n        start = this._buckets[i],\n        end   = this._buckets[i+1];\n\n    // If we're at the last bucket, then there's no next upper bound so we\n    // estimate one\n    if (i >= n - 1) {\n      end = _estimateLastBucketEnd(this);\n    }\n\n    // Invoke callback as promised\n    cb.call(context, count, start, end, i);\n  }\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "each",
+      "string": "Histogram.prototype.each()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Returns a bucket ordered array of results from invocation of <br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
+      "summary": "<p>Returns a bucket ordered array of results from invocation of <br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.map = function Histogram_map(cb, context) {\n  // Set context if none is provided\n  if (context === undefined) {\n    context = this;\n  }\n\n  // Array of return values\n  var results = [];\n\n  // For each, invoke cb and push the result\n  this.each(function(count, start, end, index) {\n    results.push(cb.call(context, count, start, end, index));\n  });\n\n  // Return values from cb\n  return results;\n};\n\nreturn Histogram;\n\n})();",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "map",
+      "string": "Histogram.prototype.map()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Representation of histogram changes over time</p>",
+      "summary": "<p>Representation of histogram changes over time</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "Telemetry.HistogramEvolution = (function(){",
+    "ctx": {
+      "type": "property",
+      "receiver": "Telemetry",
+      "name": "HistogramEvolution",
+      "value": "(function(){",
+      "string": "Telemetry.HistogramEvolution"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to parse a date string from JSON data format</p>",
+      "summary": "<p>Auxiliary function to parse a date string from JSON data format</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _parseDateString(d) {\n  return new Date(d.substr(0,4) + \"/\" + d.substr(4,2) + \"/\"+ d.substr(6,2));\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_parseDateString",
+      "string": "_parseDateString()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to compute all bucket ends from a specification<br />This returns a list [b0, b1, ..., bn] where b0 is the separator value between<br />entries in bucket index 0 and bucket index 1. Such that all values less than<br />b0 was counted in bucket 0, values greater than counted in bucket 1.</p>",
+      "summary": "<p>Auxiliary function to compute all bucket ends from a specification<br />This returns a list [b0, b1, ..., bn] where b0 is the separator value between<br />entries in bucket index 0 and bucket index 1. Such that all values less than<br />b0 was counted in bucket 0, values greater than counted in bucket 1.</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _computeBuckets(spec){\n  // Find bounds from specification\n  var low = 1, high, nbuckets;\n  if(spec.kind == 'boolean' || spec.kind == 'flag') {\n    high      = 2;\n    nbuckets  = 3;\n  } else if (spec.kind == 'enumerated') {\n    high      = eval(spec.n_values);\n    nbuckets  = eval(spec.n_values) + 1;\n  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {\n    low       = eval(spec.low) || 1;\n    high      = eval(spec.high);\n    nbuckets  = eval(spec.n_buckets)\n  }\n  // Compute buckets\n  var buckets = null;\n  if(spec.kind == 'exponential') {\n    // Exponential buckets is a special case\n    var log_max = Math.log(high);\n    buckets = [0, low];\n    var current = low;\n    for(var i = 2; i < nbuckets; i++) {\n      var log_current = Math.log(current);\n      var log_ratio   = (log_max - log_current) / (nbuckets - i);\n      var log_next    = log_current + log_ratio;\n      var next_value  = Math.floor(Math.exp(log_next) + 0.5);\n      if (next_value > current) {\n        current = next_value;\n      } else {\n        current = current + 1;\n      }\n      buckets.push(current);\n    }\n  } else {\n    // Linear buckets are computed as follows\n    buckets = [0];\n    for(var i = 1; i < nbuckets; i++) {\n      var range = (low * (nbuckets - 1 - i) + high * (i - 1));\n      buckets.push(Math.floor(range / (nbuckets - 2) + 0.5));\n    }\n  }\n  return buckets;\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_computeBuckets",
+      "string": "_computeBuckets()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Create a histogram evolution, where<br /> - measure       is the name of this histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - data          is the JSON data loaded from file,<br /> - filter_tree   is the filter_tree root, and<br /> - spec          is the histogram specification.</p>",
+      "summary": "<p>Create a histogram evolution, where<br /> - measure       is the name of this histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - data          is the JSON data loaded from file,<br /> - filter_tree   is the filter_tree root, and<br /> - spec          is the histogram specification.</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function HistogramEvolution(measure, filter_path, data, filter_tree, spec) {\n  this._measure     = measure\n  this._filter_path = filter_path;\n  this._data        = data;\n  this._filter_tree = filter_tree;\n  this._spec        = spec;\n  this._buckets     = _computeBuckets(spec);\n}",
+    "ctx": {
+      "type": "function",
+      "name": "HistogramEvolution",
+      "string": "HistogramEvolution()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the histogram measure</p>",
+      "summary": "<p>Get the histogram measure</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.measure = function HistogramEvolution_measure() {\n  return this._measure;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "measure",
+      "string": "HistogramEvolution.prototype.measure()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the histogram kind</p>",
+      "summary": "<p>Get the histogram kind</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {\n  return this._spec.kind;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "kind",
+      "string": "HistogramEvolution.prototype.kind()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get a description of the measure in this histogram</p>",
+      "summary": "<p>Get a description of the measure in this histogram</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.description = \\\n                                    function HistogramEvolution_description() {\n  return this._spec.description;\n};",
+    "ctx": {
+      "type": "property",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "description",
+      "value": "\\",
+      "string": "HistogramEvolution.prototype.description"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get new HistogramEvolution representation filtered with option</p>",
+      "summary": "<p>Get new HistogramEvolution representation filtered with option</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {\n  if (!(this._filter_tree[opt] instanceof Object)) {\n    throw new Error(\"filter option: \\\"\" + opt +\"\\\" is not available\");\n  }\n  return new HistogramEvolution(\n    this._measure,\n    this._filter_path.concat(opt),\n    this._data,\n    this._filter_tree[opt],\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "filter",
+      "string": "HistogramEvolution.prototype.filter()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Name of filter available, null if none</p>",
+      "summary": "<p>Name of filter available, null if none</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.filterName = \\\n                                      function HistogramEvolution_filterName() {\n  return this._filter_tree.name || null;\n};",
+    "ctx": {
+      "type": "property",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "filterName",
+      "value": "\\",
+      "string": "HistogramEvolution.prototype.filterName"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>List of options available for current filter</p>",
+      "summary": "<p>List of options available for current filter</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.filterOptions = \\\n                                  function HistogramEvolution_filterOptions() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
+    "ctx": {
+      "type": "property",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "filterOptions",
+      "value": "\\",
+      "string": "HistogramEvolution.prototype.filterOptions"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
+      "summary": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.range = \\\n                                function HistogramEvolution_range(start, end) {\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "property",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "range",
+      "value": "\\",
+      "string": "HistogramEvolution.prototype.range"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the list of dates in the evolution sorted by date</p>",
+      "summary": "<p>Get the list of dates in the evolution sorted by date</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(_parseDateString(date));\n  }\n  return dates.sort();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "dates",
+      "string": "HistogramEvolution.prototype.dates()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Invoke cb(date, histogram, index) with each date, histogram pair, ordered by<br />date. Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "summary": "<p>Invoke cb(date, histogram, index) with each date, histogram pair, ordered by<br />date. Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {\n  // Set this as context if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Find and sort all date strings\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(date);\n  }\n  dates.sort();\n\n  // Find filter ids\n  var filterIds = _listFilterIds(this._filter_tree);\n\n  // Auxiliary function to filter data arrays by filter_id\n  function filterByFilterId(data_array) {\n      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];\n      return filterIds.indexOf(filterId) != -1;\n  }\n\n  // Pair index, this is not equal to i as we may have filtered something out\n  var index = 0;\n\n  // Now invoke cb with each histogram\n  var n = dates.length;\n  for(var i = 0; i < n; i++) {\n    // Get dataset for date\n    var dataset = this._data[dates[i]];\n\n    // Filter for data_arrays with relevant filterId\n    dataset = dataset.filter(filterByFilterId);\n\n    // Skip this date if there was not data_array after filtering as applied\n    if (dataset.length === 0) {\n      continue;\n    }\n\n    // Invoke callback with date and histogram\n    cb.call(\n      ctx,\n      _parseDateString(dates[i]),\n      new Telemetry.Histogram(\n        this._measure,\n        this._filter_path,\n        this._buckets,\n        dataset,\n        this._filter_tree,\n        this._spec\n      ),\n      index++\n    );\n  }\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "each",
+      "string": "HistogramEvolution.prototype.each()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Returns a date ordered array of results from invocation of <br />cb(date, histogram, index) for each date, histogram pair.<br />Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "summary": "<p>Returns a date ordered array of results from invocation of <br />cb(date, histogram, index) for each date, histogram pair.<br />Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {\n  // Set this as context if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Return value array\n  var results = [];\n\n  // For each date, histogram pair invoke cb() and add result to results\n  this.each(function(date, histogram, index) {\n    results.push(cb.call(ctx, date, histogram, index));\n  });\n\n  // Return array of computed values\n  return results;\n};\n\nreturn HistogramEvolution;\n\n})();\n\nexports.Telemetry = Telemetry;\nreturn exports.Telemetry;\n\n})(this);",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "map",
+      "string": "HistogramEvolution.prototype.map()"
+    }
+  }
+]

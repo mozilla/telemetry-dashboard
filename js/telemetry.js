@@ -2,23 +2,23 @@
 
 "use strict";
 
-/** Namespace for this module */
+/** Namespace for this module, this will be exported into the global scope. */
 var Telemetry = {};
 
 // Data folder from which data will be loaded, another level indicating current
 // folder will be initialized by Telemetry.init()
-var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v2';
+var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v3';
 
-// Boolean tracks if we've initialized
-var _initialized = false;
+// Map from channel/version to data prefix, loaded by Telemetry.init()
+var _dataFolderMap = null;
 
-// List of channel/version, loaded by Telemetry.init()
+// List of versions present in _dataFolderMap
 var _versions = null;
 
-/** Auxiliary function to GET files from _data_folder */
+/*! Auxiliary function to GET files from _data_folder */
 function _get(path, cb) {
   // Check that we've been initialized
-  if(!_initialized && path != "latest-current.json") {
+  if(!_versions && path != "versions.json") {
     throw new Error("Telemetry._get: Telemetry module haven't been " +
                     "initialized, please call Telemetry.init()");
   }
@@ -43,43 +43,62 @@ function _get(path, cb) {
 }
 
 /**
- * Initialize telemetry module by fetching meta-data from server
- * cb() will be invoked when Telemetry module is ready for use.
+ * Initialize telemetry module by fetching meta-data from server, `cb()` will be
+ * invoked when Telemetry module is ready for use.
+ *
+ * You cannot use any of the methods in the `Telemetry` module before you have
+ * initialized the module with this function.
+ *
+ * @param {Function}  cb      Callback to be invoked after loading
  */
 Telemetry.init = function Telemetry_load(cb) {
-  // Get list of channels/version as most recent folder from latest-current.json
-  _get("latest-current.json", function(data) {
-    _data_folder += '/current/' + data.current
-    _versions = data.versions.sort();
-    _initialized = true;
+  // Get map from channels/version to data folders from versions.json
+  _get("versions.json", function(data) {
+    _dataFolderMap = data;
+    _versions = Object.keys(data).sort();
     cb();
   });
 };
 
-/** Get list of channel/version */
+/**
+ * Get list of channel, version combinations available. This function returns
+ * a list of strings on the form `'<channel>/<version>'`.
+ *
+ * **Example:**
+ *
+ *         ['release/24', 'release/25', 'release/26', ..., 'nightly/28']
+ *
+ * The strings returned here can be passed to `Telemetry.measures()` in order
+ * to get a list of measures available for the specific channel and version.
+ */
 Telemetry.versions = function Telemetry_versions() {
-  if (_data_folder === null) {
+  if (_versions === null) {
     throw new Error("Telemetry.versions: Telemetry module isn't initialized!");
   }
   return _versions;
 };
 
 /**
- * Request measures available for channel/version given. Once fetched the
- * callback with invoked as cb(measures) where measures a dictionary on the
+ * Request measures available for a given `'<channel>/<version>'` string. The
+ * `'<channel>/<version>'` must originate from the list returned by
+ * `Telemetry.versions()`. Once the measures have been loaded the callback `cb`
+ * will be invoked as `cb(measures)` where `measures` a dictionary on the
  * following form:
- *  {
- *    "A_TELEMETRY_MEASURE_ID": {
- *      kind:         "linear|exponential|flag|enumerated|boolean",
- *      description:  "A human readable description"
- *    },
- *    ...
- *  }
+ *
+ *         {
+ *            "A_TELEMETRY_MEASURE_ID": {
+ *              kind:         "linear|exponential|flag|enumerated|boolean",
+ *              description:  "A human readable description"
+ *            },
+ *            ...
+ *          }
  * 
- * Note, channel/version must be a string from Telemetry.versions()
+ * @param {String}    channel_version   Channel/version string
+ * @param {Function}  cb                Callback to be invoked with result
  */
 Telemetry.measures = function Telemetry_measures(channel_version, cb) {
-  _get([channel_version, "histograms.json"], function(data) {
+  var data_folder = _dataFolderMap[channel_version];
+  _get([data_folder, "histograms.json"], function(data) {
     var measures = {};
 
     // For each measure fetched
@@ -103,7 +122,7 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
  * fetched will be build dates, not telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
-Telemetry.loadEvolutionOverBuilds =
+Telemetry.loadEvolutionOverBuilds = \
       function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
   var load_count = 3;
@@ -122,18 +141,20 @@ Telemetry.loadEvolutionOverBuilds =
       );
     }
   }
+  // Find data folder for given channel/version
+  var data_folder = _dataFolderMap[channel_version];
   // Load data for measure
-  _get([channel_version, measure + "-by-build-date.json"], function(json) {
+  _get([data_folder, measure + "-by-build-date.json"], function(json) {
     data = json;
     count_down();
   });
   // Load filter data
-  _get([channel_version, "filter-tree.json"], function(json) {
+  _get([data_folder, "filter-tree.json"], function(json) {
     filter_tree = json;
     count_down();
   });
   // Load histogram specifications
-  _get([channel_version, "histograms.json"], function(json) {
+  _get([data_folder, "histograms.json"], function(json) {
     specifications = json;
     count_down();
   });
@@ -146,7 +167,7 @@ Telemetry.loadEvolutionOverBuilds =
  * fetched will be telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
- Telemetry.loadEvolutionOverTime =
+ Telemetry.loadEvolutionOverTime = \
         function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
   var load_count = 3;
@@ -165,24 +186,26 @@ Telemetry.loadEvolutionOverBuilds =
       );
     }
   }
+  // Find data folder for given channel/version
+  var data_folder = _dataFolderMap[channel_version];
   // Load data for measure
-  _get([channel_version, measure + "-by-submission-date.json"], function(json) {
+  _get([data_folder, measure + "-by-submission-date.json"], function(json) {
     data = json;
     count_down();
   });
   // Load filter data
-  _get([channel_version, "filter-tree.json"], function(json) {
+  _get([data_folder, "filter-tree.json"], function(json) {
     filter_tree = json;
     count_down();
   });
   // Load histogram specifications
-  _get([channel_version, "histograms.json"], function(json) {
+  _get([data_folder, "histograms.json"], function(json) {
     specifications = json;
     count_down();
   });
 };
 
-/** Auxiliary function to find all filter_ids in a filter_tree */
+/*! Auxiliary function to find all filter_ids in a filter_tree */
 function _listFilterIds(filter_tree){
   var ids = [];
   function visitFilterNode(filter_node){
@@ -211,7 +234,7 @@ var DataOffsets = {
 /** Representation of histogram under possible filter application */
 Telemetry.Histogram = (function(){
 
-/**
+/*!
  * Auxiliary function to aggregate values of index from histogram dataset
  */
 function _aggregate(index, histogram) {
@@ -241,7 +264,7 @@ function _aggregate(index, histogram) {
   return sum;
 }
 
-/** Auxiliary function for estimating the end of the last bucket */
+/*! Auxiliary function for estimating the end of the last bucket */
 function _estimateLastBucketEnd(histogram) {
   // As there is no next bucket for the last bucket, we sometimes need to
   // estimate one. First we estimate the sum of all data-points in buckets
@@ -264,7 +287,7 @@ function _estimateLastBucketEnd(histogram) {
   return last_bucket_start + (last_bucket_mean - last_bucket_start) * 2;
 }
 
-/**
+/*!
  * Create a new histogram, where
  *  - measure       is the name of the histogram,
  *  - filter_path   is a list of [name, date-range, filter1, filter2...]
@@ -387,7 +410,7 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
  * Get the geometric standard deviation over all data points in this histogram,
  * null if not applicable as this is only available for some histograms.
  */
-Histogram.prototype.geometricStandardDeviation =
+Histogram.prototype.geometricStandardDeviation = \
                               function Histogram_geometricStandardDeviation() {
   if (this.kind() != 'exponential') {
     throw new Error(
@@ -515,17 +538,17 @@ Histogram.prototype.map = function Histogram_map(cb, context) {
 
 return Histogram;
 
-})(); /* Histogram */
+})();
 
 /** Representation of histogram changes over time  */
 Telemetry.HistogramEvolution = (function(){
 
-/** Auxiliary function to parse a date string from JSON data format */
+/*! Auxiliary function to parse a date string from JSON data format */
 function _parseDateString(d) {
   return new Date(d.substr(0,4) + "/" + d.substr(4,2) + "/"+ d.substr(6,2));
 }
 
-/**
+/*!
  * Auxiliary function to compute all bucket ends from a specification
  * This returns a list [b0, b1, ..., bn] where b0 is the separator value between
  * entries in bucket index 0 and bucket index 1. Such that all values less than
@@ -575,7 +598,7 @@ function _computeBuckets(spec){
   return buckets;
 }
 
-/**
+/*!
  * Create a histogram evolution, where
  *  - measure       is the name of this histogram,
  *  - filter_path   is a list of [name, date-range, filter1, filter2...]
@@ -603,7 +626,7 @@ HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
 };
 
 /** Get a description of the measure in this histogram */
-HistogramEvolution.prototype.description =
+HistogramEvolution.prototype.description = \
                                     function HistogramEvolution_description() {
   return this._spec.description;
 };
@@ -623,13 +646,13 @@ HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
 };
 
 /** Name of filter available, null if none */
-HistogramEvolution.prototype.filterName =
+HistogramEvolution.prototype.filterName = \
                                       function HistogramEvolution_filterName() {
   return this._filter_tree.name || null;
 };
 
 /** List of options available for current filter */
-HistogramEvolution.prototype.filterOptions =
+HistogramEvolution.prototype.filterOptions = \
                                   function HistogramEvolution_filterOptions() {
   var options = [];
   for (var key in this._filter_tree) {
@@ -645,7 +668,7 @@ HistogramEvolution.prototype.filterOptions =
  * are inclusive. Omitting start and/or end will give you the merged histogram
  * for the open-ended interval.
  */
-HistogramEvolution.prototype.range =
+HistogramEvolution.prototype.range = \
                                 function HistogramEvolution_range(start, end) {
   // Construct a dataset by merging all datasets/histograms in the range
   var merged_dataset = [];
@@ -774,7 +797,7 @@ HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {
 
 return HistogramEvolution;
 
-})(); /* HistogramEvolution */
+})();
 
 exports.Telemetry = Telemetry;
 return exports.Telemetry;

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap, Awesome Font, nvd3 and Bootstrap-Select -->
+    <link rel="stylesheet" href="css/prism.css">
+    <link rel="stylesheet"
+          href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="//netdna.bootstrapcdn.com/font-awesome/4.0.2/css/font-awesome.min.css">
+    <style>
+    .toggle-code {
+        cursor: pointer;
+    }
+    .toggle-code:hover span.code-label {
+        text-decoration: underline;
+    }
+    .toggle-code span.label {
+        font-size: 50%;
+        position: relative;
+        top: -5px;
+        margin-left: 5px;
+    }
+    .toggle-code i.fa:before {
+        display:    inline-block;
+        -webkit-transition: linear 200ms;
+           -moz-transition: linear 200ms;
+             -o-transition: linear 200ms;
+                transition: linear 200ms;
+        -webkit-transform: rotate(-90deg);
+           -moz-transform: rotate(-90deg);
+            -ms-transform: rotate(-90deg);
+             -o-transform: rotate(-90deg);
+                transform: rotate(-90deg);
+    }
+    .toggle-code i.fa.right:before {
+        -webkit-transform: rotate(0deg);
+           -moz-transform: rotate(0deg);
+            -ms-transform: rotate(0deg);
+             -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+    }
+    #code {
+        display: none;
+    }
+    #params span{
+        margin-left: 10px;
+    }
+    #desc br {
+        display: none;
+    }
+    :not(pre) > code[class*="language-"] {
+        padding:            2px 4px;
+        background-color:   #f9f2f4;
+        border-radius:      4px;
+    }
+    pre[class*="language-"] {
+        padding: 9.5px;
+        background-color: #f5f5f5;
+    }
+    </style>
+</head>
+<body>
+    <section class="container">
+        <header>
+            <h1><code>telemetry.js</code> documentation</h1>
+            <hr>
+        </header>
+        <div class="row">
+            <div class="col-md-8">
+                <h2 id="name">Subject</h2>
+                <ul id="params">
+                </ul>
+                <div id="desc"></div>
+                <h3 class="toggle-code">
+                    <i class="fa fa-angle-down"></i>
+                    <span class="code-label">Code</span>
+                    <span class="label label-warning">Internal</span>
+                </h3>
+                <pre id="code"><code class="language-javascript"></code></pre>
+            </div>
+            <aside class="col-md-4">
+                <h2>Overview</h2>
+                <ul id="menu">
+                    <li><a href="#">Intro</a></li>
+                </ul>
+            </aside>
+        </div>
+    </section>
+    <!-- jQuery, Bootstrap and d3 -->
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js">
+    </script>
+    <script src="js/prism.js"></script>
+<script>
+
+// Build code model
+function buildCodeModel(data) {
+
+    // Create node
+    function createNode(entry) {
+        var node = {
+            name:       entry.ctx.name,
+            desc:       entry.description.full,
+            code:       entry.code,
+            params:     [],
+            returns:    null,
+            children:   []
+        };
+        entry.tags.forEach(function(tag) {
+            if (tag.type == 'param') {
+                node.params.push({
+                    name: tag.name,
+                    type: tag.types[0],
+                    desc: tag.description
+                });
+            }
+            if (tag.type == 'returns') {
+                node.returns = {
+                    type: tag.types[0],
+                    desc: tag.description
+                };
+            }
+        });
+        return node;
+    }
+
+    // Insert node in tree
+    function insertNode(entry, siblings) {
+        // If asked to ignore we'll do so
+        if (entry.ignore) {
+            return null;
+        }
+        // Add declarations to top-level node
+        if (entry.ctx.type == 'declaration') {
+            return siblings.push(createNode(entry));
+        }
+        // If element is assigned to an element, look for this element
+        if (entry.ctx.receiver) {
+            var parent = null;
+            siblings.forEach(function(child) {
+                if (child.name == entry.ctx.receiver) {
+                    parent = child;
+                }
+            });
+            if (parent) {
+                parent.children.push(createNode(entry));
+            } else {
+                siblings.forEach(function(child) {
+                    insertNode(entry, child.children);
+                });
+            }
+        }
+        // If element has constructor look for it in the Telemetry namespace
+        // this is a telemetry.js specific hack
+        if (entry.ctx.constructor) {
+            var parent = null;
+            siblings.forEach(function(child) {
+                if (child.name == entry.ctx.constructor) {
+                    parent = child;
+                }
+            });
+            if (parent) {
+                parent.children.push(createNode(entry));
+            } else {
+                siblings.forEach(function(child) {
+                    insertNode(entry, child.children);
+                });
+            }
+        }
+    }
+    var root = [];
+
+    data.forEach(function(node) {
+        insertNode(node, root);
+    });
+
+    return root;
+}
+
+$('.toggle-code').click(function() {
+    $('.toggle-code').next().slideToggle(200);
+    $('.toggle-code').find('i').toggleClass('right');
+    //$('#toggle-code').find('i').toggleClass('fa-angle-down');
+    //$('#toggle-code').find('i').toggleClass('fa-angle-right');
+});
+
+$.get("telemetry-js.json", function(data) {
+    var root = buildCodeModel(data);
+    function makeMenu(node, parent) {
+        var li = $('<li>');
+        if (parent) {
+            parent += "." + node.name;
+        } else {
+            parent = node.name;
+        }
+        li.append($('<a>').text(node.name).attr('href', '#' + parent));
+        if (node.children.length > 0) {
+            var ul = $('<ul>');
+            node.children.forEach(function(child) {
+                ul.append(makeMenu(child, parent));
+            });
+            li.append(ul);
+        }
+        return li;
+    }
+    root.forEach(function(node) {
+        $("#menu").append(makeMenu(node));
+    });
+
+
+    /** Find a node from path */
+    function findNode(path, candidates) {
+        var name = path.shift();
+        for(var i = 0; i < candidates.length; i++) {
+            var candidate = candidates[i];
+            if (candidate.name == name) {
+                if (path.length == 0) {
+                    return candidate;
+                }
+                return findNode(path, candidate.children);
+            }
+        }
+        return null;
+    }
+
+    /** Update current content */
+    function updateContent() {
+        var path = window.location.hash.substr(1).split('.');
+        var node = findNode(path, root);
+        console.log("info:\n " + JSON.stringify(node, null, 4));
+
+        $('#name').text(window.location.hash.substr(1));
+        $('#params').html("");
+        node.params.forEach(function(param) {
+            var li = $('<li>');
+            li.append($('<code>').text(param.name).addClass('language-javascript'));
+            li.append($('<span>').text(param.desc));
+            li.append($('<span>').text(param.type).addClass('badge'));
+            $('#params').append(li);
+        });
+        $('#desc').html(node.desc);
+        $('#code').find('code').text(node.code);
+        $($('#desc').find('code')[0]).addClass('language-javascript');
+        Prism.highlightAll(false);
+    }
+
+    $(window).bind("hashchange", updateContent);
+    updateContent();
+});
+
+</script>
+</body>
+<html>
