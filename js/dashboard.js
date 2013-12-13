@@ -32,10 +32,21 @@ Telemetry.init(function(){
     $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
     console.log(evoType);
   });
+
+  $('input[name=render-type]:radio').change(function() {
+    update();
+  });
 });
 
 /** Format numbers */
 function fmt(number) {
+  if(number == Infinity)
+    return "Infinity";
+  if(number == -Infinity)
+    return "-Infinity";
+  if(isNaN(number))
+    return "NaN";
+  return d3.format('.4s')(number);
   var fixed = number.toFixed(3);
   if(fixed.length > 8 || parseFloat(fixed) == 0) {
     return number.toPrecision(8);
@@ -43,9 +54,85 @@ function fmt(number) {
   return fixed;
 }
 
+
+function renderHistogramTable(hgram) {
+  $('#histogram').hide();
+  $('#histogram-table').show();
+  var body = $('#histogram-table').find('tbody')
+  body.empty();
+
+  body.append.apply(body, hgram.map(function(count, start, end, index) {
+    return $('<tr>')
+      .append($('<td>').text(fmt(start)))
+      .append($('<td>').text(fmt(end)))
+      .append($('<td>').text(fmt(count)));
+  }));
+}
+
+
+function renderHistogramGraph(hgram) {
+  $('#histogram-table').hide();
+  $('#histogram').show();
+  nv.addGraph(function(){
+    var vals = hgram.map(function(count, start, end, index) {
+                  return {x: end, y: count};
+    });
+
+    var data = [{
+      key:      "Count",
+      values:   vals,
+      color:    "#0000ff"
+    }];
+
+    var chart = nv.models.discreteBarChart()
+     .margin({top: 20, right: 80, bottom: 40, left: 80})
+     .tooltips(false);
+    chart.yAxis
+      .tickFormat(d3.format('.3s'));
+    d3.select("#histogram")
+      .datum(data)
+      .transition().duration(500).call(chart);
+
+    nv.utils.windowResize(
+      function() {
+        chart.update();
+      }
+    );
+    return chart;
+  });
+}
+
+
+
 var renderHistogramTime = null;
 
+var lastHistogramEvo = null;
+
+
+var _exportHgram = null;
+var _lastBlobUrl = null;
+// Generate download on mousedown
+$('#export-link').mousedown(function(){
+  if(_lastBlobUrl){
+    URL.revokeObjectURL(_lastBlobUrl);
+    _lastBlobUrl = null;
+  }
+  var csv = "start,\tend,\tcount\n";
+  csv += _exportHgram.map(function(count, start, end, index) {
+    return [start, end, count].join(",\t");
+  }).join("\n");
+
+   _lastBlobUrl = URL.createObjectURL(new Blob([csv]));
+   $('#export-link')[0].href = _lastBlobUrl;
+   $('#export-link')[0].download = _exportHgram.measure() + ".csv";
+});
+
 function update(hgramEvo) {
+  if(!hgramEvo) {
+    hgramEvo = lastHistogramEvo;
+  }
+  lastHistogramEvo = hgramEvo;
+
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
@@ -62,10 +149,12 @@ function update(hgramEvo) {
       hgram = hgramEvo.range();
     }
 
+    _exportHgram = hgram;
+
     // Set common properties
     $('#prop-kind')       .text(hgram.kind());
-    $('#prop-submissions').text(hgram.submissions());
-    $('#prop-count')      .text(hgram.count());
+    $('#prop-submissions').text(fmt(hgram.submissions()));
+    $('#prop-count')      .text(fmt(hgram.count()));
 
 
     // Set linear only properties
@@ -91,38 +180,16 @@ function update(hgramEvo) {
         $('#prop-p95').text(fmt(hgram.percentile(95)));
     }
 
-    function renderHistogram() {
-      var vals = hgram.map(function(count, start, end, index) {
-                    return {x: end, y: count};
-      });
-
-      var data = [{
-        key:      "Count",
-        values:   vals,
-        color:    "#0000ff"
-      }];
-
-      var chart = nv.models.discreteBarChart()
-       .margin({top: 10, right: 80, bottom: 40, left: 80})
-       .tooltips(true);
-
-      d3.select("#histogram")
-        .datum(data)
-        .transition().duration(500).call(chart);
-
-      nv.utils.windowResize(
-        function() {
-          chart.update();
-        }
-      );
-      return chart;
-    }
-
     if(renderHistogramTime) {
       clearTimeout(renderHistogramTime);
     }
     renderHistogramTime = setTimeout(function() {
-      nv.addGraph(renderHistogram);
+      var renderType = $('input[name=render-type]:radio:checked').val();
+      if(renderType == 'Table') {
+        renderHistogramTable(hgram)
+      } else {
+        renderHistogramGraph(hgram);
+      }
     }, 100);
   }
 
@@ -193,15 +260,15 @@ function update(hgramEvo) {
         return d3.time.format('%Y/%m/%d')(new Date(d));
       });
     focusChart.y1Axis
-        .tickFormat(d3.format('s'));
+        .tickFormat(d3.format('.3s'));
     focusChart.y2Axis
-        .tickFormat(d3.format('s'));
+        .tickFormat(d3.format('.3s'));
     focusChart.y3Axis
-        .tickFormat(d3.format('s'));
+        .tickFormat(d3.format('.3s'));
     focusChart.y4Axis
-        .tickFormat(d3.format('s'));
+        .tickFormat(d3.format('.3s'));
 
-    d3.select("#evolution-focus")
+    d3.select("#evolution")
       .datum(data)
       .transition().duration(500).call(focusChart);
 

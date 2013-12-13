@@ -61,12 +61,25 @@ section {
 }
 .affix-bottom {}
 
-#histogram, #evolution {
+#measure {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+#histogram {
   height:       400px;
 }
 
-#evolution-focus {
-  height:       600px;
+#evolution {
+  height:       500px;
+}
+
+#histogram-table{
+  display:      none;
+}
+
+#export-link{
+  cursor: pointer;
 }
 
 .linear-only, .exponential-only {
@@ -86,6 +99,11 @@ section {
   margin-bottom:  5px;
   margin-left:    30px;
   margin-right:   30px;
+}
+
+.radio {
+  margin-top:   0px;
+  margin-left:  20px;
 }
 
 .nvd3 .axis line {

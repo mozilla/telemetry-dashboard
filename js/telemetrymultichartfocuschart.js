@@ -80,17 +80,31 @@ telemetryMultiChartFocusChart = function() {
   // Private Variables
   //------------------------------------------------------------
 
+  // Hack from http://www.quirksmode.org/js/findpos.html
+  // Find this right position...  gotta love it :)
+  function findPos(obj) {
+    var curleft = 0, curtop = 0;
+    if (obj.offsetParent) {
+      do {
+        curleft += obj.offsetLeft;
+        curtop += obj.offsetTop;
+      } while (obj = obj.offsetParent);
+    }
+    return [curleft,curtop];
+  }
+
   var showTooltip = function(e, offsetElement) {
     if (extent) {
         e.pointIndex += Math.ceil(extent[0]);
     }
-    var left = e.pos[0] + ( offsetElement.offsetLeft || 0 ),
-        top = e.pos[1] + ( offsetElement.offsetTop || 0),
+    var pos = findPos(offsetElement);
+    var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
+        top = e.pos[1] + pos[1],//( offsetElement.offsetTop || 0),
         x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
         y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex)),
         content = tooltip(e.series.key, x, y, e, chart);
 
-    nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', null, offsetElement);
+    nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };
 
   //------------------------------------------------------------
@@ -140,7 +154,7 @@ telemetryMultiChartFocusChart = function() {
       // Setup Scales
 
       var dataBars = data.filter(function(d) { return !d.disabled && d.bar });
-      var dataLines = data.filter(function(d) { return !d.bar }); // removed the !d.disabled clause here to fix Issue #240
+      var dataLines = data.filter(function(d) { return !d.disabled && !d.bar }); // removed the !d.disabled clause here to fix Issue #240
 
       x = bars.xScale();
       x2 = x2Axis.scale();
@@ -254,7 +268,7 @@ telemetryMultiChartFocusChart = function() {
           .datum(dataBars.length ? dataBars : [{values:[]}]);
 
       var lines2Wrap = g.select('.nv-context .nv-linesWrap')
-          .datum(!dataLines[0].disabled ? dataLines : [{values:[]}]);
+          .datum(dataLines.length ? dataLines : [{values:[]}]);
           
       g.select('.nv-context')
           .attr('transform', 'translate(0,' + ( availableHeight1 + margin.bottom + margin2.top) + ')')
@@ -441,7 +455,7 @@ telemetryMultiChartFocusChart = function() {
             );
         
         var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
-            .datum(dataLines[0].disabled ? [{values:[]}] :
+            .datum(!dataLines.length ? [{values:[]}] :
               dataLines
                 .map(function(d,i) {
                   return {

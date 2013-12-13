@@ -31,25 +31,55 @@
                 <div>
                     <h2 id="measure">My measure</h2>
                     <i id="description">My description</i>
-                    <!--<figure><svg id="evolution"></figure>-->
-                    <figure><svg id="evolution-focus"></figure>
-                    <figure><svg id="histogram"></svg></figure>
+                    <figure><svg id="evolution"></figure>
+                    <figure>
+                        <svg id="histogram"></svg>
+                        <table id="histogram-table" class="table table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </figure>
                 </div>
             </div>
             <aside class="col-md-4">
                 <h2>Preferences</h2>
                 <form role="form">
-                    <div class="radio">
-                        <label>
-                            <input type="radio" name="evo-type" value="Builds" checked>
-                            Evolution over build date (build ids)
-                        </label>
+                    <div class="form-group">
+                        <label>Show evolution over</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="evo-type" value="Builds" checked>
+                                Build dates (build ids)
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="evo-type" value="Time">
+                                Calendar dates (time)
+                            </label>
+                        </div>
                     </div>
-                    <div class="radio">
-                        <label>
-                            <input type="radio" name="evo-type" value="Time">
-                            Evolution over calendar dates (time)
-                        </label>
+                    <div class="form-group">
+                        <label>Render histogram as</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="render-type" value="Graph" checked>
+                                Graph
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="render-type" value="Table">
+                                Table
+                            </label>
+                            (<a id="export-link" target="_blank">download as csv</a>)
+                        </div>
                     </div>
                 </form>
                 <h2>Summary</h2>
