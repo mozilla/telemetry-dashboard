@@ -83,3 +83,7 @@ section {
   margin-left:    30px;
   margin-right:   30px;
 }
+
+.nvd3 .axis line {
+  opacity: 0;
+}

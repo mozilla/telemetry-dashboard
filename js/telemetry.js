@@ -7,7 +7,7 @@ var Telemetry = {};
 
 // Data folder from which data will be loaded, another level indicating current
 // folder will be initialized by Telemetry.init()
-var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v3';
+var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v4';
 
 // Map from channel/version to data prefix, loaded by Telemetry.init()
 var _dataFolderMap = null;
@@ -122,8 +122,7 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
  * fetched will be build dates, not telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
-Telemetry.loadEvolutionOverBuilds =
-      function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {
+Telemetry.loadEvolutionOverBuilds = function(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
   var load_count = 3;
   var data, filter_tree, specifications;
@@ -167,8 +166,7 @@ Telemetry.loadEvolutionOverBuilds =
  * fetched will be telemetry ping submission dates.
  * Note, measure must be a valid measure identifier from Telemetry.measures()
  */
- Telemetry.loadEvolutionOverTime =
-        function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {
+ Telemetry.loadEvolutionOverTime = function(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
   var load_count = 3;
   var data, filter_tree, specifications;
@@ -403,15 +401,15 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
 
   // std. dev. = sqrt(count * sum_squares - sum * sum) / count
   // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
-  return count.times(sum_sq).minus(sum.pow(2)).divide(count).toFixed(3);
+  var std_dev = count.times(sum_sq).minus(sum.pow(2)).div(count);
+  return parseFloat(std_dev.toFixed(3));
 };
 
 /**
  * Get the geometric standard deviation over all data points in this histogram,
  * null if not applicable as this is only available for some histograms.
  */
-Histogram.prototype.geometricStandardDeviation =
-                              function Histogram_geometricStandardDeviation() {
+Histogram.prototype.geometricStandardDeviation = function() {
   if (this.kind() != 'exponential') {
     throw new Error(
       "Histogram.geometricStandardDeviation() is only " +
@@ -629,8 +627,7 @@ HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
 };
 
 /** Get a description of the measure in this histogram */
-HistogramEvolution.prototype.description =
-                                    function HistogramEvolution_description() {
+HistogramEvolution.prototype.description = function() {
   return this._spec.description;
 };
 
@@ -649,14 +646,12 @@ HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
 };
 
 /** Name of filter available, null if none */
-HistogramEvolution.prototype.filterName =
-                                      function HistogramEvolution_filterName() {
+HistogramEvolution.prototype.filterName = function() {
   return this._filter_tree.name || null;
 };
 
 /** List of options available for current filter */
-HistogramEvolution.prototype.filterOptions =
-                                  function HistogramEvolution_filterOptions() {
+HistogramEvolution.prototype.filterOptions = function() {
   var options = [];
   for (var key in this._filter_tree) {
     if (key != "name" && key != "_id") {
@@ -671,8 +666,7 @@ HistogramEvolution.prototype.filterOptions =
  * are inclusive. Omitting start and/or end will give you the merged histogram
  * for the open-ended interval.
  */
-HistogramEvolution.prototype.range =
-                                function HistogramEvolution_range(start, end) {
+HistogramEvolution.prototype.range = function (start, end) {
   // Construct a dataset by merging all datasets/histograms in the range
   var merged_dataset = [];
 

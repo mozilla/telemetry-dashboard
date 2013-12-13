@@ -77,7 +77,7 @@
       {
         "type": "param",
         "types": [
-          "Function"
+          "String"
         ],
         "name": "channel_version",
         "description": "Channel/version string"
@@ -114,13 +114,12 @@
       "body": ""
     },
     "ignore": false,
-    "code": "Telemetry.loadEvolutionOverBuilds = \\\n      function Telemetry_loadEvolutionOverBuilds(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-build-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
+    "code": "Telemetry.loadEvolutionOverBuilds = function(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-build-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "receiver": "Telemetry",
       "name": "loadEvolutionOverBuilds",
-      "value": "\\",
-      "string": "Telemetry.loadEvolutionOverBuilds"
+      "string": "Telemetry.loadEvolutionOverBuilds()"
     }
   },
   {
@@ -131,13 +130,12 @@
       "body": ""
     },
     "ignore": false,
-    "code": "Telemetry.loadEvolutionOverTime = \\\n        function Telemetry_loadEvolutionOverTime(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-submission-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
+    "code": "Telemetry.loadEvolutionOverTime = function(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-submission-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "receiver": "Telemetry",
       "name": "loadEvolutionOverTime",
-      "value": "\\",
-      "string": "Telemetry.loadEvolutionOverTime"
+      "string": "Telemetry.loadEvolutionOverTime()"
     }
   },
   {
@@ -395,7 +393,7 @@
       "body": ""
     },
     "ignore": false,
-    "code": "Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {\n  if (this.kind() != \"linear\") {\n    throw new Error(\"Histogram.standardDeviation() is only available for \" +\n                    \"linear histograms\");\n  }\n  var sum       = new Big(_aggregate(DataOffsets.SUM, this));\n  var count     = new Big(this.count());\n  var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));\n  var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));\n  var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));\n\n  // std. dev. = sqrt(count * sum_squares - sum * sum) / count\n  // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods\n  return count.times(sum_sq).minus(sum.pow(2)).divide(count).toFixed(3);\n};",
+    "code": "Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {\n  if (this.kind() != \"linear\") {\n    throw new Error(\"Histogram.standardDeviation() is only available for \" +\n                    \"linear histograms\");\n  }\n  var sum       = new Big(_aggregate(DataOffsets.SUM, this));\n  var count     = new Big(this.count());\n  var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));\n  var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));\n  var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));\n\n  // std. dev. = sqrt(count * sum_squares - sum * sum) / count\n  // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods\n  var std_dev = count.times(sum_sq).minus(sum.pow(2)).div(count);\n  return parseFloat(std_dev.toFixed(3));\n};",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",
@@ -412,14 +410,13 @@
       "body": ""
     },
     "ignore": false,
-    "code": "Histogram.prototype.geometricStandardDeviation = \\\n                              function Histogram_geometricStandardDeviation() {\n  if (this.kind() != 'exponential') {\n    throw new Error(\n      \"Histogram.geometricStandardDeviation() is only \" +\n      \"available for exponential histograms\"\n    );\n  }\n  var count       = this.count();\n  var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);\n  var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);\n\n  // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation\n  // using wxmaxima... who knows maybe it's correct...\n  return Math.exp(\n    Math.sqrt(\n      (\n        count * Math.pow(Math.log(log_sum / count), 2) +\n        log_sum_sq -\n        2 * log_sum * Math.log(log_sum / count)\n      ) / count\n    )\n  );\n};",
+    "code": "Histogram.prototype.geometricStandardDeviation = function() {\n  if (this.kind() != 'exponential') {\n    throw new Error(\n      \"Histogram.geometricStandardDeviation() is only \" +\n      \"available for exponential histograms\"\n    );\n  }\n  var count       = this.count();\n  var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);\n  var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);\n\n  // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation\n  // using wxmaxima... who knows maybe it's correct...\n  return Math.exp(\n    Math.sqrt(\n      (\n        count * Math.pow(Math.log(log_sum / count), 2) +\n        log_sum_sq -\n        2 * log_sum * Math.log(log_sum / count)\n      ) / count\n    )\n  );\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "constructor": "Histogram",
       "cons": "Histogram",
       "name": "geometricStandardDeviation",
-      "value": "\\",
-      "string": "Histogram.prototype.geometricStandardDeviation"
+      "string": "Histogram.prototype.geometricStandardDeviation()"
     }
   },
   {
@@ -530,7 +527,7 @@
       "body": ""
     },
     "ignore": true,
-    "code": "function _computeBuckets(spec){\n  // Find bounds from specification\n  var low = 1, high, nbuckets;\n  if(spec.kind == 'boolean' || spec.kind == 'flag') {\n    high      = 2;\n    nbuckets  = 3;\n  } else if (spec.kind == 'enumerated') {\n    high      = eval(spec.n_values);\n    nbuckets  = eval(spec.n_values) + 1;\n  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {\n    low       = eval(spec.low) || 1;\n    high      = eval(spec.high);\n    nbuckets  = eval(spec.n_buckets)\n  }\n  // Compute buckets\n  var buckets = null;\n  if(spec.kind == 'exponential') {\n    // Exponential buckets is a special case\n    var log_max = Math.log(high);\n    buckets = [0, low];\n    var current = low;\n    for(var i = 2; i < nbuckets; i++) {\n      var log_current = Math.log(current);\n      var log_ratio   = (log_max - log_current) / (nbuckets - i);\n      var log_next    = log_current + log_ratio;\n      var next_value  = Math.floor(Math.exp(log_next) + 0.5);\n      if (next_value > current) {\n        current = next_value;\n      } else {\n        current = current + 1;\n      }\n      buckets.push(current);\n    }\n  } else {\n    // Linear buckets are computed as follows\n    buckets = [0];\n    for(var i = 1; i < nbuckets; i++) {\n      var range = (low * (nbuckets - 1 - i) + high * (i - 1));\n      buckets.push(Math.floor(range / (nbuckets - 2) + 0.5));\n    }\n  }\n  return buckets;\n}",
+    "code": "function _computeBuckets(spec){\n  // Find bounds from specification\n  var low = 1, high, nbuckets;\n  if(spec.kind == 'boolean' || spec.kind == 'flag') {\n    // This is how boolean bucket indexes are generated in mozilla-central we\n    // might look into whether or not there is a bug, as it seems rather weird\n    // that boolean histograms have 3 buckets.\n    high      = 2;\n    nbuckets  = 3;\n  } else if (spec.kind == 'enumerated') {\n    high      = eval(spec.n_values);\n    nbuckets  = eval(spec.n_values) + 1;\n  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {\n    low       = eval(spec.low) || 1;\n    high      = eval(spec.high);\n    nbuckets  = eval(spec.n_buckets)\n  }\n  // Compute buckets\n  var buckets = null;\n  if(spec.kind == 'exponential') {\n    // Exponential buckets is a special case\n    var log_max = Math.log(high);\n    buckets = [0, low];\n    var current = low;\n    for(var i = 2; i < nbuckets; i++) {\n      var log_current = Math.log(current);\n      var log_ratio   = (log_max - log_current) / (nbuckets - i);\n      var log_next    = log_current + log_ratio;\n      var next_value  = Math.floor(Math.exp(log_next) + 0.5);\n      if (next_value > current) {\n        current = next_value;\n      } else {\n        current = current + 1;\n      }\n      buckets.push(current);\n    }\n  } else {\n    // Linear buckets are computed as follows\n    buckets = [0];\n    for(var i = 1; i < nbuckets; i++) {\n      var range = (low * (nbuckets - 1 - i) + high * (i - 1));\n      buckets[i] = (Math.floor(range / (nbuckets - 2) + 0.5));\n    }\n  }\n  return buckets;\n}",
     "ctx": {
       "type": "function",
       "name": "_computeBuckets",
@@ -594,14 +591,13 @@
       "body": ""
     },
     "ignore": false,
-    "code": "HistogramEvolution.prototype.description = \\\n                                    function HistogramEvolution_description() {\n  return this._spec.description;\n};",
+    "code": "HistogramEvolution.prototype.description = function() {\n  return this._spec.description;\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "constructor": "HistogramEvolution",
       "cons": "HistogramEvolution",
       "name": "description",
-      "value": "\\",
-      "string": "HistogramEvolution.prototype.description"
+      "string": "HistogramEvolution.prototype.description()"
     }
   },
   {
@@ -629,14 +625,13 @@
       "body": ""
     },
     "ignore": false,
-    "code": "HistogramEvolution.prototype.filterName = \\\n                                      function HistogramEvolution_filterName() {\n  return this._filter_tree.name || null;\n};",
+    "code": "HistogramEvolution.prototype.filterName = function() {\n  return this._filter_tree.name || null;\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "constructor": "HistogramEvolution",
       "cons": "HistogramEvolution",
       "name": "filterName",
-      "value": "\\",
-      "string": "HistogramEvolution.prototype.filterName"
+      "string": "HistogramEvolution.prototype.filterName()"
     }
   },
   {
@@ -647,14 +642,13 @@
       "body": ""
     },
     "ignore": false,
-    "code": "HistogramEvolution.prototype.filterOptions = \\\n                                  function HistogramEvolution_filterOptions() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
+    "code": "HistogramEvolution.prototype.filterOptions = function() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "constructor": "HistogramEvolution",
       "cons": "HistogramEvolution",
       "name": "filterOptions",
-      "value": "\\",
-      "string": "HistogramEvolution.prototype.filterOptions"
+      "string": "HistogramEvolution.prototype.filterOptions()"
     }
   },
   {
@@ -665,14 +659,13 @@
       "body": ""
     },
     "ignore": false,
-    "code": "HistogramEvolution.prototype.range = \\\n                                function HistogramEvolution_range(start, end) {\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
+    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
     "ctx": {
-      "type": "property",
+      "type": "method",
       "constructor": "HistogramEvolution",
       "cons": "HistogramEvolution",
       "name": "range",
-      "value": "\\",
-      "string": "HistogramEvolution.prototype.range"
+      "string": "HistogramEvolution.prototype.range()"
     }
   },
   {

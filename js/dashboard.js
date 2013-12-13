@@ -8,7 +8,8 @@ Telemetry.init(function(){
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
-    selectorType: BootstrapSelector
+    selectorType:   BootstrapSelector,
+    evolutionOver:  'Builds',
   });
 
   $("#histogram-filter").bind("histogramfilterchange", function(event, data) {
@@ -17,7 +18,7 @@ Telemetry.init(function(){
     var hgramEvo = data.histogram;
 
     if (hgramEvo !== null) {
-      render(hgramEvo);
+      update(hgramEvo);
       $("#content").fadeIn();
       $("#spinner").fadeOut();
     } else {
@@ -27,7 +28,16 @@ Telemetry.init(function(){
   });
 });
 
-function render(hgramEvo) {
+/** Format numbers */
+function fmt(number) {
+  var fixed = number.toFixed(3);
+  if(fixed.length > 8 || parseFloat(fixed) == 0) {
+    return number.toPrecision(8);
+  }
+  return fixed;
+}
+
+function update(hgramEvo) {
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
@@ -37,6 +47,7 @@ function render(hgramEvo) {
   $("#description").text(hgramEvo.description());
 
   var hgram = hgramEvo.range();
+  window.hgram = hgram;
 
   // Set common properties
   $('#prop-kind')       .text(hgram.kind());
@@ -46,45 +57,100 @@ function render(hgramEvo) {
 
   // Set linear only properties
   if (hgram.kind() == 'linear') {
-    $('#prop-mean').text(hgram.mean());
-    $('#prop-standardDeviation').text(hgram.standardDeviation());
+    $('#prop-mean').text(fmt(hgram.mean()));
+    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
   }
 
   // Set exponential only properties
   if (hgram.kind() == 'exponential') {
     $('#prop-geometricMean')
-      .text(hgram.geometricMean());
+      .text(fmt(hgram.geometricMean()));
     $('#prop-geometricStandardDeviation')
-      .text(hgram.geometricStandardDeviation());
+      .text(fmt(hgram.geometricStandardDeviation()));
   }
 
   // Set percentiles if linear or exponential
   if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-      $('#prop-p5').text(hgram.percentile(5).toFixed(1));
-      $('#prop-p25').text(hgram.percentile(25).toFixed(1));
-      $('#prop-p50').text(hgram.percentile(50).toFixed(1));
-      $('#prop-p75').text(hgram.percentile(75).toFixed(1));
-      $('#prop-p95').text(hgram.percentile(95).toFixed(1));
+      $('#prop-p5').text(fmt(hgram.percentile(5)));
+      $('#prop-p25').text(fmt(hgram.percentile(25)));
+      $('#prop-p50').text(fmt(hgram.percentile(50)));
+      $('#prop-p75').text(fmt(hgram.percentile(75)));
+      $('#prop-p95').text(fmt(hgram.percentile(95)));
   }
 
   nv.addGraph(function() {
-    var vals = hgramEvo.map(function(date, hgram) {
+    var submissions = hgramEvo.map(function(date, hgram) {
       return {x: date.getTime(), y: hgram.submissions()};
     });
 
     var data = [{
       key:      "Submissions",
-      values:   vals,
-      color:    "#0000ff"
+      type:     "line",
+      yAxis:    2,
+      values:   submissions,
     }];
 
-    var chart = nv.models.lineChart()
-     .tooltips(false);
+    if(hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
+      var means = [];
+      var p5 = [];
+      var p25 = [];
+      var p50 = [];
+      var p75 = [];
+      var p95 = [];
+      hgramEvo.each(function(date, hgram) {
+        date = date.getTime();
+        means.push({x: date, y: hgram.mean()});
+        p5.push({x: date, y: hgram.percentile(5)});
+        p25.push({x: date, y: hgram.percentile(25)});
+        p50.push({x: date, y: hgram.percentile(50)});
+        p75.push({x: date, y: hgram.percentile(75)});
+        p95.push({x: date, y: hgram.percentile(95)});
+      });
+      data.push({
+        key:      "Mean",
+        type:     "line",
+        yAxis:    1,
+        values:   means,
+      },{
+        key:      "5th percentile",
+        type:     "line",
+        yAxis:    1,
+        values:   p5,
+      },{
+        key:      "25th percentile",
+        type:     "line",
+        yAxis:    1,
+        values:   p25,
+      },{
+        key:      "median",
+        type:     "line",
+        yAxis:    1,
+        values:   p50,
+      },{
+        key:      "75th percentile",
+        type:     "line",
+        yAxis:    1,
+        values:   p75,
+      },{
+        key:      "95th percentile",
+        type:     "line",
+        yAxis:    1,
+        values:   p95,
+      });
+    }
+
+    var chart = nv.models.multiChart()
+      .margin({top: 0, right: 80, bottom: 40, left: 80})
+      .tooltips(false);
 
     chart.xAxis
       .tickFormat(function(d) {
-        return d3.time.format('%Y%m%d')(new Date(d));
+        return d3.time.format('%Y/%m/%d')(new Date(d));
       });
+    chart.yAxis1
+        .tickFormat(d3.format('s'));
+    chart.yAxis2
+        .tickFormat(d3.format('s'));
 
     d3.select("#evolution")
       .datum(data)
