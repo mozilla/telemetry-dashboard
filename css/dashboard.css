@@ -65,6 +65,10 @@ section {
   height:       400px;
 }
 
+#evolution-focus {
+  height:       600px;
+}
+
 .linear-only, .exponential-only {
   display: none;
 }

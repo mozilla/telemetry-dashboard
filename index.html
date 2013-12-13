@@ -31,7 +31,8 @@
                 <div>
                     <h2 id="measure">My measure</h2>
                     <i id="description">My description</i>
-                    <figure><svg id="evolution"></figure>
+                    <!--<figure><svg id="evolution"></figure>-->
+                    <figure><svg id="evolution-focus"></figure>
                     <figure><svg id="histogram"></svg></figure>
                 </div>
             </div>
@@ -85,6 +86,12 @@
                             <dd id="prop-p75"></dd>
                         <dt>95th Percentile</dt>
                             <dd id="prop-p95"></dd>
+                        <br>
+                        <div class="alert alert-warning">
+                            <strong>Notice</strong> percentiles are estimated based on
+                            values in the histogram. Validity of small changes can be
+                            argued.
+                        </div>
                     </span>
                 </dl>
             </aside>
@@ -101,6 +108,8 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.9/d3.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.js">
     </script>
+    <script src="js/telemetrymultichart.js"></script>
+    <script src="js/telemetrymultichartfocuschart.js"></script>
     
     <!-- 
         big.js and telemetry.js from telemetry.mozilla.org

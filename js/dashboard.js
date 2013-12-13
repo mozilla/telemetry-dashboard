@@ -9,7 +9,7 @@ Telemetry.init(function(){
       return nightlies.pop() || versions.sort().pop();
     },
     selectorType:   BootstrapSelector,
-    evolutionOver:  'Builds',
+    evolutionOver:  $('input[name=evo-type]:radio:checked').val(),
   });
 
   $("#histogram-filter").bind("histogramfilterchange", function(event, data) {
@@ -26,6 +26,12 @@ Telemetry.init(function(){
       $("#spinner").fadeIn();
     }
   });
+
+  $('input[name=evo-type]:radio').change(function() {
+    var evoType = $('input[name=evo-type]:radio:checked').val();
+    $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
+    console.log(evoType);
+  });
 });
 
 /** Format numbers */
@@ -37,6 +43,8 @@ function fmt(number) {
   return fixed;
 }
 
+var renderHistogramTime = null;
+
 function update(hgramEvo) {
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
@@ -46,36 +54,76 @@ function update(hgramEvo) {
   $("#measure").text(hgramEvo.measure());
   $("#description").text(hgramEvo.description());
 
-  var hgram = hgramEvo.range();
-  window.hgram = hgram;
+  function updateProps(extent) {
+    var hgram;
+    if(extent){
+      hgram = hgramEvo.range(new Date(extent[0]), new Date(extent[1]));
+    } else {
+      hgram = hgramEvo.range();
+    }
 
-  // Set common properties
-  $('#prop-kind')       .text(hgram.kind());
-  $('#prop-submissions').text(hgram.submissions());
-  $('#prop-count')      .text(hgram.count());
+    // Set common properties
+    $('#prop-kind')       .text(hgram.kind());
+    $('#prop-submissions').text(hgram.submissions());
+    $('#prop-count')      .text(hgram.count());
 
 
-  // Set linear only properties
-  if (hgram.kind() == 'linear') {
-    $('#prop-mean').text(fmt(hgram.mean()));
-    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
-  }
+    // Set linear only properties
+    if (hgram.kind() == 'linear') {
+      $('#prop-mean').text(fmt(hgram.mean()));
+      $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+    }
 
-  // Set exponential only properties
-  if (hgram.kind() == 'exponential') {
-    $('#prop-geometricMean')
-      .text(fmt(hgram.geometricMean()));
-    $('#prop-geometricStandardDeviation')
-      .text(fmt(hgram.geometricStandardDeviation()));
-  }
+    // Set exponential only properties
+    if (hgram.kind() == 'exponential') {
+      $('#prop-geometricMean')
+        .text(fmt(hgram.geometricMean()));
+      $('#prop-geometricStandardDeviation')
+        .text(fmt(hgram.geometricStandardDeviation()));
+    }
 
-  // Set percentiles if linear or exponential
-  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-      $('#prop-p5').text(fmt(hgram.percentile(5)));
-      $('#prop-p25').text(fmt(hgram.percentile(25)));
-      $('#prop-p50').text(fmt(hgram.percentile(50)));
-      $('#prop-p75').text(fmt(hgram.percentile(75)));
-      $('#prop-p95').text(fmt(hgram.percentile(95)));
+    // Set percentiles if linear or exponential
+    if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
+        $('#prop-p5').text(fmt(hgram.percentile(5)));
+        $('#prop-p25').text(fmt(hgram.percentile(25)));
+        $('#prop-p50').text(fmt(hgram.percentile(50)));
+        $('#prop-p75').text(fmt(hgram.percentile(75)));
+        $('#prop-p95').text(fmt(hgram.percentile(95)));
+    }
+
+    function renderHistogram() {
+      var vals = hgram.map(function(count, start, end, index) {
+                    return {x: end, y: count};
+      });
+
+      var data = [{
+        key:      "Count",
+        values:   vals,
+        color:    "#0000ff"
+      }];
+
+      var chart = nv.models.discreteBarChart()
+       .margin({top: 10, right: 80, bottom: 40, left: 80})
+       .tooltips(true);
+
+      d3.select("#histogram")
+        .datum(data)
+        .transition().duration(500).call(chart);
+
+      nv.utils.windowResize(
+        function() {
+          chart.update();
+        }
+      );
+      return chart;
+    }
+
+    if(renderHistogramTime) {
+      clearTimeout(renderHistogramTime);
+    }
+    renderHistogramTime = setTimeout(function() {
+      nv.addGraph(renderHistogram);
+    }, 100);
   }
 
   nv.addGraph(function() {
@@ -85,7 +133,7 @@ function update(hgramEvo) {
 
     var data = [{
       key:      "Submissions",
-      type:     "line",
+      bar:      true, // This is hacked :)
       yAxis:    2,
       values:   submissions,
     }];
@@ -108,85 +156,63 @@ function update(hgramEvo) {
       });
       data.push({
         key:      "Mean",
-        type:     "line",
         yAxis:    1,
         values:   means,
       },{
         key:      "5th percentile",
-        type:     "line",
         yAxis:    1,
         values:   p5,
       },{
         key:      "25th percentile",
-        type:     "line",
         yAxis:    1,
         values:   p25,
       },{
         key:      "median",
-        type:     "line",
         yAxis:    1,
         values:   p50,
       },{
         key:      "75th percentile",
-        type:     "line",
         yAxis:    1,
         values:   p75,
       },{
         key:      "95th percentile",
-        type:     "line",
         yAxis:    1,
         values:   p95,
       });
     }
+    
+    var focusChart = telemetryMultiChartFocusChart()
+      .margin({top: 10, right: 80, bottom: 40, left: 80});
 
-    var chart = nv.models.multiChart()
-      .margin({top: 0, right: 80, bottom: 40, left: 80})
-      .tooltips(false);
-
-    chart.xAxis
+    focusChart.xAxis
       .tickFormat(function(d) {
         return d3.time.format('%Y/%m/%d')(new Date(d));
       });
-    chart.yAxis1
+    focusChart.x2Axis
+      .tickFormat(function(d) {
+        return d3.time.format('%Y/%m/%d')(new Date(d));
+      });
+    focusChart.y1Axis
         .tickFormat(d3.format('s'));
-    chart.yAxis2
+    focusChart.y2Axis
+        .tickFormat(d3.format('s'));
+    focusChart.y3Axis
+        .tickFormat(d3.format('s'));
+    focusChart.y4Axis
         .tickFormat(d3.format('s'));
 
-    d3.select("#evolution")
+    d3.select("#evolution-focus")
       .datum(data)
-      .transition().duration(500).call(chart);
+      .transition().duration(500).call(focusChart);
 
     nv.utils.windowResize(
       function() {
-        chart.update();
+        focusChart.update();
       }
     );
-    return chart;
+
+    focusChart.setSelectionChangeCallback(updateProps);
   });
 
-  nv.addGraph(function() {
-    var vals = hgram.map(function(count, start, end, index) {
-                  return {x: end, y: count};
-    });
-
-    var data = [{
-      key:      "Count",
-      values:   vals,
-      color:    "#0000ff"
-    }];
-
-    var chart = nv.models.discreteBarChart()
-     .tooltips(false);
-
-    d3.select("#histogram")
-      .datum(data)
-      .transition().duration(500).call(chart);
-
-    nv.utils.windowResize(
-      function() {
-        chart.update();
-      }
-    );
-    return chart;
-  });
+  updateProps();
 }
