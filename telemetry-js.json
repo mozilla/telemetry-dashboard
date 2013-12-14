@@ -7,7 +7,7 @@
       "body": ""
     },
     "ignore": false,
-    "code": "var Telemetry = {};\n\n// Data folder from which data will be loaded, another level indicating current\n// folder will be initialized by Telemetry.init()\nvar _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v3';\n\n// Map from channel/version to data prefix, loaded by Telemetry.init()\nvar _dataFolderMap = null;\n\n// List of versions present in _dataFolderMap\nvar _versions = null;",
+    "code": "var Telemetry = {};\n\n// Data folder from which data will be loaded, another level indicating current\n// folder will be initialized by Telemetry.init()\nvar _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v4';\n\n// Map from channel/version to data prefix, loaded by Telemetry.init()\nvar _dataFolderMap = null;\n\n// List of versions present in _dataFolderMap\nvar _versions = null;",
     "ctx": {
       "type": "declaration",
       "name": "Telemetry",
@@ -42,9 +42,9 @@
       }
     ],
     "description": {
-      "full": "<p>Initialize telemetry module by fetching meta-data from server, <code>cb()</code> will be<br />invoked when Telemetry module is ready for use.</p>\n\n<p>You cannot use any of the methods in the <code>Telemetry</code> module before you have<br />initialized the module with this function.</p>",
+      "full": "<p>Initialize telemetry module by fetching meta-data from server, <code>cb()</code> will be<br />invoked when Telemetry module is ready for use.</p>\n\n<p>You cannot use any of the methods in the <code>Telemetry</code> module before you have<br />initialized the module with this function.</p>\n\n<pre><code>Telemetry.init(function(){\n  // You can now use telemetry.js\n  alert(\"Versions available: \"Telemetry.versions().join(','));\n});\n</code></pre>\n\n<p>Once you've initialized <code>telemetry.js</code> you'll want to lookup available<br />channel, version combinations using <code>Telemetry.versions()</code>.</p>",
       "summary": "<p>Initialize telemetry module by fetching meta-data from server, <code>cb()</code> will be<br />invoked when Telemetry module is ready for use.</p>",
-      "body": "<p>You cannot use any of the methods in the <code>Telemetry</code> module before you have<br />initialized the module with this function.</p>"
+      "body": "<p>You cannot use any of the methods in the <code>Telemetry</code> module before you have<br />initialized the module with this function.</p>\n\n<pre><code>Telemetry.init(function(){\n  // You can now use telemetry.js\n  alert(\"Versions available: \"Telemetry.versions().join(','));\n});\n</code></pre>\n\n<p>Once you've initialized <code>telemetry.js</code> you'll want to lookup available<br />channel, version combinations using <code>Telemetry.versions()</code>.</p>"
     },
     "isPrivate": false,
     "ignore": false,
@@ -59,9 +59,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get list of channel, version combinations available. This function returns<br />a list of strings on the form <code>'&lt;channel&gt;/&lt;version&gt;'</code>.</p>\n\n<p><strong>Example:</strong></p>\n\n<pre><code>    ['release/24', 'release/25', 'release/26', ..., 'nightly/28']\n</code></pre>\n\n<p>The strings returned here can be passed to <code>Telemetry.measures()</code> in order<br />to get a list of measures available for the specific channel and version.</p>",
-      "summary": "<p>Get list of channel, version combinations available. This function returns<br />a list of strings on the form <code>'&lt;channel&gt;/&lt;version&gt;'</code>.</p>",
-      "body": "<p><strong>Example:</strong></p>\n\n<pre><code>    ['release/24', 'release/25', 'release/26', ..., 'nightly/28']\n</code></pre>\n\n<p>The strings returned here can be passed to <code>Telemetry.measures()</code> in order<br />to get a list of measures available for the specific channel and version.</p>"
+      "full": "<p>Get a list of channel, version combinations available. This function returns<br />a list of strings on the form <code>'&lt;channel&gt;/&lt;version&gt;'</code>.</p>\n\n<p><strong>Example:</strong></p>\n\n<pre><code>Telemetry.versions()\n['release/24', 'release/25', 'release/26', ..., 'nightly/28']\n</code></pre>\n\n<p>The strings returned here can be passed to <code>Telemetry.measures()</code> in order<br />to get a list of measures available for the specific channel and version.<br />See, <code>Telemetry.measures()</code> for callback details.</p>",
+      "summary": "<p>Get a list of channel, version combinations available. This function returns<br />a list of strings on the form <code>'&lt;channel&gt;/&lt;version&gt;'</code>.</p>",
+      "body": "<p><strong>Example:</strong></p>\n\n<pre><code>Telemetry.versions()\n['release/24', 'release/25', 'release/26', ..., 'nightly/28']\n</code></pre>\n\n<p>The strings returned here can be passed to <code>Telemetry.measures()</code> in order<br />to get a list of measures available for the specific channel and version.<br />See, <code>Telemetry.measures()</code> for callback details.</p>"
     },
     "ignore": false,
     "code": "Telemetry.versions = function Telemetry_versions() {\n  if (_versions === null) {\n    throw new Error(\"Telemetry.versions: Telemetry module isn't initialized!\");\n  }\n  return _versions;\n};",
@@ -92,9 +92,9 @@
       }
     ],
     "description": {
-      "full": "<p>Request measures available for a given <code>'&lt;channel&gt;/&lt;version&gt;'</code> string. The<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> must originate from the list returned by<br /><code>Telemetry.versions()</code>. Once the measures have been loaded the callback <code>cb</code><br />will be invoked as <code>cb(measures)</code> where <code>measures</code> a dictionary on the<br />following form:</p>\n\n<pre><code>    {\n       \"A_TELEMETRY_MEASURE_ID\": {\n         kind:         \"linear|exponential|flag|enumerated|boolean\",\n         description:  \"A human readable description\"\n       },\n       ...\n     }\n</code></pre>",
+      "full": "<p>Request measures available for a given <code>'&lt;channel&gt;/&lt;version&gt;'</code> string. The<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> must originate from the list returned by<br /><code>Telemetry.versions()</code>. Once the measures have been loaded the callback <code>cb</code><br />will be invoked as <code>cb(measures)</code> where <code>measures</code> a dictionary on the<br />following form:</p>\n\n<pre><code>{\n  \"A_TELEMETRY_MEASURE_ID\": {\n    kind:         \"linear|exponential|flag|enumerated|boolean\",\n    description:  \"A human readable description\"\n  },\n  ...\n}\n</code></pre>\n\n<p>The following example prints all <em>exponential</em> measures for nightly 25,<br />assuming the string <code>'nightly/25'</code> is in the list returned by<br /><code>Telemetry.versions()</code>.</p>\n\n<pre><code>Telemetry.measures('nightly/25', function(measures) {\n  for(var measure in measures) {\n    if(measures[measure].kind == 'exponential') {\n      // Log the measure id\n      console.log(measure);\n    }\n  }\n});\n</code></pre>\n\n<h3>Measure Identifiers</h3>\n\n<p>The measure id's are all in UPPER case like <code>A_TELEMETRY_MEASURE_ID</code>, along<br />with the selected <code>'&lt;channel&gt;/&lt;version&gt;'</code> string these can be provide to<br /><code>Telemetry.loadEvolutionOverBuilds</code> and <code>Telemetry.loadEvolutionOverTime</code> to<br />load histogram data sets.</p>\n\n<p>The measure ids with some exceptions lives in the tree along with definitions<br />and descriptions, see <code>toolkit/components/telemetry/Histograms.json</code>.<br /><strong>Do not</strong> use this <code>Histograms.json</code> in consumers of <code>telemetry.js</code>, all the<br />is carefully included and merged to account for changing revisions.</p>",
       "summary": "<p>Request measures available for a given <code>'&lt;channel&gt;/&lt;version&gt;'</code> string. The<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> must originate from the list returned by<br /><code>Telemetry.versions()</code>. Once the measures have been loaded the callback <code>cb</code><br />will be invoked as <code>cb(measures)</code> where <code>measures</code> a dictionary on the<br />following form:</p>",
-      "body": "<pre><code>    {\n       \"A_TELEMETRY_MEASURE_ID\": {\n         kind:         \"linear|exponential|flag|enumerated|boolean\",\n         description:  \"A human readable description\"\n       },\n       ...\n     }\n</code></pre>"
+      "body": "<pre><code>{\n  \"A_TELEMETRY_MEASURE_ID\": {\n    kind:         \"linear|exponential|flag|enumerated|boolean\",\n    description:  \"A human readable description\"\n  },\n  ...\n}\n</code></pre>\n\n<p>The following example prints all <em>exponential</em> measures for nightly 25,<br />assuming the string <code>'nightly/25'</code> is in the list returned by<br /><code>Telemetry.versions()</code>.</p>\n\n<pre><code>Telemetry.measures('nightly/25', function(measures) {\n  for(var measure in measures) {\n    if(measures[measure].kind == 'exponential') {\n      // Log the measure id\n      console.log(measure);\n    }\n  }\n});\n</code></pre>\n\n<h3>Measure Identifiers</h3>\n\n<p>The measure id's are all in UPPER case like <code>A_TELEMETRY_MEASURE_ID</code>, along<br />with the selected <code>'&lt;channel&gt;/&lt;version&gt;'</code> string these can be provide to<br /><code>Telemetry.loadEvolutionOverBuilds</code> and <code>Telemetry.loadEvolutionOverTime</code> to<br />load histogram data sets.</p>\n\n<p>The measure ids with some exceptions lives in the tree along with definitions<br />and descriptions, see <code>toolkit/components/telemetry/Histograms.json</code>.<br /><strong>Do not</strong> use this <code>Histograms.json</code> in consumers of <code>telemetry.js</code>, all the<br />is carefully included and merged to account for changing revisions.</p>"
     },
     "isPrivate": false,
     "ignore": false,
@@ -107,12 +107,38 @@
     }
   },
   {
-    "tags": [],
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "String"
+        ],
+        "name": "channel_version",
+        "description": "Channel/version string"
+      },
+      {
+        "type": "param",
+        "types": [
+          "String"
+        ],
+        "name": "measure",
+        "description": "Measure identifier"
+      },
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "cb",
+        "description": "Callback to be invoked with result"
+      }
+    ],
     "description": {
-      "full": "<p>Request HistogramEvolution instance over builds for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the <br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be build dates, not telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
-      "summary": "<p>Request HistogramEvolution instance over builds for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the <br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be build dates, not telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
-      "body": ""
+      "full": "<p>Load a <code>Telemetry.HistogramEvolution</code> instance for a given channel, version<br />and measure. The <code>HistogramEvolution</code> instance will hold a collection of<br /><code>Histograms</code> over <strong>build dates</strong>. Use this function if you're interested in<br />the evolution of a histogram over different build ids, but notice that<br /><strong>build ids are reduced to dates</strong>. Hence, you cannot lookup a specific<br />build id - but for most channels there should only be one per day.</p>\n\n<p>If you don't care about evolution of the histogram over builds, but just the<br />aggregated histogram over all time or a histogram for a specific build date.<br />This is also the function you should use to load it, then call<br /><code>HistogramEvolution.range()</code> without any parameters to get an aggregated<br /><code>Histogram</code> instance over all builds.</p>\n\n<p>The <code>channel_version</code> parameter must be a string on the form<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> obtained from <code>Telemetry.versions()</code>. The <code>measure</code><br />parameter, most be a measure identifier obtained using<br /><code>Telemetry.measures(channel_version, ...)</code>. To load the <code>'CYCLE_COLLECTOR'</code><br />measure for nightly 25, proceed as follows:</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // See HistogramEvolution for how to read data, for example we can\n  // the build dates available as follows\n  console.log(histogramEvolution.dates());\n});\n</code></pre>\n\n<p><strong>Remark</strong> all telemetry pings for the given channel, version and measure are<br />aggregated in the <code>HistogramEvolution</code> instance obtained through<br /><code>loadEvolutionOverBuilds</code>. This is not the case for <code>loadEvolutionOverTime</code>.<br />The six week release cycle ensures that number of build dates is fairly<br />limited. However, this is not the case for submissions dates, as not all<br />Firefox users updates immediately. <strong>Thus</strong> if you just want the histogram<br /><strong>aggregated for all builds</strong>, you should use <code>loadEvolutionOverBuilds</code>.</p>",
+      "summary": "<p>Load a <code>Telemetry.HistogramEvolution</code> instance for a given channel, version<br />and measure. The <code>HistogramEvolution</code> instance will hold a collection of<br /><code>Histograms</code> over <strong>build dates</strong>. Use this function if you're interested in<br />the evolution of a histogram over different build ids, but notice that<br /><strong>build ids are reduced to dates</strong>. Hence, you cannot lookup a specific<br />build id - but for most channels there should only be one per day.</p>",
+      "body": "<p>If you don't care about evolution of the histogram over builds, but just the<br />aggregated histogram over all time or a histogram for a specific build date.<br />This is also the function you should use to load it, then call<br /><code>HistogramEvolution.range()</code> without any parameters to get an aggregated<br /><code>Histogram</code> instance over all builds.</p>\n\n<p>The <code>channel_version</code> parameter must be a string on the form<br /><code>'&lt;channel&gt;/&lt;version&gt;'</code> obtained from <code>Telemetry.versions()</code>. The <code>measure</code><br />parameter, most be a measure identifier obtained using<br /><code>Telemetry.measures(channel_version, ...)</code>. To load the <code>'CYCLE_COLLECTOR'</code><br />measure for nightly 25, proceed as follows:</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // See HistogramEvolution for how to read data, for example we can\n  // the build dates available as follows\n  console.log(histogramEvolution.dates());\n});\n</code></pre>\n\n<p><strong>Remark</strong> all telemetry pings for the given channel, version and measure are<br />aggregated in the <code>HistogramEvolution</code> instance obtained through<br /><code>loadEvolutionOverBuilds</code>. This is not the case for <code>loadEvolutionOverTime</code>.<br />The six week release cycle ensures that number of build dates is fairly<br />limited. However, this is not the case for submissions dates, as not all<br />Firefox users updates immediately. <strong>Thus</strong> if you just want the histogram<br /><strong>aggregated for all builds</strong>, you should use <code>loadEvolutionOverBuilds</code>.</p>"
     },
+    "isPrivate": false,
     "ignore": false,
     "code": "Telemetry.loadEvolutionOverBuilds = function(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-build-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
     "ctx": {
@@ -123,12 +149,38 @@
     }
   },
   {
-    "tags": [],
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "String"
+        ],
+        "name": "channel_version",
+        "description": "Channel/version string"
+      },
+      {
+        "type": "param",
+        "types": [
+          "String"
+        ],
+        "name": "measure",
+        "description": "Measure identifier"
+      },
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "cb",
+        "description": "Callback to be invoked with result"
+      }
+    ],
     "description": {
-      "full": "<p>Request HistogramEvolution instance over time for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the<br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
-      "summary": "<p>Request HistogramEvolution instance over time for a given channel/version<br />and measure, once fetched cb(histogramEvolution) will be invoked with the<br />HistogramEvolution instance. The dates in the HistogramEvolution instance<br />fetched will be telemetry ping submission dates.<br />Note, measure must be a valid measure identifier from Telemetry.measures()</p>",
-      "body": ""
+      "full": "<p>Load a <code>Telemetry.HistogramEvolution</code> instance for a given channel, version<br />and measure. The <code>HistogramEvolution</code> instance will hold a collection of<br /><code>Histograms</code> over <em>calendar dates</em>. <strong>Do only</strong> use this function if you're<br />interested in the <strong>evolution of the internet</strong>! It can ofcourse be useful<br />to see if measures differ because of changes in the platform or changes in<br />the internet.</p>\n\n<p>If you don't care about evolution of the histogram over time, but just the<br />aggregated histogram over all time, you should <strong>not use this function</strong>.<br />Use <code>loadEvolutionOverBuilds</code> for this purpose!</p>\n\n<p>Only the first 60 days following the build date will be aggregated in<br /><code>HistogramEvolution</code> instances obtained through <code>loadEvolutionOverTime</code>.<br />As noted in \"Remark\" for <code>loadEvolutionOverBuilds</code> this is not the case for<br />that <code>HistogramEvolution</code> instances loaded through <code>loadEvolutionOverBuilds</code>.</p>\n\n<p>See <code>loadEvolutionOverBuilds</code> for example usage, the parameters are<br />equivalent. You can use the same parameters for both of them.</p>",
+      "summary": "<p>Load a <code>Telemetry.HistogramEvolution</code> instance for a given channel, version<br />and measure. The <code>HistogramEvolution</code> instance will hold a collection of<br /><code>Histograms</code> over <em>calendar dates</em>. <strong>Do only</strong> use this function if you're<br />interested in the <strong>evolution of the internet</strong>! It can ofcourse be useful<br />to see if measures differ because of changes in the platform or changes in<br />the internet.</p>",
+      "body": "<p>If you don't care about evolution of the histogram over time, but just the<br />aggregated histogram over all time, you should <strong>not use this function</strong>.<br />Use <code>loadEvolutionOverBuilds</code> for this purpose!</p>\n\n<p>Only the first 60 days following the build date will be aggregated in<br /><code>HistogramEvolution</code> instances obtained through <code>loadEvolutionOverTime</code>.<br />As noted in \"Remark\" for <code>loadEvolutionOverBuilds</code> this is not the case for<br />that <code>HistogramEvolution</code> instances loaded through <code>loadEvolutionOverBuilds</code>.</p>\n\n<p>See <code>loadEvolutionOverBuilds</code> for example usage, the parameters are<br />equivalent. You can use the same parameters for both of them.</p>"
     },
+    "isPrivate": false,
     "ignore": false,
     "code": "Telemetry.loadEvolutionOverTime = function(channel_version, measure, cb) {\n  // Number of files to load, and what to do when done\n  var load_count = 3;\n  var data, filter_tree, specifications;\n  function count_down() {\n    load_count--;\n    if (load_count === 0) {\n      cb(\n        new Telemetry.HistogramEvolution(\n          measure,\n          [measure],\n          data,\n          filter_tree,\n          specifications[measure]\n        )\n      );\n    }\n  }\n  // Find data folder for given channel/version\n  var data_folder = _dataFolderMap[channel_version];\n  // Load data for measure\n  _get([data_folder, measure + \"-by-submission-date.json\"], function(json) {\n    data = json;\n    count_down();\n  });\n  // Load filter data\n  _get([data_folder, \"filter-tree.json\"], function(json) {\n    filter_tree = json;\n    count_down();\n  });\n  // Load histogram specifications\n  _get([data_folder, \"histograms.json\"], function(json) {\n    specifications = json;\n    count_down();\n  });\n};",
     "ctx": {
@@ -156,9 +208,251 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Representation of histogram under possible filter application</p>",
-      "summary": "<p>Representation of histogram under possible filter application</p>",
+      "full": "<p>A <code>HistogramEvolution</code> instance is a collection of histograms over dates.<br />These <em>dates</em> can be either build dates or submission dates, depending on<br />whether <code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> was used to<br />obtained the <code>HistogramEvolution</code> instance. For an example of how to obtain<br />an instance of this type see <code>loadEvolutionOverBuilds</code>.</p>\n\n<p>When you have a <code>HistogramEvolution</code> instance, you can <code>filter</code> it by<br />available <code>filterOptions</code>. You can iterate over dates and histograms with<br /><code>each</code>, or aggregated histograms between dates with <code>range</code>. If you don't<br />care about dates and just want an aggregated histogram for all dates, you<br />can call <code>range()</code> with no arguments, interpreted as the open ended interval.<br />Which in this example prints the total number of submissions aggregated.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p><strong>Note</strong> that when you have obtained an instance of <code>HistogramEvolution</code> all<br />operations on this instance and any objects created by it are synchronous<br />and doesn't require any network communication.</p>",
+      "summary": "<p>A <code>HistogramEvolution</code> instance is a collection of histograms over dates.<br />These <em>dates</em> can be either build dates or submission dates, depending on<br />whether <code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> was used to<br />obtained the <code>HistogramEvolution</code> instance. For an example of how to obtain<br />an instance of this type see <code>loadEvolutionOverBuilds</code>.</p>",
+      "body": "<p>When you have a <code>HistogramEvolution</code> instance, you can <code>filter</code> it by<br />available <code>filterOptions</code>. You can iterate over dates and histograms with<br /><code>each</code>, or aggregated histograms between dates with <code>range</code>. If you don't<br />care about dates and just want an aggregated histogram for all dates, you<br />can call <code>range()</code> with no arguments, interpreted as the open ended interval.<br />Which in this example prints the total number of submissions aggregated.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p><strong>Note</strong> that when you have obtained an instance of <code>HistogramEvolution</code> all<br />operations on this instance and any objects created by it are synchronous<br />and doesn't require any network communication.</p>"
+    },
+    "ignore": false,
+    "code": "Telemetry.HistogramEvolution = (function(){",
+    "ctx": {
+      "type": "property",
+      "receiver": "Telemetry",
+      "name": "HistogramEvolution",
+      "value": "(function(){",
+      "string": "Telemetry.HistogramEvolution"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to parse a date string from JSON data format</p>",
+      "summary": "<p>Auxiliary function to parse a date string from JSON data format</p>",
       "body": ""
+    },
+    "ignore": true,
+    "code": "function _parseDateString(d) {\n  return new Date(d.substr(0,4) + \"/\" + d.substr(4,2) + \"/\"+ d.substr(6,2));\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_parseDateString",
+      "string": "_parseDateString()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Auxiliary function to compute all bucket ends from a specification<br />This returns a list [b0, b1, ..., bn] where b0 is the separator value between<br />entries in bucket index 0 and bucket index 1. Such that all values less than<br />b0 was counted in bucket 0, values greater than counted in bucket 1.</p>",
+      "summary": "<p>Auxiliary function to compute all bucket ends from a specification<br />This returns a list [b0, b1, ..., bn] where b0 is the separator value between<br />entries in bucket index 0 and bucket index 1. Such that all values less than<br />b0 was counted in bucket 0, values greater than counted in bucket 1.</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function _computeBuckets(spec){\n  // Find bounds from specification\n  var low = 1, high, nbuckets;\n  if(spec.kind == 'boolean' || spec.kind == 'flag') {\n    // This is how boolean bucket indexes are generated in mozilla-central we\n    // might look into whether or not there is a bug, as it seems rather weird\n    // that boolean histograms have 3 buckets.\n    high      = 2;\n    nbuckets  = 3;\n  } else if (spec.kind == 'enumerated') {\n    high      = eval(spec.n_values);\n    nbuckets  = eval(spec.n_values) + 1;\n  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {\n    low       = eval(spec.low) || 1;\n    high      = eval(spec.high);\n    nbuckets  = eval(spec.n_buckets)\n  }\n  // Compute buckets\n  var buckets = null;\n  if(spec.kind == 'exponential') {\n    // Exponential buckets is a special case\n    var log_max = Math.log(high);\n    buckets = [0, low];\n    var current = low;\n    for(var i = 2; i < nbuckets; i++) {\n      var log_current = Math.log(current);\n      var log_ratio   = (log_max - log_current) / (nbuckets - i);\n      var log_next    = log_current + log_ratio;\n      var next_value  = Math.floor(Math.exp(log_next) + 0.5);\n      if (next_value > current) {\n        current = next_value;\n      } else {\n        current = current + 1;\n      }\n      buckets.push(current);\n    }\n  } else {\n    // Linear buckets are computed as follows\n    buckets = [0];\n    for(var i = 1; i < nbuckets; i++) {\n      var range = (low * (nbuckets - 1 - i) + high * (i - 1));\n      buckets[i] = (Math.floor(range / (nbuckets - 2) + 0.5));\n    }\n  }\n  return buckets;\n}",
+    "ctx": {
+      "type": "function",
+      "name": "_computeBuckets",
+      "string": "_computeBuckets()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Create a histogram evolution, where<br /> - measure       is the name of this histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - data          is the JSON data loaded from file,<br /> - filter_tree   is the filter_tree root, and<br /> - spec          is the histogram specification.</p>",
+      "summary": "<p>Create a histogram evolution, where<br /> - measure       is the name of this histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - data          is the JSON data loaded from file,<br /> - filter_tree   is the filter_tree root, and<br /> - spec          is the histogram specification.</p>",
+      "body": ""
+    },
+    "ignore": true,
+    "code": "function HistogramEvolution(measure, filter_path, data, filter_tree, spec) {\n  this._measure     = measure\n  this._filter_path = filter_path;\n  this._data        = data;\n  this._filter_tree = filter_tree;\n  this._spec        = spec;\n  this._buckets     = _computeBuckets(spec);\n}",
+    "ctx": {
+      "type": "function",
+      "name": "HistogramEvolution",
+      "string": "HistogramEvolution()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the measure for histograms in this <code>HistogramEvolution</code> instance.</p>\n\n<p>This is the measure id given when this instance was created by either<br /><code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code>. You'll also find this<br />measure id in the results obtained from <code>Telemetry.measures</code>.</p>\n\n<p>See <code>Telemetry.measures</code> for more information on measure ids.</p>",
+      "summary": "<p>Get the measure for histograms in this <code>HistogramEvolution</code> instance.</p>",
+      "body": "<p>This is the measure id given when this instance was created by either<br /><code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code>. You'll also find this<br />measure id in the results obtained from <code>Telemetry.measures</code>.</p>\n\n<p>See <code>Telemetry.measures</code> for more information on measure ids.</p>"
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.measure = function HistogramEvolution_measure() {\n  return this._measure;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "measure",
+      "string": "HistogramEvolution.prototype.measure()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the histogram kind, possible histogram kinds are:</p>\n\n<ul>\n<li><code>'linear'</code></li>\n<li><code>'exponential'</code></li>\n<li><code>'flag'</code></li>\n<li><code>'enumerated'</code></li>\n<li><code>'boolean'</code></li>\n</ul>\n\n<p><strong>Notice</strong> some methods will throw exceptions if used on a histogram with an<br />unsupported <em>\"kind\"</em>. For example it doesn't make sense to estimate<br />percentiles for boolean histograms, and doing so will throw an exception.</p>\n\n<pre><code>// Create a plot of 25'th percentile, if we have 'linear' histogram.\nvar data_points = null;\nif(histogramEvolution.kind() == 'linear') {\n  data_points = histogramEvolution.map(function(date, histogram, index) {\n    return {x: date.getTime(), y: histogram.percentile(25)};\n  });\n}\n</code></pre>",
+      "summary": "<p>Get the histogram kind, possible histogram kinds are:</p>",
+      "body": "<ul>\n<li><code>'linear'</code></li>\n<li><code>'exponential'</code></li>\n<li><code>'flag'</code></li>\n<li><code>'enumerated'</code></li>\n<li><code>'boolean'</code></li>\n</ul>\n\n<p><strong>Notice</strong> some methods will throw exceptions if used on a histogram with an<br />unsupported <em>\"kind\"</em>. For example it doesn't make sense to estimate<br />percentiles for boolean histograms, and doing so will throw an exception.</p>\n\n<pre><code>// Create a plot of 25'th percentile, if we have 'linear' histogram.\nvar data_points = null;\nif(histogramEvolution.kind() == 'linear') {\n  data_points = histogramEvolution.map(function(date, histogram, index) {\n    return {x: date.getTime(), y: histogram.percentile(25)};\n  });\n}\n</code></pre>"
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {\n  return this._spec.kind;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "kind",
+      "string": "HistogramEvolution.prototype.kind()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get a human readable description of the measure in this histogram.</p>\n\n<p>This is the same description as offered by <code>Telemetry.measures</code>, it is<br />defined in <code>Histograms.json</code>, see section on measure identifiers in<br /><code>Telemetry.measures</code>.</p>",
+      "summary": "<p>Get a human readable description of the measure in this histogram.</p>",
+      "body": "<p>This is the same description as offered by <code>Telemetry.measures</code>, it is<br />defined in <code>Histograms.json</code>, see section on measure identifiers in<br /><code>Telemetry.measures</code>.</p>"
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.description = function() {\n  return this._spec.description;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "description",
+      "string": "HistogramEvolution.prototype.description()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Name of filter available, <code>null</code> if no filter is available.</p>\n\n<pre><code>// Check to see if a filter is available, assuming histogramEvolution is\n// an instance of HistogramEvolution\nvar filterName = histogramEvolution.filterName();\nif (filterName !== null) {\n  alert(\"Current filter available: \" + filterName);\n} else {\n  alert(\"No filter available!\");\n}\n</code></pre>\n\n<p>The aggregated histograms are stored in a filter tree, you can apply one<br />filter at the time <em>drilling down</em> the aggregated data. Each application of<br />a filter returns a new <code>HistogramEvolution</code> instance.</p>\n\n<p>You should <strong>always</strong> use <code>filterName</code> and <code>filterOptions</code> get name of the<br />next filter, if any, and available filter options, if any. But as of writing<br />filters offered are:</p>\n\n<ol>\n<li><code>'reason'</code>, reason for telemetry ping submission (e.g. <code>'session_saved'</code>)</li>\n<li><code>'appName'</code>, application name (e.g. <code>'Firefox'</code>)</li>\n<li><code>'OS'</code>, operation system (e.g. <code>'Linux'</code>)</li>\n<li><code>'osVersion'</code>, operation system version (e.g. <code>'3.2'</code>)</li>\n<li><code>'arch'</code>, architecture (e.g. <code>'x86-64'</code>)</li>\n</ol>\n\n<p><strong>Warning</strong> filter availability, ordering may change at any time,<br /><code>telemetry.js</code> offers a stable API to interface them through <code>filterName</code>,<br /><code>filterOptions</code> and <code>filter</code>, use these instead of hardcoding your filters!</p>",
+      "summary": "<p>Name of filter available, <code>null</code> if no filter is available.</p>",
+      "body": "<pre><code>// Check to see if a filter is available, assuming histogramEvolution is\n// an instance of HistogramEvolution\nvar filterName = histogramEvolution.filterName();\nif (filterName !== null) {\n  alert(\"Current filter available: \" + filterName);\n} else {\n  alert(\"No filter available!\");\n}\n</code></pre>\n\n<p>The aggregated histograms are stored in a filter tree, you can apply one<br />filter at the time <em>drilling down</em> the aggregated data. Each application of<br />a filter returns a new <code>HistogramEvolution</code> instance.</p>\n\n<p>You should <strong>always</strong> use <code>filterName</code> and <code>filterOptions</code> get name of the<br />next filter, if any, and available filter options, if any. But as of writing<br />filters offered are:</p>\n\n<ol>\n<li><code>'reason'</code>, reason for telemetry ping submission (e.g. <code>'session_saved'</code>)</li>\n<li><code>'appName'</code>, application name (e.g. <code>'Firefox'</code>)</li>\n<li><code>'OS'</code>, operation system (e.g. <code>'Linux'</code>)</li>\n<li><code>'osVersion'</code>, operation system version (e.g. <code>'3.2'</code>)</li>\n<li><code>'arch'</code>, architecture (e.g. <code>'x86-64'</code>)</li>\n</ol>\n\n<p><strong>Warning</strong> filter availability, ordering may change at any time,<br /><code>telemetry.js</code> offers a stable API to interface them through <code>filterName</code>,<br /><code>filterOptions</code> and <code>filter</code>, use these instead of hardcoding your filters!</p>"
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.filterName = function() {\n  return this._filter_tree.name || null;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "filterName",
+      "string": "HistogramEvolution.prototype.filterName()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>List of options available for current filter, empty list if none or no filter<br />is available.</p>\n\n<p>Each option is a string, for example the <code>'reason'</code> filter will as of writing<br />offer options <code>'idle_daily'</code> and <code>'saved_session'</code>.<br />You may pass an option to <code>HistogramEvolution.filter</code> if you want to filter<br />by it or, as in this example, show options to the user.</p>\n\n<pre><code>// Present user with filter options available, if filter is available\nif (histogramEvolution.filterName() !== null) {\n  var options = histogramEvolution.filterOptions();\n  alert(\"Available filter options: \" + options.join(\", \"));\n}\n</code></pre>\n\n<p><strong>Warning</strong> filter options names changes based submission, do not hard code<br />these, if you want to <em>drill down</em> to your interesting segment, do create<br />an automatic strategy for doing so based on substrings with fall-back to<br />something sane. When, filtering you should <strong>always</strong> use a value returned<br />by this method. Otherwise, your application may break in the future, filter<br />option names will change over time.</p>",
+      "summary": "<p>List of options available for current filter, empty list if none or no filter<br />is available.</p>",
+      "body": "<p>Each option is a string, for example the <code>'reason'</code> filter will as of writing<br />offer options <code>'idle_daily'</code> and <code>'saved_session'</code>.<br />You may pass an option to <code>HistogramEvolution.filter</code> if you want to filter<br />by it or, as in this example, show options to the user.</p>\n\n<pre><code>// Present user with filter options available, if filter is available\nif (histogramEvolution.filterName() !== null) {\n  var options = histogramEvolution.filterOptions();\n  alert(\"Available filter options: \" + options.join(\", \"));\n}\n</code></pre>\n\n<p><strong>Warning</strong> filter options names changes based submission, do not hard code<br />these, if you want to <em>drill down</em> to your interesting segment, do create<br />an automatic strategy for doing so based on substrings with fall-back to<br />something sane. When, filtering you should <strong>always</strong> use a value returned<br />by this method. Otherwise, your application may break in the future, filter<br />option names will change over time.</p>"
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.filterOptions = function() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "filterOptions",
+      "string": "HistogramEvolution.prototype.filterOptions()"
+    }
+  },
+  {
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "String"
+        ],
+        "name": "option",
+        "description": "Option you want result filter by."
+      }
+    ],
+    "description": {
+      "full": "<p>Get a <code>HistogramEvolution</code> instance filtered by <code>option</code>.</p>\n\n<p>The <code>option</code> parameter <strong>must</strong> be a string returned by the <code>filterOptions</code><br />method on this object. It may be tempting to hard code these options, but<br />this <strong>not</strong> recommended, as available options may change at any time.<br />Instead use <code>filterOptions</code> to query for available options, and pick one.</p>\n\n<p>If you filter the a <code>HistogramEvolution</code> instance by two different options,<br />you should get two disjoint aggregates. The following example demonstrates<br />this feature, as the number of submissions in each filtered result must sum<br />up to the number of submissions in the unfiltered aggregated histogram.</p>\n\n<pre><code>// Loop over all available filter options\nhistogramEvolution.filterOptions().forEach(function(option) {\n  // Filter by option, returning a new HistogramEvolution instance\n  var filteredHistogramEvolution = histogramEvolution.filter(option);\n\n  // Get aggregated histogram for all dates in filtered histogram\n  // evolution as obtained above\n  var filteredHistogram = filteredHistogramEvolution.range();\n\n  // Get submissions from aggregated (and filtered) histogram\n  var submissions = filterHistogram.submissions();\n  console.log(option + \" has \" + submissions + \" submissions\");\n});\n\n// Get aggregated (unfiltered) histogram\nvar histogram = histogramEvolution.range();\nvar submissions = histogram.submissions();\nconsole.log(\"In total: \" + submissions + \" submissions\");\n</code></pre>\n\n<p><strong>Remark</strong> this method will not modify the existing <code>HistogramEvolution</code><br />instance, but return a new instance of <code>HistogramEvolution</code> filtered by the<br />given <code>option</code>.</p>",
+      "summary": "<p>Get a <code>HistogramEvolution</code> instance filtered by <code>option</code>.</p>",
+      "body": "<p>The <code>option</code> parameter <strong>must</strong> be a string returned by the <code>filterOptions</code><br />method on this object. It may be tempting to hard code these options, but<br />this <strong>not</strong> recommended, as available options may change at any time.<br />Instead use <code>filterOptions</code> to query for available options, and pick one.</p>\n\n<p>If you filter the a <code>HistogramEvolution</code> instance by two different options,<br />you should get two disjoint aggregates. The following example demonstrates<br />this feature, as the number of submissions in each filtered result must sum<br />up to the number of submissions in the unfiltered aggregated histogram.</p>\n\n<pre><code>// Loop over all available filter options\nhistogramEvolution.filterOptions().forEach(function(option) {\n  // Filter by option, returning a new HistogramEvolution instance\n  var filteredHistogramEvolution = histogramEvolution.filter(option);\n\n  // Get aggregated histogram for all dates in filtered histogram\n  // evolution as obtained above\n  var filteredHistogram = filteredHistogramEvolution.range();\n\n  // Get submissions from aggregated (and filtered) histogram\n  var submissions = filterHistogram.submissions();\n  console.log(option + \" has \" + submissions + \" submissions\");\n});\n\n// Get aggregated (unfiltered) histogram\nvar histogram = histogramEvolution.range();\nvar submissions = histogram.submissions();\nconsole.log(\"In total: \" + submissions + \" submissions\");\n</code></pre>\n\n<p><strong>Remark</strong> this method will not modify the existing <code>HistogramEvolution</code><br />instance, but return a new instance of <code>HistogramEvolution</code> filtered by the<br />given <code>option</code>.</p>"
+    },
+    "isPrivate": false,
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {\n  if (!(this._filter_tree[opt] instanceof Object)) {\n    throw new Error(\"filter option: \\\"\" + opt +\"\\\" is not available\");\n  }\n  return new HistogramEvolution(\n    this._measure,\n    this._filter_path.concat(opt),\n    this._data,\n    this._filter_tree[opt],\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "filter",
+      "string": "HistogramEvolution.prototype.filter()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
+      "summary": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "range",
+      "string": "HistogramEvolution.prototype.range()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the list of dates in the evolution sorted by date</p>",
+      "summary": "<p>Get the list of dates in the evolution sorted by date</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(_parseDateString(date));\n  }\n  return dates.sort();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "dates",
+      "string": "HistogramEvolution.prototype.dates()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Invoke cb(date, histogram, index) with each date, histogram pair, ordered by<br />date. Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "summary": "<p>Invoke cb(date, histogram, index) with each date, histogram pair, ordered by<br />date. Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {\n  // Set this as context if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Find and sort all date strings\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(date);\n  }\n  dates.sort();\n\n  // Find filter ids\n  var filterIds = _listFilterIds(this._filter_tree);\n\n  // Auxiliary function to filter data arrays by filter_id\n  function filterByFilterId(data_array) {\n      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];\n      return filterIds.indexOf(filterId) != -1;\n  }\n\n  // Pair index, this is not equal to i as we may have filtered something out\n  var index = 0;\n\n  // Now invoke cb with each histogram\n  var n = dates.length;\n  for(var i = 0; i < n; i++) {\n    // Get dataset for date\n    var dataset = this._data[dates[i]];\n\n    // Filter for data_arrays with relevant filterId\n    dataset = dataset.filter(filterByFilterId);\n\n    // Skip this date if there was not data_array after filtering as applied\n    if (dataset.length === 0) {\n      continue;\n    }\n\n    // Invoke callback with date and histogram\n    cb.call(\n      ctx,\n      _parseDateString(dates[i]),\n      new Telemetry.Histogram(\n        this._measure,\n        this._filter_path,\n        this._buckets,\n        dataset,\n        this._filter_tree,\n        this._spec\n      ),\n      index++\n    );\n  }\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "each",
+      "string": "HistogramEvolution.prototype.each()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Returns a date ordered array of results from invocation of <br />cb(date, histogram, index) for each date, histogram pair.<br />Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "summary": "<p>Returns a date ordered array of results from invocation of <br />cb(date, histogram, index) for each date, histogram pair.<br />Note, if provided cb() will be invoked with ctx as this argument.</p>",
+      "body": ""
+    },
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {\n  // Set this as context if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Return value array\n  var results = [];\n\n  // For each date, histogram pair invoke cb() and add result to results\n  this.each(function(date, histogram, index) {\n    results.push(cb.call(ctx, date, histogram, index));\n  });\n\n  // Return array of computed values\n  return results;\n};\n\nreturn HistogramEvolution;\n\n})();",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "map",
+      "string": "HistogramEvolution.prototype.map()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Representation of histogram under possible filter application</p>\n\n<p><strong>Remark</strong> both <code>loadEvolutionOverBuilds</code> and <code>loadEvolutionOverTime</code> will<br />provide a instance of <code>HistogramEvolution</code>, but dates in the instances<br />represents build dates and ping submission dates, respectively.</p>",
+      "summary": "<p>Representation of histogram under possible filter application</p>",
+      "body": "<p><strong>Remark</strong> both <code>loadEvolutionOverBuilds</code> and <code>loadEvolutionOverTime</code> will<br />provide a instance of <code>HistogramEvolution</code>, but dates in the instances<br />represents build dates and ping submission dates, respectively.</p>"
     },
     "ignore": false,
     "code": "Telemetry.Histogram = (function(){",
@@ -473,250 +767,18 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Returns a bucket ordered array of results from invocation of <br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
-      "summary": "<p>Returns a bucket ordered array of results from invocation of <br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
+      "full": "<p>Returns a bucket ordered array of results from invocation of<br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
+      "summary": "<p>Returns a bucket ordered array of results from invocation of<br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
       "body": ""
     },
     "ignore": false,
-    "code": "Histogram.prototype.map = function Histogram_map(cb, context) {\n  // Set context if none is provided\n  if (context === undefined) {\n    context = this;\n  }\n\n  // Array of return values\n  var results = [];\n\n  // For each, invoke cb and push the result\n  this.each(function(count, start, end, index) {\n    results.push(cb.call(context, count, start, end, index));\n  });\n\n  // Return values from cb\n  return results;\n};\n\nreturn Histogram;\n\n})();",
+    "code": "Histogram.prototype.map = function Histogram_map(cb, context) {\n  // Set context if none is provided\n  if (context === undefined) {\n    context = this;\n  }\n\n  // Array of return values\n  var results = [];\n\n  // For each, invoke cb and push the result\n  this.each(function(count, start, end, index) {\n    results.push(cb.call(context, count, start, end, index));\n  });\n\n  // Return values from cb\n  return results;\n};\n\nreturn Histogram;\n\n})();\n\nexports.Telemetry = Telemetry;\nreturn exports.Telemetry;\n\n})(this);",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",
       "cons": "Histogram",
       "name": "map",
       "string": "Histogram.prototype.map()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Representation of histogram changes over time</p>",
-      "summary": "<p>Representation of histogram changes over time</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "Telemetry.HistogramEvolution = (function(){",
-    "ctx": {
-      "type": "property",
-      "receiver": "Telemetry",
-      "name": "HistogramEvolution",
-      "value": "(function(){",
-      "string": "Telemetry.HistogramEvolution"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Auxiliary function to parse a date string from JSON data format</p>",
-      "summary": "<p>Auxiliary function to parse a date string from JSON data format</p>",
-      "body": ""
-    },
-    "ignore": true,
-    "code": "function _parseDateString(d) {\n  return new Date(d.substr(0,4) + \"/\" + d.substr(4,2) + \"/\"+ d.substr(6,2));\n}",
-    "ctx": {
-      "type": "function",
-      "name": "_parseDateString",
-      "string": "_parseDateString()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Auxiliary function to compute all bucket ends from a specification<br />This returns a list [b0, b1, ..., bn] where b0 is the separator value between<br />entries in bucket index 0 and bucket index 1. Such that all values less than<br />b0 was counted in bucket 0, values greater than counted in bucket 1.</p>",
-      "summary": "<p>Auxiliary function to compute all bucket ends from a specification<br />This returns a list [b0, b1, ..., bn] where b0 is the separator value between<br />entries in bucket index 0 and bucket index 1. Such that all values less than<br />b0 was counted in bucket 0, values greater than counted in bucket 1.</p>",
-      "body": ""
-    },
-    "ignore": true,
-    "code": "function _computeBuckets(spec){\n  // Find bounds from specification\n  var low = 1, high, nbuckets;\n  if(spec.kind == 'boolean' || spec.kind == 'flag') {\n    // This is how boolean bucket indexes are generated in mozilla-central we\n    // might look into whether or not there is a bug, as it seems rather weird\n    // that boolean histograms have 3 buckets.\n    high      = 2;\n    nbuckets  = 3;\n  } else if (spec.kind == 'enumerated') {\n    high      = eval(spec.n_values);\n    nbuckets  = eval(spec.n_values) + 1;\n  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {\n    low       = eval(spec.low) || 1;\n    high      = eval(spec.high);\n    nbuckets  = eval(spec.n_buckets)\n  }\n  // Compute buckets\n  var buckets = null;\n  if(spec.kind == 'exponential') {\n    // Exponential buckets is a special case\n    var log_max = Math.log(high);\n    buckets = [0, low];\n    var current = low;\n    for(var i = 2; i < nbuckets; i++) {\n      var log_current = Math.log(current);\n      var log_ratio   = (log_max - log_current) / (nbuckets - i);\n      var log_next    = log_current + log_ratio;\n      var next_value  = Math.floor(Math.exp(log_next) + 0.5);\n      if (next_value > current) {\n        current = next_value;\n      } else {\n        current = current + 1;\n      }\n      buckets.push(current);\n    }\n  } else {\n    // Linear buckets are computed as follows\n    buckets = [0];\n    for(var i = 1; i < nbuckets; i++) {\n      var range = (low * (nbuckets - 1 - i) + high * (i - 1));\n      buckets[i] = (Math.floor(range / (nbuckets - 2) + 0.5));\n    }\n  }\n  return buckets;\n}",
-    "ctx": {
-      "type": "function",
-      "name": "_computeBuckets",
-      "string": "_computeBuckets()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Create a histogram evolution, where<br /> - measure       is the name of this histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - data          is the JSON data loaded from file,<br /> - filter_tree   is the filter_tree root, and<br /> - spec          is the histogram specification.</p>",
-      "summary": "<p>Create a histogram evolution, where<br /> - measure       is the name of this histogram,<br /> - filter_path   is a list of [name, date-range, filter1, filter2...]<br /> - data          is the JSON data loaded from file,<br /> - filter_tree   is the filter_tree root, and<br /> - spec          is the histogram specification.</p>",
-      "body": ""
-    },
-    "ignore": true,
-    "code": "function HistogramEvolution(measure, filter_path, data, filter_tree, spec) {\n  this._measure     = measure\n  this._filter_path = filter_path;\n  this._data        = data;\n  this._filter_tree = filter_tree;\n  this._spec        = spec;\n  this._buckets     = _computeBuckets(spec);\n}",
-    "ctx": {
-      "type": "function",
-      "name": "HistogramEvolution",
-      "string": "HistogramEvolution()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get the histogram measure</p>",
-      "summary": "<p>Get the histogram measure</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.measure = function HistogramEvolution_measure() {\n  return this._measure;\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "measure",
-      "string": "HistogramEvolution.prototype.measure()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get the histogram kind</p>",
-      "summary": "<p>Get the histogram kind</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {\n  return this._spec.kind;\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "kind",
-      "string": "HistogramEvolution.prototype.kind()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get a description of the measure in this histogram</p>",
-      "summary": "<p>Get a description of the measure in this histogram</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.description = function() {\n  return this._spec.description;\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "description",
-      "string": "HistogramEvolution.prototype.description()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get new HistogramEvolution representation filtered with option</p>",
-      "summary": "<p>Get new HistogramEvolution representation filtered with option</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {\n  if (!(this._filter_tree[opt] instanceof Object)) {\n    throw new Error(\"filter option: \\\"\" + opt +\"\\\" is not available\");\n  }\n  return new HistogramEvolution(\n    this._measure,\n    this._filter_path.concat(opt),\n    this._data,\n    this._filter_tree[opt],\n    this._spec\n  );\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "filter",
-      "string": "HistogramEvolution.prototype.filter()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Name of filter available, null if none</p>",
-      "summary": "<p>Name of filter available, null if none</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.filterName = function() {\n  return this._filter_tree.name || null;\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "filterName",
-      "string": "HistogramEvolution.prototype.filterName()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>List of options available for current filter</p>",
-      "summary": "<p>List of options available for current filter</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.filterOptions = function() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "filterOptions",
-      "string": "HistogramEvolution.prototype.filterOptions()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
-      "summary": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "range",
-      "string": "HistogramEvolution.prototype.range()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get the list of dates in the evolution sorted by date</p>",
-      "summary": "<p>Get the list of dates in the evolution sorted by date</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(_parseDateString(date));\n  }\n  return dates.sort();\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "dates",
-      "string": "HistogramEvolution.prototype.dates()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Invoke cb(date, histogram, index) with each date, histogram pair, ordered by<br />date. Note, if provided cb() will be invoked with ctx as this argument.</p>",
-      "summary": "<p>Invoke cb(date, histogram, index) with each date, histogram pair, ordered by<br />date. Note, if provided cb() will be invoked with ctx as this argument.</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {\n  // Set this as context if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Find and sort all date strings\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(date);\n  }\n  dates.sort();\n\n  // Find filter ids\n  var filterIds = _listFilterIds(this._filter_tree);\n\n  // Auxiliary function to filter data arrays by filter_id\n  function filterByFilterId(data_array) {\n      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];\n      return filterIds.indexOf(filterId) != -1;\n  }\n\n  // Pair index, this is not equal to i as we may have filtered something out\n  var index = 0;\n\n  // Now invoke cb with each histogram\n  var n = dates.length;\n  for(var i = 0; i < n; i++) {\n    // Get dataset for date\n    var dataset = this._data[dates[i]];\n\n    // Filter for data_arrays with relevant filterId\n    dataset = dataset.filter(filterByFilterId);\n\n    // Skip this date if there was not data_array after filtering as applied\n    if (dataset.length === 0) {\n      continue;\n    }\n\n    // Invoke callback with date and histogram\n    cb.call(\n      ctx,\n      _parseDateString(dates[i]),\n      new Telemetry.Histogram(\n        this._measure,\n        this._filter_path,\n        this._buckets,\n        dataset,\n        this._filter_tree,\n        this._spec\n      ),\n      index++\n    );\n  }\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "each",
-      "string": "HistogramEvolution.prototype.each()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Returns a date ordered array of results from invocation of <br />cb(date, histogram, index) for each date, histogram pair.<br />Note, if provided cb() will be invoked with ctx as this argument.</p>",
-      "summary": "<p>Returns a date ordered array of results from invocation of <br />cb(date, histogram, index) for each date, histogram pair.<br />Note, if provided cb() will be invoked with ctx as this argument.</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {\n  // Set this as context if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Return value array\n  var results = [];\n\n  // For each date, histogram pair invoke cb() and add result to results\n  this.each(function(date, histogram, index) {\n    results.push(cb.call(ctx, date, histogram, index));\n  });\n\n  // Return array of computed values\n  return results;\n};\n\nreturn HistogramEvolution;\n\n})();\n\nexports.Telemetry = Telemetry;\nreturn exports.Telemetry;\n\n})(this);",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "map",
-      "string": "HistogramEvolution.prototype.map()"
     }
   }
 ]

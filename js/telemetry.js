@@ -49,6 +49,14 @@ function _get(path, cb) {
  * You cannot use any of the methods in the `Telemetry` module before you have
  * initialized the module with this function.
  *
+ *     Telemetry.init(function(){
+ *       // You can now use telemetry.js
+ *       alert("Versions available: "Telemetry.versions().join(','));
+ *     });
+ *
+ * Once you've initialized `telemetry.js` you'll want to lookup available
+ * channel, version combinations using `Telemetry.versions()`.
+ *
  * @param {Function}  cb      Callback to be invoked after loading
  */
 Telemetry.init = function Telemetry_load(cb) {
@@ -61,15 +69,17 @@ Telemetry.init = function Telemetry_load(cb) {
 };
 
 /**
- * Get list of channel, version combinations available. This function returns
+ * Get a list of channel, version combinations available. This function returns
  * a list of strings on the form `'<channel>/<version>'`.
  *
  * **Example:**
  *
- *         ['release/24', 'release/25', 'release/26', ..., 'nightly/28']
+ *     Telemetry.versions()
+ *     ['release/24', 'release/25', 'release/26', ..., 'nightly/28']
  *
  * The strings returned here can be passed to `Telemetry.measures()` in order
  * to get a list of measures available for the specific channel and version.
+ * See, `Telemetry.measures()` for callback details.
  */
 Telemetry.versions = function Telemetry_versions() {
   if (_versions === null) {
@@ -85,14 +95,38 @@ Telemetry.versions = function Telemetry_versions() {
  * will be invoked as `cb(measures)` where `measures` a dictionary on the
  * following form:
  *
- *         {
- *            "A_TELEMETRY_MEASURE_ID": {
- *              kind:         "linear|exponential|flag|enumerated|boolean",
- *              description:  "A human readable description"
- *            },
- *            ...
- *          }
- * 
+ *     {
+ *       "A_TELEMETRY_MEASURE_ID": {
+ *         kind:         "linear|exponential|flag|enumerated|boolean",
+ *         description:  "A human readable description"
+ *       },
+ *       ...
+ *     }
+ *
+ * The following example prints all _exponential_ measures for nightly 25,
+ * assuming the string `'nightly/25'` is in the list returned by
+ * `Telemetry.versions()`.
+ *
+ *     Telemetry.measures('nightly/25', function(measures) {
+ *       for(var measure in measures) {
+ *         if(measures[measure].kind == 'exponential') {
+ *           // Log the measure id
+ *           console.log(measure);
+ *         }
+ *       }
+ *     });
+ *
+ * ### Measure Identifiers
+ * The measure id's are all in UPPER case like `A_TELEMETRY_MEASURE_ID`, along
+ * with the selected `'<channel>/<version>'` string these can be provide to
+ * `Telemetry.loadEvolutionOverBuilds` and `Telemetry.loadEvolutionOverTime` to
+ * load histogram data sets.
+ *
+ * The measure ids with some exceptions lives in the tree along with definitions
+ * and descriptions, see `toolkit/components/telemetry/Histograms.json`.
+ * **Do not** use this `Histograms.json` in consumers of `telemetry.js`, all the
+ * is carefully included and merged to account for changing revisions.
+ *
  * @param {String}    channel_version   Channel/version string
  * @param {Function}  cb                Callback to be invoked with result
  */
@@ -116,11 +150,43 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
 };
 
 /**
- * Request HistogramEvolution instance over builds for a given channel/version
- * and measure, once fetched cb(histogramEvolution) will be invoked with the 
- * HistogramEvolution instance. The dates in the HistogramEvolution instance
- * fetched will be build dates, not telemetry ping submission dates.
- * Note, measure must be a valid measure identifier from Telemetry.measures()
+ * Load a `Telemetry.HistogramEvolution` instance for a given channel, version
+ * and measure. The `HistogramEvolution` instance will hold a collection of
+ * `Histograms` over **build dates**. Use this function if you're interested in
+ * the evolution of a histogram over different build ids, but notice that
+ * **build ids are reduced to dates**. Hence, you cannot lookup a specific
+ * build id - but for most channels there should only be one per day.
+ *
+ * If you don't care about evolution of the histogram over builds, but just the
+ * aggregated histogram over all time or a histogram for a specific build date.
+ * This is also the function you should use to load it, then call
+ * `HistogramEvolution.range()` without any parameters to get an aggregated
+ * `Histogram` instance over all builds.
+ *
+ * The `channel_version` parameter must be a string on the form
+ * `'<channel>/<version>'` obtained from `Telemetry.versions()`. The `measure`
+ * parameter, most be a measure identifier obtained using
+ * `Telemetry.measures(channel_version, ...)`. To load the `'CYCLE_COLLECTOR'`
+ * measure for nightly 25, proceed as follows:
+ *
+ *     Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',
+ *                                       function(histogramEvolution) {
+ *       // See HistogramEvolution for how to read data, for example we can
+ *       // the build dates available as follows
+ *       console.log(histogramEvolution.dates());
+ *     });
+ *
+ * **Remark** all telemetry pings for the given channel, version and measure are
+ * aggregated in the `HistogramEvolution` instance obtained through
+ * `loadEvolutionOverBuilds`. This is not the case for `loadEvolutionOverTime`.
+ * The six week release cycle ensures that number of build dates is fairly
+ * limited. However, this is not the case for submissions dates, as not all
+ * Firefox users updates immediately. **Thus** if you just want the histogram
+ * **aggregated for all builds**, you should use `loadEvolutionOverBuilds`.
+ *
+ * @param {String}    channel_version   Channel/version string
+ * @param {String}    measure           Measure identifier
+ * @param {Function}  cb                Callback to be invoked with result
  */
 Telemetry.loadEvolutionOverBuilds = function(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
@@ -160,11 +226,28 @@ Telemetry.loadEvolutionOverBuilds = function(channel_version, measure, cb) {
 };
 
 /**
- * Request HistogramEvolution instance over time for a given channel/version
- * and measure, once fetched cb(histogramEvolution) will be invoked with the
- * HistogramEvolution instance. The dates in the HistogramEvolution instance
- * fetched will be telemetry ping submission dates.
- * Note, measure must be a valid measure identifier from Telemetry.measures()
+ * Load a `Telemetry.HistogramEvolution` instance for a given channel, version
+ * and measure. The `HistogramEvolution` instance will hold a collection of
+ * `Histograms` over _calendar dates_. **Do only** use this function if you're
+ * interested in the **evolution of the internet**! It can ofcourse be useful
+ * to see if measures differ because of changes in the platform or changes in
+ * the internet.
+ *
+ * If you don't care about evolution of the histogram over time, but just the
+ * aggregated histogram over all time, you should **not use this function**.
+ * Use `loadEvolutionOverBuilds` for this purpose!
+ *
+ * Only the first 60 days following the build date will be aggregated in
+ * `HistogramEvolution` instances obtained through `loadEvolutionOverTime`.
+ * As noted in "Remark" for `loadEvolutionOverBuilds` this is not the case for
+ * that `HistogramEvolution` instances loaded through `loadEvolutionOverBuilds`.
+ *
+ * See `loadEvolutionOverBuilds` for example usage, the parameters are
+ * equivalent. You can use the same parameters for both of them.
+ *
+ * @param {String}    channel_version   Channel/version string
+ * @param {String}    measure           Measure identifier
+ * @param {Function}  cb                Callback to be invoked with result
  */
  Telemetry.loadEvolutionOverTime = function(channel_version, measure, cb) {
   // Number of files to load, and what to do when done
@@ -229,7 +312,419 @@ var DataOffsets = {
   FILTER_ID:      -1    // Added in results2disk.py
 };
 
-/** Representation of histogram under possible filter application */
+/**
+ * A `HistogramEvolution` instance is a collection of histograms over dates.
+ * These _dates_ can be either build dates or submission dates, depending on
+ * whether `loadEvolutionOverBuilds` or `loadEvolutionOverTime` was used to
+ * obtained the `HistogramEvolution` instance. For an example of how to obtain
+ * an instance of this type see `loadEvolutionOverBuilds`.
+ *
+ * When you have a `HistogramEvolution` instance, you can `filter` it by
+ * available `filterOptions`. You can iterate over dates and histograms with
+ * `each`, or aggregated histograms between dates with `range`. If you don't
+ * care about dates and just want an aggregated histogram for all dates, you
+ * can call `range()` with no arguments, interpreted as the open ended interval.
+ * Which in this example prints the total number of submissions aggregated.
+ *
+ *     Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',
+ *                                       function(histogramEvolution) {
+ *       // Get submissions from a histogram aggregated over all dates
+ *       // in the HistogramEvolution instance
+ *       var histogram = histogramEvolution.range();
+ *       console.log(histogram.submissions());
+ *     });
+ *
+ *
+ * **Note** that when you have obtained an instance of `HistogramEvolution` all
+ * operations on this instance and any objects created by it are synchronous
+ * and doesn't require any network communication.
+ */
+Telemetry.HistogramEvolution = (function(){
+
+/*! Auxiliary function to parse a date string from JSON data format */
+function _parseDateString(d) {
+  return new Date(d.substr(0,4) + "/" + d.substr(4,2) + "/"+ d.substr(6,2));
+}
+
+/*!
+ * Auxiliary function to compute all bucket ends from a specification
+ * This returns a list [b0, b1, ..., bn] where b0 is the separator value between
+ * entries in bucket index 0 and bucket index 1. Such that all values less than
+ * b0 was counted in bucket 0, values greater than counted in bucket 1.
+ */
+function _computeBuckets(spec){
+  // Find bounds from specification
+  var low = 1, high, nbuckets;
+  if(spec.kind == 'boolean' || spec.kind == 'flag') {
+    // This is how boolean bucket indexes are generated in mozilla-central we
+    // might look into whether or not there is a bug, as it seems rather weird
+    // that boolean histograms have 3 buckets.
+    high      = 2;
+    nbuckets  = 3;
+  } else if (spec.kind == 'enumerated') {
+    high      = eval(spec.n_values);
+    nbuckets  = eval(spec.n_values) + 1;
+  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {
+    low       = eval(spec.low) || 1;
+    high      = eval(spec.high);
+    nbuckets  = eval(spec.n_buckets)
+  }
+  // Compute buckets
+  var buckets = null;
+  if(spec.kind == 'exponential') {
+    // Exponential buckets is a special case
+    var log_max = Math.log(high);
+    buckets = [0, low];
+    var current = low;
+    for(var i = 2; i < nbuckets; i++) {
+      var log_current = Math.log(current);
+      var log_ratio   = (log_max - log_current) / (nbuckets - i);
+      var log_next    = log_current + log_ratio;
+      var next_value  = Math.floor(Math.exp(log_next) + 0.5);
+      if (next_value > current) {
+        current = next_value;
+      } else {
+        current = current + 1;
+      }
+      buckets.push(current);
+    }
+  } else {
+    // Linear buckets are computed as follows
+    buckets = [0];
+    for(var i = 1; i < nbuckets; i++) {
+      var range = (low * (nbuckets - 1 - i) + high * (i - 1));
+      buckets[i] = (Math.floor(range / (nbuckets - 2) + 0.5));
+    }
+  }
+  return buckets;
+}
+
+/*!
+ * Create a histogram evolution, where
+ *  - measure       is the name of this histogram,
+ *  - filter_path   is a list of [name, date-range, filter1, filter2...]
+ *  - data          is the JSON data loaded from file,
+ *  - filter_tree   is the filter_tree root, and
+ *  - spec          is the histogram specification.
+ */
+function HistogramEvolution(measure, filter_path, data, filter_tree, spec) {
+  this._measure     = measure
+  this._filter_path = filter_path;
+  this._data        = data;
+  this._filter_tree = filter_tree;
+  this._spec        = spec;
+  this._buckets     = _computeBuckets(spec);
+}
+
+/**
+ * Get the measure for histograms in this `HistogramEvolution` instance.
+ *
+ * This is the measure id given when this instance was created by either
+ * `loadEvolutionOverBuilds` or `loadEvolutionOverTime`. You'll also find this
+ * measure id in the results obtained from `Telemetry.measures`.
+ *
+ * See `Telemetry.measures` for more information on measure ids.
+ */
+HistogramEvolution.prototype.measure = function HistogramEvolution_measure() {
+  return this._measure;
+};
+
+/**
+ * Get the histogram kind, possible histogram kinds are:
+ *
+ *   * `'linear'`
+ *   * `'exponential'`
+ *   * `'flag'`
+ *   * `'enumerated'`
+ *   * `'boolean'`
+ *
+ * **Notice** some methods will throw exceptions if used on a histogram with an
+ * unsupported _"kind"_. For example it doesn't make sense to estimate
+ * percentiles for boolean histograms, and doing so will throw an exception.
+ *
+ *     // Create a plot of 25'th percentile, if we have 'linear' histogram.
+ *     var data_points = null;
+ *     if(histogramEvolution.kind() == 'linear') {
+ *       data_points = histogramEvolution.map(function(date, histogram, index) {
+ *         return {x: date.getTime(), y: histogram.percentile(25)};
+ *       });
+ *     }
+ *
+ */
+HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
+  return this._spec.kind;
+};
+
+/**
+ * Get a human readable description of the measure in this histogram.
+ *
+ * This is the same description as offered by `Telemetry.measures`, it is
+ * defined in `Histograms.json`, see section on measure identifiers in
+ * `Telemetry.measures`.
+ */
+HistogramEvolution.prototype.description = function() {
+  return this._spec.description;
+};
+
+/**
+ * Name of filter available, `null` if no filter is available.
+ *
+ *     // Check to see if a filter is available, assuming histogramEvolution is
+ *     // an instance of HistogramEvolution
+ *     var filterName = histogramEvolution.filterName();
+ *     if (filterName !== null) {
+ *       alert("Current filter available: " + filterName);
+ *     } else {
+ *       alert("No filter available!");
+ *     }
+ *
+ * The aggregated histograms are stored in a filter tree, you can apply one
+ * filter at the time _drilling down_ the aggregated data. Each application of
+ * a filter returns a new `HistogramEvolution` instance.
+ *
+ * You should **always** use `filterName` and `filterOptions` get name of the
+ * next filter, if any, and available filter options, if any. But as of writing
+ * filters offered are:
+ *
+ *  1. `'reason'`, reason for telemetry ping submission (e.g. `'session_saved'`)
+ *  2. `'appName'`, application name (e.g. `'Firefox'`)
+ *  3. `'OS'`, operation system (e.g. `'Linux'`)
+ *  4. `'osVersion'`, operation system version (e.g. `'3.2'`)
+ *  5. `'arch'`, architecture (e.g. `'x86-64'`)
+ *
+ * **Warning** filter availability, ordering may change at any time,
+ * `telemetry.js` offers a stable API to interface them through `filterName`,
+ * `filterOptions` and `filter`, use these instead of hardcoding your filters!
+ */
+HistogramEvolution.prototype.filterName = function() {
+  return this._filter_tree.name || null;
+};
+
+/**
+ * List of options available for current filter, empty list if none or no filter
+ * is available.
+ *
+ * Each option is a string, for example the `'reason'` filter will as of writing
+ * offer options `'idle_daily'` and `'saved_session'`.
+ * You may pass an option to `HistogramEvolution.filter` if you want to filter
+ * by it or, as in this example, show options to the user.
+ *
+ *     // Present user with filter options available, if filter is available
+ *     if (histogramEvolution.filterName() !== null) {
+ *       var options = histogramEvolution.filterOptions();
+ *       alert("Available filter options: " + options.join(", "));
+ *     }
+ *
+ * **Warning** filter options names changes based submission, do not hard code
+ * these, if you want to _drill down_ to your interesting segment, do create
+ * an automatic strategy for doing so based on substrings with fall-back to
+ * something sane. When, filtering you should **always** use a value returned
+ * by this method. Otherwise, your application may break in the future, filter
+ * option names will change over time.
+ */
+HistogramEvolution.prototype.filterOptions = function() {
+  var options = [];
+  for (var key in this._filter_tree) {
+    if (key != "name" && key != "_id") {
+      options.push(key);
+    }
+  }
+  return options.sort();
+};
+
+/**
+ * Get a `HistogramEvolution` instance filtered by `option`.
+ *
+ * The `option` parameter **must** be a string returned by the `filterOptions`
+ * method on this object. It may be tempting to hard code these options, but
+ * this **not** recommended, as available options may change at any time.
+ * Instead use `filterOptions` to query for available options, and pick one.
+ *
+ * If you filter the a `HistogramEvolution` instance by two different options,
+ * you should get two disjoint aggregates. The following example demonstrates
+ * this feature, as the number of submissions in each filtered result must sum
+ * up to the number of submissions in the unfiltered aggregated histogram.
+ *
+ *     // Loop over all available filter options
+ *     histogramEvolution.filterOptions().forEach(function(option) {
+ *       // Filter by option, returning a new HistogramEvolution instance
+ *       var filteredHistogramEvolution = histogramEvolution.filter(option);
+ *
+ *       // Get aggregated histogram for all dates in filtered histogram
+ *       // evolution as obtained above
+ *       var filteredHistogram = filteredHistogramEvolution.range();
+ *
+ *       // Get submissions from aggregated (and filtered) histogram
+ *       var submissions = filterHistogram.submissions();
+ *       console.log(option + " has " + submissions + " submissions");
+ *     });
+ *
+ *     // Get aggregated (unfiltered) histogram
+ *     var histogram = histogramEvolution.range();
+ *     var submissions = histogram.submissions();
+ *     console.log("In total: " + submissions + " submissions");
+ *
+ * **Remark** this method will not modify the existing `HistogramEvolution`
+ * instance, but return a new instance of `HistogramEvolution` filtered by the
+ * given `option`.
+ *
+ * @param {String}    option            Option you want result filter by.
+ */
+HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
+  if (!(this._filter_tree[opt] instanceof Object)) {
+    throw new Error("filter option: \"" + opt +"\" is not available");
+  }
+  return new HistogramEvolution(
+    this._measure,
+    this._filter_path.concat(opt),
+    this._data,
+    this._filter_tree[opt],
+    this._spec
+  );
+};
+
+/**
+ * Get merged histogram for the interval [start; end], ie. start and end dates
+ * are inclusive. Omitting start and/or end will give you the merged histogram
+ * for the open-ended interval.
+ */
+HistogramEvolution.prototype.range = function (start, end) {
+  // Construct a dataset by merging all datasets/histograms in the range
+  var merged_dataset = [];
+
+  // List of filter_ids we care about, instead of just merging all filters
+  var filter_ids = _listFilterIds(this._filter_tree);
+
+  // For each date we have to merge the filter_ids into merged_dataset
+  for (var datekey in this._data) {
+
+    // Check that date is between start and end (if start and end is defined)
+    var date = _parseDateString(datekey);
+    if((!start || start <= date) && (!end || date <= end)) {
+
+      // Find dataset of this datekey, merge filter_ids for this dataset into
+      // merged_dataset.
+      var dataset = this._data[datekey];
+
+      // Copy all data arrays over... we'll filter and aggregate later
+      merged_dataset = merged_dataset.concat(dataset);
+    }
+  }
+
+  // Create merged histogram
+  return new Telemetry.Histogram(
+    this._measure,
+    this._filter_path,
+    this._buckets,
+    merged_dataset,
+    this._filter_tree,
+    this._spec
+  );
+};
+
+/** Get the list of dates in the evolution sorted by date */
+HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
+  var dates = [];
+  for(var date in this._data) {
+    dates.push(_parseDateString(date));
+  }
+  return dates.sort();
+};
+
+/**
+ * Invoke cb(date, histogram, index) with each date, histogram pair, ordered by
+ * date. Note, if provided cb() will be invoked with ctx as this argument.
+ */
+HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
+  // Set this as context if none is provided
+  if (ctx === undefined) {
+    ctx = this;
+  }
+
+  // Find and sort all date strings
+  var dates = [];
+  for(var date in this._data) {
+    dates.push(date);
+  }
+  dates.sort();
+
+  // Find filter ids
+  var filterIds = _listFilterIds(this._filter_tree);
+
+  // Auxiliary function to filter data arrays by filter_id
+  function filterByFilterId(data_array) {
+      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];
+      return filterIds.indexOf(filterId) != -1;
+  }
+
+  // Pair index, this is not equal to i as we may have filtered something out
+  var index = 0;
+
+  // Now invoke cb with each histogram
+  var n = dates.length;
+  for(var i = 0; i < n; i++) {
+    // Get dataset for date
+    var dataset = this._data[dates[i]];
+
+    // Filter for data_arrays with relevant filterId
+    dataset = dataset.filter(filterByFilterId);
+
+    // Skip this date if there was not data_array after filtering as applied
+    if (dataset.length === 0) {
+      continue;
+    }
+
+    // Invoke callback with date and histogram
+    cb.call(
+      ctx,
+      _parseDateString(dates[i]),
+      new Telemetry.Histogram(
+        this._measure,
+        this._filter_path,
+        this._buckets,
+        dataset,
+        this._filter_tree,
+        this._spec
+      ),
+      index++
+    );
+  }
+};
+
+/**
+ * Returns a date ordered array of results from invocation of 
+ * cb(date, histogram, index) for each date, histogram pair.
+ * Note, if provided cb() will be invoked with ctx as this argument.
+ */
+HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {
+  // Set this as context if none is provided
+  if (ctx === undefined) {
+    ctx = this;
+  }
+
+  // Return value array
+  var results = [];
+
+  // For each date, histogram pair invoke cb() and add result to results
+  this.each(function(date, histogram, index) {
+    results.push(cb.call(ctx, date, histogram, index));
+  });
+
+  // Return array of computed values
+  return results;
+};
+
+return HistogramEvolution;
+
+})();
+
+/**
+ * Representation of histogram under possible filter application
+ *
+ * **Remark** both `loadEvolutionOverBuilds` and `loadEvolutionOverTime` will
+ * provide a instance of `HistogramEvolution`, but dates in the instances
+ * represents build dates and ping submission dates, respectively.
+ */
 Telemetry.Histogram = (function(){
 
 /*!
@@ -512,7 +1007,7 @@ Histogram.prototype.each = function Histogram_each(cb, context) {
 };
 
 /**
- * Returns a bucket ordered array of results from invocation of 
+ * Returns a bucket ordered array of results from invocation of
  * cb(count, start, end, index) for each bucket, ordered low to high.
  * Note, if context is provided it will be given as this parameter to cb().
  */
@@ -535,264 +1030,6 @@ Histogram.prototype.map = function Histogram_map(cb, context) {
 };
 
 return Histogram;
-
-})();
-
-/** Representation of histogram changes over time  */
-Telemetry.HistogramEvolution = (function(){
-
-/*! Auxiliary function to parse a date string from JSON data format */
-function _parseDateString(d) {
-  return new Date(d.substr(0,4) + "/" + d.substr(4,2) + "/"+ d.substr(6,2));
-}
-
-/*!
- * Auxiliary function to compute all bucket ends from a specification
- * This returns a list [b0, b1, ..., bn] where b0 is the separator value between
- * entries in bucket index 0 and bucket index 1. Such that all values less than
- * b0 was counted in bucket 0, values greater than counted in bucket 1.
- */
-function _computeBuckets(spec){
-  // Find bounds from specification
-  var low = 1, high, nbuckets;
-  if(spec.kind == 'boolean' || spec.kind == 'flag') {
-    // This is how boolean bucket indexes are generated in mozilla-central we
-    // might look into whether or not there is a bug, as it seems rather weird
-    // that boolean histograms have 3 buckets.
-    high      = 2;
-    nbuckets  = 3;
-  } else if (spec.kind == 'enumerated') {
-    high      = eval(spec.n_values);
-    nbuckets  = eval(spec.n_values) + 1;
-  } else if (spec.kind == 'linear' || spec.kind == 'exponential') {
-    low       = eval(spec.low) || 1;
-    high      = eval(spec.high);
-    nbuckets  = eval(spec.n_buckets)
-  }
-  // Compute buckets
-  var buckets = null;
-  if(spec.kind == 'exponential') {
-    // Exponential buckets is a special case
-    var log_max = Math.log(high);
-    buckets = [0, low];
-    var current = low;
-    for(var i = 2; i < nbuckets; i++) {
-      var log_current = Math.log(current);
-      var log_ratio   = (log_max - log_current) / (nbuckets - i);
-      var log_next    = log_current + log_ratio;
-      var next_value  = Math.floor(Math.exp(log_next) + 0.5);
-      if (next_value > current) {
-        current = next_value;
-      } else {
-        current = current + 1;
-      }
-      buckets.push(current);
-    }
-  } else {
-    // Linear buckets are computed as follows
-    buckets = [0];
-    for(var i = 1; i < nbuckets; i++) {
-      var range = (low * (nbuckets - 1 - i) + high * (i - 1));
-      buckets[i] = (Math.floor(range / (nbuckets - 2) + 0.5));
-    }
-  }
-  return buckets;
-}
-
-/*!
- * Create a histogram evolution, where
- *  - measure       is the name of this histogram,
- *  - filter_path   is a list of [name, date-range, filter1, filter2...]
- *  - data          is the JSON data loaded from file,
- *  - filter_tree   is the filter_tree root, and
- *  - spec          is the histogram specification.
- */
-function HistogramEvolution(measure, filter_path, data, filter_tree, spec) {
-  this._measure     = measure
-  this._filter_path = filter_path;
-  this._data        = data;
-  this._filter_tree = filter_tree;
-  this._spec        = spec;
-  this._buckets     = _computeBuckets(spec);
-}
-
-/** Get the histogram measure */
-HistogramEvolution.prototype.measure = function HistogramEvolution_measure() {
-  return this._measure;
-};
-
-/** Get the histogram kind */
-HistogramEvolution.prototype.kind = function HistogramEvolution_kind() {
-  return this._spec.kind;
-};
-
-/** Get a description of the measure in this histogram */
-HistogramEvolution.prototype.description = function() {
-  return this._spec.description;
-};
-
-/** Get new HistogramEvolution representation filtered with option */
-HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
-  if (!(this._filter_tree[opt] instanceof Object)) {
-    throw new Error("filter option: \"" + opt +"\" is not available");
-  }
-  return new HistogramEvolution(
-    this._measure,
-    this._filter_path.concat(opt),
-    this._data,
-    this._filter_tree[opt],
-    this._spec
-  );
-};
-
-/** Name of filter available, null if none */
-HistogramEvolution.prototype.filterName = function() {
-  return this._filter_tree.name || null;
-};
-
-/** List of options available for current filter */
-HistogramEvolution.prototype.filterOptions = function() {
-  var options = [];
-  for (var key in this._filter_tree) {
-    if (key != "name" && key != "_id") {
-      options.push(key);
-    }
-  }
-  return options.sort();
-};
-
-/**
- * Get merged histogram for the interval [start; end], ie. start and end dates
- * are inclusive. Omitting start and/or end will give you the merged histogram
- * for the open-ended interval.
- */
-HistogramEvolution.prototype.range = function (start, end) {
-  // Construct a dataset by merging all datasets/histograms in the range
-  var merged_dataset = [];
-
-  // List of filter_ids we care about, instead of just merging all filters
-  var filter_ids = _listFilterIds(this._filter_tree);
-
-  // For each date we have to merge the filter_ids into merged_dataset
-  for (var datekey in this._data) {
-
-    // Check that date is between start and end (if start and end is defined)
-    var date = _parseDateString(datekey);
-    if((!start || start <= date) && (!end || date <= end)) {
-
-      // Find dataset of this datekey, merge filter_ids for this dataset into
-      // merged_dataset.
-      var dataset = this._data[datekey];
-
-      // Copy all data arrays over... we'll filter and aggregate later
-      merged_dataset = merged_dataset.concat(dataset);
-    }
-  }
-
-  // Create merged histogram
-  return new Telemetry.Histogram(
-    this._measure,
-    this._filter_path,
-    this._buckets,
-    merged_dataset,
-    this._filter_tree,
-    this._spec
-  );
-};
-
-/** Get the list of dates in the evolution sorted by date */
-HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
-  var dates = [];
-  for(var date in this._data) {
-    dates.push(_parseDateString(date));
-  }
-  return dates.sort();
-};
-
-/**
- * Invoke cb(date, histogram, index) with each date, histogram pair, ordered by
- * date. Note, if provided cb() will be invoked with ctx as this argument.
- */
-HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
-  // Set this as context if none is provided
-  if (ctx === undefined) {
-    ctx = this;
-  }
-
-  // Find and sort all date strings
-  var dates = [];
-  for(var date in this._data) {
-    dates.push(date);
-  }
-  dates.sort();
-
-  // Find filter ids
-  var filterIds = _listFilterIds(this._filter_tree);
-
-  // Auxiliary function to filter data arrays by filter_id
-  function filterByFilterId(data_array) {
-      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];
-      return filterIds.indexOf(filterId) != -1;
-  }
-
-  // Pair index, this is not equal to i as we may have filtered something out
-  var index = 0;
-
-  // Now invoke cb with each histogram
-  var n = dates.length;
-  for(var i = 0; i < n; i++) {
-    // Get dataset for date
-    var dataset = this._data[dates[i]];
-
-    // Filter for data_arrays with relevant filterId
-    dataset = dataset.filter(filterByFilterId);
-
-    // Skip this date if there was not data_array after filtering as applied
-    if (dataset.length === 0) {
-      continue;
-    }
-
-    // Invoke callback with date and histogram
-    cb.call(
-      ctx,
-      _parseDateString(dates[i]),
-      new Telemetry.Histogram(
-        this._measure,
-        this._filter_path,
-        this._buckets,
-        dataset,
-        this._filter_tree,
-        this._spec
-      ),
-      index++
-    );
-  }
-};
-
-/**
- * Returns a date ordered array of results from invocation of 
- * cb(date, histogram, index) for each date, histogram pair.
- * Note, if provided cb() will be invoked with ctx as this argument.
- */
-HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {
-  // Set this as context if none is provided
-  if (ctx === undefined) {
-    ctx = this;
-  }
-
-  // Return value array
-  var results = [];
-
-  // For each date, histogram pair invoke cb() and add result to results
-  this.each(function(date, histogram, index) {
-    results.push(cb.call(ctx, date, histogram, index));
-  });
-
-  // Return array of computed values
-  return results;
-};
-
-return HistogramEvolution;
 
 })();
 
