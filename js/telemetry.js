@@ -702,8 +702,28 @@ HistogramEvolution.prototype.range = function (start, end) {
 };
 
 /**
- * Invoke cb(date, histogram, index) with each date, histogram pair, ordered by
- * date. Note, if provided cb() will be invoked with ctx as this argument.
+ * Iterate over dates and histograms, ordered by date, by having `cb` invoked as
+ * `cb(date, histogram, index)` for each `Date`, `Telemetry.Histogram` pair held
+ * by this `HistogramEvolution` instance.
+ *
+ * Depending on whether `loadEvolutionOverBuilds` or `loadEvolutionOverTime` was
+ * used to obtained the `HistogramEvolution` instance, the date will be a build
+ * date or submission date, respectively. The `index` is an integer starting
+ * from `0` and incremented by one for each invocation of `cb`.
+ *
+ * The following example demonstrates how to print the evolution in number of
+ * submissions over dates for a `HistogramEvolution` instance.
+ *
+ *     histogramEvolution.each(function(date, histogram, index) {
+ *       console.log(histogram.submissions() + " on the " + date.toString());
+ *     });
+ *
+ * **Remark** this optional `ctx` parameter can be used to provide a context
+ * `cb` should invoked within. If `ctx` is provided `cb` will invoked with the
+ * `HistogramEvolution` instance as context.
+ *
+ * @param {Function}  cb                Callback to be invoked with histograms
+ * @param {Object}    ctx               Optional, context calling the callback
  */
 HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
   // Set this as context if none is provided
@@ -762,9 +782,84 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
 };
 
 /**
- * Returns a date ordered array of results from invocation of 
- * cb(date, histogram, index) for each date, histogram pair.
- * Note, if provided cb() will be invoked with ctx as this argument.
+ * Map date, histogram pairs held by this `HistogramEvolution` instance to an
+ * array (ordered by date). Essentially, `cb` is invoked as
+ * `cb(date, histogram, index)` for each `Date`, `Telemetry.Histogram` pair, in
+ * ordered of increasing date, and the return value from `cb` is appened to an
+ * array, which is then then returned by `map()`.
+ *
+ * Depending on whether `loadEvolutionOverBuilds` or `loadEvolutionOverTime` was
+ * used to obtained the `HistogramEvolution` instance, the date will be a build
+ * date or submission date, respectively. The `index` is an integer starting
+ * from `0` and incremented by one for each invocation of `cb`.
+ *
+ * This is quite similar to what `HistogramEvolution.each()` does, except the
+ * return values from `cb` are stored in an array, returned by `map()` when it
+ * it finished. As the following example shows this is very useful for creating
+ * arrays of points to plot.
+ *
+ *     // Let's create a list of {x: ..., y: ...} data points of submissions and
+ *     // timestamps to plot with any common Javascript library.
+ *     var data = histogramEvolution.map(function(date, histogram, index) {
+ *       return {
+ *         x:  date.getTime(), // Use get unix timestamp
+ *         y:  histogram.submissions()
+ *       };
+ *     });
+ *     // Use your favorite graph library to plot `data`
+ *
+ * **Remark** this optional `ctx` parameter can be used to provide a context
+ * `cb` should invoked within. If `ctx` is provided `cb` will invoked with the
+ * `HistogramEvolution` instance as context.
+ *
+ * ### Performance Considerations
+ * Behind the scenes `Telemetry.Histogram` instances holds a list of histograms
+ * for different dates and filters, as you drill-down the number of dates and
+ * filters, histograms are excluded from consideration. This makes filtering
+ * and instantiation of `Histogram` instances very fast, as a `Histogram` is
+ * essentially just a virtual view of existing data.
+ *
+ * However, whenever you access data on a `Telemetry.Histogram` instance the
+ * view will be lazily materialized behind the scenes. This is great for
+ * performance, unless, `Histogram` instance is immediately discarded.
+ *
+ * So while it may be tempting to use `HistogramEvolution.map` once for each
+ * series you want to plot. It is often much better to use
+ * `HistogramEvolution.each` and reused the materialized view. See the good/bad
+ * examples below for illustration.
+ *
+ * **Bad example**, the example below offers poor performance because the
+ * `Histogram` instances are created twice and as we access data on these
+ * instances, hence, the underlying view is materialized twice.
+ *
+ *     // Get a list of means and a list of medians (bad performing example)
+ *     var means = histogramEvolution.map(function(date, histogram, index) {
+ *       return histogram.mean();
+ *     });
+ *     var medians = histogramEvolution.map(function(date, histogram, index) {
+ *       return histogram.median();
+ *     });
+ *     // Now, we can plot means and medians
+ *
+ * **Good example**, the example below offers better performance because only
+ * one `Histogram` instance is created per data point, hence, the materialized
+ * view lazily created for computation of `mean` can be reused for estimation
+ * `median`.
+ *
+ *     // Create a list of means and a list of medians (good performing example)
+ *     var means   = [],
+ *         medians = [];
+ *     histogramEvolution.each(function(date, histogram, index) {
+ *       means[index]    = histogram.mean();
+ *       medians[index]  = histogram.medians();
+ *     });
+ *     // Now, we can plot means and medians
+ *
+ * The above example is just to illustrate a common performance trap with `map`,
+ * there are many legitimate uses for `map`.
+ *
+ * @param {Function}  cb                Mapping to be invoked with histograms
+ * @param {Object}    ctx               Optional, context calling the callback
  */
 HistogramEvolution.prototype.map = function HistogramEvolution_map(cb, ctx) {
   // Set this as context if none is provided
