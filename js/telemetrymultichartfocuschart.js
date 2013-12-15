@@ -285,9 +285,16 @@ telemetryMultiChartFocusChart = function() {
       //------------------------------------------------------------
       // Setup Brush
 
+      var brushRequest = null;
+
       brush
         .x(x2)
-        .on('brush', onBrush);
+        .on('brush', function() {
+          // Rate limit onBrush to animation frames... now smooth in firefox
+          if(!brushRequest) {
+            brushRequest = requestAnimationFrame(onBrush);
+          }
+        });//onBrush);
 
       if (brushExtent) brush.extent(brushExtent);
 
@@ -412,6 +419,7 @@ telemetryMultiChartFocusChart = function() {
 
 
       function onBrush() {
+        brushRequest = null;
         var oldbrushExtent = brushExtent;
         brushExtent = brush.empty() ? null : brush.extent();
         extent = brush.empty() ? x2.domain() : brush.extent();
