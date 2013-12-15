@@ -584,11 +584,90 @@ HistogramEvolution.prototype.filter = function histogramEvolution_filter(opt) {
 };
 
 /**
- * Get merged histogram for the interval [start; end], ie. start and end dates
- * are inclusive. Omitting start and/or end will give you the merged histogram
- * for the open-ended interval.
+ * Get the list of dates for which this `HistogramEvolution` instance holds
+ * histograms. You can get the histograms with the `each()` method or aggregate
+ * them with the `range()` method.
+ *
+ * Depending on whether this `HistogramEvolution` instance was obtained from
+ * `loadEvolutionOverBuilds` or `loadEvolutionOverTime` the dates returned are
+ * build dates or submissions dates, respectively.
+ *
+ * This method **returns** a list of Javascript `Date` objects. So you can
+ * format them as you please. This examples prints the dates for which a
+ * `HistogramEvolution` instance has histograms.
+ *
+ *     // Get list of dates available
+ *     var dates = histogramEvolution.dates();
+ *     dates.forEach(function(date) {
+ *       console.log(date.toString());
+ *     });
+ *
+ * **Remark**, when you apply filters to an instance of `HistogramEvolution` the
+ * resulting (filtered) `HistogramEvolution` instance, _may_ not hold all the
+ * same dates. This usually happens if we have very little data from a  given
+ * date. See `HistogramEvolution.filter` for more on filtering.
+ */
+HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
+  var dates = [];
+  for(var date in this._data) {
+    dates.push(_parseDateString(date));
+  }
+  return dates.sort();
+};
+
+/**
+ * Get a `Histogram` instance with aggregated values over date interval starting
+ * from `start` and ending with `end`, both `start` and `end` are inclusive.
+ *
+ * It is important to understand that `null` is interpreted as parameter
+ * omission and used to get an open-ended interval. Hence, calling `range()`
+ * without any parameters returns a `Telemetry.Histogram` instance with
+ * aggregated values for all dates hold by this instance of
+ * `HistogramEvolution`. See, below for other example.
+ *
+ *     // Alert the user to number of submissions in histogramEvolution
+ *     var aggregatedHistogram = histogramEvolution.range();
+ *     var total = aggregatedHistogram.submissions();
+ *     alert("We have a total of " + total + " submissions")
+ *
+ *     // Ask the user to pick a date split date
+ *     var date = new Date(prompt("Please enter a split date:"));
+ *
+ *     // Now, alert the user the the number of submissions before and on date
+ *     aggregatedHistogram = histogramEvolution.range(null, date);
+ *     var before = aggregatedHistogram.submissions();
+ *     alert("We have " + before + " on and before the entered date");
+ *
+ *     // Let's alert the user the the number of submissions after and on date
+ *     aggregatedHistogram = histogramEvolution.range(date);
+ *     var after = aggregatedHistogram.submissions();
+ *     alert("We have " + after + " on and after the entered date");
+ *
+ *     // How about the number of submission on the date
+ *     aggregatedHistogram = histogramEvolution.range(date, date);
+ *     var on = aggregatedHistogram.submissions();
+ *     alert("We have " + on + " on the entered date");
+ *
+ * **Notice** that `telemetry.js` only cares about the date, not time of day,
+ * and while `Date` objects also stores the time of day, this part of the `Date`
+ * object will be ignored.
+ *
+ * @param {Date}      start             Option you want result filter by.
+ * @param {Date}      end               Option you want result filter by.
  */
 HistogramEvolution.prototype.range = function (start, end) {
+  // If start is given, we reduce it to year, month and day, this prevents
+  // ensure that less-then-or-equal operator works as expected, in corner cases
+  // where people submit dates that holds a none-zero timestamp
+  if(start) {
+    start = new Date(start.getYear(), start.getMonth(), start.getDate());
+  }
+
+  // Sanitize end too
+  if(end) {
+    end = new Date(end.getYear(), end.getMonth(), end.getDate());
+  }
+
   // Construct a dataset by merging all datasets/histograms in the range
   var merged_dataset = [];
 
@@ -620,15 +699,6 @@ HistogramEvolution.prototype.range = function (start, end) {
     this._filter_tree,
     this._spec
   );
-};
-
-/** Get the list of dates in the evolution sorted by date */
-HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
-  var dates = [];
-  for(var date in this._data) {
-    dates.push(_parseDateString(date));
-  }
-  return dates.sort();
 };
 
 /**

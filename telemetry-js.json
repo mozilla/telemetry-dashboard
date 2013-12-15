@@ -382,26 +382,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
-      "summary": "<p>Get merged histogram for the interval [start; end], ie. start and end dates<br />are inclusive. Omitting start and/or end will give you the merged histogram<br />for the open-ended interval.</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "HistogramEvolution",
-      "cons": "HistogramEvolution",
-      "name": "range",
-      "string": "HistogramEvolution.prototype.range()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get the list of dates in the evolution sorted by date</p>",
-      "summary": "<p>Get the list of dates in the evolution sorted by date</p>",
-      "body": ""
+      "full": "<p>Get the list of dates for which this <code>HistogramEvolution</code> instance holds<br />histograms. You can get the histograms with the <code>each()</code> method or aggregate<br />them with the <code>range()</code> method.</p>\n\n<p>Depending on whether this <code>HistogramEvolution</code> instance was obtained from<br /><code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> the dates returned are<br />build dates or submissions dates, respectively.</p>\n\n<p>This method <strong>returns</strong> a list of Javascript <code>Date</code> objects. So you can<br />format them as you please. This examples prints the dates for which a<br /><code>HistogramEvolution</code> instance has histograms.</p>\n\n<pre><code>// Get list of dates available\nvar dates = histogramEvolution.dates();\ndates.forEach(function(date) {\n  console.log(date.toString());\n});\n</code></pre>\n\n<p><strong>Remark</strong>, when you apply filters to an instance of <code>HistogramEvolution</code> the<br />resulting (filtered) <code>HistogramEvolution</code> instance, <em>may</em> not hold all the<br />same dates. This usually happens if we have very little data from a  given<br />date. See <code>HistogramEvolution.filter</code> for more on filtering.</p>",
+      "summary": "<p>Get the list of dates for which this <code>HistogramEvolution</code> instance holds<br />histograms. You can get the histograms with the <code>each()</code> method or aggregate<br />them with the <code>range()</code> method.</p>",
+      "body": "<p>Depending on whether this <code>HistogramEvolution</code> instance was obtained from<br /><code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> the dates returned are<br />build dates or submissions dates, respectively.</p>\n\n<p>This method <strong>returns</strong> a list of Javascript <code>Date</code> objects. So you can<br />format them as you please. This examples prints the dates for which a<br /><code>HistogramEvolution</code> instance has histograms.</p>\n\n<pre><code>// Get list of dates available\nvar dates = histogramEvolution.dates();\ndates.forEach(function(date) {\n  console.log(date.toString());\n});\n</code></pre>\n\n<p><strong>Remark</strong>, when you apply filters to an instance of <code>HistogramEvolution</code> the<br />resulting (filtered) <code>HistogramEvolution</code> instance, <em>may</em> not hold all the<br />same dates. This usually happens if we have very little data from a  given<br />date. See <code>HistogramEvolution.filter</code> for more on filtering.</p>"
     },
     "ignore": false,
     "code": "HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {\n  var dates = [];\n  for(var date in this._data) {\n    dates.push(_parseDateString(date));\n  }\n  return dates.sort();\n};",
@@ -411,6 +394,41 @@
       "cons": "HistogramEvolution",
       "name": "dates",
       "string": "HistogramEvolution.prototype.dates()"
+    }
+  },
+  {
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "Date"
+        ],
+        "name": "start",
+        "description": "Option you want result filter by."
+      },
+      {
+        "type": "param",
+        "types": [
+          "Date"
+        ],
+        "name": "end",
+        "description": "Option you want result filter by."
+      }
+    ],
+    "description": {
+      "full": "<p>Get a <code>Histogram</code> instance with aggregated values over date interval starting<br />from <code>start</code> and ending with <code>end</code>, both <code>start</code> and <code>end</code> are inclusive.</p>\n\n<p>It is important to understand that <code>null</code> is interpreted as parameter<br />omission and used to get an open-ended interval. Hence, calling <code>range()</code><br />without any parameters returns a <code>Telemetry.Histogram</code> instance with<br />aggregated values for all dates hold by this instance of<br /><code>HistogramEvolution</code>. See, below for other example.</p>\n\n<pre><code>// Alert the user to number of submissions in histogramEvolution\nvar aggregatedHistogram = histogramEvolution.range();\nvar total = aggregatedHistogram.submissions();\nalert(\"We have a total of \" + total + \" submissions\")\n\n// Ask the user to pick a date split date\nvar date = new Date(prompt(\"Please enter a split date:\"));\n\n// Now, alert the user the the number of submissions before and on date\naggregatedHistogram = histogramEvolution.range(null, date);\nvar before = aggregatedHistogram.submissions();\nalert(\"We have \" + before + \" on and before the entered date\");\n\n// Let's alert the user the the number of submissions after and on date\naggregatedHistogram = histogramEvolution.range(date);\nvar after = aggregatedHistogram.submissions();\nalert(\"We have \" + after + \" on and after the entered date\");\n\n// How about the number of submission on the date\naggregatedHistogram = histogramEvolution.range(date, date);\nvar on = aggregatedHistogram.submissions();\nalert(\"We have \" + on + \" on the entered date\");\n</code></pre>\n\n<p><strong>Notice</strong> that <code>telemetry.js</code> only cares about the date, not time of day,<br />and while <code>Date</code> objects also stores the time of day, this part of the <code>Date</code><br />object will be ignored.</p>",
+      "summary": "<p>Get a <code>Histogram</code> instance with aggregated values over date interval starting<br />from <code>start</code> and ending with <code>end</code>, both <code>start</code> and <code>end</code> are inclusive.</p>",
+      "body": "<p>It is important to understand that <code>null</code> is interpreted as parameter<br />omission and used to get an open-ended interval. Hence, calling <code>range()</code><br />without any parameters returns a <code>Telemetry.Histogram</code> instance with<br />aggregated values for all dates hold by this instance of<br /><code>HistogramEvolution</code>. See, below for other example.</p>\n\n<pre><code>// Alert the user to number of submissions in histogramEvolution\nvar aggregatedHistogram = histogramEvolution.range();\nvar total = aggregatedHistogram.submissions();\nalert(\"We have a total of \" + total + \" submissions\")\n\n// Ask the user to pick a date split date\nvar date = new Date(prompt(\"Please enter a split date:\"));\n\n// Now, alert the user the the number of submissions before and on date\naggregatedHistogram = histogramEvolution.range(null, date);\nvar before = aggregatedHistogram.submissions();\nalert(\"We have \" + before + \" on and before the entered date\");\n\n// Let's alert the user the the number of submissions after and on date\naggregatedHistogram = histogramEvolution.range(date);\nvar after = aggregatedHistogram.submissions();\nalert(\"We have \" + after + \" on and after the entered date\");\n\n// How about the number of submission on the date\naggregatedHistogram = histogramEvolution.range(date, date);\nvar on = aggregatedHistogram.submissions();\nalert(\"We have \" + on + \" on the entered date\");\n</code></pre>\n\n<p><strong>Notice</strong> that <code>telemetry.js</code> only cares about the date, not time of day,<br />and while <code>Date</code> objects also stores the time of day, this part of the <code>Date</code><br />object will be ignored.</p>"
+    },
+    "isPrivate": false,
+    "ignore": false,
+    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // If start is given, we reduce it to year, month and day, this prevents\n  // ensure that less-then-or-equal operator works as expected, in corner cases\n  // where people submit dates that holds a none-zero timestamp\n  if(start) {\n    start = new Date(start.getYear(), start.getMonth(), start.getDate());\n  }\n\n  // Sanitize end too\n  if(end) {\n    end = new Date(end.getYear(), end.getMonth(), end.getDate());\n  }\n\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "HistogramEvolution",
+      "cons": "HistogramEvolution",
+      "name": "range",
+      "string": "HistogramEvolution.prototype.range()"
     }
   },
   {
