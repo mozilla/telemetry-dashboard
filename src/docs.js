@@ -105,6 +105,8 @@ $('.toggle-code').click(function() {
     $('.toggle-code').find('i').toggleClass('right');
 });
 
+// Get docs.json, this file is generated with dox as follows:
+// $ dox < v1/telemetry.js > docs.json
 $.get("docs.json", function(data) {
     var root = buildCodeModel(data);
     function makeMenu(node) {
