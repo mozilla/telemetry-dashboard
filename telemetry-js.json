@@ -2,12 +2,12 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Namespace for this module, this will be exported into the global scope.</p>",
-      "summary": "<p>Namespace for this module, this will be exported into the global scope.</p>",
-      "body": ""
+      "full": "<p><code>telemetry.js</code> is the API for interfacing data aggregated for telemetry<br />dashboard. As of writing it mainly offers access to:</p>\n\n<ul>\n<li>Evolution of histograms over builds and time, and</li>\n<li>Evolution of simple measures over build and time (as histograms)</li>\n</ul>\n\n<p>The goal for <code>telemetry.js</code> is to offer a stable, well documented, easy to<br />use, interface for aggregated telemetry data. So that anybody can access the<br />raw aggregates with the aim of developing and deploying custom dashboards.</p>\n\n<h3>Quick Start <code>telemetry.js</code></h3>\n\n<p><em>For the really quick there is a demo on <a href=\"todo\">jsfiddle here</a>.</em></p>\n\n<ol>\n<li>Include <code>telemetry.mozilla.org/v1/telemetry.js</code></li>\n<li>Optionally, include <code>telemetry.mozilla.org/v1/big.js</code>,\n<a href=\"https://github.com/MikeMcl/big.js/\">big.js</a> is only needed for some\nfeatures.</li>\n<li>Initialize <code>telemetry.js</code> with <code>Telemetry.init(callback)</code></li>\n<li>Choose <code>'&lt;channel&gt;/&lt;version&gt;'</code> string from <code>Telemetry.versions()</code></li>\n<li>Load measures for version with <code>Telemetry.measures(version, callback)</code></li>\n<li>Load evolution of histogram for choice of version and measure with\n<code>Telemetry.loadEvolutionOverBuilds(version, measure, callback)</code></li>\n<li>Iterate over histograms and dates, filter histograms, display results.</li>\n</ol>\n\n<p><strong>Step 3 through 7</strong> are illustrated below</p>\n\n<pre><code>// First initialize telemetry.js (this loads some meta-data from server)\nTelemetry.init(function() {\n  // Telemetry is now loaded an ready for use, we now get a list of\n  // '&lt;channel&gt;/&lt;version&gt;' strings\n  var versions = Telemetry.versions();\n\n  // We then pick a version, in this the first\n  var version = versions[0];\n\n  // Then we load measures available for the given version\n  Telemetry.measures(version, function(measures) {\n    // In this callback `measures` is now a JSON object on the form:\n    // {MEASURE_ID: {kind: \"linear\", description: \"...\"}, ...}\n    // Let's choose a measure id, say 'CYCLE_COLLECTOR' if available\n    var measure = 'CYCLE_COLLECTOR';\n    if (measures['CYCLE_COLLECTOR'] === undefined) {\n      // If 'CYCLE_COLLECTOR' isn't available we just pick any other\n      // measure, say the first in the list of keys on the JSON object\n      measure = Object.keys(measures)[0];\n    }\n\n    // We then load evolution of this measure over build dates\n    Telemetry.loadEvolutionOverBuilds(version, measure,\n                                      function(histogramEvolution) {\n      // The HistogramEvolution instance holds a set of dates and\n      // histograms, we can iterate over them as follows\n      histogramEvolution.each(function(date, histogram) {\n        // First let's log the date of the histogram, in this case we\n        // have a build date and number of submissions\n        console.log(\"For builds on \" + date.toString() + \" we have\");\n        console.log(histogram.submissions() + \"submissions and\");\n\n        // We can also iterate over buckets in the histogram, map is\n        // just a convenient adaption of Javascripts `Array.map`\n        console.log(histogram.map(function(count, start, end, index) {\n          return count + \" hits between \" + start + \" and \" + end;\n        }).join('\\n'));\n      });\n    });\n  });\n});\n</code></pre>\n\n<h3>Deployment and API Stability</h3>\n\n<p>It is the <strong>intend</strong> that the APIs documented here should remain stable.<br />And going forward consumers of telemetry dashboard data should be comfortable<br />including <code>telemetry.js</code> from:</p>\n\n<ul>\n<li><code><a href='http://telemetry.mozilla.org/v1/telemetry.js'>http://telemetry.mozilla.org/v1/telemetry.js</a></code>'</li>\n</ul>\n\n<p>As <code>telemetry.js</code> separates data access from data storage layout, this will<br />enable telemetry-dashboard developers to change data storage layout as well<br />as adding features to <code>telemetry.js</code> without breaking custom dashboards<br />deployed in the wild.</p>\n\n<p>Again, there is no guarantee that all functions in <code>telemetry.js</code> will<br />continue to work exactly like they do now, this isn't a Mars rover project,<br />this is a promised of best efforts. If it should ever become desired to<br />refactor <code>telemetry.js</code> there will probably be implemented a shim that<br />exposes the old API and host at <code>telemetry.mozilla.org/v1/telemetry.js</code>.</p>\n\n<p><strong>Warning</strong> <code>telemetry.js</code> does include URLs point to data on the server,<br />these URLs will be subject to change <strong>without warning</strong>. So you should<br />never included <code>telemetry.js</code> form any where other than the official URL<br />noted below.</p>\n\n<ul>\n<li><code><a href='http://telemetry.mozilla.org/v1/telemetry.js'>http://telemetry.mozilla.org/v1/telemetry.js</a></code>'</li>\n</ul>\n\n<p>If you distribute your own version of <code>telemetry.js</code> or access the raw data<br />around <code>telemetry.js</code> you should expect your code to break at anytime.<br />The only supported way to consume telemetry dashboard data is through<br /><code>telemetry.js</code> included from the source directed above.</p>",
+      "summary": "<p><code>telemetry.js</code> is the API for interfacing data aggregated for telemetry<br />dashboard. As of writing it mainly offers access to:</p>",
+      "body": "<ul>\n<li>Evolution of histograms over builds and time, and</li>\n<li>Evolution of simple measures over build and time (as histograms)</li>\n</ul>\n\n<p>The goal for <code>telemetry.js</code> is to offer a stable, well documented, easy to<br />use, interface for aggregated telemetry data. So that anybody can access the<br />raw aggregates with the aim of developing and deploying custom dashboards.</p>\n\n<h3>Quick Start <code>telemetry.js</code></h3>\n\n<p><em>For the really quick there is a demo on <a href=\"todo\">jsfiddle here</a>.</em></p>\n\n<ol>\n<li>Include <code>telemetry.mozilla.org/v1/telemetry.js</code></li>\n<li>Optionally, include <code>telemetry.mozilla.org/v1/big.js</code>,\n<a href=\"https://github.com/MikeMcl/big.js/\">big.js</a> is only needed for some\nfeatures.</li>\n<li>Initialize <code>telemetry.js</code> with <code>Telemetry.init(callback)</code></li>\n<li>Choose <code>'&lt;channel&gt;/&lt;version&gt;'</code> string from <code>Telemetry.versions()</code></li>\n<li>Load measures for version with <code>Telemetry.measures(version, callback)</code></li>\n<li>Load evolution of histogram for choice of version and measure with\n<code>Telemetry.loadEvolutionOverBuilds(version, measure, callback)</code></li>\n<li>Iterate over histograms and dates, filter histograms, display results.</li>\n</ol>\n\n<p><strong>Step 3 through 7</strong> are illustrated below</p>\n\n<pre><code>// First initialize telemetry.js (this loads some meta-data from server)\nTelemetry.init(function() {\n  // Telemetry is now loaded an ready for use, we now get a list of\n  // '&lt;channel&gt;/&lt;version&gt;' strings\n  var versions = Telemetry.versions();\n\n  // We then pick a version, in this the first\n  var version = versions[0];\n\n  // Then we load measures available for the given version\n  Telemetry.measures(version, function(measures) {\n    // In this callback `measures` is now a JSON object on the form:\n    // {MEASURE_ID: {kind: \"linear\", description: \"...\"}, ...}\n    // Let's choose a measure id, say 'CYCLE_COLLECTOR' if available\n    var measure = 'CYCLE_COLLECTOR';\n    if (measures['CYCLE_COLLECTOR'] === undefined) {\n      // If 'CYCLE_COLLECTOR' isn't available we just pick any other\n      // measure, say the first in the list of keys on the JSON object\n      measure = Object.keys(measures)[0];\n    }\n\n    // We then load evolution of this measure over build dates\n    Telemetry.loadEvolutionOverBuilds(version, measure,\n                                      function(histogramEvolution) {\n      // The HistogramEvolution instance holds a set of dates and\n      // histograms, we can iterate over them as follows\n      histogramEvolution.each(function(date, histogram) {\n        // First let's log the date of the histogram, in this case we\n        // have a build date and number of submissions\n        console.log(\"For builds on \" + date.toString() + \" we have\");\n        console.log(histogram.submissions() + \"submissions and\");\n\n        // We can also iterate over buckets in the histogram, map is\n        // just a convenient adaption of Javascripts `Array.map`\n        console.log(histogram.map(function(count, start, end, index) {\n          return count + \" hits between \" + start + \" and \" + end;\n        }).join('\\n'));\n      });\n    });\n  });\n});\n</code></pre>\n\n<h3>Deployment and API Stability</h3>\n\n<p>It is the <strong>intend</strong> that the APIs documented here should remain stable.<br />And going forward consumers of telemetry dashboard data should be comfortable<br />including <code>telemetry.js</code> from:</p>\n\n<ul>\n<li><code><a href='http://telemetry.mozilla.org/v1/telemetry.js'>http://telemetry.mozilla.org/v1/telemetry.js</a></code>'</li>\n</ul>\n\n<p>As <code>telemetry.js</code> separates data access from data storage layout, this will<br />enable telemetry-dashboard developers to change data storage layout as well<br />as adding features to <code>telemetry.js</code> without breaking custom dashboards<br />deployed in the wild.</p>\n\n<p>Again, there is no guarantee that all functions in <code>telemetry.js</code> will<br />continue to work exactly like they do now, this isn't a Mars rover project,<br />this is a promised of best efforts. If it should ever become desired to<br />refactor <code>telemetry.js</code> there will probably be implemented a shim that<br />exposes the old API and host at <code>telemetry.mozilla.org/v1/telemetry.js</code>.</p>\n\n<p><strong>Warning</strong> <code>telemetry.js</code> does include URLs point to data on the server,<br />these URLs will be subject to change <strong>without warning</strong>. So you should<br />never included <code>telemetry.js</code> form any where other than the official URL<br />noted below.</p>\n\n<ul>\n<li><code><a href='http://telemetry.mozilla.org/v1/telemetry.js'>http://telemetry.mozilla.org/v1/telemetry.js</a></code>'</li>\n</ul>\n\n<p>If you distribute your own version of <code>telemetry.js</code> or access the raw data<br />around <code>telemetry.js</code> you should expect your code to break at anytime.<br />The only supported way to consume telemetry dashboard data is through<br /><code>telemetry.js</code> included from the source directed above.</p>"
     },
     "ignore": false,
-    "code": "var Telemetry = {};\n\n// Data folder from which data will be loaded, another level indicating current\n// folder will be initialized by Telemetry.init()\nvar _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v4';\n\n// Map from channel/version to data prefix, loaded by Telemetry.init()\nvar _dataFolderMap = null;\n\n// List of versions present in _dataFolderMap\nvar _versions = null;",
+    "code": "var Telemetry = {};\n\n// Release url from which people should include telemetry.js\nvar releaseURL = \"http://telemetry.mozilla.org/v1/telemetry.js\";\n\n// Check if the current browser includes telemetry.js from the release url.\n// ignore browsers that don't support `document.currentScript`, there is\n// probably not a lot of developers who use IE for development anyway.\nif (document.currentScript && document.currentScript.src != releaseURL) {\n  // Let's print a long grim warning message, hopefully people will pay\n  // attention, the issue is fairly well explained here.\n  console.log([\n    \"WARNING: telemetry.js is loaded in development mode, this should only be\",\n    \"use for telemetry.js development, not dashboard development, and never\",\n    \"in deployment! In order for telemetry.js to be automatically updated\",\n    \"whenever the server-side storage layout changes you must include \",\n    \"telemetry.js from:\",\n    releaseURL,\n    \"in exchange, we will aim for API compatibility whenever telemetry.js\",\n    \"is updated. This small change could keep your dashboard relevant for\",\n    \"years to come. Notice that telemetry.js does embed URLs pointing to\",\n    \"data folders on the server, and these URLs will be changed without\",\n    \"warning. The only supported way to include telemetry.js is from the\",\n    \"official source noted above. See documentation for further details.\"\n  ].join('\\n         '));\n}\n\n// Data folder from which data will be loaded, another level indicating current\n// folder will be initialized by Telemetry.init()\nvar _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v4';\n\n// Map from channel/version to data prefix, loaded by Telemetry.init()\nvar _dataFolderMap = null;\n\n// List of versions present in _dataFolderMap\nvar _versions = null;",
     "ctx": {
       "type": "declaration",
       "name": "Telemetry",
@@ -208,9 +208,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>A <code>HistogramEvolution</code> instance is a collection of histograms over dates.<br />These <em>dates</em> can be either build dates or submission dates, depending on<br />whether <code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> was used to<br />obtained the <code>HistogramEvolution</code> instance. For an example of how to obtain<br />an instance of this type see <code>loadEvolutionOverBuilds</code>.</p>\n\n<p>When you have a <code>HistogramEvolution</code> instance, you can <code>filter</code> it by<br />available <code>filterOptions</code>. You can iterate over dates and histograms with<br /><code>each</code>, or aggregated histograms between dates with <code>range</code>. If you don't<br />care about dates and just want an aggregated histogram for all dates, you<br />can call <code>range()</code> with no arguments, interpreted as the open ended interval.<br />Which in this example prints the total number of submissions aggregated.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p><strong>Note</strong> that when you have obtained an instance of <code>HistogramEvolution</code> all<br />operations on this instance and any objects created by it are synchronous<br />and doesn't require any network communication.</p>",
+      "full": "<p>A <code>HistogramEvolution</code> instance is a collection of histograms over dates.<br />These <em>dates</em> can be either build dates or submission dates, depending on<br />whether <code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> was used to<br />obtained the <code>HistogramEvolution</code> instance. For an example of how to obtain<br />an instance of this type see <code>loadEvolutionOverBuilds</code>.</p>\n\n<p>When you have a <code>HistogramEvolution</code> instance, you can <code>filter</code> it by<br />available <code>filterOptions</code>. You can iterate over dates and histograms with<br /><code>each</code>, or aggregated histograms between dates with <code>range</code>. If you don't<br />care about dates and just want an aggregated histogram for all dates, you<br />can call <code>range()</code> with no arguments, interpreted as the open ended interval.<br />Which in this example prints the total number of submissions aggregated.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p>Notice, that when you have obtained an instance of <code>HistogramEvolution</code> all<br />operations on this instance and any objects created by it are synchronous<br />and doesn't require any network communication.</p>\n\n<p><strong>Remark</strong> you should never instantiate <code>Telemetry.Histogram</code> instances on<br />your own. The constructor is exposed to facilitate use with <code>instanceof</code>,<br />parameters taken by the constructor is not part of the public stable<br /><code>telemetry.js</code> API.</p>",
       "summary": "<p>A <code>HistogramEvolution</code> instance is a collection of histograms over dates.<br />These <em>dates</em> can be either build dates or submission dates, depending on<br />whether <code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code> was used to<br />obtained the <code>HistogramEvolution</code> instance. For an example of how to obtain<br />an instance of this type see <code>loadEvolutionOverBuilds</code>.</p>",
-      "body": "<p>When you have a <code>HistogramEvolution</code> instance, you can <code>filter</code> it by<br />available <code>filterOptions</code>. You can iterate over dates and histograms with<br /><code>each</code>, or aggregated histograms between dates with <code>range</code>. If you don't<br />care about dates and just want an aggregated histogram for all dates, you<br />can call <code>range()</code> with no arguments, interpreted as the open ended interval.<br />Which in this example prints the total number of submissions aggregated.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p><strong>Note</strong> that when you have obtained an instance of <code>HistogramEvolution</code> all<br />operations on this instance and any objects created by it are synchronous<br />and doesn't require any network communication.</p>"
+      "body": "<p>When you have a <code>HistogramEvolution</code> instance, you can <code>filter</code> it by<br />available <code>filterOptions</code>. You can iterate over dates and histograms with<br /><code>each</code>, or aggregated histograms between dates with <code>range</code>. If you don't<br />care about dates and just want an aggregated histogram for all dates, you<br />can call <code>range()</code> with no arguments, interpreted as the open ended interval.<br />Which in this example prints the total number of submissions aggregated.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p>Notice, that when you have obtained an instance of <code>HistogramEvolution</code> all<br />operations on this instance and any objects created by it are synchronous<br />and doesn't require any network communication.</p>\n\n<p><strong>Remark</strong> you should never instantiate <code>Telemetry.Histogram</code> instances on<br />your own. The constructor is exposed to facilitate use with <code>instanceof</code>,<br />parameters taken by the constructor is not part of the public stable<br /><code>telemetry.js</code> API.</p>"
     },
     "ignore": false,
     "code": "Telemetry.HistogramEvolution = (function(){",
@@ -360,7 +360,7 @@
           "String"
         ],
         "name": "option",
-        "description": "Option you want result filter by."
+        "description": "Option you want result filter by"
       }
     ],
     "description": {
@@ -404,7 +404,7 @@
           "Date"
         ],
         "name": "start",
-        "description": "Option you want result filter by."
+        "description": "Optional, date to aggregate from"
       },
       {
         "type": "param",
@@ -412,7 +412,7 @@
           "Date"
         ],
         "name": "end",
-        "description": "Option you want result filter by."
+        "description": "Optinoal, date to aggregate to"
       }
     ],
     "description": {
@@ -422,7 +422,7 @@
     },
     "isPrivate": false,
     "ignore": false,
-    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // If start is given, we reduce it to year, month and day, this prevents\n  // ensure that less-then-or-equal operator works as expected, in corner cases\n  // where people submit dates that holds a none-zero timestamp\n  if(start) {\n    start = new Date(start.getYear(), start.getMonth(), start.getDate());\n  }\n\n  // Sanitize end too\n  if(end) {\n    end = new Date(end.getYear(), end.getMonth(), end.getDate());\n  }\n\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
+    "code": "HistogramEvolution.prototype.range = function (start, end) {\n  // If start is given, we reduce it to year, month and day, this prevents\n  // ensure that less-then-or-equal operator works as expected, in corner cases\n  // where people submit dates that holds a none-zero timestamp\n  if(start) {\n    start = new Date(start.getFullYear(), start.getMonth(), start.getDate());\n  }\n\n  // Sanitize end too½\n  if(end) {\n    end = new Date(end.getFullYear(), end.getMonth(), end.getDate());\n  }\n\n  // Construct a dataset by merging all datasets/histograms in the range\n  var merged_dataset = [];\n\n  // List of filter_ids we care about, instead of just merging all filters\n  var filter_ids = _listFilterIds(this._filter_tree);\n\n  // For each date we have to merge the filter_ids into merged_dataset\n  for (var datekey in this._data) {\n\n    // Check that date is between start and end (if start and end is defined)\n    var date = _parseDateString(datekey);\n    if((!start || start <= date) && (!end || date <= end)) {\n\n      // Find dataset of this datekey, merge filter_ids for this dataset into\n      // merged_dataset.\n      var dataset = this._data[datekey];\n\n      // Copy all data arrays over... we'll filter and aggregate later\n      merged_dataset = merged_dataset.concat(dataset);\n    }\n  }\n\n  // Create merged histogram\n  return new Telemetry.Histogram(\n    this._measure,\n    this._filter_path,\n    this._buckets,\n    merged_dataset,\n    this._filter_tree,\n    this._spec\n  );\n};",
     "ctx": {
       "type": "method",
       "constructor": "HistogramEvolution",
@@ -447,7 +447,7 @@
           "Object"
         ],
         "name": "ctx",
-        "description": "Optional, context calling the callback"
+        "description": "Optional, context for the callback"
       }
     ],
     "description": {
@@ -482,7 +482,7 @@
           "Object"
         ],
         "name": "ctx",
-        "description": "Optional, context calling the callback"
+        "description": "Optional, context for the callback"
       }
     ],
     "description": {
@@ -504,9 +504,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Representation of histogram under possible filter application</p>\n\n<p><strong>Remark</strong> both <code>loadEvolutionOverBuilds</code> and <code>loadEvolutionOverTime</code> will<br />provide a instance of <code>HistogramEvolution</code>, but dates in the instances<br />represents build dates and ping submission dates, respectively.</p>",
-      "summary": "<p>Representation of histogram under possible filter application</p>",
-      "body": "<p><strong>Remark</strong> both <code>loadEvolutionOverBuilds</code> and <code>loadEvolutionOverTime</code> will<br />provide a instance of <code>HistogramEvolution</code>, but dates in the instances<br />represents build dates and ping submission dates, respectively.</p>"
+      "full": "<p>Representation of a histogram is a set of buckets with intervals a count for<br />number of hits in each bucket.</p>\n\n<p>Consider a measure measure the amount of time a given operation takes, for<br />such a measure the first bucket may start at zero and end at 1 ms, then<br /><em>count</em> of the first bucket is the number of times the operation finished<br />between 0 and 1ms. See <a href=\"http://en.wikipedia.org/wiki/Histogram\">histogram</a><br />for deeper explanation of histograms.</p>\n\n<p>A <code>Telemetry.Histogram</code> instance can be obtained from an instance of<br /><code>Telemetry.HistogramEvolution</code>, see <code>loadEvolutionOverBuilds</code> or<br /><code>loadEvolutionOverTime</code> for how to obtain one of those.</p>\n\n<p>When you have a <code>Histogram</code> instance, you can <code>filter</code> it by available<br /><code>filterOptions</code>. You can iterate over buckets and counts with<br /><code>each</code>, compute statistics such as <code>mean</code>, standardDeviation<code>or estimate<br />more complicated statistics like</code>median<code>and</code>percentile`'s.</p>\n\n<p>The following example demonstrates how to obtain a <code>Histogram</code> instance and<br />print the number of telemetry submissions aggregated in the histogram.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n\n  // Now log the number of submissions aggregated in the histogram\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p>The above example is just an illustration, you should not hard-code<br />the <code>'&lt;channel&gt;/&lt;version&gt;'</code> or measure identifier strings. Valid values for<br />these parameters can be obtained from <code>Telemetry.versions</code> and<br /><code>Telemetry.measures</code>.</p>\n\n<p><strong>Remark</strong> you should never instantiate <code>Telemetry.Histogram</code> instances on<br />your own. The constructor is exposed to facilitate use with <code>instanceof</code>,<br />parameters taken by the constructor is not part of the public stable<br /><code>telemetry.js</code> API.</p>",
+      "summary": "<p>Representation of a histogram is a set of buckets with intervals a count for<br />number of hits in each bucket.</p>",
+      "body": "<p>Consider a measure measure the amount of time a given operation takes, for<br />such a measure the first bucket may start at zero and end at 1 ms, then<br /><em>count</em> of the first bucket is the number of times the operation finished<br />between 0 and 1ms. See <a href=\"http://en.wikipedia.org/wiki/Histogram\">histogram</a><br />for deeper explanation of histograms.</p>\n\n<p>A <code>Telemetry.Histogram</code> instance can be obtained from an instance of<br /><code>Telemetry.HistogramEvolution</code>, see <code>loadEvolutionOverBuilds</code> or<br /><code>loadEvolutionOverTime</code> for how to obtain one of those.</p>\n\n<p>When you have a <code>Histogram</code> instance, you can <code>filter</code> it by available<br /><code>filterOptions</code>. You can iterate over buckets and counts with<br /><code>each</code>, compute statistics such as <code>mean</code>, standardDeviation<code>or estimate<br />more complicated statistics like</code>median<code>and</code>percentile`'s.</p>\n\n<p>The following example demonstrates how to obtain a <code>Histogram</code> instance and<br />print the number of telemetry submissions aggregated in the histogram.</p>\n\n<pre><code>Telemetry.loadEvolutionOverBuilds('nightly/25', 'CYCLE_COLLECTOR',\n                                  function(histogramEvolution) {\n  // Get submissions from a histogram aggregated over all dates\n  // in the HistogramEvolution instance\n  var histogram = histogramEvolution.range();\n\n  // Now log the number of submissions aggregated in the histogram\n  console.log(histogram.submissions());\n});\n</code></pre>\n\n<p>The above example is just an illustration, you should not hard-code<br />the <code>'&lt;channel&gt;/&lt;version&gt;'</code> or measure identifier strings. Valid values for<br />these parameters can be obtained from <code>Telemetry.versions</code> and<br /><code>Telemetry.measures</code>.</p>\n\n<p><strong>Remark</strong> you should never instantiate <code>Telemetry.Histogram</code> instances on<br />your own. The constructor is exposed to facilitate use with <code>instanceof</code>,<br />parameters taken by the constructor is not part of the public stable<br /><code>telemetry.js</code> API.</p>"
     },
     "ignore": false,
     "code": "Telemetry.Histogram = (function(){",
@@ -566,60 +566,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get new histogram representation of this histogram filter for option</p>",
-      "summary": "<p>Get new histogram representation of this histogram filter for option</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "Histogram.prototype.filter = function Histogram_filter(option) {\n  if (!(this._filter_tree[option] instanceof Object)) {\n    throw new Error(\"filter option: \\\"\" + option +\"\\\" is not available\");\n  }\n  return new Histogram(\n    this._measure,\n    this._filter_path.concat(option),\n    this._buckets,\n    this._dataset,\n    this._filter_tree[option],\n    this._spec\n  );\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "Histogram",
-      "cons": "Histogram",
-      "name": "filter",
-      "string": "Histogram.prototype.filter()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Name of filter available, null if none</p>",
-      "summary": "<p>Name of filter available, null if none</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "Histogram.prototype.filterName = function Histogram_filterName() {\n  return this._filter_tree.name || null;\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "Histogram",
-      "cons": "Histogram",
-      "name": "filterName",
-      "string": "Histogram.prototype.filterName()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>List of options available for current filter</p>",
-      "summary": "<p>List of options available for current filter</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "Histogram.prototype.filterOptions = function Histogram_filterOptions() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "Histogram",
-      "cons": "Histogram",
-      "name": "filterOptions",
-      "string": "Histogram.prototype.filterOptions()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get the histogram measure</p>",
-      "summary": "<p>Get the histogram measure</p>",
-      "body": ""
+      "full": "<p>Get the measure aggregated in this <code>Histogram</code> instance.</p>\n\n<p>This is the measure id given when the data was loaded by either<br /><code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code>. You'll also find this<br />measure id in the results obtained from <code>Telemetry.measures</code>.</p>\n\n<p>See <code>Telemetry.measures</code> for more information on measure ids.</p>",
+      "summary": "<p>Get the measure aggregated in this <code>Histogram</code> instance.</p>",
+      "body": "<p>This is the measure id given when the data was loaded by either<br /><code>loadEvolutionOverBuilds</code> or <code>loadEvolutionOverTime</code>. You'll also find this<br />measure id in the results obtained from <code>Telemetry.measures</code>.</p>\n\n<p>See <code>Telemetry.measures</code> for more information on measure ids.</p>"
     },
     "ignore": false,
     "code": "Histogram.prototype.measure = function Histogram_measure() {\n  return this._measure;\n};",
@@ -634,9 +583,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get the histogram kind</p>",
-      "summary": "<p>Get the histogram kind</p>",
-      "body": ""
+      "full": "<p>Get the histogram kind, possible histogram kinds are:</p>\n\n<ul>\n<li><code>'linear'</code></li>\n<li><code>'exponential'</code></li>\n<li><code>'flag'</code></li>\n<li><code>'enumerated'</code></li>\n<li><code>'boolean'</code></li>\n</ul>\n\n<p><strong>Notice</strong> some methods will throw exceptions if used on a histogram with an<br />unsupported <em>\"kind\"</em>. For example it doesn't make sense to estimate<br />percentiles for boolean histograms, and doing so will throw an exception.</p>\n\n<pre><code>// Print the mean, if we have 'linear' histogram.\nif(histogram.kind() == 'linear') {\n  console.log(\"mean value: \" + histogram.mean());\n}\n</code></pre>",
+      "summary": "<p>Get the histogram kind, possible histogram kinds are:</p>",
+      "body": "<ul>\n<li><code>'linear'</code></li>\n<li><code>'exponential'</code></li>\n<li><code>'flag'</code></li>\n<li><code>'enumerated'</code></li>\n<li><code>'boolean'</code></li>\n</ul>\n\n<p><strong>Notice</strong> some methods will throw exceptions if used on a histogram with an<br />unsupported <em>\"kind\"</em>. For example it doesn't make sense to estimate<br />percentiles for boolean histograms, and doing so will throw an exception.</p>\n\n<pre><code>// Print the mean, if we have 'linear' histogram.\nif(histogram.kind() == 'linear') {\n  console.log(\"mean value: \" + histogram.mean());\n}\n</code></pre>"
     },
     "ignore": false,
     "code": "Histogram.prototype.kind = function Histogram_kind() {\n  return this._spec.kind;\n};",
@@ -651,9 +600,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get a description of the measure in this histogram</p>",
-      "summary": "<p>Get a description of the measure in this histogram</p>",
-      "body": ""
+      "full": "<p>Get a human readable description of the measure in this histogram.</p>\n\n<p>This is the same description as offered by <code>Telemetry.measures</code>, it is<br />defined in <code>Histograms.json</code>, see section on measure identifiers in<br /><code>Telemetry.measures</code>.</p>",
+      "summary": "<p>Get a human readable description of the measure in this histogram.</p>",
+      "body": "<p>This is the same description as offered by <code>Telemetry.measures</code>, it is<br />defined in <code>Histograms.json</code>, see section on measure identifiers in<br /><code>Telemetry.measures</code>.</p>"
     },
     "ignore": false,
     "code": "Histogram.prototype.description = function Histogram_description() {\n  return this._spec.description;\n};",
@@ -668,26 +617,70 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get number of data points in this histogram</p>",
-      "summary": "<p>Get number of data points in this histogram</p>",
-      "body": ""
+      "full": "<p>Name of filter available, <code>null</code> if no filter is available.</p>\n\n<pre><code>// Check to see if a filter is available, assuming histogram is\n// an instance of Histogram\nvar filterName = histogram.filterName();\nif (filterName !== null) {\n  alert(\"Current filter available: \" + filterName);\n} else {\n  alert(\"No filter available!\");\n}\n</code></pre>\n\n<p>The aggregated histograms are stored in a filter tree, you can apply one<br />filter at the time <em>drilling down</em> the aggregated data. Each application of<br />a filter returns a new <code>Histogram</code> instance.</p>\n\n<p>You should <strong>always</strong> use <code>filterName</code> and <code>filterOptions</code> get name of the<br />next filter, if any, and available filter options, if any. But as of writing<br />filters offered are:</p>\n\n<ol>\n<li><code>'reason'</code>, reason for telemetry ping submission (e.g. <code>'session_saved'</code>)</li>\n<li><code>'appName'</code>, application name (e.g. <code>'Firefox'</code>)</li>\n<li><code>'OS'</code>, operation system (e.g. <code>'Linux'</code>)</li>\n<li><code>'osVersion'</code>, operation system version (e.g. <code>'3.2'</code>)</li>\n<li><code>'arch'</code>, architecture (e.g. <code>'x86-64'</code>)</li>\n</ol>\n\n<p><strong>Warning</strong> filter availability, ordering may change at any time,<br /><code>telemetry.js</code> offers a stable API to interface them through <code>filterName</code>,<br /><code>filterOptions</code> and <code>filter</code>, use these instead of hardcoding your filters!</p>",
+      "summary": "<p>Name of filter available, <code>null</code> if no filter is available.</p>",
+      "body": "<pre><code>// Check to see if a filter is available, assuming histogram is\n// an instance of Histogram\nvar filterName = histogram.filterName();\nif (filterName !== null) {\n  alert(\"Current filter available: \" + filterName);\n} else {\n  alert(\"No filter available!\");\n}\n</code></pre>\n\n<p>The aggregated histograms are stored in a filter tree, you can apply one<br />filter at the time <em>drilling down</em> the aggregated data. Each application of<br />a filter returns a new <code>Histogram</code> instance.</p>\n\n<p>You should <strong>always</strong> use <code>filterName</code> and <code>filterOptions</code> get name of the<br />next filter, if any, and available filter options, if any. But as of writing<br />filters offered are:</p>\n\n<ol>\n<li><code>'reason'</code>, reason for telemetry ping submission (e.g. <code>'session_saved'</code>)</li>\n<li><code>'appName'</code>, application name (e.g. <code>'Firefox'</code>)</li>\n<li><code>'OS'</code>, operation system (e.g. <code>'Linux'</code>)</li>\n<li><code>'osVersion'</code>, operation system version (e.g. <code>'3.2'</code>)</li>\n<li><code>'arch'</code>, architecture (e.g. <code>'x86-64'</code>)</li>\n</ol>\n\n<p><strong>Warning</strong> filter availability, ordering may change at any time,<br /><code>telemetry.js</code> offers a stable API to interface them through <code>filterName</code>,<br /><code>filterOptions</code> and <code>filter</code>, use these instead of hardcoding your filters!</p>"
     },
     "ignore": false,
-    "code": "Histogram.prototype.count = function Histogram_count() {\n  var count = 0;\n  var n = this._buckets.length;\n  for(var i = 0; i < n; i++) {\n    count += _aggregate(i, this);\n  }\n  return count;\n};",
+    "code": "Histogram.prototype.filterName = function Histogram_filterName() {\n  return this._filter_tree.name || null;\n};",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",
       "cons": "Histogram",
-      "name": "count",
-      "string": "Histogram.prototype.count()"
+      "name": "filterName",
+      "string": "Histogram.prototype.filterName()"
     }
   },
   {
     "tags": [],
     "description": {
-      "full": "<p>Number of telemetry pings aggregated in this histogram</p>",
-      "summary": "<p>Number of telemetry pings aggregated in this histogram</p>",
-      "body": ""
+      "full": "<p>List of options available for current filter, empty list if none or no filter<br />is available.</p>\n\n<p>Each option is a string, for example the <code>'reason'</code> filter will as of writing<br />offer options <code>'idle_daily'</code> and <code>'saved_session'</code>.<br />You may pass an option to <code>Histogram.filter</code> if you want to filter by it or,<br />as in this example, show options to the user.</p>\n\n<pre><code>// Present user with filter options available, if filter is available\nif (histogram.filterName() !== null) {\n  var options = histogram.filterOptions();\n  alert(\"Available filter options: \" + options.join(\", \"));\n}\n</code></pre>\n\n<p><strong>Warning</strong> filter options names changes based submission, do not hard code<br />these, if you want to <em>drill down</em> to your interesting segment, do create<br />an automatic strategy for doing so based on substrings with fall-back to<br />something sane. When, filtering you should <strong>always</strong> use a value returned<br />by this method. Otherwise, your application may break in the future, filter<br />option names will change over time.</p>",
+      "summary": "<p>List of options available for current filter, empty list if none or no filter<br />is available.</p>",
+      "body": "<p>Each option is a string, for example the <code>'reason'</code> filter will as of writing<br />offer options <code>'idle_daily'</code> and <code>'saved_session'</code>.<br />You may pass an option to <code>Histogram.filter</code> if you want to filter by it or,<br />as in this example, show options to the user.</p>\n\n<pre><code>// Present user with filter options available, if filter is available\nif (histogram.filterName() !== null) {\n  var options = histogram.filterOptions();\n  alert(\"Available filter options: \" + options.join(\", \"));\n}\n</code></pre>\n\n<p><strong>Warning</strong> filter options names changes based submission, do not hard code<br />these, if you want to <em>drill down</em> to your interesting segment, do create<br />an automatic strategy for doing so based on substrings with fall-back to<br />something sane. When, filtering you should <strong>always</strong> use a value returned<br />by this method. Otherwise, your application may break in the future, filter<br />option names will change over time.</p>"
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.filterOptions = function Histogram_filterOptions() {\n  var options = [];\n  for (var key in this._filter_tree) {\n    if (key != \"name\" && key != \"_id\") {\n      options.push(key);\n    }\n  }\n  return options.sort();\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "filterOptions",
+      "string": "Histogram.prototype.filterOptions()"
+    }
+  },
+  {
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "String"
+        ],
+        "name": "option",
+        "description": "Option you want result filter by"
+      }
+    ],
+    "description": {
+      "full": "<p>Get a <code>Histogram</code> instance filtered by <code>option</code>.</p>\n\n<p>The <code>option</code> parameter <strong>must</strong> be a string returned by the <code>filterOptions</code><br />method on this object. It may be tempting to hard code these options, but<br />this <strong>not</strong> recommended, as available options may change at any time.<br />Instead use <code>filterOptions</code> to query for available options, and pick one.</p>\n\n<p>If you filter the a <code>Histogram</code> instance by two different options, you should<br />get two disjoint aggregates. The following example demonstrates this feature,<br />as the number of submissions in each filtered result must sum up to the<br />number of submissions in the unfiltered aggregated histogram.</p>\n\n<pre><code>// Loop over all available filter options\nhistogram.filterOptions().forEach(function(option) {\n  // Filter by option, returning a new Histogram instance\n  var filteredHistogram = histogram.filter(option);\n\n  // Get submissions from the filtered histogram\n  var submissions = filterHistogram.submissions();\n  console.log(option + \" has \" + submissions + \" submissions\");\n});\n\n// Get show submission in the unfiltered histogram\nvar submissions = histogram.submissions();\nconsole.log(\"In total: \" + submissions + \" submissions\");\n</code></pre>\n\n<p><strong>Remark</strong> this method will not modify the existing <code>Histogram</code> instance, but<br />return a new instance of <code>Histogram</code> filtered by the given <code>option</code>.</p>",
+      "summary": "<p>Get a <code>Histogram</code> instance filtered by <code>option</code>.</p>",
+      "body": "<p>The <code>option</code> parameter <strong>must</strong> be a string returned by the <code>filterOptions</code><br />method on this object. It may be tempting to hard code these options, but<br />this <strong>not</strong> recommended, as available options may change at any time.<br />Instead use <code>filterOptions</code> to query for available options, and pick one.</p>\n\n<p>If you filter the a <code>Histogram</code> instance by two different options, you should<br />get two disjoint aggregates. The following example demonstrates this feature,<br />as the number of submissions in each filtered result must sum up to the<br />number of submissions in the unfiltered aggregated histogram.</p>\n\n<pre><code>// Loop over all available filter options\nhistogram.filterOptions().forEach(function(option) {\n  // Filter by option, returning a new Histogram instance\n  var filteredHistogram = histogram.filter(option);\n\n  // Get submissions from the filtered histogram\n  var submissions = filterHistogram.submissions();\n  console.log(option + \" has \" + submissions + \" submissions\");\n});\n\n// Get show submission in the unfiltered histogram\nvar submissions = histogram.submissions();\nconsole.log(\"In total: \" + submissions + \" submissions\");\n</code></pre>\n\n<p><strong>Remark</strong> this method will not modify the existing <code>Histogram</code> instance, but<br />return a new instance of <code>Histogram</code> filtered by the given <code>option</code>.</p>"
+    },
+    "isPrivate": false,
+    "ignore": false,
+    "code": "Histogram.prototype.filter = function Histogram_filter(option) {\n  if (!(this._filter_tree[option] instanceof Object)) {\n    throw new Error(\"filter option: \\\"\" + option +\"\\\" is not available\");\n  }\n  return new Histogram(\n    this._measure,\n    this._filter_path.concat(option),\n    this._buckets,\n    this._dataset,\n    this._filter_tree[option],\n    this._spec\n  );\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "filter",
+      "string": "Histogram.prototype.filter()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Returns the number of telemetry pings aggregated in this histogram</p>\n\n<p>Notice that each <em>telemetry ping</em> contains a histogram of it own with<br />multiple measurements. That is, a telemetry ping usually contains many hits<br />in multiple buckets. It is only for simple measurements that the number of<br />submissions is equal to hits in all buckets.</p>\n\n<p>For example, if filtered with <code>'reason'</code> as <code>'session_saved'</code> the number of<br />submissions is the number session aggregated in this histogram.</p>",
+      "summary": "<p>Returns the number of telemetry pings aggregated in this histogram</p>",
+      "body": "<p>Notice that each <em>telemetry ping</em> contains a histogram of it own with<br />multiple measurements. That is, a telemetry ping usually contains many hits<br />in multiple buckets. It is only for simple measurements that the number of<br />submissions is equal to hits in all buckets.</p>\n\n<p>For example, if filtered with <code>'reason'</code> as <code>'session_saved'</code> the number of<br />submissions is the number session aggregated in this histogram.</p>"
     },
     "ignore": false,
     "code": "Histogram.prototype.submissions = function Histogram_submissions() {\n  return _aggregate(DataOffsets.SUBMISSIONS, this);\n};",
@@ -702,12 +695,29 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get the mean of all data points in this histogram, null if N/A</p>",
-      "summary": "<p>Get the mean of all data points in this histogram, null if N/A</p>",
-      "body": ""
+      "full": "<p>Get number of data points in this histogram.</p>\n\n<p>This method returns the number of measurements in this histogram. That is the<br />number of hits in all buckets. For simple measurements, this is usually equal<br />to the number of submissions.</p>",
+      "summary": "<p>Get number of data points in this histogram.</p>",
+      "body": "<p>This method returns the number of measurements in this histogram. That is the<br />number of hits in all buckets. For simple measurements, this is usually equal<br />to the number of submissions.</p>"
     },
     "ignore": false,
-    "code": "Histogram.prototype.mean = function Histogram_mean() {\n  // if (this.kind() != \"linear\" && this.kind() != \"exponential\") {\n  //   throw new Error(\"Histogram.geometricMean() is only available for \" +\n  //                   \"linear and exponential histograms\");\n  // }\n  var sum = _aggregate(DataOffsets.SUM, this);\n  return sum / this.count();\n};",
+    "code": "Histogram.prototype.count = function Histogram_count() {\n  var count = 0;\n  var n = this._buckets.length;\n  for(var i = 0; i < n; i++) {\n    count += _aggregate(i, this);\n  }\n  return count;\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "count",
+      "string": "Histogram.prototype.count()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Returns the <a href=\"http://en.wikipedia.org/wiki/Mean\">mean</a> of all data points in<br />this histogram.</p>\n\n<p>The <em>mean</em> is computed using special statistics collected by telemetry in<br />gecko.  This means that the computed mean value is exact, as oppose to<br /><code>median</code> and <code>percentile</code> which are <em>estimated</em>.</p>\n\n<pre><code>// Print mean if available\nif (histogram.kind() == 'linear' || histogram.kind() == 'exponential') {\n  console.log(\"mean: \" + histogram.mean());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> and<br /><code>'exponential'</code> histograms, see <code>Histogram.kind()</code> to see what kind of<br />histogram you have. Invoking this method on any other kind of histogram will<br />throw an exception.</p>",
+      "summary": "<p>Returns the <a href=\"http://en.wikipedia.org/wiki/Mean\">mean</a> of all data points in<br />this histogram.</p>",
+      "body": "<p>The <em>mean</em> is computed using special statistics collected by telemetry in<br />gecko.  This means that the computed mean value is exact, as oppose to<br /><code>median</code> and <code>percentile</code> which are <em>estimated</em>.</p>\n\n<pre><code>// Print mean if available\nif (histogram.kind() == 'linear' || histogram.kind() == 'exponential') {\n  console.log(\"mean: \" + histogram.mean());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> and<br /><code>'exponential'</code> histograms, see <code>Histogram.kind()</code> to see what kind of<br />histogram you have. Invoking this method on any other kind of histogram will<br />throw an exception.</p>"
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.mean = function Histogram_mean() {\n  if (this.kind() != \"linear\" && this.kind() != \"exponential\") {\n     throw new Error(\"Histogram.geometricMean() is only available for \" +\n                     \"linear and exponential histograms\");\n  }\n  var sum = _aggregate(DataOffsets.SUM, this);\n  return sum / this.count();\n};",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",
@@ -719,9 +729,26 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get the geometric mean of all data points in this histogram, null if N/A</p>",
-      "summary": "<p>Get the geometric mean of all data points in this histogram, null if N/A</p>",
-      "body": ""
+      "full": "<p>Get the <a href=\"http://en.wikipedia.org/wiki/Standard_deviation\">standard deviation</a><br />over all data points in this histogram.</p>\n\n<p>This method <strong>depends on</strong> <code>big.js</code> for high-precision integer arithmetics.<br />You can download <code>big.js</code> from <a href=\"https://github.com/MikeMcl/big.js/\">here</a>,<br />but the library is usually also included with <code>telemetry.js</code>.</p>\n\n<pre><code>// Print standard deviation if available\nif (histogram.kind() == 'linear') {\n  console.log(\"std dev: \" + histogram.mean());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> histograms, see<br /><code>Histogram.kind()</code> to see what kind of histogram you have. Invoking this<br />method on any other kind of histogram will throw an exception.</p>",
+      "summary": "<p>Get the <a href=\"http://en.wikipedia.org/wiki/Standard_deviation\">standard deviation</a><br />over all data points in this histogram.</p>",
+      "body": "<p>This method <strong>depends on</strong> <code>big.js</code> for high-precision integer arithmetics.<br />You can download <code>big.js</code> from <a href=\"https://github.com/MikeMcl/big.js/\">here</a>,<br />but the library is usually also included with <code>telemetry.js</code>.</p>\n\n<pre><code>// Print standard deviation if available\nif (histogram.kind() == 'linear') {\n  console.log(\"std dev: \" + histogram.mean());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> histograms, see<br /><code>Histogram.kind()</code> to see what kind of histogram you have. Invoking this<br />method on any other kind of histogram will throw an exception.</p>"
+    },
+    "ignore": false,
+    "code": "Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {\n  if (this.kind() != \"linear\") {\n    throw new Error(\"Histogram.standardDeviation() is only available for \" +\n                    \"linear histograms\");\n  }\n  // Get big from global scope, and check that is available\n  var Big = exports.Big;\n  if (Big === undefined) {\n    throw new Error(\"Histogram.standardDeviation() requires big.js from: \" +\n                    \"https://github.com/MikeMcl/big.js/\");\n  }\n  var sum       = new Big(_aggregate(DataOffsets.SUM, this));\n  var count     = new Big(this.count());\n  var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));\n  var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));\n  var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));\n\n  // std. dev. = sqrt(count * sum_squares - sum * sum) / count\n  // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods\n  var std_dev = count.times(sum_sq).minus(sum.pow(2)).div(count);\n  return parseFloat(std_dev.toFixed(3));\n};",
+    "ctx": {
+      "type": "method",
+      "constructor": "Histogram",
+      "cons": "Histogram",
+      "name": "standardDeviation",
+      "string": "Histogram.prototype.standardDeviation()"
+    }
+  },
+  {
+    "tags": [],
+    "description": {
+      "full": "<p>Get the <a href=\"http://en.wikipedia.org/wiki/Geometric_mean\">geometric mean</a> of all<br />data points in this histogram.</p>\n\n<pre><code>// Print geometric mean if available\nif (histogram.kind() == 'exponential') {\n  console.log(\"Geo mean: \" + histogram.geometricMean());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'exponential'</code> histograms,<br />see <code>Histogram.kind()</code> to see what kind of histogram you have. Invoking this<br />method on any other kind of histogram will throw an exception.</p>",
+      "summary": "<p>Get the <a href=\"http://en.wikipedia.org/wiki/Geometric_mean\">geometric mean</a> of all<br />data points in this histogram.</p>",
+      "body": "<pre><code>// Print geometric mean if available\nif (histogram.kind() == 'exponential') {\n  console.log(\"Geo mean: \" + histogram.geometricMean());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'exponential'</code> histograms,<br />see <code>Histogram.kind()</code> to see what kind of histogram you have. Invoking this<br />method on any other kind of histogram will throw an exception.</p>"
     },
     "ignore": false,
     "code": "Histogram.prototype.geometricMean = function Histogram_geometricMean() {\n  if (this.kind() != \"exponential\") {\n    throw new Error(\"Histogram.geometricMean() is only available for \" +\n                    \"exponential histograms\");\n  }\n  var log_sum = _aggregate(DataOffsets.LOG_SUM, this);\n  return log_sum / this.count();\n};",
@@ -736,26 +763,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Get the standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
-      "summary": "<p>Get the standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
-      "body": ""
-    },
-    "ignore": false,
-    "code": "Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {\n  if (this.kind() != \"linear\") {\n    throw new Error(\"Histogram.standardDeviation() is only available for \" +\n                    \"linear histograms\");\n  }\n  var sum       = new Big(_aggregate(DataOffsets.SUM, this));\n  var count     = new Big(this.count());\n  var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));\n  var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));\n  var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));\n\n  // std. dev. = sqrt(count * sum_squares - sum * sum) / count\n  // http://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods\n  var std_dev = count.times(sum_sq).minus(sum.pow(2)).div(count);\n  return parseFloat(std_dev.toFixed(3));\n};",
-    "ctx": {
-      "type": "method",
-      "constructor": "Histogram",
-      "cons": "Histogram",
-      "name": "standardDeviation",
-      "string": "Histogram.prototype.standardDeviation()"
-    }
-  },
-  {
-    "tags": [],
-    "description": {
-      "full": "<p>Get the geometric standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
-      "summary": "<p>Get the geometric standard deviation over all data points in this histogram,<br />null if not applicable as this is only available for some histograms.</p>",
-      "body": ""
+      "full": "<p>Return the <a href=\"http://en.wikipedia.org/wiki/Geometric_standard_deviation\">geometric standard deviation<br /></a><br />over all data points in this histogram.</p>\n\n<pre><code>// Print geometric standard deviation if available\nif (histogram.kind() == 'exponential') {\n  console.log(\"Geo std dev: \" + histogram.geometricStandardDeviation());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'exponential'</code> histograms,<br />see <code>Histogram.kind()</code> to see what kind of histogram you have. Invoking this<br />method on any other kind of histogram will throw an exception.</p>",
+      "summary": "<p>Return the <a href=\"http://en.wikipedia.org/wiki/Geometric_standard_deviation\">geometric standard deviation<br /></a><br />over all data points in this histogram.</p>",
+      "body": "<pre><code>// Print geometric standard deviation if available\nif (histogram.kind() == 'exponential') {\n  console.log(\"Geo std dev: \" + histogram.geometricStandardDeviation());\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'exponential'</code> histograms,<br />see <code>Histogram.kind()</code> to see what kind of histogram you have. Invoking this<br />method on any other kind of histogram will throw an exception.</p>"
     },
     "ignore": false,
     "code": "Histogram.prototype.geometricStandardDeviation = function() {\n  if (this.kind() != 'exponential') {\n    throw new Error(\n      \"Histogram.geometricStandardDeviation() is only \" +\n      \"available for exponential histograms\"\n    );\n  }\n  var count       = this.count();\n  var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);\n  var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);\n\n  // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation\n  // using wxmaxima... who knows maybe it's correct...\n  return Math.exp(\n    Math.sqrt(\n      (\n        count * Math.pow(Math.log(log_sum / count), 2) +\n        log_sum_sq -\n        2 * log_sum * Math.log(log_sum / count)\n      ) / count\n    )\n  );\n};",
@@ -768,14 +778,24 @@
     }
   },
   {
-    "tags": [],
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "Number"
+        ],
+        "name": "percent",
+        "description": "Percentile to estimate between 1 and 100"
+      }
+    ],
     "description": {
-      "full": "<p>Estimate value of a percentile</p>",
-      "summary": "<p>Estimate value of a percentile</p>",
-      "body": ""
+      "full": "<p>Estimate the value of the <code>percent</code> percentile. The <code>percent</code> parameter must<br />be a number between <code>0</code> and <code>100</code>.</p>\n\n<p><strong>Warning</strong>, this method <strong>only estimates</strong> the requested percentile.There is<br />no way to compute the exact percentiles for histograms. This could be done<br />for simple measures, but this is <strong>not</strong> implemented in the telemetry<br />analysis backend, and it would be non-trivial to compute the exact<br />percentiles.</p>\n\n<p>The the request percentile is estimated by first finding the bucket that<br />contains the given percentile. This is pretty easy as we know how many hits<br />each bucket has. Once we know which bucket contains the requested percentile<br />then we know that the requested percentile is between the start and the end<br />of this bucket. From here we then interpolate the percentile as a point<br />between start and end of the given bucket. For <code>'linear'</code> histograms we<br />employ a linear interpolation, for <code>'exponential'</code> histograms an exponential<br />interpolation is employed.</p>\n\n<p>Please, note that for percentiles located in the highest bucket, this is<br />often the case for the 95th percentile, there is no upper-bound specified for<br />the bucket. To allow for interpolation to work when estimating the requested<br />percentile within this bucket, an upper-bound for the highest bucket is<br />estimated. See <code>Histogram.each</code> for details on how this the highest bucket<br />upper-bound is estimated.</p>\n\n<pre><code>// Print estimated percentile if available\nif (histogram.kind() == 'linear') {\n  console.log(\"Estimated median with linear interpolation:\");\n  console.log(histogram.percentile(50));\n}\nif (histogram.kind() == 'exponential') {\n  console.log(\"Estimated median with exponential interpolation:\");\n  console.log(histogram.percentile(50));\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> and<br /><code>'exponential'</code> histograms, see <code>Histogram.kind()</code> to see what kind of<br />histogram you have. Invoking this method on any other kind of histogram will<br />throw an exception.</p>",
+      "summary": "<p>Estimate the value of the <code>percent</code> percentile. The <code>percent</code> parameter must<br />be a number between <code>0</code> and <code>100</code>.</p>",
+      "body": "<p><strong>Warning</strong>, this method <strong>only estimates</strong> the requested percentile.There is<br />no way to compute the exact percentiles for histograms. This could be done<br />for simple measures, but this is <strong>not</strong> implemented in the telemetry<br />analysis backend, and it would be non-trivial to compute the exact<br />percentiles.</p>\n\n<p>The the request percentile is estimated by first finding the bucket that<br />contains the given percentile. This is pretty easy as we know how many hits<br />each bucket has. Once we know which bucket contains the requested percentile<br />then we know that the requested percentile is between the start and the end<br />of this bucket. From here we then interpolate the percentile as a point<br />between start and end of the given bucket. For <code>'linear'</code> histograms we<br />employ a linear interpolation, for <code>'exponential'</code> histograms an exponential<br />interpolation is employed.</p>\n\n<p>Please, note that for percentiles located in the highest bucket, this is<br />often the case for the 95th percentile, there is no upper-bound specified for<br />the bucket. To allow for interpolation to work when estimating the requested<br />percentile within this bucket, an upper-bound for the highest bucket is<br />estimated. See <code>Histogram.each</code> for details on how this the highest bucket<br />upper-bound is estimated.</p>\n\n<pre><code>// Print estimated percentile if available\nif (histogram.kind() == 'linear') {\n  console.log(\"Estimated median with linear interpolation:\");\n  console.log(histogram.percentile(50));\n}\nif (histogram.kind() == 'exponential') {\n  console.log(\"Estimated median with exponential interpolation:\");\n  console.log(histogram.percentile(50));\n}\n</code></pre>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> and<br /><code>'exponential'</code> histograms, see <code>Histogram.kind()</code> to see what kind of<br />histogram you have. Invoking this method on any other kind of histogram will<br />throw an exception.</p>"
     },
+    "isPrivate": false,
     "ignore": false,
-    "code": "Histogram.prototype.percentile = function Histogram_percentile(percent) {\n  // if (this.kind() != \"linear\" && this.kind() != \"exponential\") {\n  //   throw new Error(\"Histogram.percentile() is only available for linear \" +\n  //                   \"and exponential histograms\");\n  // }\n\n  var frac  = percent / 100;\n  var count = this.count();\n\n  // Count until we have the bucket containing the percentile\n  var to_count = count * frac;\n  var i, n = this._buckets.length;\n  for (i = 0; i < n; i++) {\n    var nb_points = _aggregate(i, this);\n    if (to_count - nb_points <= 0) {\n      break;\n    }\n    to_count -= nb_points;\n  }\n\n  // Bucket start and end\n  var start = this._buckets[i];\n  var end   = this._buckets[i+1];\n  if(i >= n - 1) {\n    // If we're at the end bucket, then there's no next bucket, hence, no upper\n    // bound, so we estimate one.\n    end = _estimateLastBucketEnd(this);\n  }\n\n  // Fraction indicating where in bucket i the percentile is located\n  var bucket_fraction = to_count / (_aggregate(i, this) + 1);\n\n  if (this.kind() == \"exponential\") {\n    // Interpolate median assuming an exponential distribution\n    return start + Math.exp(Math.log(end - start) * bucket_fraction);\n  }\n\n  // Interpolate median assuming a uniform distribution between start and end.\n  return start + (end - start) * bucket_fraction;\n};",
+    "code": "Histogram.prototype.percentile = function Histogram_percentile(percent) {\n  if (this.kind() != \"linear\" && this.kind() != \"exponential\") {\n    throw new Error(\"Histogram.percentile() is only available for linear \" +\n                    \"and exponential histograms\");\n  }\n\n  var frac  = percent / 100;\n  var count = this.count();\n\n  // Count until we have the bucket containing the percentile\n  var to_count = count * frac;\n  var i, n = this._buckets.length;\n  for (i = 0; i < n; i++) {\n    var nb_points = _aggregate(i, this);\n    if (to_count - nb_points <= 0) {\n      break;\n    }\n    to_count -= nb_points;\n  }\n\n  // Bucket start and end\n  var start = this._buckets[i];\n  var end   = this._buckets[i+1];\n  if(i >= n - 1) {\n    // If we're at the end bucket, then there's no next bucket, hence, no upper\n    // bound, so we estimate one.\n    end = _estimateLastBucketEnd(this);\n  }\n\n  // Fraction indicating where in bucket i the percentile is located\n  var bucket_fraction = to_count / (_aggregate(i, this) + 1);\n\n  if (this.kind() == \"exponential\") {\n    // Interpolate median assuming an exponential distribution\n    return start + Math.exp(Math.log(end - start) * bucket_fraction);\n  }\n\n  // Interpolate median assuming a uniform distribution between start and end.\n  return start + (end - start) * bucket_fraction;\n};",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",
@@ -787,9 +807,9 @@
   {
     "tags": [],
     "description": {
-      "full": "<p>Estimate the median, returns null, if not applicable</p>",
-      "summary": "<p>Estimate the median, returns null, if not applicable</p>",
-      "body": ""
+      "full": "<p>Estimate the <a href=\"http://en.wikipedia.org/wiki/Median\">median</a>, also known as<br />the 50th percentile.</p>\n\n<p>This is just an alias for <code>Histogram.percentile(50)</code>, read documentation for<br /><code>Histogram.percentile</code> to understand limitations of the estimation.</p>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> and<br /><code>'exponential'</code> histograms, see <code>Histogram.kind()</code> to see what kind of<br />histogram you have. Invoking this method on any other kind of histogram will<br />throw an exception.</p>",
+      "summary": "<p>Estimate the <a href=\"http://en.wikipedia.org/wiki/Median\">median</a>, also known as<br />the 50th percentile.</p>",
+      "body": "<p>This is just an alias for <code>Histogram.percentile(50)</code>, read documentation for<br /><code>Histogram.percentile</code> to understand limitations of the estimation.</p>\n\n<p><strong>Remark</strong>, this method in <strong>only supported</strong> for <code>'linear'</code> and<br /><code>'exponential'</code> histograms, see <code>Histogram.kind()</code> to see what kind of<br />histogram you have. Invoking this method on any other kind of histogram will<br />throw an exception.</p>"
     },
     "ignore": false,
     "code": "Histogram.prototype.median = function Histogram_median() {\n  return this.percentile(50);\n};",
@@ -802,14 +822,32 @@
     }
   },
   {
-    "tags": [],
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "cb",
+        "description": "Callback to be invoked with buckets"
+      },
+      {
+        "type": "param",
+        "types": [
+          "Object"
+        ],
+        "name": "ctx",
+        "description": "Optional, context for the callback"
+      }
+    ],
     "description": {
-      "full": "<p>Invoke cb(count, start, end, index) for every bucket in this histogram, the<br />cb is invoked for each bucket ordered from low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
-      "summary": "<p>Invoke cb(count, start, end, index) for every bucket in this histogram, the<br />cb is invoked for each bucket ordered from low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
-      "body": ""
+      "full": "<p>Iterate over buckets, ordered from low to high, by having <code>cb</code> invoked as<br /><code>cb(count, start, end, index)</code> for each bucket in this <code>Histogram</code> instance.</p>\n\n<p>In the <code>cb(count, start, end, index)</code> invocation of <code>cb</code>, <code>count</code> the number<br />of measurements that fell in the interval between <code>start</code> and <code>end</code>, while<br /><code>index</code> is the bucket index, an integer incremented by one for each<br />invocation of <code>cb</code>.</p>\n\n<p>The following example shows how to print the contents of all buckets in an<br />instance of <code>Telemetry.Histogram</code>.</p>\n\n<pre><code>// Print the contents of all buckets\nhistogram.each(function(count, start, end, index) {\n  console.log(\"In bucket \" + index + \" we have \" + count + \" hits);\n  console.log(\"between \" + start + \" and \" + end);\n});\n</code></pre>\n\n<p><strong>Remark</strong> this optional <code>ctx</code> parameter can be used to provide a context<br /><code>cb</code> should invoked within. If <code>ctx</code> is provided <code>cb</code> will invoked with the<br /><code>Histogram</code> instance as context.</p>",
+      "summary": "<p>Iterate over buckets, ordered from low to high, by having <code>cb</code> invoked as<br /><code>cb(count, start, end, index)</code> for each bucket in this <code>Histogram</code> instance.</p>",
+      "body": "<p>In the <code>cb(count, start, end, index)</code> invocation of <code>cb</code>, <code>count</code> the number<br />of measurements that fell in the interval between <code>start</code> and <code>end</code>, while<br /><code>index</code> is the bucket index, an integer incremented by one for each<br />invocation of <code>cb</code>.</p>\n\n<p>The following example shows how to print the contents of all buckets in an<br />instance of <code>Telemetry.Histogram</code>.</p>\n\n<pre><code>// Print the contents of all buckets\nhistogram.each(function(count, start, end, index) {\n  console.log(\"In bucket \" + index + \" we have \" + count + \" hits);\n  console.log(\"between \" + start + \" and \" + end);\n});\n</code></pre>\n\n<p><strong>Remark</strong> this optional <code>ctx</code> parameter can be used to provide a context<br /><code>cb</code> should invoked within. If <code>ctx</code> is provided <code>cb</code> will invoked with the<br /><code>Histogram</code> instance as context.</p>"
     },
+    "isPrivate": false,
     "ignore": false,
-    "code": "Histogram.prototype.each = function Histogram_each(cb, context) {\n  // Set context if none is provided\n  if (context === undefined) {\n    context = this;\n  }\n\n  // For each bucket\n  var n = this._buckets.length;\n  for(var i = 0; i < n; i++) {\n\n    // Find count, start and end of bucket\n    var count = _aggregate(i, this),\n        start = this._buckets[i],\n        end   = this._buckets[i+1];\n\n    // If we're at the last bucket, then there's no next upper bound so we\n    // estimate one\n    if (i >= n - 1) {\n      end = _estimateLastBucketEnd(this);\n    }\n\n    // Invoke callback as promised\n    cb.call(context, count, start, end, i);\n  }\n};",
+    "code": "Histogram.prototype.each = function Histogram_each(cb, ctx) {\n  // Set ctx if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // For each bucket\n  var n = this._buckets.length;\n  for(var i = 0; i < n; i++) {\n\n    // Find count, start and end of bucket\n    var count = _aggregate(i, this),\n        start = this._buckets[i],\n        end   = this._buckets[i+1];\n\n    // If we're at the last bucket, then there's no next upper bound so we\n    // estimate one\n    if (i >= n - 1) {\n      end = _estimateLastBucketEnd(this);\n    }\n\n    // Invoke callback as promised\n    cb.call(ctx, count, start, end, i);\n  }\n};",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",
@@ -819,14 +857,32 @@
     }
   },
   {
-    "tags": [],
+    "tags": [
+      {
+        "type": "param",
+        "types": [
+          "Function"
+        ],
+        "name": "cb",
+        "description": "Mapping to be invoked with buckets"
+      },
+      {
+        "type": "param",
+        "types": [
+          "Object"
+        ],
+        "name": "ctx",
+        "description": "Optional, context for the callback"
+      }
+    ],
     "description": {
-      "full": "<p>Returns a bucket ordered array of results from invocation of<br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
-      "summary": "<p>Returns a bucket ordered array of results from invocation of<br />cb(count, start, end, index) for each bucket, ordered low to high.<br />Note, if context is provided it will be given as this parameter to cb().</p>",
-      "body": ""
+      "full": "<p>Map buckets in this <code>Histogram</code> instance to an array (ordered by buckets,<br />low to high). Bascially, <code>cb</code> is invoked as <code>cb(count, start, end, index)</code><br />for each bucket in order from low to high, then the values returned by <code>cb</code><br />is appended to an array, which is then returned by <code>map()</code>.</p>\n\n<p>This is quite similar to what <code>Histogram.each()</code> does, except the return<br />values from <code>cb</code> are stored in an array, returned by <code>map()</code> when it<br />it finished. As the following example shows how to generate a CSV dump from<br />an instance of <code>Histogram</code>.</p>\n\n<pre><code>// Print Comma-Separate-Value file from histogram\nvar csv = \"count,start,end,index\\n\";\ncsv += histogram.map(function(count, start, end, index) {\n  return [count, start, end, index].join(\",\");\n}).join(\"\\n\");\nconsole.log(csv);\n</code></pre>\n\n<p><strong>Remark</strong> this optional <code>ctx</code> parameter can be used to provide a context<br /><code>cb</code> should invoked within. If <code>ctx</code> is provided <code>cb</code> will invoked with the<br /><code>Histogram</code> instance as context.</p>",
+      "summary": "<p>Map buckets in this <code>Histogram</code> instance to an array (ordered by buckets,<br />low to high). Bascially, <code>cb</code> is invoked as <code>cb(count, start, end, index)</code><br />for each bucket in order from low to high, then the values returned by <code>cb</code><br />is appended to an array, which is then returned by <code>map()</code>.</p>",
+      "body": "<p>This is quite similar to what <code>Histogram.each()</code> does, except the return<br />values from <code>cb</code> are stored in an array, returned by <code>map()</code> when it<br />it finished. As the following example shows how to generate a CSV dump from<br />an instance of <code>Histogram</code>.</p>\n\n<pre><code>// Print Comma-Separate-Value file from histogram\nvar csv = \"count,start,end,index\\n\";\ncsv += histogram.map(function(count, start, end, index) {\n  return [count, start, end, index].join(\",\");\n}).join(\"\\n\");\nconsole.log(csv);\n</code></pre>\n\n<p><strong>Remark</strong> this optional <code>ctx</code> parameter can be used to provide a context<br /><code>cb</code> should invoked within. If <code>ctx</code> is provided <code>cb</code> will invoked with the<br /><code>Histogram</code> instance as context.</p>"
     },
+    "isPrivate": false,
     "ignore": false,
-    "code": "Histogram.prototype.map = function Histogram_map(cb, context) {\n  // Set context if none is provided\n  if (context === undefined) {\n    context = this;\n  }\n\n  // Array of return values\n  var results = [];\n\n  // For each, invoke cb and push the result\n  this.each(function(count, start, end, index) {\n    results.push(cb.call(context, count, start, end, index));\n  });\n\n  // Return values from cb\n  return results;\n};\n\nreturn Histogram;\n\n})();\n\nexports.Telemetry = Telemetry;\nreturn exports.Telemetry;\n\n})(this);",
+    "code": "Histogram.prototype.map = function Histogram_map(cb, ctx) {\n  // Set ctx if none is provided\n  if (ctx === undefined) {\n    ctx = this;\n  }\n\n  // Array of return values\n  var results = [];\n\n  // For each, invoke cb and push the result\n  this.each(function(count, start, end, index) {\n    results.push(cb.call(ctx, count, start, end, index));\n  });\n\n  // Return values from cb\n  return results;\n};\n\nreturn Histogram;\n\n})();\n\nexports.Telemetry = Telemetry;\nreturn exports.Telemetry;\n\n})(this);",
     "ctx": {
       "type": "method",
       "constructor": "Histogram",

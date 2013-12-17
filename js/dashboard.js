@@ -165,6 +165,8 @@ function update(hgramEvo) {
 
     // Set exponential only properties
     if (hgram.kind() == 'exponential') {
+      $('#prop-mean2')
+        .text(fmt(hgram.mean()));
       $('#prop-geometricMean')
         .text(fmt(hgram.geometricMean()));
       $('#prop-geometricStandardDeviation')
