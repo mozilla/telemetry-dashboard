@@ -75,7 +75,7 @@ function renderHistogramGraph(hgram) {
   $('#histogram').show();
   nv.addGraph(function(){
     var vals = hgram.map(function(count, start, end, index) {
-                  return {x: end, y: count};
+                  return {x: [start, end], y: count};
     });
 
     var data = [{
@@ -84,11 +84,8 @@ function renderHistogramGraph(hgram) {
       color:    "#0000ff"
     }];
 
-    var chart = nv.models.discreteBarChart()
-     .margin({top: 20, right: 80, bottom: 40, left: 80})
-     .tooltips(false);
-    chart.yAxis
-      .tickFormat(d3.format('.3s'));
+    var chart = histogramchart()
+     .margin({top: 20, right: 80, bottom: 40, left: 80});
     d3.select("#histogram")
       .datum(data)
       .transition().duration(500).call(chart);
@@ -250,7 +247,7 @@ function update(hgramEvo) {
       });
     }
     
-    var focusChart = telemetryMultiChartFocusChart()
+    var focusChart = evolutionchart()
       .margin({top: 10, right: 80, bottom: 40, left: 80});
 
     focusChart.xAxis

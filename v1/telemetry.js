@@ -17,8 +17,9 @@
  * ### Quick Start `telemetry.js`
  * _For the really quick there is a demo on [jsfiddle here](todo)._
  *
- *  1. Include `telemetry.mozilla.org/v1/telemetry.js`
- *  2. Optionally, include `telemetry.mozilla.org/v1/big.js`,
+ *  1. Include `http://telemetry.mozilla.org/v1/telemetry.js`, you **must**
+ *     include from here, **don't host it yourself**.
+ *  2. Optionally, include `http://telemetry.mozilla.org/v1/big.js`,
  *     [big.js](https://github.com/MikeMcl/big.js/) is only needed for some
  *     features.
  *  3. Initialize `telemetry.js` with `Telemetry.init(callback)`
@@ -77,7 +78,7 @@
  * And going forward consumers of telemetry dashboard data should be comfortable
  * including `telemetry.js` from:
  *
- *   * `http://telemetry.mozilla.org/v1/telemetry.js`'
+ *   * `http://telemetry.mozilla.org/v1/telemetry.js`
  *
  * As `telemetry.js` separates data access from data storage layout, this will
  * enable telemetry-dashboard developers to change data storage layout as well
@@ -95,12 +96,27 @@
  * never included `telemetry.js` form any where other than the official URL
  * noted below.
  *
- *   * `http://telemetry.mozilla.org/v1/telemetry.js`'
+ *   * `http://telemetry.mozilla.org/v1/telemetry.js`
  *
  * If you distribute your own version of `telemetry.js` or access the raw data
  * around `telemetry.js` you should expect your code to break at anytime.
  * The only supported way to consume telemetry dashboard data is through
  * `telemetry.js` included from the source directed above.
+ *
+ * ### Auxiliary Libraries
+ * The drop-down selectors used on the [dashboard](telemetry.mozilla.org) are
+ * fairly non-trivial to implement. Luckily, they are provided as an individual
+ * component in `jquery.telemetry.js`, this requires the jQuery UI widget
+ * factory, which can be found in `jquery.ui.widget.js`. You may also optionally
+ * use `bootstrap-selector.js` with
+ * [bootstrap-select](http://silviomoreto.github.io/bootstrap-select/) to get
+ * pretty [twitter-bootstrap](http://getbootstrap.com/) selectors.
+ *
+ * Take a look at the sources for telemetry-dashboard to see how
+ * `jquery.telemetry.js` works, it's also fairly well documented in source. To
+ * use these files hot-linking is, however, not recommended. Distribute them on
+ * your own and update them as the dashboard gets updated. It's only
+ * `telemetry.js` that should be included from `telemetry.mozilla.org`.
  */
 var Telemetry = {};
 

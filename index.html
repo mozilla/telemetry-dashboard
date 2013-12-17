@@ -11,15 +11,16 @@
           href="//netdna.bootstrapcdn.com/font-awesome/4.0.2/css/font-awesome.min.css">
     <link rel="stylesheet"
           href="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.css">
-    <link rel="stylesheet" href="css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="lib/bootstrap-select.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="style/dashboard.css">
 </head>
 <body>
     <header>
         <h1 style="float:left;">Telemetry Dashboard</h1>
     </header>
-    <nav data-spy="affix" data-offset-top="70" class="navbar navbar-default navbar-affix-top" role="navigation">
+    <nav data-spy="affix" data-offset-top="70"
+         class="navbar navbar-default navbar-affix-top" role="navigation">
       <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
       </form>
     </nav>
@@ -138,6 +139,7 @@
                     </li>
                 </ul>
                 <h2>Updates</h2>
+                <!-- Twitter widget -->
                 <div>
                     <a class="twitter-timeline"
                         href="https://twitter.com/MozTelemetry"
@@ -146,16 +148,16 @@
                         data-widget-id="410497663147053056">
                         Loading updates on telemetry...
                     </a>
-                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-                <a href="https://twitter.com/MozTelemetry"
-                   class="twitter-follow-button"
-                   data-show-count="false"
-                   data-align="left"
-                   data-dnt="true"
-                   data-lang="en">
-                    Follow @MozTelemtry
-                </a>
-                <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+                    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+                    <a href="https://twitter.com/MozTelemetry"
+                       class="twitter-follow-button"
+                       data-show-count="false"
+                       data-align="left"
+                       data-dnt="true"
+                       data-lang="en">
+                        Follow @MozTelemtry
+                    </a>
+                    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
                 </div>
             </aside>
         </div>
@@ -164,36 +166,39 @@
             <i class="fa fa-spinner fa-spin"></i>
     </div>
     <!-- jQuery, Bootstrap and d3 -->
-    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js">
     </script>
-    <script src="js/bootstrap-select.min.js"></script>
+    <script src="lib/bootstrap-select.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.3.9/d3.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.js">
     </script>
-    <script src="js/telemetrymultichart.js"></script>
-    <script src="js/telemetrymultichartfocuschart.js"></script>
+    <!-- nvd3 chart hacks -->
+    <script src="src/evolutionchart.js"></script>
+    <script src="src/histogramchart.js"></script>
     
     <!-- 
         big.js and telemetry.js from telemetry.mozilla.org
+        if you're not deploying to telemetry.mozilla.org you must include these
+        from:
+            - telemetry.mozilla.org/v1/big.js
+            - telemetry.mozilla.org/v1/telemetry.js
         (we'll try to keep it backwards compatible)
-        Note: Some auxiliary methods are still buggy and big.js dependency may
-              disappear some day.
      -->
-    <script src="js/big.js"></script>
-    <script src="js/telemetry.js"></script>
+    <script src="v1/big.js"></script>
+    <script src="v1/telemetry.js"></script>
     
     <!-- 
         telemetry.jquery.js and jQuery UI widget factory for stateful plugins.
         These are not required for using telemtry.js, but they make filtering
         very easy, and come in handy for custom dashboards.
     -->
-    <script src="js/bootstrap-selector.js"></script>
-    <script src="js/jquery.ui.widget.js"></script>
-    <script src="js/jquery.telemetry.js">
+    <script src="src/bootstrap-selector.js"></script>
+    <script src="lib/jquery.ui.widget.js"></script>
+    <script src="src/jquery.telemetry.js">
     </script>
 
     <!-- Dashboard specific Javascript -->
-    <script src="js/dashboard.js"></script>    
+    <script src="src/dashboard.js"></script>
 </body>
 <html>

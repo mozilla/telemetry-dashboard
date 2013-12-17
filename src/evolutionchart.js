@@ -1,6 +1,6 @@
-//NOTE: this a hack on the nvd3 model linebar with focus...
-//      see nvd3 license for details...
-telemetryMultiChartFocusChart = function() {
+// This is a hack on nv.models.linePlusBarWithFocusChart
+// See nvd3 for license information
+var evolutionchart = function() {
   "use strict";
   //============================================================
   // Public Variables with Default Settings
@@ -83,7 +83,6 @@ telemetryMultiChartFocusChart = function() {
   //------------------------------------------------------------
 
   // Hack from http://www.quirksmode.org/js/findpos.html
-  // Find this right position...  gotta love it :)
   function findPos(obj) {
     var curleft = 0, curtop = 0;
     if (obj.offsetParent) {
