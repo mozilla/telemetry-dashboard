@@ -35,7 +35,7 @@ var evolutionchart = function() {
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
         return '<b>' + key + '</b>' +
-               '<p>' +  y + ' at ' + x + '</p>';
+               '<p>' +  y + ' on ' + x + '</p>';
       }
     , x
     , x2
@@ -60,6 +60,8 @@ var evolutionchart = function() {
     ;
   y1Axis
     .orient('left')
+    .axisLabel("Histogram Evolution")
+    .axisLabelDistance(24)
     ;
   y2Axis
     .orient('right')
@@ -70,6 +72,8 @@ var evolutionchart = function() {
     ;
   y3Axis
     .orient('left')
+    .axisLabel("Date Range Selector")
+    .axisLabelDistance(24)
     ;
   y4Axis
     .orient('right')

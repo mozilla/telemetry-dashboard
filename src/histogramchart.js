@@ -41,6 +41,8 @@ var histogramchart = function() {
   yAxis
     .orient((rightAlignYAxis) ? 'right' : 'left')
     .tickFormat(d3.format('.3s'))
+    .axisLabel("Histogram")
+    .axisLabelDistance(24)
     ;
 
   //============================================================

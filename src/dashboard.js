@@ -140,19 +140,39 @@ function update(hgramEvo) {
 
   function updateProps(extent) {
     var hgram;
+    var dates = hgramEvo.dates();
     if(extent){
-      hgram = hgramEvo.range(new Date(extent[0]), new Date(extent[1]));
+      var start = new Date(extent[0]);
+      var end   = new Date(extent[1]);
+      // Normalize dates
+      start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      end   = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      hgram = hgramEvo.range(start, end);
+      // Filter dates
+      dates = dates.filter(function(date) { return start <= date && date <= end;});
     } else {
       hgram = hgramEvo.range();
     }
 
     _exportHgram = hgram;
 
+    dateFormat = d3.time.format('%Y/%m/%d');
+    var dateRange = "";
+    if (dates.length == 0) {
+      dateRange = "None";
+    } else if (dates.length == 1) {
+      dateRange = dateFormat(dates[0]);
+    } else {
+      var last = dates.length - 1;
+      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);
+    }
+
     // Set common properties
     $('#prop-kind')       .text(hgram.kind());
     $('#prop-submissions').text(fmt(hgram.submissions()));
     $('#prop-count')      .text(fmt(hgram.count()));
-
+    $('#prop-dates')      .text(d3.format('s')(dates.length));
+    $('#prop-date-range') .text(dateRange);
 
     // Set linear only properties
     if (hgram.kind() == 'linear') {

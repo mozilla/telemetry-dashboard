@@ -303,8 +303,11 @@ $.widget("telemetry.histogramfilter", {
       // Change what we load evolution over
       this.options.evolutionOver = value;
 
+      var state = this.state();
+      // Force reload of filters, so it doesn't believe we're already loaded
+      this._clearFilterList();
       // Reload state, this should refresh and reload as best possible
-      this.state(this.state());
+      this.state(state);
 
     } else if (option == "selectorClass") {
 
