@@ -9,14 +9,19 @@ applications, so you don't need to do the aggregation on your own.
 
 Consuming Telemetry Aggregations
 --------------------------------
-Include into your code `http://telemetry.mozilla.com/js/telemetry.js` feel free
+Include into your code `http://telemetry.mozilla.com/v1/telemetry.js` feel free
 to use the other modules too. Don't go about reading the raw JSON files,
 they are not designed for human consumption!
 
 We recommend that you include `telemetry.js` from
-`http://telemetry.mozilla.com/js/telemetry.js`, this file is used to access all
+`http://telemetry.mozilla.com/v1/telemetry.js`, this file is used to access all
 the generated aggregates. We will undertake reasonable effort to ensure that it
 remains backwards compatible and continously updated with new aggregates.
+
+Please refer to the [official documentation](http://telemetry.mozilla.org/docs.html)
+for `telemetry.js` for instructions on how to use this library.
+
+  * [telemetry.js documentation](http://telemetry.mozilla.org/docs.html)
 
 Hacking Telemetry Dashboard
 ---------------------------
