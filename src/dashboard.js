@@ -46,12 +46,8 @@ function fmt(number) {
     return "-Infinity";
   if(isNaN(number))
     return "NaN";
-  return d3.format('.4s')(number);
-  var fixed = number.toFixed(3);
-  if(fixed.length > 8 || parseFloat(fixed) == 0) {
-    return number.toPrecision(8);
-  }
-  return fixed;
+  var prefix = d3.formatPrefix(number ,'s')
+  return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 
 
@@ -86,6 +82,8 @@ function renderHistogramGraph(hgram) {
 
     var chart = histogramchart()
      .margin({top: 20, right: 80, bottom: 40, left: 80});
+    chart.yAxis.tickFormat(fmt);
+    chart.xAxis.tickFormat(function(bucket) {return fmt(bucket[0]);});
     d3.select("#histogram")
       .datum(data)
       .transition().duration(500).call(chart);
@@ -279,13 +277,13 @@ function update(hgramEvo) {
         return d3.time.format('%Y/%m/%d')(new Date(d));
       });
     focusChart.y1Axis
-        .tickFormat(d3.format('.3s'));
+        .tickFormat(fmt);
     focusChart.y2Axis
-        .tickFormat(d3.format('.3s'));
+        .tickFormat(fmt);
     focusChart.y3Axis
-        .tickFormat(d3.format('.3s'));
+        .tickFormat(fmt);
     focusChart.y4Axis
-        .tickFormat(d3.format('.3s'));
+        .tickFormat(fmt);
 
     d3.select("#evolution")
       .datum(data)
