@@ -173,6 +173,7 @@ $.get("docs.json", function(data) {
         });
         $('#desc').html(node.desc);
         $('#code').find('code').text(node.code);
+        $('#desc').find('br').replaceWith(" ");
         $('#desc').find('code').addClass('language-javascript');
         Prism.highlightAll(false);
     }
