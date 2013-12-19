@@ -22,7 +22,8 @@ var histogramchart = function() {
     , tooltips = true
     , formatX = d3.format('s')
     , tooltip = function(key, x, y, e, graph) {
-        return '<p>' + y + ' hits between ' + formatX(x[0]) +
+        var p = d3.format('%')(e.point.percent);
+        return '<p>' + y + ' hits (' + p + ') between ' + formatX(x[0]) +
                ' and ' + formatX(x[1]) + '</p>';
       }
     , x

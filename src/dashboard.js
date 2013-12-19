@@ -70,8 +70,13 @@ function renderHistogramGraph(hgram) {
   $('#histogram-table').hide();
   $('#histogram').show();
   nv.addGraph(function(){
+    var total = hgram.count();
     var vals = hgram.map(function(count, start, end, index) {
-                  return {x: [start, end], y: count};
+      return {
+        x: [start, end],
+        y: count,
+        percent: count / total
+      };
     });
 
     var data = [{
