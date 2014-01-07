@@ -16,7 +16,7 @@
  *
  * ### Quick Start `telemetry.js`
  * _For a really quick start there is a demo on
- * [jsfiddle](http://jsfiddle.net/mkXLg/)._
+ * [jsfiddle](http://jsfiddle.net/VHf57/)._
  *
  *  1. Include `http://telemetry.mozilla.org/v1/telemetry.js`, you **must**
  *     include from here, **don't host it yourself**.
