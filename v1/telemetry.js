@@ -148,7 +148,7 @@ if (document.currentScript && document.currentScript.src != releaseURL) {
 
 // Data folder from which data will be loaded, another level indicating current
 // folder will be initialized by Telemetry.init()
-var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v4';
+var _data_folder = 'https://s3-us-west-2.amazonaws.com/telemetry-dashboard/v2';
 
 // Map from channel/version to data prefix, loaded by Telemetry.init()
 var _dataFolderMap = null;
