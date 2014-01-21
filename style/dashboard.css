@@ -110,11 +110,3 @@ section {
   opacity: 0;
 }
 
-div.notice {
-  font-size: larger;
-  font-weight: bold;
-  color: #d33;
-  float:left;
-  padding: 20px;
-  margin-top: 5px;
-}
