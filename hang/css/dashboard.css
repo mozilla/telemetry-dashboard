@@ -1,0 +1,76 @@
+
+body {
+    margin: 90px auto 2em auto;
+}
+
+.navbar-fixed-top.container {
+    border: 14px solid white;
+    border-bottom: 8px solid white;
+}
+
+.navbar-form {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#flotTip {
+    z-index: 2000;
+}
+
+.tooltip.right .tooltip-inner {
+    max-width: none;
+}
+
+#report-plots {
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.tooltip hr {
+    margin: 5px;
+}
+
+.plot-holder {
+    height: 400px;
+    position: relative;
+}
+
+.small-plot-holder {
+    height: 250px;
+    position: relative;
+}
+
+.plot {
+    width: 100%;
+}
+
+#report-stacks .panel-title, #report-plots .panel-title {
+    cursor: pointer;
+    padding: 5px;
+}
+
+#report-stacks ul {
+    overflow-x: scroll;
+}
+
+#report-stacks li {
+    font-family: monospace;
+    font-size: smaller;
+}
+
+#report-stacks {
+    position: relative;
+}
+
+.fa-spinner.fa-spin {
+    margin: -15px 0px 0px -15px;
+    font-size: 30px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+
+.spinner-holder {
+    position: relative;
+    margin: 5px;
+}
