@@ -245,6 +245,7 @@ function replotReports(elem, reports, sessions, options) {
                   " hang" + (num === 1 ? "" : "s");
         options.normalize && (tip += " / 1k user-hrs");
         var report = item.series.report;
+        tip = replaceBrackets(tip);
         if (!report) {
             return tip;
         }
@@ -260,10 +261,10 @@ function replotReports(elem, reports, sessions, options) {
                     (!skipNative && !isNaN(parseInt(frame.functionName())))) {
                     return true;
                 }
-                var line = replaceBrackets(frame.lineNumber());
-                stack += (count ? "<br>" : "") +
-                    replaceBrackets(frame.functionName()) +
-                    (line ? " (line " + line + ")" : "");
+                var line = frame.lineNumber();
+                stack += (count ? "<br>" : "") + replaceBrackets(
+                    frame.functionName() +
+                    (line ? " (line " + line + ")" : ""));
                 return (++count) < maxStackFrames;
             });
             if (out) {
@@ -423,8 +424,8 @@ function replotInfo(elem, reports, value, sessions, options) {
     }
 
     function _tooltip(label, xval, yval, item) {
-        return replaceBrackets(item.series.info[item.dataIndex]) + " : " +
-               Math.round(item.series.data[item.dataIndex][0]) + "%";
+        return replaceBrackets(item.series.info[item.dataIndex] + " : " +
+               Math.round(item.series.data[item.dataIndex][0]) + "%");
     }
     function _tooltipHover(item, tooltip) {
         var baroffset = plotobj.pointOffset({
@@ -538,8 +539,9 @@ function replotBuild(elem, reports, value, sessions, options) {
 
     function _tooltip(label, xval, yval, item) {
         var num = item.series.data[item.dataIndex][1];
-        var tip = buildids[item.series.data[item.dataIndex][0]] + "<br>" +
-                  ((!uptimes || num >= 10) ? smartPrefix(Math.round(num))
+        var tip = replaceBrackets(buildids[
+                    item.series.data[item.dataIndex][0]]) + "<br>" +
+                  replaceBrackets((!uptimes || num >= 10) ? smartPrefix(Math.round(num))
                                            : num.toPrecision(2)) +
                   " hang" + (num === 1 ? "" : "s");
         options.normalize && (tip += " / 1k user-hrs");
@@ -653,16 +655,21 @@ function replotActivities(elem, activities, value, options) {
     }
 
     function _tooltip(label, xval, yval, item) {
-        var labelFn = options.normalize ? smartPercent : smartPrefix;
+        var labelFn = function(val) {
+            return replaceBrackets(options.normalize ?
+                smartPercent(val) : smartPrefix(val));
+        };
         var at = labelFn(item.series.data[item.dataIndex][1]);
         var below = labelFn(item.series.data.slice(0, item.dataIndex).reduce(
                 function(prev, d) { return prev + d[1]; }, 0));
         var above = labelFn(item.series.data.slice(item.dataIndex + 1).reduce(
                 function(prev, d) { return prev + d[1]; }, 0));
-        var prevtime = (item.dataIndex === 0 ? "" :
-            smartTime(item.series.data[item.dataIndex - 1][0] / 1000));
-        var time = smartTime(item.series.data[item.dataIndex][0] / 1000);
-        return (options.noname ? "" : item.series.label + "<br>") +
+        var prevtime = (item.dataIndex === 0 ? "" : replaceBrackets(
+            smartTime(item.series.data[item.dataIndex - 1][0] / 1000)));
+        var time = replaceBrackets(smartTime(
+            item.series.data[item.dataIndex][0] / 1000));
+        return (options.noname ? "" :
+                replaceBrackets(item.series.label) + "<br>") +
             (item.dataIndex === 0 ? "&lt;" + time + ": " + at + "<br>"
                                   : prevtime + "-" + time + ": " + at + "<br>" +
                                     "&lt;" + prevtime + ": " + below + "<br>") +
