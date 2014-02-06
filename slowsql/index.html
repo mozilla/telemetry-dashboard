@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+    <title>Telemetry SlowSQL</title>
+    <meta charset="UTF-8" />
+    <script type="text/javascript" src="https://code.jquery.com/jquery.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script type="text/javascript" src="slowsql.js"></script>
+    <script src="http://jquery-csv.googlecode.com/git/src/jquery.csv.js"></script>
+    <link rel="stylesheet" href="slowsql.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+</head>
+<body>
+<a href="https://github.com/mreid-moz/slowsql-dashboard"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+<div id="header">Telemetry SlowSQL</div>
+<div id="subheader">Time flies when you're fetching data</div>
+<div id="navbar">
+    <strong>Sort Top SlowSQL Queries by:</strong><br/>
+    <input id="type_frequency" type="radio" name="slowsql_type" value="frequency" checked></input>
+    <label for="type_frequency">Most Frequent</label>
+    <input id="type_median" type="radio" name="slowsql_type" value="median_duration">
+    <label for="type_median">Longest Median Duration</label></input>
+    <input id="type_duration" type="radio" name="slowsql_type" value="total_duration">
+    <label for="type_duration">Longest Total Duration</label></input>
+    <br/>
+    <strong>Filter by:</strong><br/>
+    Thread Type: <select id="filter_thread">
+        <option value="mainThread">Main Thread</option>
+        <option value="otherThreads">Other Threads</option>
+    </select>
+    Application: <select id="filter_application">
+        <option>Firefox</option>
+        <option>Fennec</option>
+        <option>Thunderbird</option>
+        <option>OTHER</option>
+    </select>
+    Channel: <select id="filter_channel">
+        <option>nightly</option>
+        <option>aurora</option>
+        <option>beta</option>
+        <option>release</option>
+        <option>OTHER</option>
+    </select>
+    Version: <select id="filter_version">
+    </select>
+    Limit: <select id="filter_rowcount">
+        <option value="10">Top 10</option>
+        <option value="25">Top 25</option>
+        <option value="50">Top 50</option>
+        <option value="100">Top 100</option>
+    </select>
+
+    <div id="week_nav">
+      <button class="week_nav_button" id="previous_week">&lt;-- Previous Week</button>
+      <button class="week_nav_button" id="next_week">Next Week --&gt;</button>
+    </div>
+</div>
+
+<div id="graphs">
+    <div id="throbber">
+        <div id="throbber-fg">
+            <div><img src="throbber.gif"/></div>
+            <div id="loading">Loading files...</div>
+        </div>
+        <div id="throbber-bg"></div>
+    </div>
+
+    <div id="current_data">
+    <div id="current_data_header">This week's data</div>
+    <div id="current_data_legend">
+    <span class="up">Moved Up in rank</span>
+    <span class="down">Moved Down in rank</span>
+    <span class="new">New</span>
+    <span class="missing">Gone</span>
+    </div>
+
+    <table id="current_data_table" class="data">
+    <thead>
+    <tr>
+    <th>Rank</th>
+    <th title="SQLite database name (or UNKNOWN if it could not be determined)">DB Name</th>
+    <th title="Percentage of total pings that contained this query">Frequency (%)</th>
+    <th title="Number of submissions containing this query">Ping Count</th>
+    <th title="Median of per-ping durations in milliseconds">Median Duration</th>
+    <th title="Total duration of all query executions in milliseconds">Total Duration</th>
+    <th title="SQL Query String">Query</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+        <td colspan="6">No Data</td>
+        </tr>
+    </tbody>
+    </table>
+    </div>
+    <br/>
+    Compare with:
+    <div id="previous_data">
+    <div id="previous_data_header">Last week's data</div>
+    <table id="previous_data_table" class="data">
+    <thead>
+    <tr>
+    <th>Rank</th>
+    <th title="SQLite database name (or UNKNOWN if it could not be determined)">DB Name</th>
+    <th title="Percentage of total pings that contained this query">Frequency (%)</th>
+    <th title="Number of submissions containing this query">Ping Count</th>
+    <th title="Median of per-ping durations in milliseconds">Median Duration</th>
+    <th title="Total duration of all query executions in milliseconds">Total Duration</th>
+    <th title="SQL Query String">Query</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="6">No Data</td>
+      </tr>
+    </tbody>
+    </table>
+    </div>
+</div>
+<div id='footer'></div>
+</body>
+</html>
+
