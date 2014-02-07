@@ -29,6 +29,14 @@ If you want to improve the user-interface for telemetry dashboard, clone this
 repository, hack and push the master branch to your own `gh-pages` branch.
 Now you can share your dashboard with others.
 
+For local development, the easiest is to run a basic webserver to serve the
+root of the repository as static files:
+```
+cd /path/to/telemetry-dashboard
+python -m SimpleHTTPServer
+```
+Now you can load `http://localhost:8000` in your browser.
+
 If you want to add new aggregations, or improve upon existing aggregations, ie.
 anything that provides data not already provided by `telemetry.js` then you
 should look in the [telemetry-aggregator](https://github.com/mozilla/telemetry-aggregator)
