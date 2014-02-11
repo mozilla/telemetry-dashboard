@@ -36,6 +36,9 @@ Telemetry.init(function(){
   $('input[name=render-type]:radio').change(function() {
     update();
   });
+  $('input[name=sanitize-pref]:checkbox').change(function() {
+    update();
+  });
 });
 
 /** Format numbers */
@@ -217,6 +220,11 @@ function update(hgramEvo) {
 
   nv.addGraph(function() {
     var maxSubmissions = 0;
+
+    // Whether we actually filter submissions is controllable via the
+    // 'sanitize-pref' preference.
+    var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
+
     var submissions = hgramEvo.map(function(date, hgram) {
       if (hgram.submissions() > maxSubmissions) {
         maxSubmissions = hgram.submissions();
@@ -248,7 +256,7 @@ function update(hgramEvo) {
       var p95 = [];
       hgramEvo.each(function(date, hgram) {
         date = date.getTime();
-        if (hgram.submissions() >= submissionsCutoff) {
+        if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
           means.push({x: date, y: hgram.mean()});
           p5.push({x: date, y: hgram.percentile(5)});
           p25.push({x: date, y: hgram.percentile(25)});
