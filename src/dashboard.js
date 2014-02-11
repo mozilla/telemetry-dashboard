@@ -36,6 +36,9 @@ Telemetry.init(function(){
   $('input[name=render-type]:radio').change(function() {
     update();
   });
+  $('input[name=sanitize-pref]:checkbox').change(function() {
+    update();
+  });
 });
 
 /** Format numbers */
@@ -216,7 +219,17 @@ function update(hgramEvo) {
   }
 
   nv.addGraph(function() {
+    var maxSubmissions = 0;
+
+    // Whether we actually filter submissions is controllable via the
+    // 'sanitize-pref' preference.
+    var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
+
     var submissions = hgramEvo.map(function(date, hgram) {
+      if (hgram.submissions() > maxSubmissions) {
+        maxSubmissions = hgram.submissions();
+      }
+
       return {x: date.getTime(), y: hgram.submissions()};
     });
 
@@ -227,6 +240,13 @@ function update(hgramEvo) {
       values:   submissions,
     }];
 
+    // Don't crap up the percentiles / means with lines based on a tiny number
+    // of submissions. Flatten them all to zero if there are less than this
+    // many submissions.
+    // The cutoff is the lesser of 100 or 1% of the maximum number of
+    // submissions we saw.
+    var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
+
     if(hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
       var means = [];
       var p5 = [];
@@ -236,12 +256,22 @@ function update(hgramEvo) {
       var p95 = [];
       hgramEvo.each(function(date, hgram) {
         date = date.getTime();
-        means.push({x: date, y: hgram.mean()});
-        p5.push({x: date, y: hgram.percentile(5)});
-        p25.push({x: date, y: hgram.percentile(25)});
-        p50.push({x: date, y: hgram.percentile(50)});
-        p75.push({x: date, y: hgram.percentile(75)});
-        p95.push({x: date, y: hgram.percentile(95)});
+        if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
+          means.push({x: date, y: hgram.mean()});
+          p5.push({x: date, y: hgram.percentile(5)});
+          p25.push({x: date, y: hgram.percentile(25)});
+          p50.push({x: date, y: hgram.percentile(50)});
+          p75.push({x: date, y: hgram.percentile(75)});
+          p95.push({x: date, y: hgram.percentile(95)});
+        } else {
+          // Set everything to zero to keep the graphs looking nice.
+          means.push({x: date, y: 0});
+          p5.push({x: date, y: 0});
+          p25.push({x: date, y: 0});
+          p50.push({x: date, y: 0});
+          p75.push({x: date, y: 0});
+          p95.push({x: date, y: 0});
+        }
       });
       data.push({
         key:      "Mean",
@@ -269,7 +299,7 @@ function update(hgramEvo) {
         values:   p95,
       });
     }
-    
+
     var focusChart = evolutionchart()
       .margin({top: 10, right: 80, bottom: 40, left: 80});
 
