@@ -179,8 +179,13 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
         }
         if (activityPlot.length &&
             !activityPlotted && $("#report-plots-activity").hasClass("in")) {
-            replotActivities(activityPlot, [report], dimValue,
-                             $.extend({noname: true}, options));
+            var hangtime = sessions.byName("hangtime").filter(
+                function(name, dimval, info, val) {
+                    return dimval === dimValue && val === report.name();
+                }
+            );
+            replotActivities(activityPlot, [hangtime], dimValue,
+                             $.extend({noname: true, }, options));
             activityPlot.prev("i.fa-spinner").stop().fadeOut();
             activityPlotted = true;
         }
@@ -766,14 +771,20 @@ $("#navbar-groupby").change(function() {
 
     function replot() {
         var updateVars = {};
-        if (!reports || (normalize && !sessions)) {
+        if (!reports || !sessions) {
             $("#report-plot").prev("i.fa-spinner").fadeIn();
+        } else if (reports !== plottedVars.reports ||
+                   sessions !== plottedVars.sessions ||
+                   normalize !== plottedVars.normalize) {
+            replotReports($("#report-plot"), reports, sessions, {normalize: normalize});
+            $("#report-plot").prev("i.fa-spinner").stop().fadeOut();
+            updateVars.reports = updateVars.normalize = updateVars.sessions = true;
+        }
+        if (!reports || (normalize && !sessions)) {
             $("#info-plot").prev("i.fa-spinner").fadeIn();
         } else if (reports !== plottedVars.reports ||
                    (normalize && sessions !== plottedVars.sessions) ||
                    normalize !== plottedVars.normalize) {
-            replotReports($("#report-plot"), reports, sessions, {normalize: normalize});
-            $("#report-plot").prev("i.fa-spinner").stop().fadeOut();
             infodim.trigger("change");
             updateVars.reports = updateVars.normalize = true;
             normalize && (updateVars.sessions = true);

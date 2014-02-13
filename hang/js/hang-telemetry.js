@@ -207,12 +207,12 @@ Collection.prototype = {
             names = names.filter(filter);
         }
         return names.map(function(name) {
-            return new self._obj(self._telemetry, name, self._content[name]);
+            return new self._obj(self._telemetry, name, self._content[name], self._obj);
         });
     },
 
     byName: function(name) {
-        return new this._obj(this._telemetry, name, this._content[name]);
+        return new this._obj(this._telemetry, name, this._content[name], this._obj);
     },
 
     infoDistribution: function(dimensionValue) {
@@ -235,14 +235,24 @@ Collection.prototype = {
         return this._value_agg[value];
     },
 
-    filter: function() {
+    filter: function(filter) {
+        var content = {};
+        for (var name in this._content) {
+            var value_histograms =
+                this.byName(name).filter(filter)._value_histograms;
+            if (Object.keys(value_histograms).length) {
+                content[name] = value_histograms;
+            }
+        }
+        return new Collection(this._telemetry, this._dim, content, this._obj)
     },
 };
 
-function CollectionItem(telemetry, name, value_histograms) {
+function CollectionItem(telemetry, name, value_histograms, obj) {
     this._telemetry = telemetry;
     this._name = name;
     this._value_histograms = value_histograms;
+    this._obj = obj;
     this._value_count = {};
     this._value_agg = {};
 }
@@ -314,6 +324,30 @@ CollectionItem.prototype = {
         }
         return this._value_agg[value];
     },
+
+    filter: function(filter) {
+        var value_histograms = {};
+        for (var dimval in this._value_histograms) {
+            var oldinfos = this._value_histograms[dimval];
+            var newinfos = {};
+            for (var info in oldinfos) {
+                var oldvals = oldinfos[info];
+                var newvals = {};
+                for (var value in oldvals) {
+                    if (filter(this._name, dimval, info, value)) {
+                        newvals[value] = oldvals[value];
+                    }
+                }
+                if (Object.keys(newvals).length) {
+                    newinfos[info] = newvals;
+                }
+            }
+            if (Object.keys(newinfos).length) {
+                value_histograms[dimval] = newinfos;
+            }
+        }
+        return new this._obj(this._telemetry, this._name, value_histograms, this._obj)
+    },
 };
 
 function Session() {
@@ -356,42 +390,55 @@ Thread.prototype = {
 };
 
 function StackFrame(frame) {
-    this._components = frame.split(':');
+    var sep1 = frame.indexOf(':');
+    this._ident = frame.slice(0, sep1);
+
+    if (this.isNative() || this.isJava()) {
+        var sep2 = frame.indexOf(':', sep1 + 1);
+        this._components = [
+            frame.slice(sep1 + 1, sep2),
+            frame.slice(sep2 + 1),
+        ];
+    } else if (this.isPseudo()) {
+        this._components = [
+            frame.slice(sep1 + 1),
+        ];
+    }
 }
 
 StackFrame.prototype = {
 
     isNative: function() {
-        return this._components[0] === "c";
+        return this._ident === "c";
     },
 
     isJava: function() {
-        return this._components[0] === "j";
+        return this._ident === "j";
     },
 
     isPseudo: function() {
-        return this._components[0] === "p";
+        return this._ident === "p";
     },
 
     functionName: function() {
         if (this.isJava()) {
-            return this._components[1];
+            return this._components[0];
         } else if (this.isNative()) {
-            return this._components[2];
-        } else if (this.isPseudo()) {
             return this._components[1];
+        } else if (this.isPseudo()) {
+            return this._components[0];
         }
     },
 
     libName: function() {
         if (this.isNative()) {
-            return this._components[1];
+            return this._components[0];
         }
     },
 
     lineNumber: function() {
         if (this.isJava()) {
-            return this._components[2];
+            return this._components[1];
         }
     },
 };
