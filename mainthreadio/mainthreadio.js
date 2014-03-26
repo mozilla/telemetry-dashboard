@@ -31,6 +31,7 @@ var FILENAME_COLUMN         = 4;
 var APP_COLUMN              = 5;
 var CHAN_COLUMN             = 6;
 var VER_COLUMN              = 7;
+var INTERVAL_COLUMN         = 8;
 
 function zpad(aNum) {
   return (aNum < 10 ? "0" : "") + aNum;
@@ -114,6 +115,7 @@ function populate_table(table_id, key, label) {
   var filter_app = $('#filter_application').find(":selected").val();
   var filter_channel = $('#filter_channel').find(":selected").val();
   var filter_version = $('#filter_version').find(":selected").val();
+  var filter_interval = $('#filter_interval').find(":selected").val();
 
   console.log("Populating " + table_id + " table");
   tbody.empty();
@@ -134,7 +136,8 @@ function populate_table(table_id, key, label) {
       var drow = fileio_data[key][i];
       if (drow[APP_COLUMN] === filter_app &&
           clean_version(drow[VER_COLUMN]) === filter_version &&
-          drow[CHAN_COLUMN] === filter_channel) {
+          drow[CHAN_COLUMN] === filter_channel &&
+          drow[INTERVAL_COLUMN] === filter_interval) {
         var trow = $('<tr>', {id: label + rank});
 
         trow.append($('<td>', {id: label + rank + "rank", text: rank}));
@@ -251,6 +254,7 @@ $(function () {
   $('#filter_channel').change(update_data);
   $('#filter_rowcount').change(update_data);
   $('#filter_version').change(update_data);
+  $('#filter_interval').change(update_data);
   $('input[name=mainthreadio_type]').change(update_data);
 
   update_data();
