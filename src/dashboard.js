@@ -21,6 +21,16 @@ Telemetry.init(function(){
       update(hgramEvo);
       $("#content").fadeIn();
       $("#spinner").fadeOut();
+
+      // Send new state to google analytics
+      var state = $("#histogram-filter").histogramfilter('option', 'state');
+      ga('send', 'event', 'states', 'changed', state, 1);
+      var parts = state.split('/');
+      // Report channel, version, measure and filter independently
+      ga('send', 'event', 'states', 'channel', parts[0], 1);
+      ga('send', 'event', 'states', 'version', parts[1], 1);
+      ga('send', 'event', 'states', 'measure', parts[2], 1);
+      ga('send', 'event', 'states', 'filter',  parts.slice(3).join('/'), 1);
     } else {
       $("#content").fadeOut();
       $("#spinner").fadeIn();
@@ -29,15 +39,22 @@ Telemetry.init(function(){
 
   $('input[name=evo-type]:radio').change(function() {
     var evoType = $('input[name=evo-type]:radio:checked').val();
+    // Inform google analytics of click
     $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
-    console.log(evoType);
+    ga('send', 'event', 'click', 'evolution-type', evoType);
   });
 
   $('input[name=render-type]:radio').change(function() {
     update();
+    // Inform google analytics of click
+    var renderType = $('input[name=render-type]:radio:checked').val();
+    ga('send', 'event', 'click', 'render-type', renderType);
   });
   $('input[name=sanitize-pref]:checkbox').change(function() {
     update();
+    // Inform google analytics of click
+    var value = $('input[name=sanitize-pref]:checkbox').is(':checked');
+    ga('send', 'event', 'click', 'sanitize-data', value + '');
   });
 });
 
@@ -130,6 +147,8 @@ $('#export-link').mousedown(function(){
    $('#export-link')[0].download = _exportHgram.measure() + ".csv";
 });
 
+var hasReportedDateRangeSelectorUsedInThisSession = false;
+
 function update(hgramEvo) {
   if(!hgramEvo) {
     hgramEvo = lastHistogramEvo;
@@ -156,6 +175,11 @@ function update(hgramEvo) {
       hgram = hgramEvo.range(start, end);
       // Filter dates
       dates = dates.filter(function(date) { return start <= date && date <= end;});
+      // Report it the first time the date-range selector is used in a session
+      if (!hasReportedDateRangeSelectorUsedInThisSession) {
+        hasReportedDateRangeSelectorUsedInThisSession = true;
+        ga('send', 'event', 'report', 'date-range-selector', 'used-in-session', 1);
+      }
     } else {
       hgram = hgramEvo.range();
     }
