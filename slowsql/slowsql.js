@@ -10,9 +10,9 @@ yesterday.setDate(yesterday.getDate() - 7);
 // Monday is 1, so we adjust offset accordingly
 var dowOffset = (yesterday.getUTCDay() - 1) % 7;
 var thisWeekStart = new Date(yesterday);
-var thisWeekEnd = new Date(yesterday);
 thisWeekStart.setDate(thisWeekStart.getDate() - dowOffset);
-thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+var thisWeekEnd = new Date(thisWeekStart);
+thisWeekEnd.setDate(thisWeekEnd.getDate() + 6);
 
 var lastWeekStart = new Date(thisWeekStart);
 lastWeekStart.setDate(lastWeekStart.getDate() - 7);
