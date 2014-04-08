@@ -249,28 +249,31 @@ function update(hgramEvo) {
 
     if(hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
       var means = [];
-      var p5 = [];
-      var p25 = [];
-      var p50 = [];
-      var p75 = [];
-      var p95 = [];
+      // Percentile series
+      var ps = {};
+      [5, 25, 50, 75, 95].forEach(function(p) {
+        ps[p] = [];
+      });
       hgramEvo.each(function(date, hgram) {
         date = date.getTime();
         if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
-          means.push({x: date, y: hgram.mean()});
-          p5.push({x: date, y: hgram.percentile(5)});
-          p25.push({x: date, y: hgram.percentile(25)});
-          p50.push({x: date, y: hgram.percentile(50)});
-          p75.push({x: date, y: hgram.percentile(75)});
-          p95.push({x: date, y: hgram.percentile(95)});
+          var mean = hgram.mean();
+          if (mean >= 0) {
+            means.push({x: date, y: mean});
+          }
+          [5, 25, 50, 75, 95].forEach(function(p) {
+            var v = hgram.percentile(p);
+            // Weird negative values can cause d3 etc. to freak out - see Bug 984928 
+            if (v >= 0) {
+              ps[p].push({x: date, y: v});
+            }
+          });
         } else {
           // Set everything to zero to keep the graphs looking nice.
           means.push({x: date, y: 0});
-          p5.push({x: date, y: 0});
-          p25.push({x: date, y: 0});
-          p50.push({x: date, y: 0});
-          p75.push({x: date, y: 0});
-          p95.push({x: date, y: 0});
+          [5, 25, 50, 75, 95].forEach(function(p) {
+            ps[p].push({x: date, y: 0});
+          });
         }
       });
       data.push({
@@ -280,23 +283,23 @@ function update(hgramEvo) {
       },{
         key:      "5th percentile",
         yAxis:    1,
-        values:   p5,
+        values:   ps['5'],
       },{
         key:      "25th percentile",
         yAxis:    1,
-        values:   p25,
+        values:   ps['25'],
       },{
         key:      "median",
         yAxis:    1,
-        values:   p50,
+        values:   ps['50'],
       },{
         key:      "75th percentile",
         yAxis:    1,
-        values:   p75,
+        values:   ps['75'],
       },{
         key:      "95th percentile",
         yAxis:    1,
-        values:   p95,
+        values:   ps['95'],
       });
     }
 
