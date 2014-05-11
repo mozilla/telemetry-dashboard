@@ -1,3 +1,6 @@
+// NEW
+  
+var gHistogramFilterObjects = [];
 var gHistogramEvolutions = {};
 function plot(){
   var isLoaded = true;
@@ -87,10 +90,11 @@ function addFilter(name)
   f.id = name;
   if (name !== undefined)
   {
+    console.log("i ended up here");
     var button = createRemoveButton(f); 
   }
  
-  console.log("f is", f);
+  console.log("-------f is", f);
 	$('#newHistoFilter').append(f);
 	f.histogramfilter({
 	// TODO: raluca: Fighting over the window url.
@@ -188,22 +192,41 @@ $('#export-link').mousedown(function(){
 
 function update(hgramEvos) {
   console.log("here i am ", hgramEvos);
+  var xxx = [];
+  
+  $.each(hgramEvos, function( key, value ) { xxx.push(value); });
+  
+  var hgramEvo = xxx[0];
   
   if (hgramEvos === undefined || hgramEvos === [])
   {
     console.log("here i am ");
     return;
   }
-  xxx = [];
-  $.each(hgramEvos, function( key, value ) { xxx.push(value); });
+  
 
   if(!hgramEvos) {
     hgramEvos = lastHistogramEvos;
   }
   lastHistogramEvos = hgramEvos;
 
-  var hgramEvo = xxx[0];
   console.log("-----", hgramEvo);
+  
+  var datas = [];
+  $.each(hgramEvos, function(state, evo) { 
+    data = prepareData(evo);
+    datas.push(prependState(state, data));
+  });
+  function prependState(state, data) {
+    $.each(data, function(i, d) { 
+      d.key = state + ": " + d.key; 
+    });
+    return data;
+  }
+  //from list of lists to list  
+  cDatas = [].concat.apply([], datas);
+  
+  
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
@@ -374,14 +397,6 @@ function update(hgramEvos) {
     return data;  
   }
   
-  var datas = [];
-//  $.each(hgramEvos, function(state, evo) { 
-//    data = prepareData(evo);
-//    datas.push(prependState(state, data));
-//  });
-  //from list of lists to list  
-  cDatas = [].concat.apply([], datas);
-  
   function plot(){
     var isLoaded = true;
     gHistogramFilterObjects.forEach(function (filter){
@@ -417,7 +432,9 @@ function update(hgramEvos) {
   
   
   nv.addGraph(function() {    
-    var data = prepareData(hgramEvo);
+    //var data = prepareData(hgramEvo);
+    console.log("hgramEvos----------", hgramEvos);
+    //update(hgramEvos);
     var focusChart = evolutionchart()
       .margin({top: 10, right: 80, bottom: 40, left: 80});
 
@@ -439,7 +456,7 @@ function update(hgramEvos) {
         .tickFormat(fmt);
 
     d3.select("#evolution")
-      .datum(data)
+      .datum(cDatas)
       .transition().duration(500).call(focusChart);
 
     nv.utils.windowResize(
