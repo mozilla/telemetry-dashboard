@@ -1,43 +1,57 @@
-Telemetry.init(function(){
-  $("#histogram-filter").histogramfilter({
-    synchronizeStateWithHash:   true,
-    defaultVersion:             function(versions) {
-      var nightlies = versions.filter(function(version) {
-        return version.substr(0,8) == "nightly/";
-      });
-      nightlies.sort();
-      return nightlies.pop() || versions.sort().pop();
-    },
-    selectorType:   BootstrapSelector,
-    evolutionOver:  $('input[name=evo-type]:radio:checked').val(),
-  });
-
-  $("#histogram-filter").bind("histogramfilterchange", function(event, data) {
-
-    // Get HistogramEvolution instance
-    var hgramEvo = data.histogram;
-
-    if (hgramEvo !== null) {
-      update(hgramEvo);
+var gHistogramEvolutions = {};
+function plot(){
+  var isLoaded = true;
+  gHistogramFilterObjects.forEach(function (filter){
+    if (!filter.histogramfilter('histogram'))
+      isLoaded = false;
+  })
+  if (isLoaded) {
       $("#content").fadeIn();
       $("#spinner").fadeOut();
-    } else {
+  } 
+  else 
+  {
       $("#content").fadeOut();
       $("#spinner").fadeIn();
+      return;
+  }
+	gHistogramEvolutions = {};
+	gHistogramFilterObjects.forEach(function(f) {
+    var hist = f.histogramfilter('histogram');
+		if (hist !== null) {
+      gHistogramEvolutions[f.histogramfilter('state')] = hist;
     }
-  });
+	});
+
+
+	
+	if (!$.isEmptyObject(gHistogramEvolutions)) {
+		update(gHistogramEvolutions);
+	}
+	return gHistogramEvolutions;
+}
+
+Telemetry.init(function(){
+  var id = 0;
+  var versions = Telemetry.versions();
+  addFilter();
+  $("#addVersionButton").click(function() {  
+                                             id++;
+                                             addFilter(id);
+                                           });
+	
 
   $('input[name=evo-type]:radio').change(function() {
     var evoType = $('input[name=evo-type]:radio:checked').val();
     $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
-    console.log(evoType);
+    //console.log(evoType);
   });
 
   $('input[name=render-type]:radio').change(function() {
-    update();
+    plot();
   });
   $('input[name=sanitize-pref]:checkbox').change(function() {
-    update();
+    plot();
   });
 });
 
@@ -51,6 +65,48 @@ function fmt(number) {
     return "NaN";
   var prefix = d3.formatPrefix(number ,'s')
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
+}
+var gHistogramFilterObjects = [];
+var gHistogramEvolutions = {};
+function createRemoveButton(parent)
+{  
+  var button = $("<button>");
+  button.name = "remove";
+  console.log("the name of my button is", button.name, "and the object itself is", button);
+  parent.append(button);
+  button.click(function(){parent.remove();
+  gHistogramFilterObjects = gHistogramFilterObjects.filter(function(x)
+                                                          {
+                                                              return x !==parent;
+                                                           });
+    plot();})
+}
+function addFilter(name)
+{
+  var f = $("<div>");
+  f.id = name;
+  if (name !== undefined)
+  {
+    var button = createRemoveButton(f); 
+  }
+ 
+  console.log("f is", f);
+	$('#newHistoFilter').append(f);
+	f.histogramfilter({
+	// TODO: raluca: Fighting over the window url.
+    // synchronizeStateWithHash: true,
+    defaultVersion: function(versions) {
+      var nightlies = versions.filter(function(version) {
+        return version.substr(0,8) == "nightly/";
+      });
+      nightlies.sort();
+      return nightlies.pop() || versions.sort().pop();
+    }, 
+    selectorType: BootstrapSelector,
+    evolutionOver: $('input[name=evo-type]:radio:checked').val(),
+  });
+  f.bind("histogramfilterchange", plot);
+  gHistogramFilterObjects.push(f);
 }
 
 
@@ -130,12 +186,24 @@ $('#export-link').mousedown(function(){
    $('#export-link')[0].download = _exportHgram.measure() + ".csv";
 });
 
-function update(hgramEvo) {
-  if(!hgramEvo) {
-    hgramEvo = lastHistogramEvo;
+function update(hgramEvos) {
+  console.log("here i am ", hgramEvos);
+  
+  if (hgramEvos === undefined || hgramEvos === [])
+  {
+    console.log("here i am ");
+    return;
   }
-  lastHistogramEvo = hgramEvo;
+  xxx = [];
+  $.each(hgramEvos, function( key, value ) { xxx.push(value); });
 
+  if(!hgramEvos) {
+    hgramEvos = lastHistogramEvos;
+  }
+  lastHistogramEvos = hgramEvos;
+
+  var hgramEvo = xxx[0];
+  console.log("-----", hgramEvo);
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
@@ -305,6 +373,48 @@ function update(hgramEvo) {
     }
     return data;  
   }
+  
+  var datas = [];
+//  $.each(hgramEvos, function(state, evo) { 
+//    data = prepareData(evo);
+//    datas.push(prependState(state, data));
+//  });
+  //from list of lists to list  
+  cDatas = [].concat.apply([], datas);
+  
+  function plot(){
+    var isLoaded = true;
+    gHistogramFilterObjects.forEach(function (filter){
+      if (!filter.histogramfilter('histogram'))
+        isLoaded = false;
+    })
+    if (isLoaded) {
+        $("#content").fadeIn();
+        $("#spinner").fadeOut();
+    } 
+    else 
+    {
+        $("#content").fadeOut();
+        $("#spinner").fadeIn();
+        return;
+    }
+  	gHistogramEvolutions = {};
+  	gHistogramFilterObjects.forEach(function(f) {
+      var hist = f.histogramfilter('histogram');
+  		if (hist !== null) {
+        gHistogramEvolutions[f.histogramfilter('state')] = hist;
+      }
+  	});
+
+
+	
+  	if (!$.isEmptyObject(gHistogramEvolutions)) {
+  		update(gHistogramEvolutions);
+  	}
+  	return gHistogramEvolutions;
+  }
+
+  
   
   nv.addGraph(function() {    
     var data = prepareData(hgramEvo);
