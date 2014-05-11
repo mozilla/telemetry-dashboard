@@ -218,7 +218,8 @@ function update(hgramEvo) {
     }, 100);
   }
 
-  nv.addGraph(function() {
+  
+  function prepareData(hgramEvo) {
     var maxSubmissions = 0;
 
     // Whether we actually filter submissions is controllable via the
@@ -302,7 +303,11 @@ function update(hgramEvo) {
         values:   ps['95'],
       });
     }
-
+    return data;  
+  }
+  
+  nv.addGraph(function() {    
+    var data = prepareData(hgramEvo);
     var focusChart = evolutionchart()
       .margin({top: 10, right: 80, bottom: 40, left: 80});
 
