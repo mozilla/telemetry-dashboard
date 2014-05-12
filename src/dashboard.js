@@ -31,7 +31,8 @@ function plot(){
 
 function addMultipleSelect(options, changeCb) {
   
-     var selector = $("<select multiple id=optSelector >");
+     var selector = $("<select multiple  id=optSelector >");
+     selector.addClass( "multiselect");
      $('#multipercentile').empty().append(selector);
      var n = options.length;
      for(var i = 0; i < n; i++) {
@@ -55,6 +56,7 @@ function addMultipleSelect(options, changeCb) {
        
        
      });
+     selector.multiselect();
 }
 
  Telemetry.init(function(){
