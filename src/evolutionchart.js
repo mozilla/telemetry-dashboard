@@ -227,7 +227,7 @@ var evolutionchart = function() {
       // Legend
 
       if (showLegend) {
-        /*legend.width( availableWidth  );
+        legend.width( availableWidth  );
 
         g.select('.nv-legendWrap')
             .datum(data.map(function(series) {
@@ -244,7 +244,7 @@ var evolutionchart = function() {
         }
 
         g.select('.nv-legendWrap')
-            .attr('transform', 'translate(' + (0 ) + ',' + (-margin.top) +')');*/
+            .attr('transform', 'translate(' + (0 ) + ',' + (-margin.top) +')');
       }
 
       //------------------------------------------------------------

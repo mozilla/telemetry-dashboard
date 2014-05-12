@@ -28,10 +28,10 @@ function plot(){
 	}
 	return gHistogramEvolutions;
 }
-function addMultipleSelect(options)
-{
+
+function addMultipleSelect(options, changeCb) {
   
-     var selector = $("<select multiple>");
+     var selector = $("<select multiple id=optSelector >");
      $('#multipercentile').empty().append(selector);
      var n = options.length;
      for(var i = 0; i < n; i++) {
@@ -41,11 +41,22 @@ function addMultipleSelect(options)
        // Add <option>
        selector.append($("<option>", {
          text:       label,
-         value:      option
+         value:      option,
+         //selected: true
+         
        }));
      }
- 
+     $("#optSelector").val(options);
+     $("#optSelector").change(function(){
+       console.log("just enetered in change---");
+       console.log($(selector).val());
+       changeCb(selector);
+       console.log("finished the callback for selector---");
+       
+       
+     });
 }
+
  Telemetry.init(function(){
   var id = 0;
   var versions = Telemetry.versions();
@@ -138,7 +149,6 @@ function renderHistogramTable(hgram) {
       .append($('<td>').text(fmt(count)));
   }));
 }
-
 
 function renderHistogramGraph(hgram) {
   $('#histogram-table').hide();
@@ -243,8 +253,6 @@ function update(hgramEvos) {
         return index == $.inArray(el, array);
     });
   }
-  labels = unique(labels);
-  addMultipleSelect(labels);
   
   $.each(hgramEvos, function(state, evo) { 
     var data = prepareData(evo); 
@@ -494,6 +502,47 @@ function update(hgramEvos) {
     );
 
     focusChart.setSelectionChangeCallback(updateProps);
+    
+    function endsWith(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }
+    labels = unique(labels);
+    addMultipleSelect(labels, function(selector){
+      var toBeSelected = selector.val();
+      if (toBeSelected === null)
+      toBeSelected = [];
+      for (var i = 0; i < cDatas.length; i++) {
+        if (isKeySelected(cDatas[i].originalKey, toBeSelected)){
+          console.log("isKeySelected true");
+            cDatas[i].disabled = false;
+        }
+        else
+        {
+            cDatas[i].disabled = true;
+            console.log("isKeySelected false");
+        
+        }
+      }
+          
+      console.log("to be selected looks like", toBeSelected);
+      focusChart.update();
+    });
+    
+    function isKeySelected(key, toBeSelected) {
+      for (var i = 0; i < toBeSelected.length; i++) {
+        if (endsWith(key, toBeSelected[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+   
+    
+    
+    
+    
+    
+    
   });
 
   updateProps();
