@@ -1,4 +1,3 @@
-// NEW  
 function plot(){
   var isLoaded = true;
   gHistogramFilterObjects.forEach(function (filter){
@@ -29,27 +28,22 @@ function plot(){
 	return gHistogramEvolutions;
 }
 
-function addMultipleSelect(options, changeCb) {
-  
-     var selector = $("<select multiple  id=optSelector >");
-     selector.addClass( "multiselect");
-     $('#multipercentile').empty().append(selector);
-     var n = options.length;
-     for(var i = 0; i < n; i++) {
-       var option = options[i];
-
-       var label = option;
-       // Add <option>
-       selector.append($("<option>", {
-         text:       label,
-         value:      option,
-         //selected: true
-         
-       }));
-     }
-     $("#optSelector").val(options);
-     $("#optSelector").change(function(){
-       console.log("just enetered in change---");
+function addMultipleSelect(options, changeCb) {  
+  var selector = $("<select multiple  id=optSelector >");
+  selector.addClass( "multiselect");
+  $('#multipercentile').empty().append(selector);
+  var n = options.length;
+  for(var i = 0; i < n; i++) {
+    var option = options[i];
+    var label = option;
+    // Add <option>
+    selector.append($("<option>", {
+    text:       label,
+    value:      option,}));
+  }
+  $("#optSelector").val(options);
+  $("#optSelector").change(function(){
+       console.log("just enetered in change---HUHUHUHUHUHUHUH");
        console.log($(selector).val());
        changeCb(selector);
        console.log("finished the callback for selector---");
