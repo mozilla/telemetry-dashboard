@@ -93,8 +93,10 @@ var gHistogramFilterObjects = [];
 var gHistogramEvolutions = {};
 function createRemoveButton(parent)
 {  
-  var button = $("<button>");
-  button.name = "remove";
+  //var button = $("<button>");
+  //var button=$('<button class="btn btn-primary btn-lg">');
+  var button=$('<button class="btn btn-default " >');
+  $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   console.log("the name of my button is", button.name, "and the object itself is", button);
   parent.append(button);
   button.click(function(){parent.remove();
@@ -103,15 +105,15 @@ function createRemoveButton(parent)
                                                               return x !==parent;
                                                            });
     plot();})
+  return button;
 }
 function addFilter(name)
 {
   var f = $("<div>");
   f.id = name;
-  if (name !== undefined)
-  {
-    console.log("i ended up here");
-    var button = createRemoveButton(f); 
+  var button = createRemoveButton(f);
+  if (name === undefined) {
+    button.css("visibility", "hidden");
   }
  	$('#newHistoFilter').append(f);
 	f.histogramfilter({

@@ -29,14 +29,14 @@
     </header>
     <nav data-spy="affix" data-offset-top="70"
          class="navbar navbar-default navbar-affix-top" role="navigation">
-         <div><form id="newHistoFilter" class=" navbar-form navbar-left form-inline histogram-filter"></form></div>
-         <div id = "multipercentile">
-             <!-- Initialize the plugin: -->
-             
-             </div>
-             
-         <div id="addVersionButton" ><button type="button">addVersion</button></div>
-         
+         <div><form id="newHistoFilter" class=" navbar-form navbar-left form-inline histogram-filter">
+         </form></div>
+         <div class="navbar-form navbar-right">
+           <div id="addVersionButton">
+             <button type="button" class="btn btn-default" ><span class="glyphicon glyphicon-remove"></span>Add version</button>
+           </div>
+           <div id = "multipercentile"></div>
+         </div>
       <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
       </form>
     </nav>
