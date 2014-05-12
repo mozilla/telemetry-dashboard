@@ -506,6 +506,8 @@ function update(hgramEvos) {
     focusChart.setSelectionChangeCallback(updateProps);
     
     function endsWith(str, suffix) {
+      suffix = ": " + suffix;
+      console.log("---------########str is", str, "suffix is", suffix);
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     }
     labels = unique(labels);
