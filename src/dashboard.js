@@ -1,7 +1,4 @@
-// NEW
-  
-var gHistogramFilterObjects = [];
-var gHistogramEvolutions = {};
+// NEW  
 function plot(){
   var isLoaded = true;
   gHistogramFilterObjects.forEach(function (filter){
@@ -25,16 +22,31 @@ function plot(){
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
     }
 	});
-
-
 	
 	if (!$.isEmptyObject(gHistogramEvolutions)) {
 		update(gHistogramEvolutions);
 	}
 	return gHistogramEvolutions;
 }
+function addMultipleSelect(options)
+{
+  
+     var selector = $("<select multiple>");
+     $('#multipercentile').empty().append(selector);
+     var n = options.length;
+     for(var i = 0; i < n; i++) {
+       var option = options[i];
 
-Telemetry.init(function(){
+       var label = option;
+       // Add <option>
+       selector.append($("<option>", {
+         text:       label,
+         value:      option
+       }));
+     }
+ 
+}
+ Telemetry.init(function(){
   var id = 0;
   var versions = Telemetry.versions();
   addFilter();
@@ -69,6 +81,7 @@ function fmt(number) {
   var prefix = d3.formatPrefix(number ,'s')
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
+
 var gHistogramFilterObjects = [];
 var gHistogramEvolutions = {};
 function createRemoveButton(parent)
@@ -93,9 +106,7 @@ function addFilter(name)
     console.log("i ended up here");
     var button = createRemoveButton(f); 
   }
- 
-  console.log("-------f is", f);
-	$('#newHistoFilter').append(f);
+ 	$('#newHistoFilter').append(f);
 	f.histogramfilter({
 	// TODO: raluca: Fighting over the window url.
     // synchronizeStateWithHash: true,
@@ -191,7 +202,6 @@ $('#export-link').mousedown(function(){
 });
 
 function update(hgramEvos) {
-  console.log("here i am ", hgramEvos);
   var xxx = [];
   
   $.each(hgramEvos, function( key, value ) { xxx.push(value); });
@@ -200,7 +210,6 @@ function update(hgramEvos) {
   
   if (hgramEvos === undefined || hgramEvos === [])
   {
-    console.log("here i am ");
     return;
   }
   
@@ -209,20 +218,39 @@ function update(hgramEvos) {
     hgramEvos = lastHistogramEvos;
   }
   lastHistogramEvos = hgramEvos;
-
-  console.log("-----", hgramEvo);
-  
-  var datas = [];
-  $.each(hgramEvos, function(state, evo) { 
-    data = prepareData(evo);
-    datas.push(prependState(state, data));
-  });
-  function prependState(state, data) {
+  function prependState(state, data) {  
     $.each(data, function(i, d) { 
       d.key = state + ": " + d.key; 
     });
+  
     return data;
   }
+  
+  var datas = []; 
+  var allDataForLabels = [];
+  $.each(hgramEvos, function(state, evo){
+    allDataForLabels.push(prepareData(evo));
+  });
+  //from list of lists to list   
+  listOfAllData = [].concat.apply([], allDataForLabels);
+  
+  var labels = listOfAllData.map(function(x){
+      return x.key;
+    });
+  
+  function unique(array) {
+    return $.grep(array, function(el, index) {
+        return index == $.inArray(el, array);
+    });
+  }
+  labels = unique(labels);
+  addMultipleSelect(labels);
+  
+  $.each(hgramEvos, function(state, evo) { 
+    var data = prepareData(evo); 
+    datas.push(prependState(state, data));
+  });
+  
   //from list of lists to list  
   cDatas = [].concat.apply([], datas);
   

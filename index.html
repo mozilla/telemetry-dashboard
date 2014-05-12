@@ -30,8 +30,11 @@
     <nav data-spy="affix" data-offset-top="70"
          class="navbar navbar-default navbar-affix-top" role="navigation">
          <div><form id="newHistoFilter" class=" navbar-form navbar-left form-inline histogram-filter"></form></div>
-         
+         <div id = "multipercentile">
+             <!-- Initialize the plugin: -->
+             </div>
          <div id="addVersionButton" ><button type="button">addVersion</button></div>
+         
       <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
       </form>
     </nav>
@@ -199,12 +202,14 @@
     </div>
     <!-- jQuery, Bootstrap and d3 -->
     <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js">
-    </script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
     <script src="lib/bootstrap-select.min.js"></script>
     <script src="lib/d3.js"></script>
-    <script src="lib/nv.d3.js">
-    </script>
+    <script src="lib/nv.d3.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    
+    
     <!-- nvd3 chart hacks -->
     <script src="src/evolutionchart.js"></script>
     <script src="src/histogramchart.js"></script>
