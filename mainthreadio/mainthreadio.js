@@ -19,6 +19,7 @@ var lastWeekEnd = new Date(thisWeekEnd);
 lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
 
 var version_filters = [];
+var versions_seen = {}
 
 var fileio_data = {};
 
@@ -53,20 +54,24 @@ function clean_version(ver) {
 }
 
 function update_version_filter(key) {
-  if (version_filters.length == 0) {
-    var vermap = {};
-    for (var i = 0; i < fileio_data[key].length; i++) {
-      vermap[clean_version(fileio_data[key][i][VER_COLUMN])] = 1;
-    }
-    version_filters = Object.keys(vermap);
-    version_filters.sort(function(a, b) {
-      // Sort descending
-      return parseInt(b) - parseInt(a);
-    });
-    // Populate the filter list:
-    var version_select = $('#filter_version');
-    for (var j = 0; j < version_filters.length; j++) {
-      version_select.append($('<option>', {text: version_filters[j]}));
+  var vermap = {};
+  for (var i = 0; i < fileio_data[key].length; i++) {
+    vermap[clean_version(fileio_data[key][i][VER_COLUMN])] = 1;
+  }
+  version_filters = Object.keys(vermap);
+  version_filters.sort(function(a, b) {
+    // Sort descending
+    return parseInt(b) - parseInt(a);
+  });
+  // Populate the filter list:
+  var version_select = $('#filter_version');
+  for (var j = 0; j < version_filters.length; j++) {
+    var version = version_filters[j]
+    if (versions_seen[version]) {
+      continue;
+    } else {
+      version_select.append($('<option>', {text: version}));
+      versions_seen[version] = true;
     }
   }
 }
