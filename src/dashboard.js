@@ -1,4 +1,4 @@
-function plot() {
+function plot(firstChanged) {
   var isLoaded = true;
   gHistogramFilterObjects.forEach(function (filter) {
     if (!filter.histogramfilter('histogram')) isLoaded = false;
@@ -12,8 +12,9 @@ function plot() {
     return;
   }
   gHistogramEvolutions = {};
-  var fixedState = gHistogramFilterObjects[0].histogramfilter('state');
-  console.log("");
+  
+  if (firstChanged)
+    syncStateWithFirst();
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
     if (hist !== null) {
@@ -25,6 +26,35 @@ function plot() {
     update(gHistogramEvolutions);
   }
   return gHistogramEvolutions;
+}
+
+function syncStateWithFirst() {
+  console.log("updateState1 enter");
+  
+  if (gHistogramFilterObjects.length == 0 ) {
+    console.log("updateState1 len=0");
+    return;
+  }
+  
+  var stateSegment = gHistogramFilterObjects[0].histogramfilter('state');
+  var segm = stateSegment.split("/");
+  segm.shift();
+  segm.shift();
+  var segment = "";
+  for (var i = 0; i < segm.length; i++) {
+    segment += '/' + segm[i];
+  }
+  console.log("state segment is ", stateSegment);
+  console.log("segment is ",  segment);
+  
+  for (var j = 1; j < gHistogramFilterObjects.length; j++) {
+    var highSegm = gHistogramFilterObjects[j].histogramfilter('state');
+    var segm = highSegm.split("/");
+    var high = segm[0] + '/' + segm[1];
+    console.log("-------new state is ", high+segment);
+    
+    gHistogramFilterObjects[j].histogramfilter('state', high+segment);
+  }
 }
 
 function addMultipleSelect(options, changeCb) {
@@ -50,19 +80,19 @@ function addMultipleSelect(options, changeCb) {
 
 Telemetry.init(function () {
   var versions = Telemetry.versions();
-  addFilter();
+  addFilter(true); //  first filter
   $("#addVersionButton").click(function () {
-    addFilter(0);
+    addFilter(false);
   });
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
     $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
   });
   $('input[name=render-type]:radio').change(function () {
-    plot();
+    plot(true);
   });
   $('input[name=sanitize-pref]:checkbox').change(function () {
-    plot();
+    plot(true);
   });
 });
 
@@ -88,12 +118,12 @@ function createRemoveButton(parent) {
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
       return x !== parent;
     });
-    plot();
+    plot(false);
   })
   return button;
 }
 
-function addFilter(flag) {
+function addFilter(firstHistogramFilter) {
   var f = $("<div>");
   //f.id = name;
   var state = null;
@@ -101,7 +131,7 @@ function addFilter(flag) {
     state = gHistogramFilterObjects[0].histogramfilter('state');
   
   var button = createRemoveButton(f);
-  if (flag === undefined) {
+  if (firstHistogramFilter) {
     button.css("visibility", "hidden");
   }
   $('#newHistoFilter').append(f);
@@ -126,7 +156,7 @@ function addFilter(flag) {
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
-  f.bind("histogramfilterchange", plot);
+  f.bind("histogramfilterchange", function() {plot(firstHistogramFilter);});
   if (gHistogramFilterObjects.length >= 1)
   {
 //    f.histogramfilter.visibility = "hidden";
@@ -437,6 +467,10 @@ function update(hgramEvos) {
     return data;
   }
 
+  
+  //updateState1();
+  
+ /* 
   function plot() {
     var isLoaded = true;
     gHistogramFilterObjects.forEach(function (filter) {
@@ -451,6 +485,7 @@ function update(hgramEvos) {
       return;
     }
     gHistogramEvolutions = {};
+    
     gHistogramFilterObjects.forEach(function (f) {
       var hist = f.histogramfilter('histogram');
       if (hist !== null) {
@@ -465,7 +500,7 @@ function update(hgramEvos) {
     }
     return gHistogramEvolutions;
   }
-  
+ */ 
   nv.addGraph(function () {
     var focusChart = evolutionchart().margin({
       top: 10,
