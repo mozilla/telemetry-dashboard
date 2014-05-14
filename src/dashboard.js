@@ -103,11 +103,16 @@ function addFilter(flag) {
     button.css("visibility", "hidden");
   }
   $('#newHistoFilter').append(f);
+  var visibility = null;
+  if (gHistogramFilterObjects.length >= 1)
+        visibility = "hidden";
+  
   f.histogramfilter({
-    // TODO: raluca: Fighting over the window url.
-    // synchronizeStateWithHash: true, 
-      defaultVersion: function (versions) {
-            var nightlies = versions.filter(function (version) {
+  // TODO: raluca: Fighting over the window url.
+  // synchronizeStateWithHash: true, 
+
+  defaultVersion: function (versions) {
+      var nightlies = versions.filter(function (version) {
               return version.substr(0, 8) == "nightly/";
             });
             nightlies.sort();
@@ -115,10 +120,17 @@ function addFilter(flag) {
         }
     ,
     selectorType: BootstrapSelector,
+    visibility: visibility,
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", plot);
+  if (gHistogramFilterObjects.length >= 1)
+  {
+//    f.histogramfilter.visibility = "hidden";
+    console.log("i am in za if");
+    //f.histogramfilter('selectVisibility', false);
+  }
   gHistogramFilterObjects.push(f);
   
 }

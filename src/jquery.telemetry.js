@@ -36,7 +36,11 @@ $.widget("telemetry.histogramfilter", {
   
   /** Default options */
   options: {
+    //todo add comment
+    visibility:                     null,
+    
     /** Class use to style <select> elements */
+   
     selectorClass:                  "histogram-filter",
 
     /** Initial state of histogram filter */
@@ -75,7 +79,8 @@ $.widget("telemetry.histogramfilter", {
 
     /** Prefix for state() if synchronizeStateWithHash is true */
     windowHashPrefix:               "",
-
+    
+    
     /**
      * Load histogram evolution over "Builds" or "Time".
      *
@@ -86,6 +91,8 @@ $.widget("telemetry.histogramfilter", {
      * information.
      */
     evolutionOver:                  "Builds",
+    
+    
 
     /**
      * Constructor for type to use for selectors. The default constructor
@@ -197,6 +204,11 @@ $.widget("telemetry.histogramfilter", {
     // Create version and measure selectors
     this._versionSelector = new this.options.selectorType('version');
     this._measureSelector = new this.options.selectorType('measure');
+    if (this.options.visibility !== null) {  
+      console.log("the visibility is set to be", this.options.visibility);
+      this._measureSelector.element().css("visibility", this.options.visibility);
+    }
+   
     this._versionSelector.options(Telemetry.versions());
     this._versionSelector.element().addClass(this.options.selectorClass);
     this._measureSelector.element().addClass(this.options.selectorClass);
@@ -486,7 +498,7 @@ $.widget("telemetry.histogramfilter", {
       // Get filter options
       var options = hgram.filterOptions();
 
-      // Prepend default option
+      // Prepend default optionf
       var defaultOption = filterName + "*";
       options.unshift(defaultOption);
 
@@ -495,8 +507,15 @@ $.widget("telemetry.histogramfilter", {
         select:         new this.options.selectorType(filterName),
         histogram:      hgram
       };
-
+      if (this.options.visibility !== null) {  
+        filter.select.element().css("visibility", this.options.visibility);
+        console.log("i entered in if--------******", this.options.visibility);
+        
+      }
       // Populate select with options and style it
+      
+      //    this.options.visibility = "visible";
+      
       filter.select.options(options);
       filter.select.element().addClass(this.options.selectorClass);
 
@@ -788,7 +807,30 @@ $.widget("telemetry.histogramfilter", {
 
     // Destroy widget base class
     $.Widget.prototype.destroy.call(this);
-  }
+  },
+  selectVisibility: function select_visibility(val)
+  {
+    if (!val)
+    {
+      console.log("i am in hidden");
+      console.log("this is    ", this);
+      this.__MIMIMI = 0;
+      console.log("again      ", this);
+      console.log("filter list is ", this._filterList.length);
+
+      this._filterList.forEach(function(x){
+        console.log("-----------i am in foreach and x.element is", x.element());
+        x.element().css("visibility", "hidden");
+      });
+      this._measureSelector.element().css("visibility", "hidden");
+
+    }
+    else
+    {
+      this._measureSelector.element().css("visibility", "visible");
+      console.log("i am in visible");
+    }
+  },
 });
 
 })(jQuery);
