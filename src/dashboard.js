@@ -1,3 +1,4 @@
+// firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
   var isLoaded = true;
   gHistogramFilterObjects.forEach(function (filter) {
@@ -14,7 +15,7 @@ function plot(firstChanged) {
   gHistogramEvolutions = {};
   
   if (firstChanged)
-    syncStateWithFirst();
+  syncStateWithFirst();
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
     if (hist !== null) {
@@ -28,32 +29,24 @@ function plot(firstChanged) {
   return gHistogramEvolutions;
 }
 
-function syncStateWithFirst() {
-  console.log("updateState1 enter");
-  
+function syncStateWithFirst() {  
   if (gHistogramFilterObjects.length == 0 ) {
-    console.log("updateState1 len=0");
     return;
   }
   
   var stateSegment = gHistogramFilterObjects[0].histogramfilter('state');
-  var segm = stateSegment.split("/");
-  segm.shift();
-  segm.shift();
+  var segmParts = stateSegment.split("/");
+  segmParts.shift();
+  segmParts.shift();
   var segment = "";
-  for (var i = 0; i < segm.length; i++) {
-    segment += '/' + segm[i];
+  for (var i = 0; i < segmParts.length; i++) {
+    segment += '/' + segmParts[i];
   }
-  console.log("state segment is ", stateSegment);
-  console.log("segment is ",  segment);
   
   for (var j = 1; j < gHistogramFilterObjects.length; j++) {
-    var highSegm = gHistogramFilterObjects[j].histogramfilter('state');
-    var segm = highSegm.split("/");
-    var high = segm[0] + '/' + segm[1];
-    console.log("-------new state is ", high+segment);
-    
-    gHistogramFilterObjects[j].histogramfilter('state', high+segment);
+    var segmParts = gHistogramFilterObjects[j].histogramfilter('state').split("/");
+    var currentVersion = segmParts[0] + '/' + segmParts[1];    
+    gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
   }
 }
 
@@ -125,10 +118,9 @@ function createRemoveButton(parent) {
 
 function addFilter(firstHistogramFilter) {
   var f = $("<div>");
-  //f.id = name;
   var state = null;
   if  (gHistogramFilterObjects.length != 0)
-    state = gHistogramFilterObjects[0].histogramfilter('state');
+  state = gHistogramFilterObjects[0].histogramfilter('state');
   
   var button = createRemoveButton(f);
   if (firstHistogramFilter) {
@@ -137,79 +129,72 @@ function addFilter(firstHistogramFilter) {
   $('#newHistoFilter').append(f);
   var visibility = null;
   if (gHistogramFilterObjects.length >= 1)
-        visibility = "hidden";
+  visibility = "hidden";
   
   f.histogramfilter({
-  // TODO: raluca: Fighting over the window url.
-  // synchronizeStateWithHash: true, 
+    // TODO: raluca: Fighting over the window url.
+    // synchronizeStateWithHash: true, 
 
   defaultVersion: function (versions) {
-      var nightlies = versions.filter(function (version) {
-              return version.substr(0, 8) == "nightly/";
-            });
-            nightlies.sort();
-            return nightlies.pop() || versions.sort().pop();
-        }
-    ,
-    selectorType: BootstrapSelector,
-    visibility: visibility,
-    state: state,
-    evolutionOver: $('input[name=evo-type]:radio:checked').val(),
-  });
-  f.bind("histogramfilterchange", function() {plot(firstHistogramFilter);});
-  if (gHistogramFilterObjects.length >= 1)
-  {
-//    f.histogramfilter.visibility = "hidden";
-    console.log("i am in za if");
-    //f.histogramfilter('selectVisibility', false);
+    var nightlies = versions.filter(function (version) {
+      return version.substr(0, 8) == "nightly/";
+    });
+    nightlies.sort();
+    return nightlies.pop() || versions.sort().pop();
   }
-  gHistogramFilterObjects.push(f);
-  
+  ,
+  selectorType: BootstrapSelector,
+  visibility: visibility,
+  state: state,
+  evolutionOver: $('input[name=evo-type]:radio:checked').val(),
+});
+f.bind("histogramfilterchange", function() {plot(firstHistogramFilter);});
+gHistogramFilterObjects.push(f);  
 }
 
 function renderHistogramTable(hgram) {
-  $('#histogram').hide();
-  $('#histogram-table').show();
-  var body = $('#histogram-table').find('tbody')
-  body.empty();
+$('#histogram').hide();
+$('#histogram-table').show();
+var body = $('#histogram-table').find('tbody')
+body.empty();
 
-  body.append.apply(body, hgram.map(function (count, start, end, index) {
-    return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
-  }));
+body.append.apply(body, hgram.map(function (count, start, end, index) {
+  return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
+}));
 }
 
 function renderHistogramGraph(hgram) {
-  $('#histogram-table').hide();
-  $('#histogram').show();
-  nv.addGraph(function () {
-    var total = hgram.count();
-    var vals = hgram.map(function (count, start, end, index) {
-      return {
-        x: [start, end],
-        y: count,
-        percent: count / total
-      };
-    });
+$('#histogram-table').hide();
+$('#histogram').show();
+nv.addGraph(function () {
+  var total = hgram.count();
+  var vals = hgram.map(function (count, start, end, index) {
+    return {
+      x: [start, end],
+      y: count,
+      percent: count / total
+    };
+  });
 
-    var data = [{
-      key: "Count",
-      values: vals,
-      color: "#0000ff"
-    }];
+  var data = [{
+    key: "Count",
+    values: vals,
+    color: "#0000ff"
+  }];
 
-    var chart = histogramchart().margin({
-      top: 20,
-      right: 80,
-      bottom: 40,
-      left: 80
-    });
-    chart.yAxis.tickFormat(fmt);
-    chart.xAxis.tickFormat(function (bucket) {
-      return fmt(bucket[0]);
-    });
-    d3.select("#histogram").datum(data).transition().duration(500).call(chart);
+  var chart = histogramchart().margin({
+    top: 20,
+    right: 80,
+    bottom: 40,
+    left: 80
+  });
+  chart.yAxis.tickFormat(fmt);
+  chart.xAxis.tickFormat(function (bucket) {
+    return fmt(bucket[0]);
+  });
+  d3.select("#histogram").datum(data).transition().duration(500).call(chart);
 
-    nv.utils.windowResize(
+  nv.utils.windowResize(
 
     function () {
       chart.update();
@@ -466,41 +451,6 @@ function update(hgramEvos) {
     }
     return data;
   }
-
-  
-  //updateState1();
-  
- /* 
-  function plot() {
-    var isLoaded = true;
-    gHistogramFilterObjects.forEach(function (filter) {
-      if (!filter.histogramfilter('histogram')) isLoaded = false;
-    })
-    if (isLoaded) {
-      $("#content").fadeIn();
-      $("#spinner").fadeOut();
-    } else {
-      $("#content").fadeOut();
-      $("#spinner").fadeIn();
-      return;
-    }
-    gHistogramEvolutions = {};
-    
-    gHistogramFilterObjects.forEach(function (f) {
-      var hist = f.histogramfilter('histogram');
-      if (hist !== null) {
-        gHistogramEvolutions[f.histogramfilter('state')] = hist;
-      }
-    });
-
-
-
-    if (!$.isEmptyObject(gHistogramEvolutions)) {
-      update(gHistogramEvolutions);
-    }
-    return gHistogramEvolutions;
-  }
- */ 
   nv.addGraph(function () {
     var focusChart = evolutionchart().margin({
       top: 10,
@@ -524,41 +474,39 @@ function update(hgramEvos) {
 
     nv.utils.windowResize(
 
-    function () {
-      focusChart.update();
+      function () {
+        focusChart.update();
+      });
+
+      focusChart.setSelectionChangeCallback(updateProps);
+
+      function endsWith(str, suffix) {
+        suffix = ": " + suffix;
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+      }
+      labels = unique(labels);
+      addMultipleSelect(labels, function (selector) {
+        var toBeSelected = selector.val();
+        if (toBeSelected === null) toBeSelected = [];
+        for (var i = 0; i < cDatas.length; i++) {
+          if (isKeySelected(cDatas[i].originalKey, toBeSelected)) {
+            cDatas[i].disabled = false;
+          } else {
+            cDatas[i].disabled = true;
+          }
+        }
+        focusChart.update();
+      });
+
+      function isKeySelected(key, toBeSelected) {
+        for (var i = 0; i < toBeSelected.length; i++) {
+          if (endsWith(key, toBeSelected[i])) {
+            return true;
+          }
+        }
+        return false;
+      }
     });
 
-    focusChart.setSelectionChangeCallback(updateProps);
-
-    function endsWith(str, suffix) {
-      suffix = ": " + suffix;
-      return str.indexOf(suffix, str.length - suffix.length) !== -1;
-    }
-    labels = unique(labels);
-    addMultipleSelect(labels, function (selector) {
-      var toBeSelected = selector.val();
-      if (toBeSelected === null) toBeSelected = [];
-      for (var i = 0; i < cDatas.length; i++) {
-        if (isKeySelected(cDatas[i].originalKey, toBeSelected)) {
-          cDatas[i].disabled = false;
-        } else {
-          cDatas[i].disabled = true;
-        }
-      }
-
-      console.log("to be selected looks like", toBeSelected);
-      focusChart.update();
-    });
-
-    function isKeySelected(key, toBeSelected) {
-      for (var i = 0; i < toBeSelected.length; i++) {
-        if (endsWith(key, toBeSelected[i])) {
-          return true;
-        }
-      }
-      return false;
-    }
-  });
-
-  updateProps();
-}
+    updateProps();
+  }

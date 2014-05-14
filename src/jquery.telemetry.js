@@ -205,7 +205,6 @@ $.widget("telemetry.histogramfilter", {
     this._versionSelector = new this.options.selectorType('version');
     this._measureSelector = new this.options.selectorType('measure');
     if (this.options.visibility !== null) {  
-      console.log("the visibility is set to be", this.options.visibility);
       this._measureSelector.element().css("visibility", this.options.visibility);
     }
    
@@ -507,15 +506,11 @@ $.widget("telemetry.histogramfilter", {
         select:         new this.options.selectorType(filterName),
         histogram:      hgram
       };
+      //default visibility is visible but if changed comply  
       if (this.options.visibility !== null) {  
-        filter.select.element().css("visibility", this.options.visibility);
-        console.log("i entered in if--------******", this.options.visibility);
-        
+        filter.select.element().css("visibility", this.options.visibility);        
       }
-      // Populate select with options and style it
-      
-      //    this.options.visibility = "visible";
-      
+            
       filter.select.options(options);
       filter.select.element().addClass(this.options.selectorClass);
 
