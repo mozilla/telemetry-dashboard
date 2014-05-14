@@ -26,7 +26,7 @@ function plot() {
 }
 
 function addMultipleSelect(options, changeCb) {
-  var selector = $("<select multiple  id=optSelector >");
+  var selector = $("<select multiple  id=optSelector>");
   selector.addClass("multiselect");
   $('#multipercentile').empty().append(selector);
   var n = options.length;
@@ -47,14 +47,11 @@ function addMultipleSelect(options, changeCb) {
 }
 
 Telemetry.init(function () {
-  var id = 0;
   var versions = Telemetry.versions();
   addFilter();
   $("#addVersionButton").click(function () {
-    id++;
-    addFilter(id);
+    addFilter(0);
   });
-
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
     $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
@@ -94,31 +91,37 @@ function createRemoveButton(parent) {
   return button;
 }
 
-function addFilter(name) {
+function addFilter(flag) {
   var f = $("<div>");
-  f.id = name;
+  //f.id = name;
+  var state = null;
+  if  (gHistogramFilterObjects.length != 0)
+    state = gHistogramFilterObjects[0].histogramfilter('state');
+  
   var button = createRemoveButton(f);
-  if (name === undefined) {
+  if (flag === undefined) {
     button.css("visibility", "hidden");
   }
   $('#newHistoFilter').append(f);
   f.histogramfilter({
     // TODO: raluca: Fighting over the window url.
-    // synchronizeStateWithHash: true,
-    defaultVersion: function (versions) {
-      var nightlies = versions.filter(function (version) {
-        return version.substr(0, 8) == "nightly/";
-      });
-      nightlies.sort();
-      return nightlies.pop() || versions.sort().pop();
-    },
+    // synchronizeStateWithHash: true, 
+      defaultVersion: function (versions) {
+            var nightlies = versions.filter(function (version) {
+              return version.substr(0, 8) == "nightly/";
+            });
+            nightlies.sort();
+            return nightlies.pop() || versions.sort().pop();
+        }
+    ,
     selectorType: BootstrapSelector,
+    state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", plot);
   gHistogramFilterObjects.push(f);
+  
 }
-
 
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
