@@ -808,29 +808,7 @@ $.widget("telemetry.histogramfilter", {
     // Destroy widget base class
     $.Widget.prototype.destroy.call(this);
   },
-  selectVisibility: function select_visibility(val)
-  {
-    if (!val)
-    {
-      console.log("i am in hidden");
-      console.log("this is    ", this);
-      this.__MIMIMI = 0;
-      console.log("again      ", this);
-      console.log("filter list is ", this._filterList.length);
-
-      this._filterList.forEach(function(x){
-        console.log("-----------i am in foreach and x.element is", x.element());
-        x.element().css("visibility", "hidden");
-      });
-      this._measureSelector.element().css("visibility", "hidden");
-
-    }
-    else
-    {
-      this._measureSelector.element().css("visibility", "visible");
-      console.log("i am in visible");
-    }
-  },
+  
 });
 
 })(jQuery);

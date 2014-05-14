@@ -12,6 +12,8 @@ function plot() {
     return;
   }
   gHistogramEvolutions = {};
+  var fixedState = gHistogramFilterObjects[0].histogramfilter('state');
+  console.log("");
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
     if (hist !== null) {
