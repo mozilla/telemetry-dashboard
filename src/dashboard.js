@@ -1,3 +1,5 @@
+var paradise;
+var setVisible = true;
 // firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
   var isLoaded = true;
@@ -15,7 +17,7 @@ function plot(firstChanged) {
   gHistogramEvolutions = {};
   
   if (firstChanged)
-  syncStateWithFirst();
+    syncStateWithFirst();
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
     if (hist !== null) {
@@ -74,9 +76,19 @@ function addMultipleSelect(options, changeCb) {
 Telemetry.init(function () {
   var versions = Telemetry.versions();
   addFilter(true); //  first filter
+  
+  
   $("#addVersionButton").click(function () {
     addFilter(false);
+    //$('#histogram').hide();
+    setVisible = false;
+    console.log("I just set the histogram to be invisible set visible is: ", setVisible);
+    $('#histogram-table').hide();
+    var pls = document.getElementById("summary").remove();
+    var pls2 = document.getElementById('summaryDetails').remove();
+    
   });
+  
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
     $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
@@ -112,8 +124,20 @@ function createRemoveButton(parent) {
       return x !== parent;
     });
     plot(false);
-  })
+  });
   return button;
+}
+
+//not gonna happen here because i can't get the parent of my parent
+function createUnfoldButton(parent){
+  var button1 = $('<button class="btn btn-default " >');
+  $('<span class="glyphicon glyphicon-edit">').appendTo(button1);
+  parent.append(button1);
+  //var x = parent[0];
+  button1.click(function(){
+     plot(false);
+  });
+  return button1;
 }
 
 function addFilter(firstHistogramFilter) {
@@ -122,14 +146,16 @@ function addFilter(firstHistogramFilter) {
   if  (gHistogramFilterObjects.length != 0)
   state = gHistogramFilterObjects[0].histogramfilter('state');
   
-  var button = createRemoveButton(f);
   if (firstHistogramFilter) {
-    button.css("visibility", "hidden");
+    button = createUnfoldButton(f);
   }
+  else
+    button = createRemoveButton(f);
+  
   $('#newHistoFilter').append(f);
   var visibility = null;
   if (gHistogramFilterObjects.length >= 1)
-  visibility = "hidden";
+    visibility = "hidden";//none
   
   f.histogramfilter({
     // TODO: raluca: Fighting over the window url.
@@ -154,7 +180,13 @@ gHistogramFilterObjects.push(f);
 
 function renderHistogramTable(hgram) {
 $('#histogram').hide();
-$('#histogram-table').show();
+$('#histogram-table').hide();
+if(setVisible == true)
+{
+  $('#histogram-table').show();
+  console.log("I JUSR SHOW STUFF RIGHT NOW!!!!!");
+}
+
 var body = $('#histogram-table').find('tbody')
 body.empty();
 
@@ -165,7 +197,11 @@ body.append.apply(body, hgram.map(function (count, start, end, index) {
 
 function renderHistogramGraph(hgram) {
 $('#histogram-table').hide();
-$('#histogram').show();
+$('#histogram').hide();
+if(setVisible == true)
+{
+  $('#histogram').show();
+}
 nv.addGraph(function () {
   var total = hgram.count();
   var vals = hgram.map(function (count, start, end, index) {
@@ -343,7 +379,7 @@ function update(hgramEvos) {
     renderHistogramTime = setTimeout(function () {
       var renderType = $('input[name=render-type]:radio:checked').val();
       if (renderType == 'Table') {
-        renderHistogramTable(hgram)
+        renderHistogramTable(hgram);
       } else {
         renderHistogramGraph(hgram);
       }
