@@ -130,12 +130,11 @@ function populate_table(table_id, key, label) {
     var filter_version = $('#filter_version').find(":selected").val();
     tbody.empty();
     if (!slowsql_data[key] || slowsql_data[key].length == 0) {
-        var trow = $('<tr>', {id: label + "1"});
-        trow.append($('<td>', {colspan: "7", id: label + "1rank", text: "No Data for " + key}));
-        tbody.append(trow);
+        missing_data_warning(tbody, label, "No data for " + key);
     } else {
         var maxRows = parseInt($('#filter_rowcount').find(":selected").val());
         var rank = 1;
+        var is_empty = true;
         for (var i = 0; i < slowsql_data[key].length; i++) {
             if (rank > maxRows) break;
             var drow = slowsql_data[key][i];
@@ -144,6 +143,7 @@ function populate_table(table_id, key, label) {
                 clean_version(drow[VER_COLUMN]) === filter_version &&
                 drow[CHAN_COLUMN] === filter_channel) {
                 var trow = $('<tr>', {id: label + rank});
+                is_empty = false;
                 trow.append($('<td>', {id: label + rank + "rank", text: rank}));
                 for (var j = 0; j < QUERY_COLUMN; j++) {
                     trow.append($('<td>', {text: drow[j]}));
@@ -155,7 +155,14 @@ function populate_table(table_id, key, label) {
             //    console.log("skipping a row with app " + drow[5] + ", chan " + drow[6]);
             }
         }
+        is_empty && missing_data_warning(tbody, label, "No data found with the requested filtering criteria.")
     }
+}
+
+function missing_data_warning(tbody, label, message) {
+  var trow = $('<tr>', {id: label + "1"});
+  trow.append($('<td>', {colspan: "6", id: label + "1rank", text: message}));
+  tbody.append(trow);
 }
 
 function update_week_over_week(lastWeekKey, thisWeekKey) {
