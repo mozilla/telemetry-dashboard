@@ -125,7 +125,9 @@ Telemetry.init(function () {
   
   $(window).bind("hashchange", function(){ 
     var stateUrl = makeUrlHashFromStates();
-    if (window.location.hash !== stateUrl) {
+    console.log("111111111111111111111 ---------the state url is", stateUrl);
+    if (window.location.hash.slice(1) !== stateUrl) {
+      console.log("222222222222222222222---------------window.location.hash", window.location.hash.slice(1));
       restoreStateFromUrl(window.location.hash);
     }
   });
@@ -167,7 +169,6 @@ function fmt(number) {
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 
-//var gHistogramFilterObjects = [];
 var gHistogramEvolutions = {};
 
 function createRemoveButton(parent) {
@@ -337,30 +338,30 @@ function update(hgramEvos) {
   }
 
   var datas = [];
-  var allDataForLabels = [];
+  var labels = [];
+  
   $.each(hgramEvos, function (state, evo) {
-    allDataForLabels.push(prepareData(evo));
+    //allDataForLabels.push(prepareData(evo).labels = listOfAllData.map(function (x) {
+      var y = prepareData(evo);
+      for (var x in y)
+      {
+        console.log("x looks like", y[x].key);
+        labels.push(y[x].key);
+      }
+      datas.push(prependState(state, y));
   });
-  //from list of lists to list   
-  listOfAllData = [].concat.apply([], allDataForLabels);
-  var labels = listOfAllData.map(function (x) {
-    return x.key;
-  });
+    
 
+  //from list of lists to list   
+  cDatas = [].concat.apply([], datas);
   function unique(array) {
     return $.grep(array, function (el, index) {
       return index == $.inArray(el, array);
     });
   }
 
-  $.each(hgramEvos, function (state, evo) {
-    var data = prepareData(evo);
-    datas.push(prependState(state, data));
-  });
-
   //from list of lists to list  
-  cDatas = [].concat.apply([], datas);
-
+  //cDatas = listOfAllData;
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
