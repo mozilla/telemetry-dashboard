@@ -1,5 +1,6 @@
 var paradise;
 var setVisible = true;
+
 // firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
   var isLoaded = true;
@@ -16,8 +17,9 @@ function plot(firstChanged) {
   }
   gHistogramEvolutions = {};
   
-  if (firstChanged)
+  if (firstChanged) {
     syncStateWithFirst();
+  }
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
     if (hist !== null) {
@@ -53,7 +55,7 @@ function syncStateWithFirst() {
 }
 
 function addMultipleSelect(options, changeCb) {
-  var selector = $("<select multiple  id=optSelector>");
+  var selector = $("<select multiple id=optSelector>");
   selector.addClass("multiselect");
   $('#multipercentile').empty().append(selector);
   var n = options.length;
@@ -84,9 +86,10 @@ Telemetry.init(function () {
     setVisible = false;
     console.log("I just set the histogram to be invisible set visible is: ", setVisible);
     $('#histogram-table').hide();
-    var pls = document.getElementById("summary").remove();
-    var pls2 = document.getElementById('summaryDetails').remove();
-    
+    //var pls = document.getElementById("summary").remove();
+    //var pls2 = document.getElementById('summaryDetails').remove();
+    //var pls3 = document.getElementById('measure').remove();
+    //var pls4 = document.getElementById('description').remove();
   });
   
   $('input[name=evo-type]:radio').change(function () {
@@ -115,7 +118,7 @@ var gHistogramFilterObjects = [];
 var gHistogramEvolutions = {};
 
 function createRemoveButton(parent) {
-  var button = $('<button class="btn btn-default " >');
+  var button = $('<button type="button" class="btn btn-default " >');
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   parent.append(button);
   button.click(function () {
@@ -130,12 +133,16 @@ function createRemoveButton(parent) {
 
 //not gonna happen here because i can't get the parent of my parent
 function createUnfoldButton(parent){
-  var button1 = $('<button class="btn btn-default " >');
+  var button1 = $('<button type="button" class="btn btn-default " >');
   $('<span class="glyphicon glyphicon-edit">').appendTo(button1);
   parent.append(button1);
   //var x = parent[0];
   button1.click(function(){
-     plot(false);
+    gHistogramFilterObjects.forEach(function (x){
+      x.histogramfilter('option', 'visibility', 'visible');
+    });
+    
+    plot(false);
   });
   return button1;
 }
@@ -143,94 +150,96 @@ function createUnfoldButton(parent){
 function addFilter(firstHistogramFilter) {
   var f = $("<div>");
   var state = null;
-  if  (gHistogramFilterObjects.length != 0)
-  state = gHistogramFilterObjects[0].histogramfilter('state');
+  if  (gHistogramFilterObjects.length != 0) {
+    state = gHistogramFilterObjects[0].histogramfilter('state');
+  }
   
   if (firstHistogramFilter) {
-    button = createUnfoldButton(f);
+    createUnfoldButton(f);
+  } else {
+    createRemoveButton(f);
   }
-  else
-    button = createRemoveButton(f);
   
   $('#newHistoFilter').append(f);
   var visibility = null;
-  if (gHistogramFilterObjects.length >= 1)
+  if (gHistogramFilterObjects.length >= 1) {
     visibility = "hidden";//none
+  }
   
   f.histogramfilter({
     // TODO: raluca: Fighting over the window url.
-    // synchronizeStateWithHash: true, 
+    synchronizeStateWithHash: true, 
 
-  defaultVersion: function (versions) {
-    var nightlies = versions.filter(function (version) {
-      return version.substr(0, 8) == "nightly/";
-    });
-    nightlies.sort();
-    return nightlies.pop() || versions.sort().pop();
-  }
-  ,
-  selectorType: BootstrapSelector,
-  visibility: visibility,
-  state: state,
-  evolutionOver: $('input[name=evo-type]:radio:checked').val(),
-});
-f.bind("histogramfilterchange", function() {plot(firstHistogramFilter);});
-gHistogramFilterObjects.push(f);  
+    defaultVersion: function (versions) {
+      var nightlies = versions.filter(function (version) {
+        return version.substr(0, 8) == "nightly/";
+      });
+      nightlies.sort();
+      return nightlies.pop() || versions.sort().pop();
+    },
+    selectorType: BootstrapSelector,
+    visibility: visibility,
+    state: state,
+    evolutionOver: $('input[name=evo-type]:radio:checked').val(),
+  });
+  f.bind("histogramfilterchange", function() {plot(firstHistogramFilter);});
+  gHistogramFilterObjects.push(f);  
 }
+
 
 function renderHistogramTable(hgram) {
-$('#histogram').hide();
-$('#histogram-table').hide();
-if(setVisible == true)
-{
-  $('#histogram-table').show();
-  console.log("I JUSR SHOW STUFF RIGHT NOW!!!!!");
-}
+  $('#histogram').hide();
+  $('#histogram-table').hide();
+  if(setVisible == true)
+  {
+    $('#histogram-table').show();
+    console.log("I JUSR SHOW STUFF RIGHT NOW!!!!!");
+  }
 
-var body = $('#histogram-table').find('tbody')
-body.empty();
+  var body = $('#histogram-table').find('tbody')
+  body.empty();
 
-body.append.apply(body, hgram.map(function (count, start, end, index) {
-  return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
-}));
+  body.append.apply(body, hgram.map(function (count, start, end, index) {
+    return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
+  }));
 }
 
 function renderHistogramGraph(hgram) {
-$('#histogram-table').hide();
-$('#histogram').hide();
-if(setVisible == true)
-{
-  $('#histogram').show();
-}
-nv.addGraph(function () {
-  var total = hgram.count();
-  var vals = hgram.map(function (count, start, end, index) {
-    return {
-      x: [start, end],
-      y: count,
-      percent: count / total
-    };
-  });
+  $('#histogram-table').hide();
+  $('#histogram').hide();
+  if(setVisible == true) {
+    $('#histogram').show();
+  }
+  
+  nv.addGraph(function () {
+    var total = hgram.count();
+    var vals = hgram.map(function (count, start, end, index) {
+      return {
+        x: [start, end],
+        y: count,
+        percent: count / total
+      };
+    });
 
-  var data = [{
-    key: "Count",
-    values: vals,
-    color: "#0000ff"
-  }];
+    var data = [{
+      key: "Count",
+      values: vals,
+      color: "#0000ff"
+    }];
 
-  var chart = histogramchart().margin({
-    top: 20,
-    right: 80,
-    bottom: 40,
-    left: 80
-  });
-  chart.yAxis.tickFormat(fmt);
-  chart.xAxis.tickFormat(function (bucket) {
-    return fmt(bucket[0]);
-  });
-  d3.select("#histogram").datum(data).transition().duration(500).call(chart);
+    var chart = histogramchart().margin({
+      top: 20,
+      right: 80,
+      bottom: 40,
+      left: 80
+    });
+    chart.yAxis.tickFormat(fmt);
+    chart.xAxis.tickFormat(function (bucket) {
+      return fmt(bucket[0]);
+    });
+    d3.select("#histogram").datum(data).transition().duration(500).call(chart);
 
-  nv.utils.windowResize(
+    nv.utils.windowResize(
 
     function () {
       chart.update();

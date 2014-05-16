@@ -379,7 +379,16 @@ $.widget("telemetry.histogramfilter", {
         $(window).unbind("hashchange", this._windowHashChanged);
       }
 
-    } else {
+     } else if (option == "visibility"){
+         this.options.visibility = value;
+         this._versionSelector.element().css("visibility", this.options.visibility);
+         this._measureSelector.element().css("visibility", this.options.visibility);
+         this._filterList.forEach(function(x){
+           console.log("filter list is", x);
+           x.select.element().css("visibility", value);
+         });
+              
+     } else {
       this.options[option] = value;
     }
   },
