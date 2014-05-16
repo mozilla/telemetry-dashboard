@@ -1,4 +1,3 @@
-var paradise;
 var setVisible = true;
 var gHistogramFilterObjects = [];
 var syncWithFirst = true;
@@ -49,8 +48,6 @@ function makeUrlHashFromStates() {
   }  
   return url.join("&");
 }
-
-
 
 function syncStateWithFirst() {  
   if (gHistogramFilterObjects.length == 0 ) {
@@ -140,7 +137,7 @@ Telemetry.init(function () {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
     addFilter(false, state);
-    //$('#histogram').hide();
+    //$('#histogram').hide(); // work in progr
     $('#histogram-table').hide();
     //var pls = document.getElementById("summary").remove();
     //var pls2 = document.getElementById('summaryDetails').remove();

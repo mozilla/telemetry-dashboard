@@ -384,7 +384,6 @@ $.widget("telemetry.histogramfilter", {
          this._versionSelector.element().css("visibility", this.options.visibility);
          this._measureSelector.element().css("visibility", this.options.visibility);
          this._filterList.forEach(function(x){
-           console.log("filter list is", x);
            x.select.element().css("visibility", value);
          });
               
