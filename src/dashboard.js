@@ -184,12 +184,10 @@ function createRemoveButton(parent) {
   return button;
 }
 
-//not gonna happen here because i can't get the parent of my parent
 function createUnfoldButton(parent){
   var button1 = $('<button type="button" class="btn btn-default " >');
   $('<span class="glyphicon glyphicon-edit">').appendTo(button1);
   parent.append(button1);
-  //var x = parent[0];
   button1.click(function(){
     syncWithFirst = !syncWithFirst;
     gHistogramFilterObjects.forEach(function (x){
@@ -218,7 +216,6 @@ function addFilter(firstHistogramFilter, state) {
   }
   
   f.histogramfilter({
-    // TODO: raluca: Fighting over the window url.
     synchronizeStateWithHash: false, 
 
     defaultVersion: function (versions) {
