@@ -33,14 +33,13 @@ function plot(firstChanged) {
     update(gHistogramEvolutions);
   }
   
-  var newHash = "#" + makeUrlHashFromStates();
-  if (window.location.hash !== newHash) {
-    window.location.hash = newHash;
+  var statesUrlHash = "#" + makeUrlHashFromStates();
+  if (window.location.hash !== statesUrlHash) {
+    window.location.hash = statesUrlHash;
   }
   
   return gHistogramEvolutions;
 }
-
 
 function makeUrlHashFromStates() {  
   var url = [];
@@ -48,13 +47,8 @@ function makeUrlHashFromStates() {
     var state = gHistogramFilterObjects[i].histogramfilter('state');
     url.push(state);
   }  
-  
-  var newHash = url.join("&");
-  return newHash;
+  return url.join("&");
 }
-
-
-
 
 
 
@@ -133,9 +127,9 @@ Telemetry.init(function () {
   }
   
   $(window).bind("hashchange", function(){ 
-    var newUrl = makeUrlHashFromStates();
-    if (window.location.hash !== newUrl) {
-      window.location.hash = newUrl;
+    var stateUrl = makeUrlHashFromStates();
+    if (window.location.hash !== stateUrl) {
+      restoreStateFromUrl(window.location.hash);
     }
   });
   
