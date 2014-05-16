@@ -1,5 +1,6 @@
 var paradise;
 var setVisible = true;
+var gHistogramFilterObjects = [];
 
 // firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
@@ -30,26 +31,29 @@ function plot(firstChanged) {
   if (!$.isEmptyObject(gHistogramEvolutions)) {
     update(gHistogramEvolutions);
   }
-  constructFragments(gHistogramFilterObjects);
+  
+  var newHash = "#" + makeUrlHashFromStates();
+  if (window.location.hash !== newHash) {
+    window.location.hash = newHash;
+  }
+  
   return gHistogramEvolutions;
 }
-function constructFragments(gHistogramFilterObjects)
-{
+
+
+function makeUrlHashFromStates() {  
   var url = [];
-  for (var i = 0; i < gHistogramFilterObjects.length; i++)
-  {
+  for (var i = 0; i < gHistogramFilterObjects.length; i++) {
     var state = gHistogramFilterObjects[i].histogramfilter('state');
     url.push(state);
   }  
-  console.log("------------", url);
-  //var prefixLength = this.options.windowHashPrefix.length;
-  // var hashState = window.location.hash.substr(1 + url);
   
-  // url.map(encodeURIComponent).join("&");
   var newHash = url.join("&");
-  console.log("newHash: ", newHash);
-  window.location.hash = "#" + newHash;
+  return newHash;
 }
+
+
+
 
 
 
@@ -95,16 +99,53 @@ function addMultipleSelect(options, changeCb) {
   selector.multiselect();
 }
 
-Telemetry.init(function () {
+
+function restoreStateFromUrl(url) {
+  $('#newHistoFilter').empty();
+  gHistogramEvolutions = {};
+  gHistogramFilterObjects = [];
+  
+  var x = url.split("#");
+  if (x.length < 2) {
+    return false;
+  }
+  
+  var states = x[1].split("&");
+  
+  if (states.length === 0) {
+    return false;
+  }
+  
+  addFilter(true, states[0]);
+  for (var i = 1; i < states.length; i++) {
+    addFilter(false, states[i]);
+  }
+  return true;
+}
+
+
+Telemetry.init(function () {  
   var versions = Telemetry.versions();
-  addFilter(true); //  first filter
+  
+  if (!restoreStateFromUrl(window.location.hash)) {
+    addFilter(true, null); //  first filter
+  }
+  
+  $(window).bind("hashchange", function(){ 
+    var newUrl = makeUrlHashFromStates();
+    if (window.location.hash !== newUrl) {
+      window.location.hash = newUrl;
+    }
+  });
   
   
   $("#addVersionButton").click(function () {
-    addFilter(false);
+    var state = null;
+    if  (gHistogramFilterObjects.length != 0) {
+      state = gHistogramFilterObjects[0].histogramfilter('state');
+    }
+    addFilter(false, state);
     //$('#histogram').hide();
-    setVisible = false;
-    console.log("I just set the histogram to be invisible set visible is: ", setVisible);
     $('#histogram-table').hide();
     //var pls = document.getElementById("summary").remove();
     //var pls2 = document.getElementById('summaryDetails').remove();
@@ -134,7 +175,7 @@ function fmt(number) {
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 
-var gHistogramFilterObjects = [];
+//var gHistogramFilterObjects = [];
 var gHistogramEvolutions = {};
 
 function createRemoveButton(parent) {
@@ -167,12 +208,9 @@ function createUnfoldButton(parent){
   return button1;
 }
 
-function addFilter(firstHistogramFilter) {
+function addFilter(firstHistogramFilter, state) {
   var f = $("<div>");
-  var state = null;
-  if  (gHistogramFilterObjects.length != 0) {
-    state = gHistogramFilterObjects[0].histogramfilter('state');
-  }
+  
   
   if (firstHistogramFilter) {
     createUnfoldButton(f);
@@ -213,7 +251,6 @@ function renderHistogramTable(hgram) {
   if(setVisible == true)
   {
     $('#histogram-table').show();
-    console.log("I JUSR SHOW STUFF RIGHT NOW!!!!!");
   }
 
   var body = $('#histogram-table').find('tbody')
@@ -575,3 +612,6 @@ function update(hgramEvos) {
 
     updateProps();
   }
+  
+  
+  
