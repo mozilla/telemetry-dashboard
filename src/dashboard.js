@@ -1,6 +1,7 @@
 var paradise;
 var setVisible = true;
 var gHistogramFilterObjects = [];
+var syncWithFirst = true;
 
 // firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
@@ -18,7 +19,7 @@ function plot(firstChanged) {
   }
   gHistogramEvolutions = {};
   
-  if (firstChanged) {
+  if (firstChanged && syncWithFirst) {
     syncStateWithFirst();
   }
   gHistogramFilterObjects.forEach(function (f) {
@@ -199,6 +200,7 @@ function createUnfoldButton(parent){
   parent.append(button1);
   //var x = parent[0];
   button1.click(function(){
+    syncWithFirst = !syncWithFirst;
     gHistogramFilterObjects.forEach(function (x){
       x.histogramfilter('option', 'visibility', 'visible');
     });
@@ -220,7 +222,7 @@ function addFilter(firstHistogramFilter, state) {
   
   $('#newHistoFilter').append(f);
   var visibility = null;
-  if (gHistogramFilterObjects.length >= 1) {
+  if (gHistogramFilterObjects.length >= 1 && syncWithFirst) {
     visibility = "hidden";//none
   }
   
