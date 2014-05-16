@@ -30,8 +30,28 @@ function plot(firstChanged) {
   if (!$.isEmptyObject(gHistogramEvolutions)) {
     update(gHistogramEvolutions);
   }
+  constructFragments(gHistogramFilterObjects);
   return gHistogramEvolutions;
 }
+function constructFragments(gHistogramFilterObjects)
+{
+  var url = [];
+  for (var i = 0; i < gHistogramFilterObjects.length; i++)
+  {
+    var state = gHistogramFilterObjects[i].histogramfilter('state');
+    url.push(state);
+  }  
+  console.log("------------", url);
+  //var prefixLength = this.options.windowHashPrefix.length;
+  // var hashState = window.location.hash.substr(1 + url);
+  
+  // url.map(encodeURIComponent).join("&");
+  var newHash = url.join("&");
+  console.log("newHash: ", newHash);
+  window.location.hash = "#" + newHash;
+}
+
+
 
 function syncStateWithFirst() {  
   if (gHistogramFilterObjects.length == 0 ) {
@@ -168,7 +188,7 @@ function addFilter(firstHistogramFilter) {
   
   f.histogramfilter({
     // TODO: raluca: Fighting over the window url.
-    synchronizeStateWithHash: true, 
+    synchronizeStateWithHash: false, 
 
     defaultVersion: function (versions) {
       var nightlies = versions.filter(function (version) {
