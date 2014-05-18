@@ -91,7 +91,6 @@ function addMultipleSelect(options, changeCb) {
   selector.multiselect();
 }
 
-
 function restoreStateFromUrl(url) {
   $('#newHistoFilter').empty();
   gHistogramEvolutions = {};
@@ -103,7 +102,7 @@ function restoreStateFromUrl(url) {
   }
   
   var states = x[1].split("&");
-  
+
   if (states.length === 0) {
     return false;
   }
@@ -111,6 +110,7 @@ function restoreStateFromUrl(url) {
   addFilter(true, states[0]);
   for (var i = 1; i < states.length; i++) {
     addFilter(false, states[i]);
+    console.log("-------ai intrat in urmatoarele states");
   }
   return true;
 }
@@ -125,9 +125,7 @@ Telemetry.init(function () {
   
   $(window).bind("hashchange", function(){ 
     var stateUrl = makeUrlHashFromStates();
-    console.log("111111111111111111111 ---------the state url is", stateUrl);
     if (window.location.hash.slice(1) !== stateUrl) {
-      console.log("222222222222222222222---------------window.location.hash", window.location.hash.slice(1));
       restoreStateFromUrl(window.location.hash);
     }
   });
@@ -227,6 +225,7 @@ function addFilter(firstHistogramFilter, state) {
       return nightlies.pop() || versions.sort().pop();
     },
     selectorType: BootstrapSelector,
+    //selectorType: select,
     visibility: visibility,
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
