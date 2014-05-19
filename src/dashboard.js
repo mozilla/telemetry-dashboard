@@ -100,7 +100,7 @@ function restoreStateFromUrl(url) {
   if (x.length < 2) {
     return false;
   }
-  
+  setVisible = false;
   var states = x[1].split("&");
 
   if (states.length === 0) {
@@ -108,9 +108,15 @@ function restoreStateFromUrl(url) {
   }
   
   addFilter(true, states[0]);
+  if (states.length == 1)
+    setVisible = true;
+  if (states.length > 1) {
+    document.getElementById("summary").remove();
+    document.getElementById('summaryDetails').remove();
+
+  }
   for (var i = 1; i < states.length; i++) {
     addFilter(false, states[i]);
-    console.log("-------ai intrat in urmatoarele states");
   }
   return true;
 }
@@ -141,10 +147,14 @@ Telemetry.init(function () {
     //$('#histogram').hide(); // work in progr
     //this has to be done even when i restaurate the state from multiple versions
     $('#histogram-table').hide();
-    var pls = document.getElementById("summary").remove();
-    var pls2 = document.getElementById('summaryDetails').remove();
-    var pls3 = document.getElementById('measure').remove();
-    var pls4 = document.getElementById('description').remove();
+    setVisible = false;
+    if (document.getElementById("summary") !== null) {
+      document.getElementById("summary").remove();
+      document.getElementById('summaryDetails').remove();
+    }
+    document.getElementById('measure').remove();
+    document.getElementById('description').remove();
+    document.getElementById('renderHistogram').remove();
   });
   
   $('input[name=evo-type]:radio').change(function () {
@@ -190,7 +200,8 @@ function createRemoveButton(parent) {
 
 function createUnfoldButton(parent){
   var button = $('<button type="button" class="btn btn-default " >');
-  $('<span class="glyphicon glyphicon-edit">').appendTo(button);
+  $('<span class="glyphicon glyphicon-lock">').appendTo(button);
+
   parent.append(button);
   button.click(function(){
     gSyncWithFirst = !gSyncWithFirst;
@@ -218,8 +229,6 @@ function addFilter(firstHistogramFilter, state) {
     locked = true;
   }
 
-  console.log("ZOMG: addFilter: ", locked);
-  
   f.histogramfilter({
     synchronizeStateWithHash: false, 
 
@@ -361,8 +370,6 @@ function update(hgramEvos) {
     });
   }
 
-  //from list of lists to list  
-  //cDatas = listOfAllData;
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
