@@ -43,17 +43,14 @@ var BootstrapSelector = (function($){
           }
           groups[groupName].push({id: option, text: option.replace("/", " ")});
         });
-        console.log("OMG: version groupVal: ", groups);
         data = [];
         $.each(groups, function (groupName, children) {
           data.push({text: groupName, children: children});
         });
-        console.log("OMG: version data: ", data);
       } else {
         data = options.map(function(value) { return {id : value, text: value}});
       }
 
-      console.log("my dict is------@@@@@@@@@@@@", data);
 
       if (options !== undefined) {
         this._options = options;
@@ -61,9 +58,7 @@ var BootstrapSelector = (function($){
         this._select.select2("val", options[0]);
       }
 
-        if (options === "mumu") {
-
-
+        if (false) {
 
           // Clear existing options
           this._select.empty();
@@ -98,21 +93,18 @@ var BootstrapSelector = (function($){
         //this._select.selectpicker('refresh');
 
 
-        }
+      }
       return this._options;
     },
 
     val: function BootstrapSelector_val(value) {
       if (value !== undefined) {
-        console.log("CACA: VAL: ", value);
         //this._select.val(value);
         this._select.select2("val", value);
         //this._select.selectpicker('render');
-        //XSP.partialRefreshPost(this);
 
       }
       var ret = this._select.select2("val");
-      console.log(" IN THE VAL: reutrning: ", ret);
       return ret;
 
       return this._select.select2("val");

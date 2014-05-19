@@ -227,8 +227,10 @@ var evolutionchart = function() {
 
       if (showLegend) {
         legend.width( availableWidth  );
+       // ralu
+        legend.height(availableWidth);
 
-        g.select('.nv-legendWrap')
+        d3.select('.zuzu')
             .datum(data.map(function(series) {
               series.originalKey = series.originalKey === undefined ? series.key : series.originalKey;
               series.key = series.originalKey + (series.bar ? ' (left axis)' : ' (right axis)');
@@ -241,9 +243,6 @@ var evolutionchart = function() {
           availableHeight1 = (height || parseInt(container.style('height')) || 400)
                              - margin.top - margin.bottom - height2;
         }
-
-        g.select('.nv-legendWrap')
-            .attr('transform', 'translate(' + (0 ) + ',' + (-margin.top) +')');
       }
 
       //------------------------------------------------------------

@@ -1,6 +1,6 @@
 var setVisible = true;
 var gHistogramFilterObjects = [];
-var syncWithFirst = true;
+var syncWithFirst = false;
 
 // firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
@@ -31,12 +31,13 @@ function plot(firstChanged) {
   if (!$.isEmptyObject(gHistogramEvolutions)) {
     update(gHistogramEvolutions);
   }
-  
+
+
   var statesUrlHash = "#" + makeUrlHashFromStates();
   if (window.location.hash !== statesUrlHash) {
     window.location.hash = statesUrlHash;
   }
-  
+
   return gHistogramEvolutions;
 }
 
@@ -121,8 +122,9 @@ Telemetry.init(function () {
   
   if (!restoreStateFromUrl(window.location.hash)) {
     addFilter(true, null); //  first filter
+    syncWithFirst = true;
   }
-  
+
   $(window).bind("hashchange", function(){ 
     var stateUrl = makeUrlHashFromStates();
     if (window.location.hash.slice(1) !== stateUrl) {
@@ -544,6 +546,7 @@ function update(hgramEvos) {
     return data;
   }
   nv.addGraph(function () {
+    //top was 10
     var focusChart = evolutionchart().margin({
       top: 10,
       right: 80,
