@@ -99,16 +99,16 @@ var BootstrapSelector = (function($){
 
     val: function BootstrapSelector_val(value) {
       if (value !== undefined) {
-        //this._select.val(value);
         this._select.select2("val", value);
-        //this._select.selectpicker('render');
-
       }
-      var ret = this._select.select2("val");
-      return ret;
-
       return this._select.select2("val");
-      //return this._select.val();
+    },
+
+    enable: function BootstrapSelector_enable(value) {
+      if (value !== undefined) {
+        this._select.select2("readonly", !value);
+      }
+      return this._select.select2("enable");
     },
 
     change: function BootstrapSelector_change(cb) {

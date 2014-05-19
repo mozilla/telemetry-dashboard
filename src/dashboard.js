@@ -1,6 +1,6 @@
 var setVisible = true;
 var gHistogramFilterObjects = [];
-var syncWithFirst = false;
+var gSyncWithFirst = false;
 
 // firstChanged true if first filter changed and I need to sync all hidden filters 
 function plot(firstChanged) {
@@ -18,7 +18,7 @@ function plot(firstChanged) {
   }
   gHistogramEvolutions = {};
   
-  if (firstChanged && syncWithFirst) {
+  if (firstChanged && gSyncWithFirst) {
     syncStateWithFirst();
   }
   gHistogramFilterObjects.forEach(function (f) {
@@ -119,10 +119,10 @@ function restoreStateFromUrl(url) {
 
 Telemetry.init(function () {  
   var versions = Telemetry.versions();
-  
+
   if (!restoreStateFromUrl(window.location.hash)) {
     addFilter(true, null); //  first filter
-    syncWithFirst = true;
+    gSyncWithFirst = true;
   }
 
   $(window).bind("hashchange", function(){ 
@@ -135,16 +135,18 @@ Telemetry.init(function () {
   
   $("#addVersionButton").click(function () {
     var state = null;
+    //document.getElementById("legend").style.overflow="auto";
     if  (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
     addFilter(false, state);
     //$('#histogram').hide(); // work in progr
+    //this has to be done even when i restaurate the state from multiple versions
     $('#histogram-table').hide();
-    //var pls = document.getElementById("summary").remove();
-    //var pls2 = document.getElementById('summaryDetails').remove();
-    //var pls3 = document.getElementById('measure').remove();
-    //var pls4 = document.getElementById('description').remove();
+    var pls = document.getElementById("summary").remove();
+    var pls2 = document.getElementById('summaryDetails').remove();
+    var pls3 = document.getElementById('measure').remove();
+    var pls4 = document.getElementById('description').remove();
   });
   
   $('input[name=evo-type]:radio').change(function () {
@@ -186,24 +188,23 @@ function createRemoveButton(parent) {
 }
 
 function createUnfoldButton(parent){
-  var button1 = $('<button type="button" class="btn btn-default " >');
-  $('<span class="glyphicon glyphicon-edit">').appendTo(button1);
-  parent.append(button1);
-  button1.click(function(){
-    syncWithFirst = !syncWithFirst;
-    gHistogramFilterObjects.forEach(function (x){
-      x.histogramfilter('option', 'visibility', 'visible');
+  var button = $('<button type="button" class="btn btn-default " >');
+  $('<span class="glyphicon glyphicon-edit">').appendTo(button);
+  parent.append(button);
+  button.click(function(){
+    gSyncWithFirst = !gSyncWithFirst;
+    gHistogramFilterObjects.slice(1).forEach(function (x) {
+      x.histogramfilter('option', 'locked', gSyncWithFirst);
     });
     
     plot(false);
   });
-  return button1;
+  return button;
 }
 
 function addFilter(firstHistogramFilter, state) {
   var f = $("<div>");
-  
-  
+
   if (firstHistogramFilter) {
     createUnfoldButton(f);
   } else {
@@ -211,10 +212,12 @@ function addFilter(firstHistogramFilter, state) {
   }
   
   $('#newHistoFilter').append(f);
-  var visibility = null;
-  if (gHistogramFilterObjects.length >= 1 && syncWithFirst) {
-    visibility = "hidden";//none
+  var locked = false;
+  if (gHistogramFilterObjects.length >= 1 && gSyncWithFirst) {
+    locked = true;
   }
+
+  console.log("ZOMG: addFilter: ", locked);
   
   f.histogramfilter({
     synchronizeStateWithHash: false, 
@@ -227,8 +230,7 @@ function addFilter(firstHistogramFilter, state) {
       return nightlies.pop() || versions.sort().pop();
     },
     selectorType: BootstrapSelector,
-    //selectorType: select,
-    visibility: visibility,
+    locked: locked,
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
@@ -342,11 +344,8 @@ function update(hgramEvos) {
   var labels = [];
   
   $.each(hgramEvos, function (state, evo) {
-    //allDataForLabels.push(prepareData(evo).labels = listOfAllData.map(function (x) {
       var y = prepareData(evo);
-      for (var x in y)
-      {
-        console.log("x looks like", y[x].key);
+      for (var x in y) {
         labels.push(y[x].key);
       }
       datas.push(prependState(state, y));

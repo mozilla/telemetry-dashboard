@@ -36,8 +36,8 @@ $.widget("telemetry.histogramfilter", {
   
   /** Default options */
   options: {
-    //todo add comment
-    visibility:                     null,
+    /** Bool: lock or unlock measure and filters */
+    locked:                        false,
     
     /** Class use to style <select> elements */
    
@@ -102,6 +102,7 @@ $.widget("telemetry.histogramfilter", {
      *  - element()       Get jQuery wrapped element to add to container
      *  - options(opts)   Get/set list of options.
      *  - val(v)          Get/set currently selected option
+     *  - enable(v)       Enable/disable the selector
      *  - change(cb)      Set value changed callback, invoked as
      *                    cb(selectorTypeInstance, value)
      *  - destroy()       Remove jQuery wrapped element, unbind event listeners,
@@ -172,6 +173,14 @@ $.widget("telemetry.histogramfilter", {
           return this._select.val();
         },
 
+        /** Enable/disable (gray-out) this selector */
+        enable: function DefaultSelector_enable(value) {
+          if (value !== undefined) {
+            this._select.prop("disabled", !value);
+          }
+          return this._select.prop("disabled");
+        },
+
         /**
          * Set change callback, only one callback supported, invocation without
          * the callback argument unbinds previous callback. The callback is
@@ -204,8 +213,8 @@ $.widget("telemetry.histogramfilter", {
     // Create version and measure selectors
     this._versionSelector = new this.options.selectorType('version');
     this._measureSelector = new this.options.selectorType('measure');
-    if (this.options.visibility !== null) {  
-      this._measureSelector.element().css("visibility", this.options.visibility);
+    if (this.options.locked) {
+      this._measureSelector.enable(false);
     }
    
     this._versionSelector.options(Telemetry.versions());
@@ -379,14 +388,13 @@ $.widget("telemetry.histogramfilter", {
         $(window).unbind("hashchange", this._windowHashChanged);
       }
 
-     } else if (option == "visibility"){
-         this.options.visibility = value;
-         this._versionSelector.element().css("visibility", this.options.visibility);
-         this._measureSelector.element().css("visibility", this.options.visibility);
-         this._filterList.forEach(function(x){
-           x.select.element().css("visibility", value);
-         });
-              
+     } else if (option == "locked"){
+       this.options.locked = value;
+       console.log("locked: ", value);
+       this._measureSelector.enable(!value);
+       this._filterList.forEach(function(x){
+         x.select.enable(!value);
+       });
      } else {
       this.options[option] = value;
     }
@@ -514,9 +522,9 @@ $.widget("telemetry.histogramfilter", {
         select:         new this.options.selectorType(filterName),
         histogram:      hgram
       };
-      //default visibility is visible but if changed comply  
-      if (this.options.visibility !== null) {  
-        filter.select.element().css("visibility", this.options.visibility);        
+
+      if (this.options.locked) {
+        filter.select.enable(false);
       }
             
       filter.select.options(options);

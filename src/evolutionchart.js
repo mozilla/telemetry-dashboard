@@ -228,8 +228,6 @@ var evolutionchart = function() {
       if (showLegend) {
       //  if (false){
         legend.width( availableWidth  );
-       // ralu
-        legend.height(availableWidth);
 
         d3.select('.zuzu')
             .datum(data.map(function(series) {
