@@ -1,8 +1,7 @@
 var setVisible = true;
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
-
-// firstChanged true if first filter changed and I need to sync all hidden filters 
+  // firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
   var isLoaded = true;
   gHistogramFilterObjects.forEach(function (filter) {
@@ -135,7 +134,6 @@ Telemetry.init(function () {
   
   $("#addVersionButton").click(function () {
     var state = null;
-    //document.getElementById("legend").style.overflow="auto";
     if  (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
@@ -150,8 +148,11 @@ Telemetry.init(function () {
   });
   
   $('input[name=evo-type]:radio').change(function () {
-    var evoType = $('input[name=evo-type]:radio:checked').val();
-    $("#histogram-filter").histogramfilter('option', 'evolutionOver', evoType);
+    evoType = $('input[name=evo-type]:radio:checked').val();
+    gHistogramFilterObjects.forEach(function(x){
+      x.histogramfilter('option', 'evolutionOver', evoType);
+    });
+
   });
   $('input[name=render-type]:radio').change(function () {
     plot(true);
@@ -167,7 +168,7 @@ function fmt(number) {
   if (number == Infinity) return "Infinity";
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
-  var prefix = d3.formatPrefix(number, 's')
+  var prefix = d3.formatPrefix(number, 's');
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 

@@ -229,7 +229,7 @@ var evolutionchart = function() {
       //  if (false){
         legend.width( availableWidth  );
 
-        d3.select('.zuzu')
+        d3.select('.evolegend')
             .datum(data.map(function(series) {
               series.originalKey = series.originalKey === undefined ? series.key : series.originalKey;
               series.key = series.originalKey + (series.bar ? ' (left axis)' : ' (right axis)');
