@@ -226,6 +226,7 @@ var evolutionchart = function() {
       // Legend
 
       if (showLegend) {
+      //  if (false){
         legend.width( availableWidth  );
        // ralu
         legend.height(availableWidth);
@@ -238,11 +239,11 @@ var evolutionchart = function() {
             }))
           .call(legend);
 
-        if ( margin.top != legend.height()) {
+       /* if ( margin.top != legend.height()) {
           margin.top = legend.height();
           availableHeight1 = (height || parseInt(container.style('height')) || 400)
                              - margin.top - margin.bottom - height2;
-        }
+        }*/
       }
 
       //------------------------------------------------------------
