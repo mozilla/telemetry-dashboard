@@ -2,7 +2,6 @@
 // See nvd3 for license information
 var evolutionchart = function() {
   "use strict";
-  console.log("-----------------i am in evolutionchart");
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
@@ -35,11 +34,6 @@ var evolutionchart = function() {
     , selectionChangeCallback = null
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
-      console.log("x is", x);
-      console.log("y is", y);
-      console.log("key is", key);
-      //y = $("<div>").text(x);
-        $("#AAA").text(x);
       return '<b>' + key + '</b>' +
                '<p>' +  y + ' on ' + x + '</p>';
       }
@@ -111,14 +105,75 @@ var evolutionchart = function() {
     var pos = findPos(offsetElement);
     var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
         top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
-    console.log("e point index---------", e.pointIndex);
      var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
      var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
-    console.log("e.series is-----%%%%---", e.series, "x is", x, "y is", y);
-    var XXX = d3.selectAll("#evolution").datum();
-    console.log("adioasudioasjadisfdsafjadsopifjasdfjasdjfaopsjgfposadghjasdfjaso[djfpgaosdgihasodifja[idsjfkdsjgiosdpjfxx is ", XXX);
-    var    content = tooltip(e.series.key, x, y, e, chart);
-    console.log("e.series is--------", e.series, "x is", x, "y is", y);
+     var   content = tooltip(e.series.key, x, y, e, chart);
+
+
+    function extractField(data, field) {
+      var d = {};
+      for(var i = 0; i < data.length; i++) {
+        var v = data[i][field];
+        d[v] = 1;
+      }
+      var l = [];
+      $.each(d, function(v, i) { l.push(v); });
+      l.sort();
+      return l;
+    }
+
+    // Get the set of .originalKey and .state members of all series.
+    var series = d3.selectAll("#evolution").datum();
+    var states = extractField(series, "tableState");
+    var keys = extractField(series, "tableKey");
+
+    /*
+    tale format:
+
+             X                 | aurora/27/COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED | release/27/COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED
+     Submissions (left axis)	 | 12                                               | 3051
+     Mean (right axis)	     	 | 0                                                | 596
+     */
+    var table = [["X"].concat(states)];
+    for (var i = 0; i < keys.length; i++) {
+      var row = [keys[i]];
+      for (var j = 0; j < states.length; j++) {
+        row.push(null);
+      }
+      table.push(row);
+    }
+
+    for(var i = 0; i < series.length; i++) {
+      for(var j = 0; j < series[i].values.length; j++) {
+        if (series[i].values[j].x == e.point.x) {
+          var stateIdx = states.indexOf(series[i].tableState);
+          var originalKeyIdx = keys.indexOf(series[i].tableKey);
+          // +1 because first row is table header (list of states) and first column is the key.
+          table[originalKeyIdx + 1][stateIdx + 1] = series[i].values[j].y;
+        }
+      }
+    }
+
+    var tbody = d3.select("#AAA").select("table");
+    var rows = tbody.selectAll("tr")
+      .data(table);
+
+    rows.enter()
+      .append("tr");
+
+    rows.order();
+
+    var cells = rows.selectAll("td")
+      .data(function(d) { return d; });
+
+    cells.enter()
+      .append("td");
+
+    cells.text(function(d) { return d;});
+
+    cells.exit().remove();
+
+    rows.exit().remove();
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };
@@ -387,10 +442,8 @@ var evolutionchart = function() {
 
 
       dispatch.on('tooltipShow', function(e) {
-        console.log("TOLTIP");
         if (tooltips) {
           showTooltip(e, that.parentNode);
-          console.log("e is", e);
         }
       });
 
@@ -440,7 +493,6 @@ var evolutionchart = function() {
         var oldbrushExtent = brushExtent;
         brushExtent = brush.empty() ? null : brush.extent();
         extent = brush.empty() ? x2.domain() : brush.extent();
-        console.log("brush extent is", brushExtent);
 
         if (selectionChangeCallback && oldbrushExtent != brushExtent) {
           selectionChangeCallback(brushExtent);
@@ -576,12 +628,10 @@ var evolutionchart = function() {
   lines.dispatch.on('elementMouseover.tooltip', function(e) {
     e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
     dispatch.tooltipShow(e);
-    console.log("ZOMG mouseover");
   });
 
   lines.dispatch.on('elementMouseout.tooltip', function(e) {
     dispatch.tooltipHide(e);
-    console.log("ZOMG");
   });
 
   bars.dispatch.on('elementMouseover.tooltip', function(e) {

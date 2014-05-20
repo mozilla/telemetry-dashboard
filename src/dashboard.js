@@ -195,17 +195,21 @@ function createRemoveButton(parent) {
   return button;
 }
 
-function createUnfoldButton(parent){
+function createLockButton(parent){
   var button = $('<button type="button" class="btn btn-default " >');
   $('<span class="glyphicon glyphicon-lock">').appendTo(button);
 
   parent.append(button);
   button.click(function(){
     gSyncWithFirst = !gSyncWithFirst;
+
     gHistogramFilterObjects.slice(1).forEach(function (x) {
       x.histogramfilter('option', 'locked', gSyncWithFirst);
     });
-    
+    if (gSyncWithFirst) {
+      syncStateWithFirst();
+    }
+
     plot(false);
   });
   return button;
@@ -215,7 +219,7 @@ function addFilter(firstHistogramFilter, state) {
   var f = $("<div>");
 
   if (firstHistogramFilter) {
-    createUnfoldButton(f);
+    createLockButton(f);
   } else {
     createRemoveButton(f);
   }
@@ -340,22 +344,20 @@ function update(hgramEvos) {
   }
   lastHistogramEvos = hgramEvos;
 
-  function prependState(state, data) {
-    $.each(data, function (i, d) {
-      d.key = state + ": " + d.key;
-    });
-    return data;
-  }
-
   var datas = [];
   var labels = [];
-  
+
   $.each(hgramEvos, function (state, evo) {
-      var y = prepareData(evo);
-      for (var x in y) {
-        labels.push(y[x].key);
-      }
-      datas.push(prependState(state, y));
+    var series = prepareData(evo);
+    $.each(series, function(i, entry) {
+      entry.tableState = state;
+      entry.tableKey = entry.key;
+      entry.key = state + ": " + entry.key;
+    });
+    for (var x in series) {
+      labels.push(series[x].key);
+    }
+    datas.push(series);
   });
     
 
@@ -376,7 +378,6 @@ function update(hgramEvos) {
   $("#description").text(hgramEvo.description());
 
   function updateProps(extent) {
-    console.log("sunt in update props is arguments este", arguments);
     var hgram;
     var dates = hgramEvo.dates();
     if (extent) {
@@ -401,9 +402,7 @@ function update(hgramEvos) {
     if (dates.length == 0) {
       dateRange = "None";
     } else if (dates.length == 1) {
-      console.log("dates ----", dates[0]);
       dateRange = dateFormat(dates[0]);
-
     } else {
       var last = dates.length - 1;
       dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);

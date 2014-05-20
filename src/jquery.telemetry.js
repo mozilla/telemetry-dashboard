@@ -390,7 +390,6 @@ $.widget("telemetry.histogramfilter", {
 
      } else if (option == "locked"){
        this.options.locked = value;
-       console.log("locked: ", value);
        this._measureSelector.enable(!value);
        this._filterList.forEach(function(x){
          x.select.enable(!value);
@@ -635,7 +634,6 @@ $.widget("telemetry.histogramfilter", {
 
     // Now restore version, measure and cleared filters as desired
     // this will also trigger a changed event, so that's it
-    console.log("_versionChanged: ", version);
     this._restoreVersion(version, measure, clearedFilters);
   },
 
@@ -657,8 +655,6 @@ $.widget("telemetry.histogramfilter", {
     if(!this.options.attemptFilterAutoRestore) {
       clearedFilters = [];
     }
-
-    console.log("_measureChanged: ", measure);
 
     // Now restore measure and cleared filters as desired this will also
     // trigger a changed event, so that's it
