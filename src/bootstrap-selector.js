@@ -16,13 +16,11 @@ var BootstrapSelector = (function($){
       }
     }, this));
 
-    //this._select.addClass("show-tick");
     if (this._filterName === "version" || this._filterName === "measure") {
       this._select.data("live-search", true);
     }
     this._select.addClass("filter-" + this._filterName);
     this._select.select2({data: []});
-    //this._select.selectpicker();
   }
 
   $.extend(BootstrapSelector.prototype, {
@@ -32,7 +30,7 @@ var BootstrapSelector = (function($){
 
     options: function BootstrapSelector_options(options) {
       var data = [];
-      var filterName = this._filterName;
+    //  var filterName = this._filterName;
 
       if (this._filterName === "version") {
         var groups = {};
@@ -88,10 +86,6 @@ var BootstrapSelector = (function($){
 
         // Store options for another time
         this._options = options;
-
-        // Update bootstrap select
-        //this._select.selectpicker('refresh');
-
 
       }
       return this._options;

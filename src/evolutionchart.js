@@ -2,6 +2,7 @@
 // See nvd3 for license information
 var evolutionchart = function() {
   "use strict";
+  console.log("-----------------i am in evolutionchart");
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
@@ -34,7 +35,12 @@ var evolutionchart = function() {
     , selectionChangeCallback = null
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
-        return '<b>' + key + '</b>' +
+      console.log("x is", x);
+      console.log("y is", y);
+      console.log("key is", key);
+      //y = $("<div>").text(x);
+        $("#AAA").text(x);
+      return '<b>' + key + '</b>' +
                '<p>' +  y + ' on ' + x + '</p>';
       }
     , x
@@ -104,10 +110,15 @@ var evolutionchart = function() {
     }
     var pos = findPos(offsetElement);
     var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
-        top = e.pos[1] + pos[1],//( offsetElement.offsetTop || 0),
-        x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
-        y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex)),
-        content = tooltip(e.series.key, x, y, e, chart);
+        top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
+    console.log("e point index---------", e.pointIndex);
+     var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
+     var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
+    console.log("e.series is-----%%%%---", e.series, "x is", x, "y is", y);
+    var XXX = d3.selectAll("#evolution").datum();
+    console.log("adioasudioasjadisfdsafjadsopifjasdfjasdjfaopsjgfposadghjasdfjaso[djfpgaosdgihasodifja[idsjfkdsjgiosdpjfxx is ", XXX);
+    var    content = tooltip(e.series.key, x, y, e, chart);
+    console.log("e.series is--------", e.series, "x is", x, "y is", y);
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };
@@ -374,8 +385,13 @@ var evolutionchart = function() {
         chart.update();
       });
 
+
       dispatch.on('tooltipShow', function(e) {
-        if (tooltips) showTooltip(e, that.parentNode);
+        console.log("TOLTIP");
+        if (tooltips) {
+          showTooltip(e, that.parentNode);
+          console.log("e is", e);
+        }
       });
 
       //============================================================
@@ -424,6 +440,7 @@ var evolutionchart = function() {
         var oldbrushExtent = brushExtent;
         brushExtent = brush.empty() ? null : brush.extent();
         extent = brush.empty() ? x2.domain() : brush.extent();
+        console.log("brush extent is", brushExtent);
 
         if (selectionChangeCallback && oldbrushExtent != brushExtent) {
           selectionChangeCallback(brushExtent);
@@ -559,10 +576,12 @@ var evolutionchart = function() {
   lines.dispatch.on('elementMouseover.tooltip', function(e) {
     e.pos = [e.pos[0] +  margin.left, e.pos[1] + margin.top];
     dispatch.tooltipShow(e);
+    console.log("ZOMG mouseover");
   });
 
   lines.dispatch.on('elementMouseout.tooltip', function(e) {
     dispatch.tooltipHide(e);
+    console.log("ZOMG");
   });
 
   bars.dispatch.on('elementMouseover.tooltip', function(e) {

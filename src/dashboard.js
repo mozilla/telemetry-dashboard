@@ -31,7 +31,6 @@ function plot(firstChanged) {
     update(gHistogramEvolutions);
   }
 
-
   var statesUrlHash = "#" + makeUrlHashFromStates();
   if (window.location.hash !== statesUrlHash) {
     window.location.hash = statesUrlHash;
@@ -144,8 +143,6 @@ Telemetry.init(function () {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
     addFilter(false, state);
-    //$('#histogram').hide(); // work in progr
-    //this has to be done even when i restaurate the state from multiple versions
     $('#histogram-table').hide();
     setVisible = false;
     if (document.getElementById("summary") !== null) {
@@ -379,6 +376,7 @@ function update(hgramEvos) {
   $("#description").text(hgramEvo.description());
 
   function updateProps(extent) {
+    console.log("sunt in update props is arguments este", arguments);
     var hgram;
     var dates = hgramEvo.dates();
     if (extent) {
@@ -403,7 +401,9 @@ function update(hgramEvos) {
     if (dates.length == 0) {
       dateRange = "None";
     } else if (dates.length == 1) {
+      console.log("dates ----", dates[0]);
       dateRange = dateFormat(dates[0]);
+
     } else {
       var last = dates.length - 1;
       dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);
@@ -574,11 +574,7 @@ function update(hgramEvos) {
 
     d3.select("#evolution").datum(cDatas).transition().duration(500).call(focusChart);
 
-    nv.utils.windowResize(
-
-      function () {
-        focusChart.update();
-      });
+    nv.utils.windowResize(function () { focusChart.update(); });
 
       focusChart.setSelectionChangeCallback(updateProps);
 
