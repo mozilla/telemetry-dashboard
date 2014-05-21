@@ -152,9 +152,6 @@ function colourize(aStack) {
 function populate_table(table_id, key, label) {
     console.log("Populating " + table_id + " table");
     var tbody = $('#' + table_id + ' > tbody');
-    var filter_thread = $('#filter_thread').find(":selected").val();
-    var filter_app = $('#filter_application').find(":selected").val();
-    var filter_channel = $('#filter_channel').find(":selected").val();
     var filter_version = $('#filter_version').find(":selected").val();
     tbody.empty();
     if (!chromehangs_data[key] || chromehangs_data[key].length == 0) {
@@ -166,9 +163,7 @@ function populate_table(table_id, key, label) {
         for (var i = 0; i < chromehangs_data[key].length; i++) {
             if (rank > maxRows) break;
             var drow = chromehangs_data[key][i];
-            if (drow[APP_COLUMN] === filter_app &&
-                clean_version(drow[VER_COLUMN]) === filter_version &&
-                drow[CHAN_COLUMN] === filter_channel) {
+            if (clean_version(drow[VER_COLUMN]) === filter_version) {
 
                 var trow = $('<tr>', {id: label + rank});
                 is_empty = false;
@@ -290,9 +285,6 @@ $(function () {
         lastWeekEnd.setDate(lastWeekEnd.getDate() + 7);
         update_data();
     });
-    $('#filter_thread').change(update_data);
-    $('#filter_application').change(update_data);
-    $('#filter_channel').change(update_data);
     $('#filter_rowcount').change(update_data);
     $('#filter_version').change(update_data);
     $('input[name=slowsql_type]').change(update_data);

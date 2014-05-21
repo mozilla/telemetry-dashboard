@@ -24,7 +24,7 @@
 <body>
 <a href="https://github.com/mreid-moz/slowsql-dashboard"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
 <div id="header">Telemetry Chrome Hangs</div>
-<div id="subheader">An overview of common hang stacks</div>
+<div id="subheader">An overview of common hang stacks in Firefox Nightly</div>
 <div id="navbar">
     <strong>Sort Top Hangs by:</strong><br/>
     <input id="type_frequency" type="radio" name="slowsql_type" value="frequency" checked></input>
@@ -35,19 +35,6 @@
     <label for="type_duration">Longest Total Duration</label></input>
     <br/>
     <strong>Filter by:</strong><br/>
-    Application: <select id="filter_application">
-        <option>Firefox</option>
-        <option>Fennec</option>
-        <option>Thunderbird</option>
-        <option>OTHER</option>
-    </select>
-    Channel: <select id="filter_channel">
-        <option>nightly</option>
-        <option>aurora</option>
-        <option>beta</option>
-        <option>release</option>
-        <option>OTHER</option>
-    </select>
     Version: <select id="filter_version">
     </select>
     Limit: <select id="filter_rowcount">
