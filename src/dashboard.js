@@ -1,7 +1,191 @@
 var setVisible = true;
+var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
-  // firstChanged true if first filter changed and I need to sync all hidden filters
+
+function computePageState() {
+  var pageState = {};
+  pageState.filter = [];
+  for (var i = 0; i < gHistogramFilterObjects.length; i++) {
+    pageState.filter.push(gHistogramFilterObjects[i].histogramfilter('state'));
+  }
+
+/*
+  // TODO: doesn't work!
+  pageState.aggregates = $("#optSelector").val();
+  if (pageState.aggregates === undefined || pageState.aggregates === null) {
+    pageState.aggregates = [];
+  }
+*/
+  pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
+  pageState.locked = gSyncWithFirst;
+  pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
+
+  console.log("computePageState: ", pageState);
+  return pageState;
+}
+
+// Only works on array of objects which can be compared with == (string, numbers, etc.)
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  // make copies so that sort doesn't change the order in the originals
+  a = [].concat(a);
+  b = [].concat(b);
+
+  a.sort();
+  b.sort();
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function restoreFromPageState(newPageState, curPageState) {
+  console.log("restoreFromPageState: ", newPageState, curPageState);
+  if (newPageState === undefined ||
+      newPageState.filter === undefined ||
+      newPageState.filter.length === 0) {
+    console.log("restoreFromPageState: return false");
+    return false;
+  }
+
+  if (!arraysEqual(newPageState.filter, curPageState.filter)) {
+    console.log("restoreFromPageState: diff filters: ", newPageState.filter, curPageState.filter);
+
+    $('#newHistoFilter').empty();
+
+    gHistogramEvolutions = {};
+    gHistogramFilterObjects = [];
+
+    var states = newPageState.filter;
+
+    addFilter(true, states[0]);
+    if (states.length == 1) {
+      setVisible = true;
+    }
+
+    for (var i = 1; i < states.length; i++) {
+      addFilter(false, states[i]);
+    }
+
+    /*
+    // TODO: re-enable?
+    if (states.length > 1) {
+      document.getElementById("summary").remove();
+      document.getElementById('summaryDetails').remove();
+    }
+*/
+
+  }
+
+  function toBoolean(x) {
+    if (x === "true" || x === true)
+      return true;
+    if (x === "false" || x === false)
+      return false;
+    throw x;
+  }
+
+  if (newPageState.evoOver !== undefined) {
+    console.log("newPageState.evoOver: ", newPageState.evoOver);
+    $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
+  }
+
+  if (newPageState.sanitize !== undefined) {
+    $('input[name=sanitize-pref]:checkbox').prop('checked', toBoolean(newPageState.sanitize));
+  }
+
+  if (newPageState.locked !== undefined) {
+    console.log("restoreFromPageState: restoring gSyncWithFirst, old val: ", gSyncWithFirst, " new val: ", newPageState.locked);
+    changeLockButton(toBoolean(newPageState.locked));
+  }
+
+  if (newPageState.aggregates !== undefined) {
+    $("#optSelector").val(newPageState.aggregates);
+  }
+
+
+  console.log("restoreFromPageState: end: ", newPageState, curPageState, computePageState());
+
+  return true;
+}
+
+function pageStateToUrlHash(pageState) {
+  var fragments = [];
+  $.each(pageState, function(k, v) {
+    if (v instanceof Array) {
+      v = v.join("!");
+    }
+
+    fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
+  });
+
+  var newUrl = fragments.join("&");
+  console.log("pageStateToUrlHash: (", pageState, ")= ", newUrl);
+  return newUrl;
+}
+
+function urlHashToPageState(url) {
+  if (url.length === 0) {
+    return {}; // empty state
+  }
+
+  if (url[0] === "#") {
+    url = url.slice(1);  // drop #
+  }
+
+  var fragments = url.split("&");
+  var pageState = {};
+  for(var i = 0; i < fragments.length; i++) {
+      var l = fragments[i].split("=");
+      pageState[decodeURIComponent(l[0])] = decodeURIComponent(l[1]);
+  }
+
+  if (pageState.filter !== undefined) {
+    pageState.filter = pageState.filter.split("!");
+  }
+
+  if (pageState.aggregates !== undefined) {
+    pageState.aggregates = pageState.aggregates.split("!");
+  }
+
+  console.log("urlHashToPageState: (", url, ")= ", pageState);
+
+  return pageState;
+}
+
+function updateUrlHashIfNeeded() {
+  var pageState = computePageState();
+  var urlPageState = urlHashToPageState(window.location.hash);
+
+  var loadedEvolutions = Object.keys(gHistogramEvolutions).length;
+  var allEvolutions = gHistogramFilterObjects.length;
+  if (loadedEvolutions !== allEvolutions) {
+    console.log("updateUrlHashIfNeeded: won't update state, still loading: ", allEvolutions, loadedEvolutions);
+    //return;
+  }
+
+
+  // debugger;
+
+  if (!arraysEqual(pageState.filter, urlPageState.filter) ||
+      !arraysEqual(pageState.aggregates, urlPageState.aggregates) ||
+      "" + pageState.locked !== "" + urlPageState.locked ||
+      "" + pageState.evoOver !== "" + urlPageState.evoOver ||
+      "" + pageState.sanitize !== "" + urlPageState.sanitize) {
+    console.log("updateUrlHashIfNeeded: DIFF: ", pageState, " and ", urlPageState);
+
+    window.location.hash = pageStateToUrlHash(pageState);
+  }
+  console.log("updateUrlHashIfNeeded: EQ  : ", pageState, " and ", urlPageState);
+}
+
+
+// firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
   var isLoaded = true;
   gHistogramFilterObjects.forEach(function (filter) {
@@ -22,6 +206,7 @@ function plot(firstChanged) {
   }
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
+    console.log("full hist state is --------", hist._filter_path);
     if (hist !== null) {
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
     }
@@ -31,22 +216,11 @@ function plot(firstChanged) {
     update(gHistogramEvolutions);
   }
 
-  var statesUrlHash = "#" + makeUrlHashFromStates();
-  if (window.location.hash !== statesUrlHash) {
-    window.location.hash = statesUrlHash;
-  }
+  updateUrlHashIfNeeded();
 
   return gHistogramEvolutions;
 }
 
-function makeUrlHashFromStates() {  
-  var url = [];
-  for (var i = 0; i < gHistogramFilterObjects.length; i++) {
-    var state = gHistogramFilterObjects[i].histogramfilter('state');
-    url.push(state);
-  }  
-  return url.join("&");
-}
 
 function syncStateWithFirst() {  
   if (gHistogramFilterObjects.length == 0 ) {
@@ -67,10 +241,13 @@ function syncStateWithFirst() {
     var currentVersion = segmParts[0] + '/' + segmParts[1];    
     gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
   }
+
+  updateUrlHashIfNeeded();
 }
 
 function addMultipleSelect(options, changeCb) {
   var selector = $("<select multiple id=optSelector>");
+  console.log("sunt in add multiple select");
   selector.addClass("multiselect");
   $('#multipercentile').empty().append(selector);
   var n = options.length;
@@ -86,65 +263,70 @@ function addMultipleSelect(options, changeCb) {
   $("#optSelector").val(options);
   $("#optSelector").change(function () {
     changeCb(selector);
+    updateUrlHashIfNeeded();
   });
+  updateUrlHashIfNeeded();
   selector.multiselect();
-}
-
-function restoreStateFromUrl(url) {
-  $('#newHistoFilter').empty();
-  gHistogramEvolutions = {};
-  gHistogramFilterObjects = [];
-  
-  var x = url.split("#");
-  if (x.length < 2) {
-    return false;
-  }
-  setVisible = false;
-  var states = x[1].split("&");
-
-  if (states.length === 0) {
-    return false;
-  }
-  
-  addFilter(true, states[0]);
-  if (states.length == 1)
-    setVisible = true;
-  if (states.length > 1) {
-    document.getElementById("summary").remove();
-    document.getElementById('summaryDetails').remove();
-
-  }
-  for (var i = 1; i < states.length; i++) {
-    addFilter(false, states[i]);
-  }
-  return true;
 }
 
 
 Telemetry.init(function () {  
   var versions = Telemetry.versions();
-
-  if (!restoreStateFromUrl(window.location.hash)) {
+//todo
+  var pageState = urlHashToPageState(window.location.hash);
+  if (!restoreFromPageState(pageState, {})) {
     addFilter(true, null); //  first filter
     gSyncWithFirst = true;
   }
 
   $(window).bind("hashchange", function(){ 
-    var stateUrl = makeUrlHashFromStates();
-    if (window.location.hash.slice(1) !== stateUrl) {
-      restoreStateFromUrl(window.location.hash);
-    }
+    var curPageState = computePageState();
+    var newPageState = urlHashToPageState(window.location.hash);
+    restoreFromPageState(newPageState, curPageState);
   });
   
-  
+  var rrr ="http://localhost:63342/telemetry-dashboard/index.html#filter=nightly%2F32%2FA11Y_CONSUMERS&evoOver=Builds&locked=true&sanitize=true"
+  /////$.get("tinyurl.com/api-create.php", rrr, function(data){console.log("DATA is", data);});
+  var gg ;
+  var request = {
+    url: "https://api-ssl.bitly.com/shorten",
+
+    // tell jQuery we're expecting JSONP
+    dataType: "jsonp",
+
+    // tell YQL what we want and that we want JSON
+    data: {
+      longUrl: window.location.href ,  access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+      format: "json"
+    },
+
+    // work with the response
+    success: function( response ) {
+      console.log( "SUCCESS: ", response ); // server response
+      gg = response;
+
+      console.log("------------this is my response--------------AAAAAA", response.results);
+      console.log("ZUZU: ", Object.keys(response.results))
+      var longUrl = Object.keys(response.results)[0];
+      var shortUrl = response.results[longUrl].shortUrl;
+      console.log("Short: ", shortUrl);
+      for (x in response.results)
+        console.log("keys are-----------", x);
+
+    }
+  };
+  var response = $.ajax(request);
+
   $("#addVersionButton").click(function () {
     var state = null;
     if  (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
+
     addFilter(false, state);
     $('#histogram-table').hide();
     setVisible = false;
+    /*
     if (document.getElementById("summary") !== null) {
       document.getElementById("summary").remove();
       document.getElementById('summaryDetails').remove();
@@ -152,20 +334,26 @@ Telemetry.init(function () {
     document.getElementById('measure').remove();
     document.getElementById('description').remove();
     document.getElementById('renderHistogram').remove();
+    */
+    updateUrlHashIfNeeded();
   });
-  
+
   $('input[name=evo-type]:radio').change(function () {
-    evoType = $('input[name=evo-type]:radio:checked').val();
+    var evoType = $('input[name=evo-type]:radio:checked').val();
     gHistogramFilterObjects.forEach(function(x){
       x.histogramfilter('option', 'evolutionOver', evoType);
     });
-
+    updateUrlHashIfNeeded();
   });
+
   $('input[name=render-type]:radio').change(function () {
     plot(true);
+    // TODO: add updateUrlHashIfNeeded + add to state?
   });
+
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
+    updateUrlHashIfNeeded();
   });
 });
 
@@ -179,8 +367,6 @@ function fmt(number) {
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 
-var gHistogramEvolutions = {};
-
 function createRemoveButton(parent) {
   var button = $('<button type="button" class="btn btn-default " >');
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
@@ -191,26 +377,49 @@ function createRemoveButton(parent) {
       return x !== parent;
     });
     plot(false);
+    updateUrlHashIfNeeded();
   });
   return button;
 }
 
+function changeLockButton(newValue) {
+  console.log("Lock change from: ", gSyncWithFirst, " to: ", newValue);
+  if (gSyncWithFirst === newValue) {
+    return;
+  }
+
+  gSyncWithFirst = newValue;
+  var lockButton = $("#lock-button");
+  if (!gSyncWithFirst) {
+    lockButton.removeClass("glyphicon-lock");
+    lockButton.addClass("glyphicon-ok");
+  } else {
+    lockButton.addClass("glyphicon-lock");
+    lockButton.removeClass("glyphicon-ok");
+  }
+
+  gHistogramFilterObjects.slice(1).forEach(function (x) {
+    x.histogramfilter('option', 'locked', gSyncWithFirst);
+  });
+
+  if (gSyncWithFirst) {
+    syncStateWithFirst();
+  }
+
+  plot(false);
+
+}
+
 function createLockButton(parent){
   var button = $('<button type="button" class="btn btn-default " >');
-  $('<span class="glyphicon glyphicon-lock">').appendTo(button);
+  var span = $('<span id="lock-button" class="glyphicon">');
+
+  span.addClass(gSyncWithFirst ? "glyphicon-lock" : "glyphicon-ok");
+  span.appendTo(button);
 
   parent.append(button);
-  button.click(function(){
-    gSyncWithFirst = !gSyncWithFirst;
-
-    gHistogramFilterObjects.slice(1).forEach(function (x) {
-      x.histogramfilter('option', 'locked', gSyncWithFirst);
-    });
-    if (gSyncWithFirst) {
-      syncStateWithFirst();
-    }
-
-    plot(false);
+  button.click(function() {
+    changeLockButton(!gSyncWithFirst);
   });
   return button;
 }
@@ -231,8 +440,7 @@ function addFilter(firstHistogramFilter, state) {
   }
 
   f.histogramfilter({
-    synchronizeStateWithHash: false, 
-
+    synchronizeStateWithHash: false,
     defaultVersion: function (versions) {
       var nightlies = versions.filter(function (version) {
         return version.substr(0, 8) == "nightly/";
@@ -245,7 +453,7 @@ function addFilter(firstHistogramFilter, state) {
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
-  f.bind("histogramfilterchange", function() {plot(firstHistogramFilter);});
+  f.bind("histogramfilterchange", function() { plot(firstHistogramFilter); });
   gHistogramFilterObjects.push(f);  
 }
 
@@ -253,8 +461,7 @@ function addFilter(firstHistogramFilter, state) {
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
   $('#histogram-table').hide();
-  if(setVisible == true)
-  {
+  if(setVisible == true) {
     $('#histogram-table').show();
   }
 
@@ -349,19 +556,20 @@ function update(hgramEvos) {
 
   $.each(hgramEvos, function (state, evo) {
     var series = prepareData(evo);
+    for (var x in series) {
+      labels.push(series[x].key);
+    }
     $.each(series, function(i, entry) {
       entry.tableState = state;
       entry.tableKey = entry.key;
       entry.key = state + ": " + entry.key;
     });
-    for (var x in series) {
-      labels.push(series[x].key);
-    }
+
     datas.push(series);
   });
-    
 
-  //from list of lists to list   
+
+  // from list of lists to list
   cDatas = [].concat.apply([], datas);
   function unique(array) {
     return $.grep(array, function (el, index) {
@@ -571,42 +779,47 @@ function update(hgramEvos) {
     focusChart.y3Axis.tickFormat(fmt);
     focusChart.y4Axis.tickFormat(fmt);
 
+    console.log("I ended up here---------");
     d3.select("#evolution").datum(cDatas).transition().duration(500).call(focusChart);
 
     nv.utils.windowResize(function () { focusChart.update(); });
 
-      focusChart.setSelectionChangeCallback(updateProps);
+    focusChart.setSelectionChangeCallback(updateProps);
 
-      function endsWith(str, suffix) {
-        suffix = ": " + suffix;
-        return str.indexOf(suffix, str.length - suffix.length) !== -1;
-      }
-      labels = unique(labels);
-      addMultipleSelect(labels, function (selector) {
-        var toBeSelected = selector.val();
-        if (toBeSelected === null) toBeSelected = [];
-        for (var i = 0; i < cDatas.length; i++) {
-          if (isKeySelected(cDatas[i].originalKey, toBeSelected)) {
-            cDatas[i].disabled = false;
-          } else {
-            cDatas[i].disabled = true;
-          }
-        }
-        focusChart.update();
-      });
+    function endsWith(str, suffix) {
+      suffix = ": " + suffix;
+      return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }
+    labels = unique(labels);
 
-      function isKeySelected(key, toBeSelected) {
-        for (var i = 0; i < toBeSelected.length; i++) {
-          if (endsWith(key, toBeSelected[i])) {
-            return true;
-          }
+
+    addMultipleSelect(labels, function (selector) {
+      var toBeSelected = selector.val();
+      console.log("toBeSelected----############--------", toBeSelected);
+      if (toBeSelected === null) toBeSelected = [];
+      for (var i = 0; i < cDatas.length; i++) {
+        if (isKeySelected(cDatas[i].originalKey, toBeSelected)) {
+          agregates = toBeSelected;
+          cDatas[i].disabled = false;
+        } else {
+          cDatas[i].disabled = true;
         }
-        return false;
       }
+      focusChart.update();
     });
 
-    updateProps();
-  }
+    function isKeySelected(key, toBeSelected) {
+      for (var i = 0; i < toBeSelected.length; i++) {
+        if (endsWith(key, toBeSelected[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+  });
+
+  updateProps();
+}
   
   
   
