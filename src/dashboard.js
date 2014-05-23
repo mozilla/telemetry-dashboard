@@ -2,6 +2,7 @@ var setVisible = true;
 var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
+var oldEvolutions = [];
 
 function computePageState() {
   var pageState = {};
@@ -21,7 +22,6 @@ function computePageState() {
   pageState.locked = gSyncWithFirst;
   pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
 
-  console.log("computePageState: ", pageState);
   return pageState;
 }
 
@@ -45,16 +45,13 @@ function arraysEqual(a, b) {
 }
 
 function restoreFromPageState(newPageState, curPageState) {
-  console.log("restoreFromPageState: ", newPageState, curPageState);
   if (newPageState === undefined ||
       newPageState.filter === undefined ||
       newPageState.filter.length === 0) {
-    console.log("restoreFromPageState: return false");
     return false;
   }
 
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
-    console.log("restoreFromPageState: diff filters: ", newPageState.filter, curPageState.filter);
 
     $('#newHistoFilter').empty();
 
@@ -91,7 +88,6 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.evoOver !== undefined) {
-    console.log("newPageState.evoOver: ", newPageState.evoOver);
     $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
   }
 
@@ -100,16 +96,12 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.locked !== undefined) {
-    console.log("restoreFromPageState: restoring gSyncWithFirst, old val: ", gSyncWithFirst, " new val: ", newPageState.locked);
     changeLockButton(toBoolean(newPageState.locked));
   }
 
   if (newPageState.aggregates !== undefined) {
     $("#optSelector").val(newPageState.aggregates);
   }
-
-
-  console.log("restoreFromPageState: end: ", newPageState, curPageState, computePageState());
 
   return true;
 }
@@ -125,7 +117,6 @@ function pageStateToUrlHash(pageState) {
   });
 
   var newUrl = fragments.join("&");
-  console.log("pageStateToUrlHash: (", pageState, ")= ", newUrl);
   return newUrl;
 }
 
@@ -153,8 +144,6 @@ function urlHashToPageState(url) {
     pageState.aggregates = pageState.aggregates.split("!");
   }
 
-  console.log("urlHashToPageState: (", url, ")= ", pageState);
-
   return pageState;
 }
 
@@ -165,7 +154,6 @@ function updateUrlHashIfNeeded() {
   var loadedEvolutions = Object.keys(gHistogramEvolutions).length;
   var allEvolutions = gHistogramFilterObjects.length;
   if (loadedEvolutions !== allEvolutions) {
-    console.log("updateUrlHashIfNeeded: won't update state, still loading: ", allEvolutions, loadedEvolutions);
     //return;
   }
 
@@ -177,13 +165,10 @@ function updateUrlHashIfNeeded() {
       "" + pageState.locked !== "" + urlPageState.locked ||
       "" + pageState.evoOver !== "" + urlPageState.evoOver ||
       "" + pageState.sanitize !== "" + urlPageState.sanitize) {
-    console.log("updateUrlHashIfNeeded: DIFF: ", pageState, " and ", urlPageState);
 
     window.location.hash = pageStateToUrlHash(pageState);
   }
-  console.log("updateUrlHashIfNeeded: EQ  : ", pageState, " and ", urlPageState);
 }
-
 
 // firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
@@ -200,20 +185,34 @@ function plot(firstChanged) {
     return;
   }
   gHistogramEvolutions = {};
-  
+
   if (firstChanged && gSyncWithFirst) {
     syncStateWithFirst();
   }
+  //ralu
+  var filt = [];
+
   gHistogramFilterObjects.forEach(function (f) {
+
     var hist = f.histogramfilter('histogram');
-    console.log("full hist state is --------", hist._filter_path);
-    if (hist !== null) {
+    var xxx = f.histogramfilter('state');
+    var auci = f.histogramfilter('state') + "";
+    if (hist !== null && filt.indexOf(xxx) == -1 && oldEvolutions.indexOf(auci) === -1) {
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
+      console.log("f.histogramfilter('state') ", f.histogramfilter('state'), "oldEvolution", oldEvolutions.indexOf(f.histogramfilter('state')));
+      console.log("oldEvolution looks like inside the if", oldEvolutions);
+      filt.push(xxx);
+
     }
+    oldEvolutions = Object.keys(gHistogramEvolutions);
+    console.log("old evolutions look like", oldEvolutions);
+    //compare old with new histogram evolutions
+
   });
 
   if (!$.isEmptyObject(gHistogramEvolutions)) {
     update(gHistogramEvolutions);
+    console.log("-----i made un update again");
   }
 
   updateUrlHashIfNeeded();
@@ -247,7 +246,6 @@ function syncStateWithFirst() {
 
 function addMultipleSelect(options, changeCb) {
   var selector = $("<select multiple id=optSelector>");
-  console.log("sunt in add multiple select");
   selector.addClass("multiselect");
   $('#multipercentile').empty().append(selector);
   var n = options.length;
@@ -273,6 +271,8 @@ function addMultipleSelect(options, changeCb) {
 Telemetry.init(function () {  
   var versions = Telemetry.versions();
 //todo
+  //ralu
+  createButtonTinyMe();
   var pageState = urlHashToPageState(window.location.hash);
   if (!restoreFromPageState(pageState, {})) {
     addFilter(true, null); //  first filter
@@ -285,37 +285,6 @@ Telemetry.init(function () {
     restoreFromPageState(newPageState, curPageState);
   });
   
-  var rrr ="http://localhost:63342/telemetry-dashboard/index.html#filter=nightly%2F32%2FA11Y_CONSUMERS&evoOver=Builds&locked=true&sanitize=true"
-  /////$.get("tinyurl.com/api-create.php", rrr, function(data){console.log("DATA is", data);});
-  var gg ;
-  var request = {
-    url: "https://api-ssl.bitly.com/shorten",
-
-    // tell jQuery we're expecting JSONP
-    dataType: "jsonp",
-
-    // tell YQL what we want and that we want JSON
-    data: {
-      longUrl: window.location.href ,  access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
-      format: "json"
-    },
-
-    // work with the response
-    success: function( response ) {
-      console.log( "SUCCESS: ", response ); // server response
-      gg = response;
-
-      console.log("------------this is my response--------------AAAAAA", response.results);
-      console.log("ZUZU: ", Object.keys(response.results))
-      var longUrl = Object.keys(response.results)[0];
-      var shortUrl = response.results[longUrl].shortUrl;
-      console.log("Short: ", shortUrl);
-      for (x in response.results)
-        console.log("keys are-----------", x);
-
-    }
-  };
-  var response = $.ajax(request);
 
   $("#addVersionButton").click(function () {
     var state = null;
@@ -383,7 +352,6 @@ function createRemoveButton(parent) {
 }
 
 function changeLockButton(newValue) {
-  console.log("Lock change from: ", gSyncWithFirst, " to: ", newValue);
   if (gSyncWithFirst === newValue) {
     return;
   }
@@ -393,6 +361,7 @@ function changeLockButton(newValue) {
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
     lockButton.addClass("glyphicon-ok");
+
   } else {
     lockButton.addClass("glyphicon-lock");
     lockButton.removeClass("glyphicon-ok");
@@ -409,6 +378,46 @@ function changeLockButton(newValue) {
   plot(false);
 
 }
+//ralu
+function createButtonTinyMe()
+{
+  var valOfTyniUrl;
+  var button = $('<button type="button" class="btn btn-default">');
+  button.addClass("glyphicon glyphicon-leaf");
+  button.text(" tinyMe");
+
+  $("#tinyMe").append(button);
+  button.click(function(){
+    var request = {
+      url: "https://api-ssl.bitly.com/shorten",
+
+      // tell jQuery we're expecting JSONP
+      dataType: "jsonp",
+
+      // tell YQL what we want and that we want JSON
+      data: {
+        longUrl: window.location.href ,  access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+        format: "json"
+      },
+
+      // work with the response
+      success: function( response ) {
+        var longUrl = Object.keys(response.results)[0];
+        var shortUrl = response.results[longUrl].shortUrl;
+        valOfTyniUrl = "tiny url for this state is: " + " " + shortUrl;
+        var tiny = $("<div>");
+        //maibe we don't want to append ..we'll see
+        tiny.append(valOfTyniUrl);
+        $("#tinyMe").append(tiny);
+      }
+    };
+
+
+    var response = $.ajax(request);
+
+  })
+
+  }
 
 function createLockButton(parent){
   var button = $('<button type="button" class="btn btn-default " >');
@@ -423,10 +432,9 @@ function createLockButton(parent){
   });
   return button;
 }
-
+var allChachedStates = {};
 function addFilter(firstHistogramFilter, state) {
   var f = $("<div>");
-
   if (firstHistogramFilter) {
     createLockButton(f);
   } else {
@@ -438,8 +446,7 @@ function addFilter(firstHistogramFilter, state) {
   if (gHistogramFilterObjects.length >= 1 && gSyncWithFirst) {
     locked = true;
   }
-
-  f.histogramfilter({
+    f.histogramfilter({
     synchronizeStateWithHash: false,
     defaultVersion: function (versions) {
       var nightlies = versions.filter(function (version) {
@@ -454,7 +461,7 @@ function addFilter(firstHistogramFilter, state) {
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", function() { plot(firstHistogramFilter); });
-  gHistogramFilterObjects.push(f);  
+  gHistogramFilterObjects.push(f);
 }
 
 
@@ -779,7 +786,6 @@ function update(hgramEvos) {
     focusChart.y3Axis.tickFormat(fmt);
     focusChart.y4Axis.tickFormat(fmt);
 
-    console.log("I ended up here---------");
     d3.select("#evolution").datum(cDatas).transition().duration(500).call(focusChart);
 
     nv.utils.windowResize(function () { focusChart.update(); });
@@ -795,7 +801,6 @@ function update(hgramEvos) {
 
     addMultipleSelect(labels, function (selector) {
       var toBeSelected = selector.val();
-      console.log("toBeSelected----############--------", toBeSelected);
       if (toBeSelected === null) toBeSelected = [];
       for (var i = 0; i < cDatas.length; i++) {
         if (isKeySelected(cDatas[i].originalKey, toBeSelected)) {

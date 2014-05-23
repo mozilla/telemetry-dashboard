@@ -30,16 +30,9 @@
 </head>
 <body>
     <header>
-        <h1>Telemetry Dashboard</h1>
+        <h1>Telemetry Dashboard </h1>
     </header>
 
-    <div id="AAA"> <table border="1"></table></div>
-    <form action="http://tinyurl.com/create.php" method="post" target="_blank">
-        <table align="center" cellpadding="5" bgcolor="#E7E7F7"><tr><td>
-            <b>Enter a long URL to make <a href="http://tinyurl.com">tiny</a>:</b><br />
-            <input type="text" name="url" size="30"><input type="submit" name="submit" value="Make TinyURL!">
-        </td></tr></table>
-    </form>
 
     <nav 
          class="navbar navbar-default  "  role="navigation">
@@ -55,6 +48,8 @@
       <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
       </form>
     </nav>
+    <div id="AAA"> <table border="1"></table></div>
+
     <section>
         <div id="content" class="row">
             <div class="col-md-8">
@@ -76,9 +71,11 @@
                 </div>
             </div>
             <aside class="col-md-4">
-                <h2>Series</h2>
-                <div id="legend" class="evoLegend" style="height: 200px; overflow: scroll; -moz-box-shadow: inset 0 4px 0 #FF0000; box-shadow: 10px 10px 5px #888888;"> <svg  style="height: 501px; " class="evolegend nvd3 nv-wrap "></svg></div>
-                <h2>Preferences</h2>
+
+<!--                <h2>Series</h2>
+                <div id="legend" class="evoLegend" style="height: 200px; overflow: scroll; -moz-box-shadow: inset 0 4px 0 #FF0000; box-shadow: 10px 10px 5px #888888;"> <svg  style="height: 501px; " class="evolegend nvd3 nv-wrap "></svg></div> -->
+                <h2>Preferences
+                </h2>
                 <form role="form">
                     <div class="form-group">
                         <label>Show evolution over</label>
@@ -120,6 +117,7 @@
                             </label>
                         </div>
                     </div>
+                    <div id="tinyMe"></div>
                 </form>
                 <h2 id="summary" >Summary</h2>
                 <dl id= "summaryDetails" class="dl-horizontal">
