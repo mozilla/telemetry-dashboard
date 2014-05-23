@@ -4,12 +4,15 @@ var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
-function prepareData(hgramEvo) {
+function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
-
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
   var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
+  if (state in cachedData) {
+    console.log("i already have this data!", state);
+    return cachedData[state];
+  }
 
   var submissions = hgramEvo.map(function (date, hgram) {
     if (hgram.submissions() > maxSubmissions) {
@@ -103,6 +106,7 @@ function prepareData(hgramEvo) {
       values: ps['95'],
     });
   }
+  cachedData[state] = data;
   return data;
 }
 
@@ -228,7 +232,7 @@ function urlHashToPageState(url) {
   }
 
   if (url[0] === "#") {
-    url = url.slice(1);  // drop #
+    url = url.slice(1);  //drop #
   }
 
   var fragments = url.split("&");
@@ -255,13 +259,6 @@ function updateUrlHashIfNeeded() {
 
   var loadedEvolutions = Object.keys(gHistogramEvolutions).length;
   var allEvolutions = gHistogramFilterObjects.length;
-  if (loadedEvolutions !== allEvolutions) {
-    //return;
-  }
-
-
-  // debugger;
-
   if (!arraysEqual(pageState.filter, urlPageState.filter) ||
       !arraysEqual(pageState.aggregates, urlPageState.aggregates) ||
       "" + pageState.locked !== "" + urlPageState.locked ||
@@ -299,7 +296,7 @@ function plot(firstChanged) {
   gHistogramFilterObjects.forEach(function (hfilter) { filterStates[hfilter.histogramfilter("state")] = 1; });
 
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
-    console.log("ZOMG: stateurile de pe plit sunt la fel cau alea din obiectele filter: ", gStatesOnPlot, Object.keys(filterStates));
+    console.log("got the same old filters: ", gStatesOnPlot, Object.keys(filterStates));
     return;
   }
 
@@ -367,7 +364,7 @@ Telemetry.init(function () {
   var versions = Telemetry.versions();
 //todo
   //ralu
-  createButtonTinyMe();
+  createButtonTinyUrl();
   var pageState = urlHashToPageState(window.location.hash);
   if (!restoreFromPageState(pageState, {})) {
     addHistogramFilter(true, null); //  first filter
@@ -474,14 +471,14 @@ function changeLockButton(newValue) {
 
 }
 //ralu
-function createButtonTinyMe()
+function createButtonTinyUrl()
 {
   var valOfTyniUrl;
   var button = $('<button type="button" class="btn btn-default">');
-  button.addClass("glyphicon glyphicon-leaf");
-  button.text(" tinyMe");
+  //button.addClass("glyphicon glyphicon-leaf");
+  button.text(" tinyUrl");
 
-  $("#tinyMe").append(button);
+  $("#tinyUrl").append(button);
   button.click(function(){
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
@@ -503,7 +500,7 @@ function createButtonTinyMe()
         var tiny = $("<div>");
         //maibe we don't want to append ..we'll see
         tiny.append(valOfTyniUrl);
-        $("#tinyMe").append(tiny);
+        $("#tinyUrl").append(tiny);
       }
     };
 
@@ -641,9 +638,6 @@ $('#export-link').mousedown(function () {
 });
 
 function update(hgramEvos) {
-  //ralu
-  //if (hgramEvos == undefined ||
-  console.log("hgramEvo is############### i update with ------", hgramEvos);
   var evosVals = [];
   $.each(hgramEvos, function (key, value) {
     evosVals.push(value);
@@ -661,10 +655,20 @@ function update(hgramEvos) {
   var labels = [];
 
   $.each(hgramEvos, function (state, evo) {
-    var series = prepareData(evo);
+    var series = prepareData(state,evo);
     for (var x in series) {
       labels.push(series[x].key);
     }
+
+    // shallow clone for each item: don't change the original series because it's cached by prepareData.
+    series = series.map(function(e) {
+      var d = {};
+      $.each(e, function (k, v) {
+        d[k] = v;
+      });
+      return d;
+    });
+
     $.each(series, function(i, entry) {
       entry.tableState = state;
       entry.tableKey = entry.key;
