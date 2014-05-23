@@ -495,14 +495,11 @@ function createButtonTinyUrl()
         valOfTinyUrl = "tiny url for this state is: " + " " + shortUrl;
         tiny.remove();
         tiny = $("<div>");
-        //maibe we don't want to append ..we'll see
         tiny.append(valOfTinyUrl);
         $("#tinyUrl").append(tiny);
       }
     };
-
-
-    var response = $.ajax(request);
+    $.ajax(request);
 
   })
 
@@ -521,7 +518,6 @@ function createLockButton(parent){
   });
   return button;
 }
-var allChachedStates = {};
 function addHistogramFilter(firstHistogramFilter, state) {
   var f = $("<div>");
   if (firstHistogramFilter) {

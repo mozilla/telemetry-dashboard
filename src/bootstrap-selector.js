@@ -30,8 +30,6 @@ var BootstrapSelector = (function($){
 
     options: function BootstrapSelector_options(options) {
       var data = [];
-    //  var filterName = this._filterName;
-
       if (this._filterName === "version") {
         var groups = {};
         $.each(options, function (idx, option) {
@@ -48,7 +46,6 @@ var BootstrapSelector = (function($){
       } else {
         data = options.map(function(value) { return {id : value, text: value}});
       }
-
 
       if (options !== undefined) {
         this._options = options;
