@@ -3,6 +3,108 @@ var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
 var gStatesOnPlot = [];
+var cachedData = {};//if data was prepared once never do it again
+function prepareData(hgramEvo) {
+  var maxSubmissions = 0;
+
+  // Whether we actually filter submissions is controllable via the
+  // 'sanitize-pref' preference.
+  var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
+
+  var submissions = hgramEvo.map(function (date, hgram) {
+    if (hgram.submissions() > maxSubmissions) {
+      maxSubmissions = hgram.submissions();
+    }
+
+    return {
+      x: date.getTime(),
+      y: hgram.submissions()
+    };
+  });
+
+  var data = [{
+    key: "Submissions",
+    bar: true,
+    // This is hacked :)
+    yAxis: 2,
+    values: submissions,
+  }];
+
+  // Don't crap up the percentiles / means with lines based on a tiny number
+  // of submissions. Flatten them all to zero if there are less than this
+  // many submissions.
+  // The cutoff is the lesser of 100 or 1% of the maximum number of
+  // submissions we saw.
+  var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
+
+  if (hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
+    var means = [];
+    // Percentile series
+    var ps = {};
+    [5, 25, 50, 75, 95].forEach(function (p) {
+      ps[p] = [];
+    });
+    hgramEvo.each(function (date, hgram) {
+      date = date.getTime();
+      if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
+        var mean = hgram.mean();
+        if (mean >= 0) {
+          means.push({
+            x: date,
+            y: mean
+          });
+        }[5, 25, 50, 75, 95].forEach(function (p) {
+          var v = hgram.percentile(p);
+          // Weird negative values can cause d3 etc. to freak out - see Bug 984928
+          if (v >= 0) {
+            ps[p].push({
+              x: date,
+              y: v
+            });
+          }
+        });
+      } else {
+        // Set everything to zero to keep the graphs looking nice.
+        means.push({
+          x: date,
+          y: 0
+        });
+        [5, 25, 50, 75, 95].forEach(function (p) {
+          ps[p].push({
+            x: date,
+            y: 0
+          });
+        });
+      }
+    });
+    data.push({
+      key: "Mean",
+      yAxis: 1,
+      values: means,
+    }, {
+      key: "5th percentile",
+      yAxis: 1,
+      values: ps['5'],
+    }, {
+      key: "25th percentile",
+      yAxis: 1,
+      values: ps['25'],
+    }, {
+      key: "median",
+      yAxis: 1,
+      values: ps['50'],
+    }, {
+      key: "75th percentile",
+      yAxis: 1,
+      values: ps['75'],
+    }, {
+      key: "95th percentile",
+      yAxis: 1,
+      values: ps['95'],
+    });
+  }
+  return data;
+}
 
 function computePageState() {
   var pageState = {};
@@ -448,7 +550,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
-    //selectorType: BootstrapSelector,
+    selectorType: BootstrapSelector,
     locked: locked,
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
@@ -662,107 +764,6 @@ function update(hgramEvos) {
     }, 100);
   }
 
-  function prepareData(hgramEvo) {
-    var maxSubmissions = 0;
-
-    // Whether we actually filter submissions is controllable via the
-    // 'sanitize-pref' preference.
-    var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
-
-    var submissions = hgramEvo.map(function (date, hgram) {
-      if (hgram.submissions() > maxSubmissions) {
-        maxSubmissions = hgram.submissions();
-      }
-
-      return {
-        x: date.getTime(),
-        y: hgram.submissions()
-      };
-    });
-
-    var data = [{
-      key: "Submissions",
-      bar: true,
-      // This is hacked :)
-      yAxis: 2,
-      values: submissions,
-    }];
-
-    // Don't crap up the percentiles / means with lines based on a tiny number
-    // of submissions. Flatten them all to zero if there are less than this
-    // many submissions.
-    // The cutoff is the lesser of 100 or 1% of the maximum number of
-    // submissions we saw.
-    var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
-
-    if (hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
-      var means = [];
-      // Percentile series
-      var ps = {};
-      [5, 25, 50, 75, 95].forEach(function (p) {
-        ps[p] = [];
-      });
-      hgramEvo.each(function (date, hgram) {
-        date = date.getTime();
-        if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
-          var mean = hgram.mean();
-          if (mean >= 0) {
-            means.push({
-              x: date,
-              y: mean
-            });
-          }[5, 25, 50, 75, 95].forEach(function (p) {
-            var v = hgram.percentile(p);
-            // Weird negative values can cause d3 etc. to freak out - see Bug 984928 
-            if (v >= 0) {
-              ps[p].push({
-                x: date,
-                y: v
-              });
-            }
-          });
-        } else {
-          // Set everything to zero to keep the graphs looking nice.
-          means.push({
-            x: date,
-            y: 0
-          });
-          [5, 25, 50, 75, 95].forEach(function (p) {
-            ps[p].push({
-              x: date,
-              y: 0
-            });
-          });
-        }
-      });
-      data.push({
-        key: "Mean",
-        yAxis: 1,
-        values: means,
-      }, {
-        key: "5th percentile",
-        yAxis: 1,
-        values: ps['5'],
-      }, {
-        key: "25th percentile",
-        yAxis: 1,
-        values: ps['25'],
-      }, {
-        key: "median",
-        yAxis: 1,
-        values: ps['50'],
-      }, {
-        key: "75th percentile",
-        yAxis: 1,
-        values: ps['75'],
-      }, {
-        key: "95th percentile",
-        yAxis: 1,
-        values: ps['95'],
-      });
-    }
-    return data;
-  }
 
 
   nv.addGraph(function () {
