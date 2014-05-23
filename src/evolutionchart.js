@@ -518,7 +518,8 @@ var evolutionchart = function() {
         .width(availableWidth)
         .height(availableHeight1)
         .color(data.map(function(d,i) {
-          return d.color || color(d, i);
+ //         console.log("d.color is-----------", d.color, "color(d, i)------------", color(d,i));
+            return d.color || color(d, i);
         }).filter(function(d,i) { return !data[i].disabled && !data[i].bar }));
 
         var focusBarsWrap = g.select('.nv-focus .nv-barsWrap')

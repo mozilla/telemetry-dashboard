@@ -2,7 +2,7 @@ var setVisible = true;
 var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
-var oldEvolutions = [];
+var gStatesOnPlot = [];
 
 function computePageState() {
   var pageState = {};
@@ -60,13 +60,13 @@ function restoreFromPageState(newPageState, curPageState) {
 
     var states = newPageState.filter;
 
-    addFilter(true, states[0]);
+    addHistogramFilter(true, states[0]);
     if (states.length == 1) {
       setVisible = true;
     }
 
     for (var i = 1; i < states.length; i++) {
-      addFilter(false, states[i]);
+      addHistogramFilter(false, states[i]);
     }
 
     /*
@@ -189,35 +189,57 @@ function plot(firstChanged) {
   if (firstChanged && gSyncWithFirst) {
     syncStateWithFirst();
   }
-  //ralu
+
+
+  var filterStates = {};
+  gHistogramFilterObjects.forEach(function (hfilter) { filterStates[hfilter.histogramfilter("state")] = 1; });
+
+  if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
+    console.log("ZOMG: stateurile de pe plit sunt la fel cau alea din obiectele filter: ", gStatesOnPlot, Object.keys(filterStates));
+    return;
+  }
+
+  gStatesOnPlot = Object.keys(filterStates);
+  // Draw plot again.
+
+    //ralu
   var filt = [];
 
   gHistogramFilterObjects.forEach(function (f) {
 
     var hist = f.histogramfilter('histogram');
-    var xxx = f.histogramfilter('state');
-    var auci = f.histogramfilter('state') + "";
-    if (hist !== null && filt.indexOf(xxx) == -1 && oldEvolutions.indexOf(auci) === -1) {
+    //var xxx = f.histogramfilter('state');
+    //var auci = f.histogramfilter('state') + "";
+    //if (hist !== null && filt.indexOf(xxx) == -1 && gStatesOnPlot.indexOf(auci) === -1) {
+    if (hist!=null){
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
-      console.log("f.histogramfilter('state') ", f.histogramfilter('state'), "oldEvolution", oldEvolutions.indexOf(f.histogramfilter('state')));
-      console.log("oldEvolution looks like inside the if", oldEvolutions);
-      filt.push(xxx);
-
     }
-    oldEvolutions = Object.keys(gHistogramEvolutions);
-    console.log("old evolutions look like", oldEvolutions);
-    //compare old with new histogram evolutions
+      //console.log("f.histogramfilter('state') ", f.histogramfilter('state'), "oldEvolution", gStatesOnPlot.indexOf(f.histogramfilter('state')));
+      //console.log("oldEvolution looks like inside the if", gStatesOnPlot);
+      //filt.push(xxx);
+
+    //}
 
   });
+  /*if (Object.keys(gHistogramEvolutions).length != 0) {
+    console.log("y old value is ", gStatesOnPlot, "now i take ", Object.keys(gHistogramEvolutions), " gHistogramEvolutions", gHistogramEvolutions);
+    gStatesOnPlot = Object.keys(gHistogramEvolutions);
+  }
+  console.log("old evolutions look like", gStatesOnPlot);
+  //compare old with new histogram evolutions
+
 
   if (!$.isEmptyObject(gHistogramEvolutions)) {
     update(gHistogramEvolutions);
     console.log("-----i made un update again");
-  }
+  }*/
 
-  updateUrlHashIfNeeded();
+ // if (Object.keys(gHistogramEvolutions).length != 0) {
+    update(gHistogramEvolutions);
 
-  return gHistogramEvolutions;
+    updateUrlHashIfNeeded();
+    return gHistogramEvolutions;
+ // }
 }
 
 
@@ -275,7 +297,7 @@ Telemetry.init(function () {
   createButtonTinyMe();
   var pageState = urlHashToPageState(window.location.hash);
   if (!restoreFromPageState(pageState, {})) {
-    addFilter(true, null); //  first filter
+    addHistogramFilter(true, null); //  first filter
     gSyncWithFirst = true;
   }
 
@@ -292,7 +314,7 @@ Telemetry.init(function () {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
 
-    addFilter(false, state);
+    addHistogramFilter(false, state);
     $('#histogram-table').hide();
     setVisible = false;
     /*
@@ -433,7 +455,7 @@ function createLockButton(parent){
   return button;
 }
 var allChachedStates = {};
-function addFilter(firstHistogramFilter, state) {
+function addHistogramFilter(firstHistogramFilter, state) {
   var f = $("<div>");
   if (firstHistogramFilter) {
     createLockButton(f);
@@ -545,6 +567,9 @@ $('#export-link').mousedown(function () {
 });
 
 function update(hgramEvos) {
+  //ralu
+  //if (hgramEvos == undefined ||
+  console.log("hgramEvo is############### i update with ------", hgramEvos);
   var evosVals = [];
   $.each(hgramEvos, function (key, value) {
     evosVals.push(value);
