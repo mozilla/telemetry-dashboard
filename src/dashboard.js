@@ -256,9 +256,6 @@ function urlHashToPageState(url) {
 function updateUrlHashIfNeeded() {
   var pageState = computePageState();
   var urlPageState = urlHashToPageState(window.location.hash);
-
-  var loadedEvolutions = Object.keys(gHistogramEvolutions).length;
-  var allEvolutions = gHistogramFilterObjects.length;
   if (!arraysEqual(pageState.filter, urlPageState.filter) ||
       !arraysEqual(pageState.aggregates, urlPageState.aggregates) ||
       "" + pageState.locked !== "" + urlPageState.locked ||
@@ -361,9 +358,6 @@ function addMultipleSelect(options, changeCb) {
 
 
 Telemetry.init(function () {  
-  var versions = Telemetry.versions();
-//todo
-  //ralu
   createButtonTinyUrl();
   var pageState = urlHashToPageState(window.location.hash);
   if (!restoreFromPageState(pageState, {})) {
@@ -470,15 +464,17 @@ function changeLockButton(newValue) {
   plot(false);
 
 }
-//ralu
+
 function createButtonTinyUrl()
 {
-  var valOfTyniUrl;
+  var valOfTinyUrl;
   var button = $('<button type="button" class="btn btn-default">');
-  //button.addClass("glyphicon glyphicon-leaf");
   button.text(" tinyUrl");
-
   $("#tinyUrl").append(button);
+  var tiny = $("<div>");
+  $("#tinyUrl").append(tiny);
+
+
   button.click(function(){
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
@@ -496,10 +492,11 @@ function createButtonTinyUrl()
       success: function( response ) {
         var longUrl = Object.keys(response.results)[0];
         var shortUrl = response.results[longUrl].shortUrl;
-        valOfTyniUrl = "tiny url for this state is: " + " " + shortUrl;
-        var tiny = $("<div>");
+        valOfTinyUrl = "tiny url for this state is: " + " " + shortUrl;
+        tiny.remove();
+        tiny = $("<div>");
         //maibe we don't want to append ..we'll see
-        tiny.append(valOfTyniUrl);
+        tiny.append(valOfTinyUrl);
         $("#tinyUrl").append(tiny);
       }
     };
