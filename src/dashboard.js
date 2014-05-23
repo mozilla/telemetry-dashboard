@@ -176,6 +176,7 @@ function plot(firstChanged) {
   gHistogramFilterObjects.forEach(function (filter) {
     if (!filter.histogramfilter('histogram')) isLoaded = false;
   })
+
   if (isLoaded) {
     $("#content").fadeIn();
     $("#spinner").fadeOut();
@@ -184,6 +185,7 @@ function plot(firstChanged) {
     $("#spinner").fadeIn();
     return;
   }
+
   gHistogramEvolutions = {};
 
   if (firstChanged && gSyncWithFirst) {
@@ -200,46 +202,15 @@ function plot(firstChanged) {
   }
 
   gStatesOnPlot = Object.keys(filterStates);
-  // Draw plot again.
-
-    //ralu
-  var filt = [];
-
   gHistogramFilterObjects.forEach(function (f) {
-
     var hist = f.histogramfilter('histogram');
-    //var xxx = f.histogramfilter('state');
-    //var auci = f.histogramfilter('state') + "";
-    //if (hist !== null && filt.indexOf(xxx) == -1 && gStatesOnPlot.indexOf(auci) === -1) {
     if (hist!=null){
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
     }
-      //console.log("f.histogramfilter('state') ", f.histogramfilter('state'), "oldEvolution", gStatesOnPlot.indexOf(f.histogramfilter('state')));
-      //console.log("oldEvolution looks like inside the if", gStatesOnPlot);
-      //filt.push(xxx);
-
-    //}
-
   });
-  /*if (Object.keys(gHistogramEvolutions).length != 0) {
-    console.log("y old value is ", gStatesOnPlot, "now i take ", Object.keys(gHistogramEvolutions), " gHistogramEvolutions", gHistogramEvolutions);
-    gStatesOnPlot = Object.keys(gHistogramEvolutions);
-  }
-  console.log("old evolutions look like", gStatesOnPlot);
-  //compare old with new histogram evolutions
-
-
-  if (!$.isEmptyObject(gHistogramEvolutions)) {
     update(gHistogramEvolutions);
-    console.log("-----i made un update again");
-  }*/
-
- // if (Object.keys(gHistogramEvolutions).length != 0) {
-    update(gHistogramEvolutions);
-
     updateUrlHashIfNeeded();
     return gHistogramEvolutions;
- // }
 }
 
 
@@ -477,7 +448,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
-    selectorType: BootstrapSelector,
+    //selectorType: BootstrapSelector,
     locked: locked,
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
@@ -503,6 +474,7 @@ function renderHistogramTable(hgram) {
 }
 
 function renderHistogramGraph(hgram) {
+
   $('#histogram-table').hide();
   $('#histogram').hide();
   if(setVisible == true) {
@@ -602,7 +574,7 @@ function update(hgramEvos) {
 
 
   // from list of lists to list
-  cDatas = [].concat.apply([], datas);
+  var cDatas = [].concat.apply([], datas);
   function unique(array) {
     return $.grep(array, function (el, index) {
       return index == $.inArray(el, array);
@@ -791,7 +763,10 @@ function update(hgramEvos) {
     }
     return data;
   }
+
+
   nv.addGraph(function () {
+
     //top was 10
     var focusChart = evolutionchart().margin({
       top: 10,
