@@ -156,6 +156,7 @@ var _dataFolderMap = null;
 // List of versions present in _dataFolderMap
 var _versions = null;
 
+var _telemetryAjaxCache = {};
 /*! Auxiliary function to GET files from _data_folder */
 function _get(path, cb) {
   // Check that we've been initialized
@@ -169,11 +170,19 @@ function _get(path, cb) {
     path = path.join("/");
   }
 
+  var url = _data_folder + "/" + path;
+  if (_telemetryAjaxCache[url] !== undefined) {
+    cb.apply(this, [JSON.parse(_telemetryAjaxCache[url])]);
+    return;
+  }
+
   // Create HTTP request
   var xhr = new XMLHttpRequest();
   xhr.onload = function (e) {
     if (e.target.status == 200) {
-      cb.apply(this, [JSON.parse(this.responseText)]);
+      var resp = this.responseText;
+      _telemetryAjaxCache[url] = resp;
+      cb.apply(this, [JSON.parse(resp)]);
     } else {
       console.log("Telemetry._get: Failed loading " + path + " with " +
                   e.target.status);
