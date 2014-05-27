@@ -111,3 +111,16 @@ header h1{
   opacity: 0;
 }
 
+.legendColorBar {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    /*padding-right: 10px;*/
+    margin-right: 10px;
+}
+
+.removeBullets {
+    list-style-type: none;
+    padding:0;
+    margin:0;
+}

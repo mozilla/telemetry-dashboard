@@ -122,7 +122,7 @@ var labelToColor = [];
       return l;
     }
 
-    var series = d3.selectAll("#evolution").datum();
+    var series = d3.selectAll("#evolution").datum().filter(function(e){return !e.disabled});
     var aggregates = extractField(series, "tableKey");
 
     /*
@@ -152,8 +152,8 @@ var labelToColor = [];
       for (var j = 0; j < series.length; j++) {
         if (aggregate !== series[j].tableKey)
           continue;
-
         var state = series[j].tableState;
+        var color = series[j].color;
 
         var numericValue = "none";
         for (var k = 0; k < series[j].values.length; k++) {
@@ -161,14 +161,12 @@ var labelToColor = [];
             numericValue = series[j].values[k].y;
           }
         }
-
-        versions.push({key: state, val: numericValue});
+        versions.push({key: state, val: numericValue, color: color});
       }
-
       legendData.push({title: aggregate, versions: versions});
     }
 
-
+    var formatFunct = d3.format(".3s");
     var legend = $("#legend");
     legend.empty();
     var outList = $("<ul>");
@@ -178,8 +176,18 @@ var labelToColor = [];
       var innerUl = $("<ul>");
       for (var j = 0; j < legendData[i].versions.length; j++) {
         var v = legendData[i].versions[j];
+        var colorBar = $("<div>");
+        colorBar.addClass("legendColorBar");
+        colorBar.css("background-color", legendData[i].versions[j].color);
         var innerLi = $("<li>");
+        innerUl.addClass("removeBullets");
+
+        if (v.val !== "none") {
+          v.val = formatFunct(v.val);
+        }
         innerLi.text(v.key + ": " + v.val);
+        innerLi.prepend(colorBar);
+
         innerLi.appendTo(innerUl);
       }
       innerUl.appendTo(li);
@@ -360,12 +368,13 @@ var labelToColor = [];
         .width(availableWidth)
         .height(availableHeight2)
         .color(data.map(function(d,i) {
-          var aux = color(d, i);
+          var c = color(d, i);
           labelToColor.push({
             key:   d,
-            value: aux
+            value: c
           });
-          return d.color || aux;
+          d.color = c;
+          return d.color || c;
         }).filter(function(d,i) { return !data[i].disabled && data[i].bar }));
 
       lines2
@@ -560,7 +569,6 @@ var labelToColor = [];
         .width(availableWidth)
         .height(availableHeight1)
         .color(data.map(function(d,i) {
- //         console.log("d.color is-----------", d.color, "color(d, i)------------", color(d,i));
             return d.color || color(d, i);
         }).filter(function(d,i) { return !data[i].disabled && !data[i].bar }));
 
