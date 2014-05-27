@@ -5,7 +5,8 @@ var evolutionchart = function() {
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
-var labelToColor = [];
+  var labelToColor = [];
+
   var lines = nv.models.line()
     , lines2 = nv.models.line()
     , bars = nv.models.line()

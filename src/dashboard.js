@@ -117,13 +117,13 @@ function computePageState() {
     pageState.filter.push(gHistogramFilterObjects[i].histogramfilter('state'));
   }
 
-/*
+
   // TODO: doesn't work!
-  pageState.aggregates = $("#aggregateSelector").val();
+  pageState.aggregates = $("#aggregateSelector").multiselect("getSelected").val();
   if (pageState.aggregates === undefined || pageState.aggregates === null) {
     pageState.aggregates = [];
   }
-*/
+
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
   pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
@@ -206,7 +206,7 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.aggregates !== undefined) {
-    $("#aggregateSelector").val(newPageState.aggregates);
+    // TODO: $("#aggregateSelector").val(newPageState.aggregates);
   }
 
   return true;
@@ -304,9 +304,9 @@ function plot(firstChanged) {
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
     }
   });
-    update(gHistogramEvolutions);
-    updateUrlHashIfNeeded();
-    return gHistogramEvolutions;
+  update(gHistogramEvolutions);
+  updateUrlHashIfNeeded();
+  return gHistogramEvolutions;
 }
 
 
@@ -334,30 +334,51 @@ function syncStateWithFirst() {
 }
 
 
-function updateAggregates(options, changeCb) {
+function setAggregateSelectorOptions(options, changeCb) {
+  var prevOptions = [];
+  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
+  var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
+
+  console.log("prevOptions: ", prevOptions, "prevSelected:" , prevSelected);
+
   var selector = $("<select multiple id=aggregateSelector>");
   selector.addClass("multiselect");
-  $('#multipercentile').empty().append(selector);
-  var n = options.length;
-  for (var i = 0; i < n; i++) {
-    var option = options[i];
-    var label = option;
-    // Add <option>
-    selector.append($("<option>", {
-      text: label,
-      value: option,
-    }));
+
+
+  if (!arraysEqual(prevOptions, options)) {
+    console.log("!arraysEqual(prevOptions, options)");
+    $('#multipercentile').empty().append(selector);
+    var n = options.length;
+    for (var i = 0; i < n; i++) {
+      var option = options[i];
+      var label = option;
+      // Add <option>
+      selector.append($("<option>", {
+        text: label,
+        value: option,
+      }));
+    }
   }
+
   selector.multiselect({
     includeSelectAllOption: true,
     onChange : function(option, checked) {
-      changeCb(selector);
+      changeCb();
       updateUrlHashIfNeeded();
     }
   });
+  //prevSelected = selector.multiselect("getSelected").val() || [];
 
-  // select all
-  selector.multiselect("select", options);
+  console.log("XXX: prevOptions: ", prevOptions, "prevSelected:" , prevSelected);
+
+
+  // If "Select All" is checked, select all the new options.
+  if (prevSelected.length === 0 || prevSelected.indexOf("multiselect-all") !== -1) {
+    selector.multiselect("select", options);
+  } else {
+    selector.multiselect("select", prevSelected);
+
+  }
 
   updateUrlHashIfNeeded();
 }
@@ -537,7 +558,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
   if (gHistogramFilterObjects.length >= 1 && gSyncWithFirst) {
     locked = true;
   }
-    f.histogramfilter({
+  f.histogramfilter({
     synchronizeStateWithHash: false,
     defaultVersion: function (versions) {
       var nightlies = versions.filter(function (version) {
@@ -572,7 +593,6 @@ function renderHistogramTable(hgram) {
 }
 
 function renderHistogramGraph(hgram) {
-
   $('#histogram-table').hide();
   $('#histogram').hide();
   if(setVisible == true) {
@@ -685,6 +705,28 @@ function update(hgramEvos) {
       return index == $.inArray(el, array);
     });
   }
+
+  function updateDisabledAggregates() {
+    var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
+    console.log("updateDisabledAggregates toBeSelected:", toBeSelected, cDatas);
+
+    if (toBeSelected === undefined) {
+      return;
+    }
+
+    if (toBeSelected === null) toBeSelected = [];
+    // toBeSelected is [] when nothing is selected, and we set all .disabled=true
+    console.log("updateDisabledAggregateX toBeSelected:", toBeSelected, cDatas);
+
+    for (var i = 0; i < cDatas.length; i++) {
+      if (toBeSelected.indexOf(cDatas[i].tableKey) !== -1 && toBeSelected.length !== 0) {
+        cDatas[i].disabled = false;
+      } else {
+        cDatas[i].disabled = true;
+      }
+    }
+  }
+  updateDisabledAggregates();
 
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
@@ -801,17 +843,10 @@ function update(hgramEvos) {
 
     labels = unique(labels);
 
-    updateAggregates(labels, function (selector) {
-      var toBeSelected = selector.multiselect("getSelected").val();
-      if (toBeSelected === null) toBeSelected = [];
-      for (var i = 0; i < cDatas.length; i++) {
-        if (toBeSelected.indexOf(cDatas[i].tableKey) !== -1) {
-          agregates = toBeSelected;
-          cDatas[i].disabled = false;
-        } else {
-          cDatas[i].disabled = true;
-        }
-      }
+
+
+    setAggregateSelectorOptions(labels, function () {
+      updateDisabledAggregates();
       focusChart.update();
     });
   });
