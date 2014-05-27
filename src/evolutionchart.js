@@ -5,7 +5,7 @@ var evolutionchart = function() {
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
-
+var labelToColor = [];
   var lines = nv.models.line()
     , lines2 = nv.models.line()
     , bars = nv.models.line()
@@ -100,14 +100,14 @@ var evolutionchart = function() {
 
   var showTooltip = function(e, offsetElement) {
     if (extent) {
-        e.pointIndex += Math.ceil(extent[0]);
+      e.pointIndex += Math.ceil(extent[0]);
     }
     var pos = findPos(offsetElement);
     var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
-        top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
-     var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
-     var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
-     var   content = tooltip(e.series.key, x, y, e, chart);
+      top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
+    var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
+    var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
+    var   content = tooltip(e.series.key, x, y, e, chart);
 
 
     function extractField(data, field) {
@@ -122,58 +122,95 @@ var evolutionchart = function() {
       return l;
     }
 
-    // Get the set of .originalKey and .state members of all series.
     var series = d3.selectAll("#evolution").datum();
-    var states = extractField(series, "tableState");
-    var keys = extractField(series, "tableKey");
+    var aggregates = extractField(series, "tableKey");
 
     /*
-    tale format:
-
-             X                 | aurora/27/COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED | release/27/COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED
-     Submissions (left axis)	 | 12                                               | 3051
-     Mean (right axis)	     	 | 0                                                | 596
+     * series: list of Objects
+          bar: true
+          key: "nightly/32/CYCLE_COLLECTOR: Submissions (left axis)"
+          originalKey: "nightly/32/CYCLE_COLLECTOR: Submissions"
+          tableKey: "Submissions"
+          tableState: "nightly/32/CYCLE_COLLECTOR"
+          values: Array[27] objects like: {series: 0, x: 1398754800000, y: 346493}
      */
-    var table = [["X"].concat(states)];
-    for (var i = 0; i < keys.length; i++) {
-      var row = [keys[i]];
-      for (var j = 0; j < states.length; j++) {
-        row.push(null);
-      }
-      table.push(row);
-    }
 
-    for(var i = 0; i < series.length; i++) {
-      for(var j = 0; j < series[i].values.length; j++) {
-        if (series[i].values[j].x == e.point.x) {
-          var stateIdx = states.indexOf(series[i].tableState);
-          var originalKeyIdx = keys.indexOf(series[i].tableKey);
-          // +1 because first row is table header (list of states) and first column is the key.
-          table[originalKeyIdx + 1][stateIdx + 1] = series[i].values[j].y;
+    /*
+     * legendData => list of entries for each aggregate (mean, p5, etc.)
+     * Each entry has:
+     *    - title: e.g. mean, p5, etc.
+     *    - versions: list of objects:
+     *        - key: version + measure (e.g. nightly/32 + CYCLE_COLLECTOR)
+     *        - val: numeric value or "none"
+     */
+
+    var legendData = [];
+    for (var i = 0; i < aggregates.length; i++) {
+      var aggregate = aggregates[i];
+      var versions = [];
+      // versions: [  Object {key: versions+measure === state, val: "none" or number}
+      for (var j = 0; j < series.length; j++) {
+        if (aggregate !== series[j].tableKey)
+          continue;
+
+        var state = series[j].tableState;
+
+        var numericValue = "none";
+        for (var k = 0; k < series[j].values.length; k++) {
+          if (series[j].values[k].x == e.point.x) {
+            numericValue = series[j].values[k].y;
+          }
         }
+
+        versions.push({key: state, val: numericValue});
       }
+
+      legendData.push({title: aggregate, versions: versions});
     }
 
-    var tbody = d3.select("#AAA").select("table");
-    var rows = tbody.selectAll("tr")
-      .data(table);
 
-    rows.enter()
-      .append("tr");
+    var legend = $("#legend");
+    legend.empty();
+    var outList = $("<ul>");
+    for (var i = 0; i < legendData.length; i++) {
+      var li = $("<li>");
+      li.text(legendData[i].title);
+      var innerUl = $("<ul>");
+      for (var j = 0; j < legendData[i].versions.length; j++) {
+        var v = legendData[i].versions[j];
+        var innerLi = $("<li>");
+        innerLi.text(v.key + ": " + v.val);
+        innerLi.appendTo(innerUl);
+      }
+      innerUl.appendTo(li);
+      li.appendTo(outList);
+    }
+    outList.appendTo(legend);
 
-    rows.order();
 
-    var cells = rows.selectAll("td")
-      .data(function(d) { return d; });
+/*
+    var listAggregates = d3.select("#AAA").select("ul").selectAll("li").data(d3Data);
+    listAggregates.enter().append("li");
+    listAggregates.text(function(d){return d.title});
 
-    cells.enter()
-      .append("td");
+    var uls = listAggregates.selectAll("ul").data(function(d) {
+      console.log("[d.versions]#################", [d.versions])
+      return [d.versions]; });
+    uls.enter().append("ul");
 
-    cells.text(function(d) { return d;});
+    var innerLis = uls.selectAll("li").data(function(d){ return d; });
+    innerLis.enter().append("li");
+    innerLis.text(function(d){
+      console.log("innerLis.text: arg look like --", d);
+      return d.key + ":" + d.val;
+    });
+*/
 
-    cells.exit().remove();
-
-    rows.exit().remove();
+    /*
+    innerLis.exit().remove();
+    uls.exit().remove();
+    listAggregates.exit().remove();
+*/
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };
@@ -323,7 +360,12 @@ var evolutionchart = function() {
         .width(availableWidth)
         .height(availableHeight2)
         .color(data.map(function(d,i) {
-          return d.color || color(d, i);
+          var aux = color(d, i);
+          labelToColor.push({
+            key:   d,
+            value: aux
+          });
+          return d.color || aux;
         }).filter(function(d,i) { return !data[i].disabled && data[i].bar }));
 
       lines2
