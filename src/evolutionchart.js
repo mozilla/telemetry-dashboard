@@ -98,18 +98,7 @@ var labelToColor = [];
     return [curleft,curtop];
   }
 
-  var showTooltip = function(e, offsetElement) {
-    if (extent) {
-      e.pointIndex += Math.ceil(extent[0]);
-    }
-    var pos = findPos(offsetElement);
-    var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
-      top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
-    var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
-    var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
-    var   content = tooltip(e.series.key, x, y, e, chart);
-
-
+  function drawLegend(xCoord) {
     function extractField(data, field) {
       var d = {};
       for(var i = 0; i < data.length; i++) {
@@ -127,12 +116,12 @@ var labelToColor = [];
 
     /*
      * series: list of Objects
-          bar: true
-          key: "nightly/32/CYCLE_COLLECTOR: Submissions (left axis)"
-          originalKey: "nightly/32/CYCLE_COLLECTOR: Submissions"
-          tableKey: "Submissions"
-          tableState: "nightly/32/CYCLE_COLLECTOR"
-          values: Array[27] objects like: {series: 0, x: 1398754800000, y: 346493}
+     bar: true
+     key: "nightly/32/CYCLE_COLLECTOR: Submissions (left axis)"
+     originalKey: "nightly/32/CYCLE_COLLECTOR: Submissions"
+     tableKey: "Submissions"
+     tableState: "nightly/32/CYCLE_COLLECTOR"
+     values: Array[27] objects like: {series: 0, x: 1398754800000, y: 346493}
      */
 
     /*
@@ -157,7 +146,7 @@ var labelToColor = [];
 
         var numericValue = "none";
         for (var k = 0; k < series[j].values.length; k++) {
-          if (series[j].values[k].x == e.point.x) {
+          if (series[j].values[k].x == xCoord) {
             numericValue = series[j].values[k].y;
           }
         }
@@ -196,29 +185,43 @@ var labelToColor = [];
     outList.appendTo(legend);
 
 
-/*
-    var listAggregates = d3.select("#AAA").select("ul").selectAll("li").data(d3Data);
-    listAggregates.enter().append("li");
-    listAggregates.text(function(d){return d.title});
+    /*
+     var listAggregates = d3.select("#AAA").select("ul").selectAll("li").data(d3Data);
+     listAggregates.enter().append("li");
+     listAggregates.text(function(d){return d.title});
 
-    var uls = listAggregates.selectAll("ul").data(function(d) {
-      console.log("[d.versions]#################", [d.versions])
-      return [d.versions]; });
-    uls.enter().append("ul");
+     var uls = listAggregates.selectAll("ul").data(function(d) {
+     console.log("[d.versions]#################", [d.versions])
+     return [d.versions]; });
+     uls.enter().append("ul");
 
-    var innerLis = uls.selectAll("li").data(function(d){ return d; });
-    innerLis.enter().append("li");
-    innerLis.text(function(d){
-      console.log("innerLis.text: arg look like --", d);
-      return d.key + ":" + d.val;
-    });
-*/
+     var innerLis = uls.selectAll("li").data(function(d){ return d; });
+     innerLis.enter().append("li");
+     innerLis.text(function(d){
+     console.log("innerLis.text: arg look like --", d);
+     return d.key + ":" + d.val;
+     });
+     */
 
     /*
-    innerLis.exit().remove();
-    uls.exit().remove();
-    listAggregates.exit().remove();
-*/
+     innerLis.exit().remove();
+     uls.exit().remove();
+     listAggregates.exit().remove();
+     */
+
+  }
+  var showTooltip = function(e, offsetElement) {
+    if (extent) {
+      e.pointIndex += Math.ceil(extent[0]);
+    }
+    var pos = findPos(offsetElement);
+    var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
+      top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
+    var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
+    var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
+    var   content = tooltip(e.series.key, x, y, e, chart);
+    drawLegend(e.point.x);
+
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };
@@ -332,28 +335,6 @@ var labelToColor = [];
 
       //------------------------------------------------------------
 
-
-      //------------------------------------------------------------
-      // Legend
-
-      if (showLegend) {
-      //  if (false){
-        legend.width( availableWidth  );
-
-        d3.select('.evolegend')
-            .datum(data.map(function(series) {
-              series.originalKey = series.originalKey === undefined ? series.key : series.originalKey;
-              series.key = series.originalKey + (series.bar ? ' (left axis)' : ' (right axis)');
-              return series;
-            }))
-          .call(legend);
-
-       /* if ( margin.top != legend.height()) {
-          margin.top = legend.height();
-          availableHeight1 = (height || parseInt(container.style('height')) || 400)
-                             - margin.top - margin.bottom - height2;
-        }*/
-      }
 
       //------------------------------------------------------------
 
@@ -486,12 +467,6 @@ var labelToColor = [];
       //============================================================
       // Event Handling/Dispatching (in chart's scope)
       //------------------------------------------------------------
-
-      legend.dispatch.on('stateChange', function(newState) { 
-        chart.update();
-      });
-
-
       dispatch.on('tooltipShow', function(e) {
         if (tooltips) {
           showTooltip(e, that.parentNode);
@@ -665,6 +640,16 @@ var labelToColor = [];
       //============================================================
 
       onBrush();
+
+
+      //------------------------------------------------------------
+      // Legend
+
+      if (showLegend) {
+        // NOTE: all value in the legend will be "none" as there's no point selected yet.
+        var startXCoord = 0;
+        drawLegend(startXCoord);
+      }
 
     });
 
