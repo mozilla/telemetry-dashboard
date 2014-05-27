@@ -241,29 +241,44 @@ var labelToColor = [];
                              - margin.top - margin.bottom - height2,
           availableHeight2 = height2 - margin2.top - margin2.bottom;
 
-      chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
+      function updateNoData(noData) {
+        if (noData) {
+          var noDataText = container.selectAll('.nv-noData').data([chart.noData()]);
+
+          noDataText.enter().append('text')
+            .attr('class', 'nvd3 nv-noData')
+            .attr('dy', '-.7em')
+            .style('text-anchor', 'middle');
+
+          noDataText
+            .attr('x', margin.left + availableWidth / 2)
+            .attr('y', margin.top + availableHeight1 / 2)
+            .text(function(d) { return d });
+
+          container.selectAll('g.nv-wrap.nv-linePlusBar').remove();
+          drawLegend(0);
+        } else {
+          container.selectAll('.nv-noData').remove();
+        }
+      }
+
+      chart.update = function() {
+        var series = container.datum().filter(function(e) { return !e.disabled;});
+        var noData = series.length === 0;
+        updateNoData(noData);
+        if (!noData) {
+          container.transition().duration(transitionDuration).call(chart);
+        }
+      };
       chart.container = this;
 
 
       //------------------------------------------------------------
       // Display No Data message if there's nothing to show.
-
-      if (!data || !data.length || !data.filter(function(d) { return d.values.length }).length) {
-        var noDataText = container.selectAll('.nv-noData').data([noData]);
-
-        noDataText.enter().append('text')
-          .attr('class', 'nvd3 nv-noData')
-          .attr('dy', '-.7em')
-          .style('text-anchor', 'middle');
-
-        noDataText
-          .attr('x', margin.left + availableWidth / 2)
-          .attr('y', margin.top + availableHeight1 / 2)
-          .text(function(d) { return d });
-
+      var noData = (!data || !data.length || !data.filter(function(d) { return d.values.length }).length);
+      updateNoData(noData);
+      if (noData) {
         return chart;
-      } else {
-        container.selectAll('.nv-noData').remove();
       }
 
       //------------------------------------------------------------

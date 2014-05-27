@@ -119,7 +119,7 @@ function computePageState() {
 
 /*
   // TODO: doesn't work!
-  pageState.aggregates = $("#optSelector").val();
+  pageState.aggregates = $("#aggregateSelector").val();
   if (pageState.aggregates === undefined || pageState.aggregates === null) {
     pageState.aggregates = [];
   }
@@ -206,7 +206,7 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.aggregates !== undefined) {
-    $("#optSelector").val(newPageState.aggregates);
+    $("#aggregateSelector").val(newPageState.aggregates);
   }
 
   return true;
@@ -333,8 +333,9 @@ function syncStateWithFirst() {
   updateUrlHashIfNeeded();
 }
 
+
 function updateAggregates(options, changeCb) {
-  var selector = $("<select multiple id=optSelector>");
+  var selector = $("<select multiple id=aggregateSelector>");
   selector.addClass("multiselect");
   $('#multipercentile').empty().append(selector);
   var n = options.length;
@@ -347,13 +348,18 @@ function updateAggregates(options, changeCb) {
       value: option,
     }));
   }
-  $("#optSelector").val(options);
-  $("#optSelector").change(function () {
-    changeCb(selector);
-    updateUrlHashIfNeeded();
+  selector.multiselect({
+    includeSelectAllOption: true,
+    onChange : function(option, checked) {
+      changeCb(selector);
+      updateUrlHashIfNeeded();
+    }
   });
+
+  // select all
+  selector.multiselect("select", options);
+
   updateUrlHashIfNeeded();
-  selector.multiselect();
 }
 
 
@@ -793,15 +799,10 @@ function update(hgramEvos) {
 
     focusChart.setSelectionChangeCallback(updateProps);
 
-    function endsWith(str, suffix) {
-      suffix = ": " + suffix;
-      return str.indexOf(suffix, str.length - suffix.length) !== -1;
-    }
     labels = unique(labels);
 
-
     updateAggregates(labels, function (selector) {
-      var toBeSelected = selector.val();
+      var toBeSelected = selector.multiselect("getSelected").val();
       if (toBeSelected === null) toBeSelected = [];
       for (var i = 0; i < cDatas.length; i++) {
         if (toBeSelected.indexOf(cDatas[i].tableKey) !== -1) {
