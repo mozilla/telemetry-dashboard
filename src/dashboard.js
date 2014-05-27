@@ -784,7 +784,10 @@ function update(hgramEvos) {
     focusChart.y3Axis.tickFormat(fmt);
     focusChart.y4Axis.tickFormat(fmt);
 
-    d3.select("#evolution").datum(cDatas).transition().duration(500).call(focusChart);
+    // Fix nvd3 bug: addGraph called on a non-empty svg breaks tooltips.
+    // Clear the svg to avoid this.
+    $("#evolution").empty();
+    d3.select("#evolution").datum(cDatas).call(focusChart);
 
     nv.utils.windowResize(function () { focusChart.update(); });
 
