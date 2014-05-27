@@ -19,7 +19,6 @@
  the specific language governing permissions and limitations under the Apache License and the GPL License.
  */
 (function ($) {
-  console.log("-----i am using this selector");
   if(typeof $.fn.each2 == "undefined") {
     $.extend($.fn, {
       /*

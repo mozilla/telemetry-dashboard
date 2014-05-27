@@ -10,7 +10,6 @@ function prepareData(state, hgramEvo) {
   // 'sanitize-pref' preference.
   var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
   if (state in cachedData) {
-    console.log("i already have this data!", state);
     return cachedData[state];
   }
 
@@ -175,13 +174,20 @@ function restoreFromPageState(newPageState, curPageState) {
       addHistogramFilter(false, states[i]);
     }
 
-    /*
+
     // TODO: re-enable?
-    if (states.length > 1) {
-      document.getElementById("summary").remove();
-      document.getElementById('summaryDetails').remove();
+    if (states.length > 1 ) {
+      if (document.getElementById("summary") !== null)
+        document.getElementById("summary").remove();
+      if (document.getElementById('summaryDetails') !== null)
+        document.getElementById('summaryDetails').remove();
+      if (document.getElementById('renderHistogram') !== null) {
+        $('#histogram').hide();
+        $('#histogram').remove();
+        document.getElementById('renderHistogram').remove();
+      }
+
     }
-*/
 
   }
 
@@ -338,15 +344,11 @@ function setAggregateSelectorOptions(options, changeCb) {
   var prevOptions = [];
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-
-  console.log("prevOptions: ", prevOptions, "prevSelected:" , prevSelected);
-
   var selector = $("<select multiple id=aggregateSelector>");
   selector.addClass("multiselect");
 
 
   if (!arraysEqual(prevOptions, options)) {
-    console.log("!arraysEqual(prevOptions, options)");
     $('#multipercentile').empty().append(selector);
     var n = options.length;
     for (var i = 0; i < n; i++) {
@@ -367,10 +369,6 @@ function setAggregateSelectorOptions(options, changeCb) {
       updateUrlHashIfNeeded();
     }
   });
-  //prevSelected = selector.multiselect("getSelected").val() || [];
-
-  console.log("XXX: prevOptions: ", prevOptions, "prevSelected:" , prevSelected);
-
 
   // If "Select All" is checked, select all the new options.
   if (prevSelected.length === 0 || prevSelected.indexOf("multiselect-all") !== -1) {
@@ -408,15 +406,21 @@ Telemetry.init(function () {
     addHistogramFilter(false, state);
     $('#histogram-table').hide();
     setVisible = false;
-    /*
+
     if (document.getElementById("summary") !== null) {
       document.getElementById("summary").remove();
       document.getElementById('summaryDetails').remove();
     }
-    document.getElementById('measure').remove();
-    document.getElementById('description').remove();
-    document.getElementById('renderHistogram').remove();
-    */
+
+    if (document.getElementById('measure') !== null)
+      document.getElementById('measure').remove();
+    if (document.getElementById('description') !== null)
+      document.getElementById('description').remove();
+    if (document.getElementById('renderHistogram') !== null) {
+      $('#histogram').hide();
+      document.getElementById('renderHistogram').remove();
+    }
+
     updateUrlHashIfNeeded();
   });
 
@@ -630,7 +634,7 @@ function renderHistogramGraph(hgram) {
     nv.utils.windowResize(
 
     function () {
-      chart.update();
+      //chart.update();
     });
     return chart;
   });

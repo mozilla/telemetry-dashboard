@@ -185,31 +185,6 @@ var evolutionchart = function() {
     }
     outList.appendTo(legend);
 
-
-    /*
-     var listAggregates = d3.select("#AAA").select("ul").selectAll("li").data(d3Data);
-     listAggregates.enter().append("li");
-     listAggregates.text(function(d){return d.title});
-
-     var uls = listAggregates.selectAll("ul").data(function(d) {
-     console.log("[d.versions]#################", [d.versions])
-     return [d.versions]; });
-     uls.enter().append("ul");
-
-     var innerLis = uls.selectAll("li").data(function(d){ return d; });
-     innerLis.enter().append("li");
-     innerLis.text(function(d){
-     console.log("innerLis.text: arg look like --", d);
-     return d.key + ":" + d.val;
-     });
-     */
-
-    /*
-     innerLis.exit().remove();
-     uls.exit().remove();
-     listAggregates.exit().remove();
-     */
-
   }
   var showTooltip = function(e, offsetElement) {
     if (extent) {
