@@ -333,7 +333,7 @@ function syncStateWithFirst() {
   updateUrlHashIfNeeded();
 }
 
-function addMultipleSelect(options, changeCb) {
+function updateAggregates(options, changeCb) {
   var selector = $("<select multiple id=optSelector>");
   selector.addClass("multiselect");
   $('#multipercentile').empty().append(selector);
@@ -797,11 +797,11 @@ function update(hgramEvos) {
     labels = unique(labels);
 
 
-    addMultipleSelect(labels, function (selector) {
+    updateAggregates(labels, function (selector) {
       var toBeSelected = selector.val();
       if (toBeSelected === null) toBeSelected = [];
       for (var i = 0; i < cDatas.length; i++) {
-        if (isKeySelected(cDatas[i].originalKey, toBeSelected)) {
+        if (toBeSelected.indexOf(cDatas[i].tableKey) !== -1) {
           agregates = toBeSelected;
           cDatas[i].disabled = false;
         } else {
@@ -810,15 +810,6 @@ function update(hgramEvos) {
       }
       focusChart.update();
     });
-
-    function isKeySelected(key, toBeSelected) {
-      for (var i = 0; i < toBeSelected.length; i++) {
-        if (endsWith(key, toBeSelected[i])) {
-          return true;
-        }
-      }
-      return false;
-    }
   });
 
   updateProps();
