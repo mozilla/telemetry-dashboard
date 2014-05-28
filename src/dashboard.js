@@ -4,6 +4,47 @@ var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
+function setCookie(cname,cvalue,exdays)
+{
+  var d = new Date();
+  d.setTime(d.getTime()+(exdays*24*60*60*1000));
+  var expires = "expires="+d.toGMTString();
+  document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+function getCookie(cname)
+{
+  var name = cname + "=";
+  var ca = document.cookie.split(';');
+  for(var i=0; i<ca.length; i++)
+  {
+    var c = ca[i].trim();
+    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+  }
+  return "";
+}
+function checkCookie()
+{
+  var stateFromUrl=getCookie("stateFromUrl");
+  if (stateFromUrl!="")
+  {
+    alert("ThaDaaaaa!!!!");
+  }
+  else
+  {
+    stateFromUrl = prompt("I want coookie!!!");
+    if (username!="" && username!=null)
+    {
+      setCookie("stateFromUrl",stateFromUrl,365);
+    }
+  }
+}
+//var x = getCookie(state);
+//checkCookie();
+
+
+
+
 function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
   // Whether we actually filter submissions is controllable via the
@@ -382,7 +423,10 @@ function setAggregateSelectorOptions(options, changeCb) {
 }
 
 
-Telemetry.init(function () {  
+Telemetry.init(function () {
+  setCookie("stateFromUrl","X_X",3);
+  checkCookie();
+
   createButtonTinyUrl();
   var pageState = urlHashToPageState(window.location.hash);
   if (!restoreFromPageState(pageState, {})) {
