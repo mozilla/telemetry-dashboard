@@ -174,9 +174,8 @@ function _get(path, cb) {
       console.log("Telemetry._get: Failed loading " + path + " with " + err);
       return;
     }
-    cb.call(null, data);
+    cb.call(data);
   });
-
 }
 
 /**
