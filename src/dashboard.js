@@ -4,8 +4,10 @@ var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
+var xxx;
 function setCookie(cname,cvalue,exdays)
 {
+  console.log("I set cookie to: ", "cname ", cname, "cvalue ", cvalue);
   var d = new Date();
   d.setTime(d.getTime()+(exdays*24*60*60*1000));
   var expires = "expires="+d.toGMTString();
@@ -16,27 +18,35 @@ function getCookie(cname)
 {
   var name = cname + "=";
   var ca = document.cookie.split(';');
-  for(var i=0; i<ca.length; i++)
+  for(var i=0; i < ca.length; i++)
   {
     var c = ca[i].trim();
-    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+    if (c.indexOf(name)==0) {
+      console.log("    ", c.substring(name.length, c.length));
+      return c.substring(name.length, c.length);
+    }
   }
   return "";
 }
+
 function checkCookie()
 {
   var stateFromUrl=getCookie("stateFromUrl");
-  if (stateFromUrl!="")
+  console.log("I am in checkCookie and i've got--------", stateFromUrl);
+
+  if (stateFromUrl!="" && stateFromUrl != null)
   {
-    alert("ThaDaaaaa!!!!");
+    alert("ThaDaaaaa!!!!", stateFromUrl);
+    //console.log("I've got this state from my url      ", stateFromUrl);
+
+    ///raluca
+    return stateFromUrl;
   }
   else
   {
-    stateFromUrl = prompt("I want coookie!!!");
-    if (username!="" && username!=null)
-    {
-      setCookie("stateFromUrl",stateFromUrl,365);
-    }
+    stateFromUrl = prompt("Coookie!!!");
+    console.log("the cookie i set is ", stateFromUrl);
+    return "";
   }
 }
 //var x = getCookie(state);
@@ -191,9 +201,13 @@ function arraysEqual(a, b) {
 }
 
 function restoreFromPageState(newPageState, curPageState) {
+  console.log("restoreFromPageState~~~~~~~~~~~~~~~~~~", newPageState);
   if (newPageState === undefined ||
       newPageState.filter === undefined ||
       newPageState.filter.length === 0) {
+    console.log("newPageState === undefined", newPageState === undefined);
+    console.log("newPageState.filter === undefined", newPageState.filter === undefined);
+    //console.log("newPageState.filter.length === 0", newPageState.filter.length === 0);
     return false;
   }
 
@@ -310,6 +324,12 @@ function updateUrlHashIfNeeded() {
       "" + pageState.sanitize !== "" + urlPageState.sanitize) {
 
     window.location.hash = pageStateToUrlHash(pageState);
+    console.log("this is my new page state------", pageState);
+    console.log("this is my new url hash---------", pageStateToUrlHash(pageState));
+    xxx = pageStateToUrlHash(pageState);
+    $(window).onclose = setCookie("stateFromUrl",xxx,3);
+
+
   }
 }
 
@@ -424,22 +444,30 @@ function setAggregateSelectorOptions(options, changeCb) {
 
 
 Telemetry.init(function () {
-  setCookie("stateFromUrl","X_X",3);
-  checkCookie();
-
   createButtonTinyUrl();
-  var pageState = urlHashToPageState(window.location.hash);
-  if (!restoreFromPageState(pageState, {})) {
-    addHistogramFilter(true, null); //  first filter
-    gSyncWithFirst = true;
+
+  var cookie = checkCookie();
+  if (cookie) {
+    console.log("I do have a cookie!    ", cookie);
+    //cookie should be set from #
+    var pgState = urlHashToPageState(cookie);
+    console.log("my page state is ", pgState);
+    restoreFromPageState(pgState, {});
   }
 
-  $(window).bind("hashchange", function(){ 
+
+else {
+    var pageState = urlHashToPageState(window.location.hash);
+    if (!restoreFromPageState(pageState, {})) {
+      addHistogramFilter(true, null); //  first filter
+      gSyncWithFirst = true;
+    }
+   $(window).bind("hashchange", function(){
     var curPageState = computePageState();
     var newPageState = urlHashToPageState(window.location.hash);
     restoreFromPageState(newPageState, curPageState);
+
   });
-  
 
   $("#addVersionButton").click(function () {
     var state = null;
@@ -485,6 +513,15 @@ Telemetry.init(function () {
     plot(true);
     updateUrlHashIfNeeded();
   });
+  //$(window).onclose = setCookie("stateFromUrl","X_X",3);
+
+
+}
+xxx = "filter=beta%2F22%2FBAD_FALLBACK_FONT&aggregates=Submissions&evoOver=Builds&locked=true&sanitize=true";
+//setCookie("stateFromUrl",xxx,5);
+//$(window).bind('beforeunload', function() {});
+ $(window).onclose = setCookie("stateFromUrl",xxx,3);
+
 });
 
 /** Format numbers */
@@ -901,6 +938,8 @@ function update(hgramEvos) {
 
   updateProps();
 }
+
+
   
   
   
