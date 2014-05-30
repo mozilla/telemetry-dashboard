@@ -1,7 +1,7 @@
 var setVisible = true;
 var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
-var gSyncWithFirst = false;
+var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var cookie;
@@ -546,7 +546,7 @@ function createRemoveButton(parent) {
       return x !== parent;
     });
     plot(false);
-//I need this here for a corner case -- when got two identical filters, remove one the url needs to be updated even if I don't make a plot
+//I need this here for a corner case --when got two identical filters, remove one the url needs to be updated even if I don't make a plot
     updateUrlHashIfNeeded();
   });
   return button;
