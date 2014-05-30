@@ -655,7 +655,9 @@ function addHistogramFilter(firstHistogramFilter, state) {
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
-  f.bind("histogramfilterchange", function() { plot(firstHistogramFilter); });
+  f.bind("histogramfilterchange", function(event, args) {
+    if (args.doneLoading)
+      plot(firstHistogramFilter); });
   gHistogramFilterObjects.push(f);
 }
 

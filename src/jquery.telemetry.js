@@ -430,7 +430,7 @@ $.widget("telemetry.histogramfilter", {
     this._ignoreChanges = false;
 
     // Report that we're loading
-    this._triggerChange();
+    this._triggerChange(false);
 
     // Load measures for selected version
     Telemetry.measures(version, $.proxy(function(measures) {
@@ -478,7 +478,7 @@ $.widget("telemetry.histogramfilter", {
     var version = this._versionSelector.val();
 
     // Report that we're loading
-    this._triggerChange();
+    this._triggerChange(false);
 
     // Load histogram for desired measure
     var loader = "loadEvolutionOver" + this.options.evolutionOver;
@@ -555,12 +555,12 @@ $.widget("telemetry.histogramfilter", {
       } else {
         // If we selected default options then no filters follows and we should
         // trigger a change
-        this._triggerChange();
+        this._triggerChange(true);
       }
     } else {
       // If there's no filter available, then we've drilled all the way down and
       // should trigger a change event
-      this._triggerChange();
+      this._triggerChange(true);
     }
   },
 
@@ -697,7 +697,7 @@ $.widget("telemetry.histogramfilter", {
       this._restoreFilters(filter.histogram.filter(option), clearedFilters);
     } else {
       // Otherwise, trigger the change event
-      this._triggerChange();
+      this._triggerChange(true);
     }
   },
 
@@ -739,7 +739,7 @@ $.widget("telemetry.histogramfilter", {
   },
 
   /** Trigger the histogramfilterchange event */
-  _triggerChange: function histogramfilter__triggerChange() {
+  _triggerChange: function histogramfilter__triggerChange(doneLoading) {
     // Version should be channel/version, and we wish to treat this as two
     // fragments with respect to serialization
     var fragments = this._versionSelector.val().split("/");
@@ -804,7 +804,8 @@ $.widget("telemetry.histogramfilter", {
     // Now trigger the histogramfilterchange event
     this._trigger("change", null, {
       state:      this.options.state,
-      histogram:  histogram
+      histogram:  histogram,
+      doneLoading: doneLoading,
     });
   },
 
