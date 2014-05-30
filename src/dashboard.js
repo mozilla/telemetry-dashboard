@@ -49,7 +49,8 @@ function prepareData(state, hgramEvo) {
   var pgState = computePageState();
   dataKey = state +" " + pgState.sanitize + " " + pgState.evoOver;
   if (dataKey in cachedData) {
-    console.log("I do have this in my cache  ", dataKey);
+    console.log("@_@I do have this in my cache  where dataKey is ", dataKey);
+    console.log("@_@The cached data is ", cachedData[dataKey]);
     return cachedData[dataKey];
   }
 
@@ -147,6 +148,7 @@ function prepareData(state, hgramEvo) {
   }
   var pgState = computePageState();
   dataKey = state +" " + pgState.sanitize + " " + pgState.evoOver;
+  console.log("^_^ I just cached data    ", data,  "with this dataKey    ", dataKey);
   cachedData[dataKey] = data;
   return data;
 }
@@ -364,7 +366,7 @@ function plot(firstChanged) {
   var filterStates = {};
   gHistogramFilterObjects.forEach(function (hfilter) {
     filterStates[hfilter.histogramfilter("state")] = 1; });
-  //FIX HERE
+  //FIX ME
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
     console.log("got the same old filters: ", gStatesOnPlot, Object.keys(filterStates));
     return;
@@ -544,8 +546,8 @@ function createRemoveButton(parent) {
       return x !== parent;
     });
     plot(false);
-    //XXX
-    //updateUrlHashIfNeeded();
+//I need this here for a corner case -- when got two identical filters, remove one the url needs to be updated even if I don't make a plot
+    updateUrlHashIfNeeded();
   });
   return button;
 }
@@ -574,9 +576,9 @@ function changeLockButton(newValue) {
   if (gSyncWithFirst) {
     syncStateWithFirst();
   } else {
-    updateUrlHashIfNeeded();
+  //  updateUrlHashIfNeeded();
   }
-
+  updateUrlHashIfNeeded();
   plot(false);
 
 }
