@@ -5,6 +5,7 @@ var gSyncWithFirst = false;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var cookie;
+var xxx = "";
 function setCookie(cname,cvalue,exdays)
 {
   var d = new Date();
@@ -250,6 +251,21 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.aggregates !== undefined) {
     // TODO: $("#aggregateSelector").val(newPageState.aggregates);
+    if (xxx == "")
+        xxx = newPageState.aggregates;
+    console.log("i've got this aggregates", newPageState.aggregates);
+    console.log("what does jquery returns",  $('#multipercentile').selector);
+    console.log("xxx is ", xxx);
+    if ("xxx" !== "")
+    {
+      /*$("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
+      var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
+      var selector = $("<select multiple id=aggregateSelector>");
+      selector.addClass("multiselect");*/
+
+    }
+
+
   }
 
   return true;
@@ -436,14 +452,9 @@ Telemetry.init(function () {
     var pgState = urlHashToPageState(cookie);
     console.log("my page state is ", pgState);
     restoreFromPageState(pgState, {});
-  }
-
-
-  else {
-    if (!restoreFromPageState(pageState, {})) {
+  } else if (!restoreFromPageState(pageState, {})) {
       addHistogramFilter(true, null); //  first filter
-      gSyncWithFirst = true;
-    }
+      changeLockButton(true);
   }
   $(window).bind("hashchange", function () {
     var curPageState = computePageState();
@@ -528,6 +539,7 @@ function changeLockButton(newValue) {
     return;
   }
 
+
   gSyncWithFirst = newValue;
   var lockButton = $("#lock-button");
   if (!gSyncWithFirst) {
@@ -545,6 +557,8 @@ function changeLockButton(newValue) {
 
   if (gSyncWithFirst) {
     syncStateWithFirst();
+  } else {
+    updateUrlHashIfNeeded();
   }
 
   plot(false);
