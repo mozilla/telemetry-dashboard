@@ -4,10 +4,9 @@ var gHistogramFilterObjects = [];
 var gSyncWithFirst = false;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
-var xxx;
+var cookie;
 function setCookie(cname,cvalue,exdays)
 {
-  console.log("I set cookie to: ", "cname ", cname, "cvalue ", cvalue);
   var d = new Date();
   d.setTime(d.getTime()+(exdays*24*60*60*1000));
   var expires = "expires="+d.toGMTString();
@@ -22,7 +21,6 @@ function getCookie(cname)
   {
     var c = ca[i].trim();
     if (c.indexOf(name)==0) {
-      console.log("    ", c.substring(name.length, c.length));
       return c.substring(name.length, c.length);
     }
   }
@@ -32,28 +30,15 @@ function getCookie(cname)
 function checkCookie()
 {
   var stateFromUrl=getCookie("stateFromUrl");
-  console.log("I am in checkCookie and i've got--------", stateFromUrl);
-
   if (stateFromUrl!="" && stateFromUrl != null)
   {
-    alert("ThaDaaaaa!!!!", stateFromUrl);
-    //console.log("I've got this state from my url      ", stateFromUrl);
-
-    ///raluca
     return stateFromUrl;
   }
   else
   {
-    stateFromUrl = prompt("Coookie!!!");
-    console.log("the cookie i set is ", stateFromUrl);
     return "";
   }
 }
-//var x = getCookie(state);
-//checkCookie();
-
-
-
 
 function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
@@ -205,9 +190,6 @@ function restoreFromPageState(newPageState, curPageState) {
   if (newPageState === undefined ||
       newPageState.filter === undefined ||
       newPageState.filter.length === 0) {
-    console.log("newPageState === undefined", newPageState === undefined);
-    console.log("newPageState.filter === undefined", newPageState.filter === undefined);
-    //console.log("newPageState.filter.length === 0", newPageState.filter.length === 0);
     return false;
   }
 
@@ -326,9 +308,8 @@ function updateUrlHashIfNeeded() {
     window.location.hash = pageStateToUrlHash(pageState);
     console.log("this is my new page state------", pageState);
     console.log("this is my new url hash---------", pageStateToUrlHash(pageState));
-    xxx = pageStateToUrlHash(pageState);
-    $(window).onclose = setCookie("stateFromUrl",xxx,3);
-
+    cookie = pageStateToUrlHash(pageState);
+    setCookie("stateFromUrl",cookie,3);
 
   }
 }
@@ -447,7 +428,9 @@ Telemetry.init(function () {
   createButtonTinyUrl();
 
   var cookie = checkCookie();
-  if (cookie) {
+  var pageState = urlHashToPageState(window.location.hash);
+
+  if (cookie && !restoreFromPageState(pageState, {})) {
     console.log("I do have a cookie!    ", cookie);
     //cookie should be set from #
     var pgState = urlHashToPageState(cookie);
@@ -456,13 +439,13 @@ Telemetry.init(function () {
   }
 
 
-else {
-    var pageState = urlHashToPageState(window.location.hash);
+  else {
     if (!restoreFromPageState(pageState, {})) {
       addHistogramFilter(true, null); //  first filter
       gSyncWithFirst = true;
     }
-   $(window).bind("hashchange", function(){
+  }
+  $(window).bind("hashchange", function () {
     var curPageState = computePageState();
     var newPageState = urlHashToPageState(window.location.hash);
     restoreFromPageState(newPageState, curPageState);
@@ -471,7 +454,7 @@ else {
 
   $("#addVersionButton").click(function () {
     var state = null;
-    if  (gHistogramFilterObjects.length != 0) {
+    if (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
 
@@ -498,7 +481,7 @@ else {
 
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
-    gHistogramFilterObjects.forEach(function(x){
+    gHistogramFilterObjects.forEach(function (x) {
       x.histogramfilter('option', 'evolutionOver', evoType);
     });
     updateUrlHashIfNeeded();
@@ -513,17 +496,8 @@ else {
     plot(true);
     updateUrlHashIfNeeded();
   });
-  //$(window).onclose = setCookie("stateFromUrl","X_X",3);
-
-
-}
-xxx = "filter=beta%2F22%2FBAD_FALLBACK_FONT&aggregates=Submissions&evoOver=Builds&locked=true&sanitize=true";
-//setCookie("stateFromUrl",xxx,5);
-//$(window).bind('beforeunload', function() {});
- $(window).onclose = setCookie("stateFromUrl",xxx,3);
 
 });
-
 /** Format numbers */
 
 function fmt(number) {
