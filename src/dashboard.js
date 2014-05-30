@@ -330,21 +330,26 @@ function updateUrlHashIfNeeded() {
   }
 }
 
+function anyHsLoading() {
+  var anyLoading = false;
+  gHistogramFilterObjects.forEach(function (filter) {
+    if (!filter.histogramfilter('histogram')) {
+      anyLoading = true;
+    }
+  })
+  return anyLoading;
+}
+
 // firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
-  var isLoaded = true;
-  gHistogramFilterObjects.forEach(function (filter) {
-    if (!filter.histogramfilter('histogram')) isLoaded = false;
-  })
-
-  if (isLoaded) {
-    $("#content").fadeIn();
-    $("#spinner").fadeOut();
-  } else {
+  if (anyHsLoading()) {
     $("#content").fadeOut();
     $("#spinner").fadeIn();
     return;
   }
+
+  $("#content").fadeIn();
+  $("#spinner").fadeOut();
 
   gHistogramEvolutions = {};
 
@@ -376,6 +381,10 @@ function plot(firstChanged) {
 
 function syncStateWithFirst() {  
   if (gHistogramFilterObjects.length == 0 ) {
+    return;
+  }
+
+  if (anyHsLoading()) {
     return;
   }
   
@@ -618,6 +627,7 @@ function createLockButton(parent){
   });
   return button;
 }
+
 function addHistogramFilter(firstHistogramFilter, state) {
   var f = $("<div>");
   if (firstHistogramFilter) {
