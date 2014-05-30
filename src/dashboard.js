@@ -5,7 +5,7 @@ var gSyncWithFirst = false;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var cookie;
-var xxx = "";
+var oldSelectionFromUrl = "";
 function setCookie(cname,cvalue,exdays)
 {
   var d = new Date();
@@ -46,8 +46,11 @@ function prepareData(state, hgramEvo) {
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
   var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
-  if (state in cachedData) {
-    return cachedData[state];
+  var pgState = computePageState();
+  dataKey = state +" " + pgState.sanitize + " " + pgState.evoOver;
+  if (dataKey in cachedData) {
+    console.log("I do have this in my cache  ", dataKey);
+    return cachedData[dataKey];
   }
 
   var submissions = hgramEvo.map(function (date, hgram) {
@@ -142,7 +145,9 @@ function prepareData(state, hgramEvo) {
       values: ps['95'],
     });
   }
-  cachedData[state] = data;
+  var pgState = computePageState();
+  dataKey = state +" " + pgState.sanitize + " " + pgState.evoOver;
+  cachedData[dataKey] = data;
   return data;
 }
 
@@ -187,7 +192,7 @@ function arraysEqual(a, b) {
 }
 
 function restoreFromPageState(newPageState, curPageState) {
-  console.log("restoreFromPageState~~~~~~~~~~~~~~~~~~", newPageState);
+  console.log("I am in restoreFromPageState", newPageState);
   if (newPageState === undefined ||
       newPageState.filter === undefined ||
       newPageState.filter.length === 0) {
@@ -251,12 +256,12 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.aggregates !== undefined) {
     // TODO: $("#aggregateSelector").val(newPageState.aggregates);
-    if (xxx == "")
-        xxx = newPageState.aggregates;
+    if (oldSelectionFromUrl == "")
+        oldSelectionFromUrl = newPageState.aggregates;
     console.log("i've got this aggregates", newPageState.aggregates);
     console.log("what does jquery returns",  $('#multipercentile').selector);
-    console.log("xxx is ", xxx);
-    if ("xxx" !== "")
+    console.log("oldSelectionFromUrl is ", oldSelectionFromUrl);
+    if ("oldSelectionFromUrl" !== "")
     {
       /*$("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
       var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
@@ -322,8 +327,6 @@ function updateUrlHashIfNeeded() {
       "" + pageState.sanitize !== "" + urlPageState.sanitize) {
 
     window.location.hash = pageStateToUrlHash(pageState);
-    console.log("this is my new page state------", pageState);
-    console.log("this is my new url hash---------", pageStateToUrlHash(pageState));
     cookie = pageStateToUrlHash(pageState);
     setCookie("stateFromUrl",cookie,3);
 
@@ -340,7 +343,7 @@ function anyHsLoading() {
   return anyLoading;
 }
 
-// firstChanged true if first filter changed and I need to sync all hidden filters
+// `firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
   if (anyHsLoading()) {
     $("#content").fadeOut();
@@ -359,8 +362,9 @@ function plot(firstChanged) {
 
 
   var filterStates = {};
-  gHistogramFilterObjects.forEach(function (hfilter) { filterStates[hfilter.histogramfilter("state")] = 1; });
-
+  gHistogramFilterObjects.forEach(function (hfilter) {
+    filterStates[hfilter.histogramfilter("state")] = 1; });
+  //FIX HERE
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
     console.log("got the same old filters: ", gStatesOnPlot, Object.keys(filterStates));
     return;
@@ -369,13 +373,12 @@ function plot(firstChanged) {
   gStatesOnPlot = Object.keys(filterStates);
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
-    if (hist!=null){
+    if (hist != null){
       gHistogramEvolutions[f.histogramfilter('state')] = hist;
     }
   });
   update(gHistogramEvolutions);
   updateUrlHashIfNeeded();
-  return gHistogramEvolutions;
 }
 
 
@@ -402,8 +405,8 @@ function syncStateWithFirst() {
     var currentVersion = segmParts[0] + '/' + segmParts[1];    
     gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
   }
-
-  updateUrlHashIfNeeded();
+   //XXX
+  //updateUrlHashIfNeeded();
 }
 
 
@@ -433,7 +436,8 @@ function setAggregateSelectorOptions(options, changeCb) {
     includeSelectAllOption: true,
     onChange : function(option, checked) {
       changeCb();
-      updateUrlHashIfNeeded();
+      //XXX
+      //updateUrlHashIfNeeded();
     }
   });
 
@@ -444,8 +448,8 @@ function setAggregateSelectorOptions(options, changeCb) {
     selector.multiselect("select", prevSelected);
 
   }
-
-  updateUrlHashIfNeeded();
+   //XXX
+  //updateUrlHashIfNeeded();
 }
 
 
@@ -504,6 +508,7 @@ Telemetry.init(function () {
     gHistogramFilterObjects.forEach(function (x) {
       x.histogramfilter('option', 'evolutionOver', evoType);
     });
+    plot(false);
     updateUrlHashIfNeeded();
   });
 
@@ -514,7 +519,8 @@ Telemetry.init(function () {
 
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
-    updateUrlHashIfNeeded();
+    //XXX
+    //updateUrlHashIfNeeded();
   });
 
 });
@@ -538,7 +544,8 @@ function createRemoveButton(parent) {
       return x !== parent;
     });
     plot(false);
-    updateUrlHashIfNeeded();
+    //XXX
+    //updateUrlHashIfNeeded();
   });
   return button;
 }
