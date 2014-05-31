@@ -2,12 +2,12 @@ var setVisible = true;
 var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = true;
+var restoreState = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var cookie;
 var oldSelectionFromUrl = "";
-function setCookie(cname,cvalue,exdays)
-{
+function setCookie(cname,cvalue,exdays) {
   var d = new Date();
   d.setTime(d.getTime()+(exdays*24*60*60*1000));
   var expires = "expires="+d.toGMTString();
@@ -45,12 +45,9 @@ function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
-  var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
   var pgState = computePageState();
-  dataKey = state +" " + pgState.sanitize + " " + pgState.evoOver;
+  dataKey = state + " " + pgState.evoOver + " " +  pgState.sanitize;
   if (dataKey in cachedData) {
-    console.log("@_@I do have this in my cache  where dataKey is ", dataKey);
-    console.log("@_@The cached data is ", cachedData[dataKey]);
     return cachedData[dataKey];
   }
 
@@ -146,9 +143,6 @@ function prepareData(state, hgramEvo) {
       values: ps['95'],
     });
   }
-  var pgState = computePageState();
-  dataKey = state +" " + pgState.sanitize + " " + pgState.evoOver;
-  console.log("^_^ I just cached data    ", data,  "with this dataKey    ", dataKey);
   cachedData[dataKey] = data;
   return data;
 }
@@ -169,9 +163,9 @@ function computePageState() {
 
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
+  console.log("i am in computePageState pageState.locked = gSyncWithFirst", gSyncWithFirst);
   pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
-
-  return pageState;
+   return pageState;
 }
 
 // Only works on array of objects which can be compared with == (string, numbers, etc.)
@@ -193,6 +187,14 @@ function arraysEqual(a, b) {
   return true;
 }
 
+function toBoolean(x) {
+  if (x === "true" || x === true)
+    return true;
+  if (x === "false" || x === false)
+    return false;
+  throw x;
+}
+
 function restoreFromPageState(newPageState, curPageState) {
   console.log("I am in restoreFromPageState", newPageState);
   if (newPageState === undefined ||
@@ -200,16 +202,19 @@ function restoreFromPageState(newPageState, curPageState) {
       newPageState.filter.length === 0) {
     return false;
   }
-
+  console.log("I am in restoreFromPageState", "newPageState is   ", newPageState , "curPageState  is", curPageState);
+  //!restoreState
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
-
+    console.log("newPageState.filter ", newPageState.filter, "curPageState.filter  ", curPageState.filter);
     $('#newHistoFilter').empty();
 
     gHistogramEvolutions = {};
     gHistogramFilterObjects = [];
 
     var states = newPageState.filter;
-
+    //gSyncWithFirst = newPageState.locked;
+    //changeLockButton(gSyncWithFirst);
+    console.log("I did the crazy thing");
     addHistogramFilter(true, states[0]);
     if (states.length == 1) {
       setVisible = true;
@@ -236,14 +241,6 @@ function restoreFromPageState(newPageState, curPageState) {
 
   }
 
-  function toBoolean(x) {
-    if (x === "true" || x === true)
-      return true;
-    if (x === "false" || x === false)
-      return false;
-    throw x;
-  }
-
   if (newPageState.evoOver !== undefined) {
     $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
   }
@@ -260,9 +257,6 @@ function restoreFromPageState(newPageState, curPageState) {
     // TODO: $("#aggregateSelector").val(newPageState.aggregates);
     if (oldSelectionFromUrl == "")
         oldSelectionFromUrl = newPageState.aggregates;
-    console.log("i've got this aggregates", newPageState.aggregates);
-    console.log("what does jquery returns",  $('#multipercentile').selector);
-    console.log("oldSelectionFromUrl is ", oldSelectionFromUrl);
     if ("oldSelectionFromUrl" !== "")
     {
       /*$("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
@@ -271,7 +265,6 @@ function restoreFromPageState(newPageState, curPageState) {
       selector.addClass("multiselect");*/
 
     }
-
 
   }
 
@@ -287,7 +280,6 @@ function pageStateToUrlHash(pageState) {
 
     fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
   });
-
   var newUrl = fragments.join("&");
   return newUrl;
 }
@@ -359,16 +351,22 @@ function plot(firstChanged) {
   gHistogramEvolutions = {};
 
   if (firstChanged && gSyncWithFirst) {
+    console.log("i am in firstChanged and i get ", firstChanged, "and gSyncWithFirst ", gSyncWithFirst);
     syncStateWithFirst();
   }
 
 
   var filterStates = {};
+  //ralu
+  var pgState = computePageState();
+  var evOver = pgState.evoOver;
+  var sanitize = pgState.sanitize;
+  console.log("%%%%%%%%%%%%%%%%%%%%%%  sanitize             ", sanitize);
   gHistogramFilterObjects.forEach(function (hfilter) {
-    filterStates[hfilter.histogramfilter("state")] = 1; });
+    filterStates[hfilter.histogramfilter("state") + " " + evOver + sanitize] = 1; });
   //FIX ME
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
-    console.log("got the same old filters: ", gStatesOnPlot, Object.keys(filterStates));
+    console.log("got the same old filters: ", gStatesOnPlot, "  ", Object.keys(filterStates));
     return;
   }
 
@@ -462,14 +460,19 @@ Telemetry.init(function () {
   var pageState = urlHashToPageState(window.location.hash);
 
   if (cookie && !restoreFromPageState(pageState, {})) {
+    restoreState = false;
     console.log("I do have a cookie!    ", cookie);
     //cookie should be set from #
     var pgState = urlHashToPageState(cookie);
-    console.log("my page state is ", pgState);
     restoreFromPageState(pgState, {});
   } else if (!restoreFromPageState(pageState, {})) {
+      restoreState = false;
       addHistogramFilter(true, null); //  first filter
       changeLockButton(true);
+  }
+  if (restoreFromPageState(pageState, {}))
+  {
+
   }
   $(window).bind("hashchange", function () {
     var curPageState = computePageState();
@@ -520,9 +523,11 @@ Telemetry.init(function () {
   });
 
   $('input[name=sanitize-pref]:checkbox').change(function () {
-    plot(true);
-    //XXX
+    console.log("I've got sanitize event   ");
+    //XXXTO FIX
     //updateUrlHashIfNeeded();
+    plot(true);
+
   });
 
 });
@@ -559,6 +564,7 @@ function changeLockButton(newValue) {
 
 
   gSyncWithFirst = newValue;
+  console.log("i chance gSysncWithFirst    ", gSyncWithFirst);
   var lockButton = $("#lock-button");
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
@@ -621,7 +627,7 @@ function createButtonTinyUrl()
 
   })
 
-  }
+}
 
 function createLockButton(parent){
   var button = $('<button type="button" class="btn btn-default " >');
@@ -632,7 +638,9 @@ function createLockButton(parent){
 
   parent.append(button);
   button.click(function() {
+    console.log("i am to check the button------------- ", gSyncWithFirst);
     changeLockButton(!gSyncWithFirst);
+    console.log("i just clecked the button-----------", gSyncWithFirst);
   });
   return button;
 }
@@ -646,9 +654,12 @@ function addHistogramFilter(firstHistogramFilter, state) {
   }
   
   $('#newHistoFilter').append(f);
+
   var locked = false;
+
   if (gHistogramFilterObjects.length >= 1 && gSyncWithFirst) {
-    locked = true;
+
+    locked = gSyncWithFirst;
   }
   f.histogramfilter({
     synchronizeStateWithHash: false,
@@ -906,7 +917,6 @@ function update(hgramEvos) {
 
 
   nv.addGraph(function () {
-
     //top was 10
     var focusChart = evolutionchart().margin({
       top: 10,
