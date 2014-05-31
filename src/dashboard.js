@@ -2,16 +2,21 @@ var setVisible = true;
 var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = true;
-var restoreState = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var cookie;
 var oldSelectionFromUrl = "";
+var gHashSetFromCode = false;
 function setCookie(cname,cvalue,exdays) {
   var d = new Date();
   d.setTime(d.getTime()+(exdays*24*60*60*1000));
   var expires = "expires="+d.toGMTString();
   document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+function setUrlHash(hash){
+  gHashSetFromCode = true;
+  window.location.hash = hash;
 }
 
 function getCookie(cname)
@@ -76,7 +81,6 @@ function prepareData(state, hgramEvo) {
   // The cutoff is the lesser of 100 or 1% of the maximum number of
   // submissions we saw.
   var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
-
   if (hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
     var means = [];
     // Percentile series
@@ -86,7 +90,9 @@ function prepareData(state, hgramEvo) {
     });
     hgramEvo.each(function (date, hgram) {
       date = date.getTime();
-      if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
+      //TODO sanitizeData
+      //if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
+      if (hgram.submissions() >= submissionsCutoff) {
         var mean = hgram.mean();
         if (mean >= 0) {
           means.push({
@@ -154,7 +160,6 @@ function computePageState() {
     pageState.filter.push(gHistogramFilterObjects[i].histogramfilter('state'));
   }
 
-
   // TODO: doesn't work!
   pageState.aggregates = $("#aggregateSelector").multiselect("getSelected").val();
   if (pageState.aggregates === undefined || pageState.aggregates === null) {
@@ -165,7 +170,7 @@ function computePageState() {
   pageState.locked = gSyncWithFirst;
   console.log("i am in computePageState pageState.locked = gSyncWithFirst", gSyncWithFirst);
   pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
-   return pageState;
+  return pageState;
 }
 
 // Only works on array of objects which can be compared with == (string, numbers, etc.)
@@ -196,25 +201,19 @@ function toBoolean(x) {
 }
 
 function restoreFromPageState(newPageState, curPageState) {
-  console.log("I am in restoreFromPageState", newPageState);
   if (newPageState === undefined ||
       newPageState.filter === undefined ||
       newPageState.filter.length === 0) {
     return false;
   }
-  console.log("I am in restoreFromPageState", "newPageState is   ", newPageState , "curPageState  is", curPageState);
-  //!restoreState
+
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
-    console.log("newPageState.filter ", newPageState.filter, "curPageState.filter  ", curPageState.filter);
     $('#newHistoFilter').empty();
 
     gHistogramEvolutions = {};
     gHistogramFilterObjects = [];
 
     var states = newPageState.filter;
-    //gSyncWithFirst = newPageState.locked;
-    //changeLockButton(gSyncWithFirst);
-    console.log("I did the crazy thing");
     addHistogramFilter(true, states[0]);
     if (states.length == 1) {
       setVisible = true;
@@ -223,7 +222,6 @@ function restoreFromPageState(newPageState, curPageState) {
     for (var i = 1; i < states.length; i++) {
       addHistogramFilter(false, states[i]);
     }
-
 
     // TODO: re-enable?
     if (states.length > 1 ) {
@@ -319,11 +317,9 @@ function updateUrlHashIfNeeded() {
       "" + pageState.locked !== "" + urlPageState.locked ||
       "" + pageState.evoOver !== "" + urlPageState.evoOver ||
       "" + pageState.sanitize !== "" + urlPageState.sanitize) {
-
-    window.location.hash = pageStateToUrlHash(pageState);
+    setUrlHash(pageStateToUrlHash(pageState));
     cookie = pageStateToUrlHash(pageState);
     setCookie("stateFromUrl",cookie,3);
-
   }
 }
 
@@ -333,7 +329,7 @@ function anyHsLoading() {
     if (!filter.histogramfilter('histogram')) {
       anyLoading = true;
     }
-  })
+  });
   return anyLoading;
 }
 
@@ -351,22 +347,16 @@ function plot(firstChanged) {
   gHistogramEvolutions = {};
 
   if (firstChanged && gSyncWithFirst) {
-    console.log("i am in firstChanged and i get ", firstChanged, "and gSyncWithFirst ", gSyncWithFirst);
     syncStateWithFirst();
   }
 
-
   var filterStates = {};
-  //ralu
   var pgState = computePageState();
   var evOver = pgState.evoOver;
   var sanitize = pgState.sanitize;
-  console.log("%%%%%%%%%%%%%%%%%%%%%%  sanitize             ", sanitize);
   gHistogramFilterObjects.forEach(function (hfilter) {
     filterStates[hfilter.histogramfilter("state") + " " + evOver + sanitize] = 1; });
-  //FIX ME
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
-    console.log("got the same old filters: ", gStatesOnPlot, "  ", Object.keys(filterStates));
     return;
   }
 
@@ -383,14 +373,10 @@ function plot(firstChanged) {
 
 
 function syncStateWithFirst() {  
-  if (gHistogramFilterObjects.length == 0 ) {
+  if (gHistogramFilterObjects.length == 0 || anyHsLoading()) {
     return;
   }
 
-  if (anyHsLoading()) {
-    return;
-  }
-  
   var stateSegment = gHistogramFilterObjects[0].histogramfilter('state');
   var segmParts = stateSegment.split("/");
   segmParts.shift();
@@ -458,27 +444,24 @@ Telemetry.init(function () {
 
   var cookie = checkCookie();
   var pageState = urlHashToPageState(window.location.hash);
-
-  if (cookie && !restoreFromPageState(pageState, {})) {
-    restoreState = false;
-    console.log("I do have a cookie!    ", cookie);
+  var restoreFromPg = restoreFromPageState(pageState, {});
+  if (cookie && !restoreFromPg) {
     //cookie should be set from #
     var pgState = urlHashToPageState(cookie);
     restoreFromPageState(pgState, {});
-  } else if (!restoreFromPageState(pageState, {})) {
-      restoreState = false;
-      addHistogramFilter(true, null); //  first filter
-      changeLockButton(true);
+    } else if (!restoreFromPg) {
+    addHistogramFilter(true, null); //  first filter
+    changeLockButton(true);
   }
-  if (restoreFromPageState(pageState, {}))
-  {
 
-  }
   $(window).bind("hashchange", function () {
+    if (gHashSetFromCode) {
+      gHashSetFromCode = false;
+      return;
+    }
     var curPageState = computePageState();
     var newPageState = urlHashToPageState(window.location.hash);
     restoreFromPageState(newPageState, curPageState);
-
   });
 
   $("#addVersionButton").click(function () {
@@ -524,10 +507,9 @@ Telemetry.init(function () {
 
   $('input[name=sanitize-pref]:checkbox').change(function () {
     console.log("I've got sanitize event   ");
-    //XXXTO FIX
+    //TODO
     //updateUrlHashIfNeeded();
     plot(true);
-
   });
 
 });
@@ -562,9 +544,8 @@ function changeLockButton(newValue) {
     return;
   }
 
-
   gSyncWithFirst = newValue;
-  console.log("i chance gSysncWithFirst    ", gSyncWithFirst);
+  console.log("changeLockButton: set gSysncWithFirst to:", gSyncWithFirst);
   var lockButton = $("#lock-button");
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
@@ -581,12 +562,9 @@ function changeLockButton(newValue) {
 
   if (gSyncWithFirst) {
     syncStateWithFirst();
-  } else {
-  //  updateUrlHashIfNeeded();
   }
   updateUrlHashIfNeeded();
   plot(false);
-
 }
 
 function createButtonTinyUrl()
@@ -638,9 +616,7 @@ function createLockButton(parent){
 
   parent.append(button);
   button.click(function() {
-    console.log("i am to check the button------------- ", gSyncWithFirst);
     changeLockButton(!gSyncWithFirst);
-    console.log("i just clecked the button-----------", gSyncWithFirst);
   });
   return button;
 }
@@ -813,16 +789,11 @@ function update(hgramEvos) {
 
   function updateDisabledAggregates() {
     var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
-    console.log("updateDisabledAggregates toBeSelected:", toBeSelected, cDatas);
-
     if (toBeSelected === undefined) {
       return;
     }
 
     if (toBeSelected === null) toBeSelected = [];
-    // toBeSelected is [] when nothing is selected, and we set all .disabled=true
-    console.log("updateDisabledAggregateX toBeSelected:", toBeSelected, cDatas);
-
     for (var i = 0; i < cDatas.length; i++) {
       if (toBeSelected.indexOf(cDatas[i].tableKey) !== -1 && toBeSelected.length !== 0) {
         cDatas[i].disabled = false;
@@ -940,14 +911,10 @@ function update(hgramEvos) {
     // Clear the svg to avoid this.
     $("#evolution").empty();
     d3.select("#evolution").datum(cDatas).call(focusChart);
-
     nv.utils.windowResize(function () { focusChart.update(); });
-
     focusChart.setSelectionChangeCallback(updateProps);
 
     labels = unique(labels);
-
-
 
     setAggregateSelectorOptions(labels, function () {
       updateDisabledAggregates();
