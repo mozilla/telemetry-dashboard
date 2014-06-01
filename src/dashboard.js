@@ -3,9 +3,9 @@ var gHistogramFilterObjects = [];
 var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
-var cookie;
 var gHashSetFromCode = false;
-function setCookie(cname,cvalue,exdays) {
+
+function setCookie(cname, cvalue, exdays) {
   var d = new Date();
   d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
   var expires = "expires=" + d.toGMTString();
@@ -15,6 +15,7 @@ function setCookie(cname,cvalue,exdays) {
 function setUrlHash(hash) {
   gHashSetFromCode = true;
   window.location.hash = hash;
+  setCookie("stateFromUrl", hash, 3);
 }
 
 function getCookie(cname) {
@@ -29,7 +30,7 @@ function getCookie(cname) {
   return "";
 }
 
-function checkCookie() {
+function readCookie() {
   var stateFromUrl = getCookie("stateFromUrl");
   if (stateFromUrl != "" && stateFromUrl != null) {
     return stateFromUrl;
@@ -152,15 +153,13 @@ function computePageState() {
     pageState.filter.push(gHistogramFilterObjects[i].histogramfilter('state'));
   }
 
-  // TODO: doesn't work!
   pageState.aggregates = $("#aggregateSelector").multiselect("getSelected").val();
   if (pageState.aggregates === undefined || pageState.aggregates === null) {
     pageState.aggregates = [];
   }
-
+  pageState.aggregates = pageState.aggregates.filter(function(e) { return e !== "";});
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
-  console.log("i am in computePageState pageState.locked = gSyncWithFirst", gSyncWithFirst);
   pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
   return pageState;
 }
@@ -193,6 +192,8 @@ function toBoolean(x) {
 }
 
 function restoreFromPageState(newPageState, curPageState) {
+  console.trace("restoreFromPageState newPageState:", newPageState, "curPageState:", curPageState);
+
   if (newPageState === undefined ||
     newPageState.filter === undefined ||
     newPageState.filter.length === 0) {
@@ -214,20 +215,22 @@ function restoreFromPageState(newPageState, curPageState) {
       addHistogramFilter(false, states[i]);
     }
 
-    // TODO: re-enable?
+    // TODO: re-enable AKA another button for first state
     if (states.length > 1 ) {
-      if (document.getElementById("summary") !== null)
+      if (document.getElementById("summary") !== null) {
         document.getElementById("summary").remove();
-      if (document.getElementById('summaryDetails') !== null)
+      }
+
+      if (document.getElementById('summaryDetails') !== null) {
         document.getElementById('summaryDetails').remove();
+      }
+
       if (document.getElementById('renderHistogram') !== null) {
         $('#histogram').hide();
         $('#histogram').remove();
         document.getElementById('renderHistogram').remove();
       }
-
     }
-
   }
 
   if (newPageState.evoOver !== undefined) {
@@ -243,11 +246,10 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.aggregates !== undefined) {
-    // TODO: $("#aggregateSelector").val(newPageState.aggregates);
-      /*$("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
-       var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-       var selector = $("<select multiple id=aggregateSelector>");
-       selector.addClass("multiselect");*/
+    console.log("restoreFromPageState: newPageState.aggregates: ", newPageState.aggregates);
+    setAggregateSelectorOptions(newPageState.aggregates, function() {
+      console.trace("changeCb set from restoreFromPageState->setAggregateSelectorOptions, called with: ", arguments);
+    }, false);
   }
 
   return true;
@@ -259,9 +261,9 @@ function pageStateToUrlHash(pageState) {
     if (v instanceof Array) {
       v = v.join("!");
     }
-
     fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
   });
+
   var newUrl = fragments.join("&");
   return newUrl;
 }
@@ -294,17 +296,29 @@ function urlHashToPageState(url) {
 }
 
 function updateUrlHashIfNeeded() {
+  if (gHistogramFilterObjects.length === 0) {
+    console.log("updateUrlHashIfNeeded: gHistogramFilterObjects empty. Bad Kitty, no URL for you!");
+    return;
+  }
+
+  if (anyHsLoading()) {
+    console.log("updateUrlHashIfNeeded: anyHsLoading true. Bad Kitty, no URL for you!");
+    return;
+  }
+
   var pageState = computePageState();
   var urlPageState = urlHashToPageState(window.location.hash);
-  if (!arraysEqual(pageState.filter, urlPageState.filter) ||
-    !arraysEqual(pageState.aggregates, urlPageState.aggregates) ||
-    "" + pageState.locked !== "" + urlPageState.locked ||
-    "" + pageState.evoOver !== "" + urlPageState.evoOver ||
-    "" + pageState.sanitize !== "" + urlPageState.sanitize) {
-    setUrlHash(pageStateToUrlHash(pageState));
-    cookie = pageStateToUrlHash(pageState);
-    setCookie("stateFromUrl",cookie,3);
+  if (arraysEqual(pageState.filter, urlPageState.filter) &&
+      arraysEqual(pageState.aggregates, urlPageState.aggregates) &&
+      "" + pageState.locked === "" + urlPageState.locked &&
+      "" + pageState.evoOver === "" + urlPageState.evoOver &&
+      "" + pageState.sanitize === "" + urlPageState.sanitize) {
+    console.log("updateUrlHashIfNeeded: same state. Bad Kitty, no URL for you!", pageState, urlPageState);
+    return;
   }
+
+  console.trace("updateUrlHashIfNeeded: YEY: pageState (newUrl): ", pageState, "oldUrlPageState:", urlPageState);
+  setUrlHash(pageStateToUrlHash(pageState));
 }
 
 function anyHsLoading() {
@@ -336,7 +350,7 @@ function plot(firstChanged) {
 
   var filterStates = {};
   gHistogramFilterObjects.forEach(function (hfilter) {
-    var key = hfilter.histogramfilter("state") + " " + pgState.evoOver + pgState.sanitize;
+    var key = hfilter.histogramfilter("state") + " " + pgState.evoOver + " " + pgState.sanitize;
     filterStates[key] = 1;
   });
 
@@ -354,7 +368,6 @@ function plot(firstChanged) {
     }
   });
   update(hgramEvos);
-  updateUrlHashIfNeeded();
 }
 
 
@@ -377,15 +390,25 @@ function syncStateWithFirst() {
     var currentVersion = segmParts[0] + '/' + segmParts[1];
     gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
   }
-  //XXX
-  //updateUrlHashIfNeeded();
+
 }
 
 
-function setAggregateSelectorOptions(options, changeCb) {
+function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
+  console.trace("setAggregateSelectorOptions: options:", options, "defaultToAll: ", defaultToAll);
+
+  if (options.length === 0) {
+    console.log("setAggregateSelectorOptions: options empty, not doing anything: ", options);
+    return;
+  }
+  
   var prevOptions = [];
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
+
+  console.trace("setAggregateSelectorOptions: prevSelected:", prevSelected, "defaultToAll: ", defaultToAll);
+  console.trace("setAggregateSelectorOptions: prevOptions:", prevOptions, "defaultToAll: ", defaultToAll);
+
   var selector = $("<select multiple id=aggregateSelector>");
   selector.addClass("multiselect");
 
@@ -406,39 +429,63 @@ function setAggregateSelectorOptions(options, changeCb) {
   selector.multiselect({
     includeSelectAllOption: true,
     onChange : function(option, checked) {
+      console.log("setAggregateSelectorOptions: onChange: changeCb:", changeCb);
+      selector.multiselect("updateSelectAll");
       changeCb();
       updateUrlHashIfNeeded();
     }
   });
 
-  // If "Select All" is checked, select all the new options.
-  if (prevSelected.length === 0 || prevSelected.indexOf("multiselect-all") !== -1) {
+  if (prevOptions.length === 0) {
+    // first time drawing the selector.
     selector.multiselect("select", options);
-    selector.multiselect("select", "multiselect-all");
+    if (defaultToAll) {
+      selector.multiselect("updateSelectAll");
+    }
+  } else {
+    // updating existing selector.
+    if (prevSelected.indexOf("multiselect-all") !== -1) {
+      selector.multiselect("select", options);
+      selector.multiselect("updateSelectAll");
+    } else {
+      selector.multiselect("select", prevSelected);
+    }
+  }
+
+/*
+  // If "Select All" is checked, select all the new options.
+  if ((prevOptions.length === 0 && defaultToAll) || prevSelected.indexOf("multiselect-all") !== -1) {
+    selector.multiselect("select", options);
+    selector.multiselect("updateSelectAll");
+    changeCb();  // TODO
   } else {
     selector.multiselect("select", prevSelected);
   }
-  //XXX
-  //updateUrlHashIfNeeded();
+*/
+  updateUrlHashIfNeeded();
 }
 
 
 Telemetry.init(function () {
   createButtonTinyUrl();
 
-  var cookie = checkCookie();
-  var pageState = urlHashToPageState(window.location.hash);
-  var restoreFromPg = restoreFromPageState(pageState, {});
-  if (cookie && !restoreFromPg) {
-    //cookie should be set from #
-    var pgState = urlHashToPageState(cookie);
-    restoreFromPageState(pgState, {});
-  } else if (!restoreFromPg) {
-    addHistogramFilter(true, null); //  first filter
-    changeLockButton(true);
+  var urlPageState = urlHashToPageState(window.location.hash);
+  if (!restoreFromPageState(urlPageState, {})) {
+    var cookie = readCookie();
+    if (cookie) {
+      // cookie should be set from #
+      console.log("cookie: ", cookie);
+      var pgState = urlHashToPageState(cookie);
+      restoreFromPageState(pgState, {});
+    } else {
+      // Could not restore from either url or cookie => create a default hs filter.
+      addHistogramFilter(true, null); //  first filter
+      changeLockButton(true);  // default: locked
+    }
   }
 
   $(window).bind("hashchange", function () {
+    console.trace("hashchange event: gHashSetFromCode: ", gHashSetFromCode, window.location.hash);
     if (gHashSetFromCode) {
       gHashSetFromCode = false;
       return;
@@ -636,8 +683,10 @@ function addHistogramFilter(firstHistogramFilter, state) {
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", function(event, args) {
-    if (args.doneLoading)
-      plot(firstHistogramFilter); });
+    if (args.doneLoading) {
+      plot(firstHistogramFilter);
+    }
+  });
   gHistogramFilterObjects.push(f);
 }
 
@@ -903,7 +952,9 @@ function update(hgramEvos) {
     setAggregateSelectorOptions(labels, function () {
       updateDisabledAggregates();
       focusChart.update();
-    });
+    }, true);
+
+    updateUrlHashIfNeeded();
   });
 
   updateProps();
