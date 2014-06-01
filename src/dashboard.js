@@ -200,6 +200,16 @@ function restoreFromPageState(newPageState, curPageState) {
     return false;
   }
 
+
+  if (newPageState.sanitize !== undefined) {
+    $('input[name=sanitize-pref]:checkbox').prop('checked', toBoolean(newPageState.sanitize));
+  }
+
+  if (newPageState.evoOver !== undefined) {
+    $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
+    console.log("restore state in evolutionOver",    $('input[name=evo-type]:radio:checked').val());
+  }
+
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
     $('#newHistoFilter').empty();
 
@@ -233,13 +243,6 @@ function restoreFromPageState(newPageState, curPageState) {
     }
   }
 
-  if (newPageState.evoOver !== undefined) {
-    $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
-  }
-
-  if (newPageState.sanitize !== undefined) {
-    $('input[name=sanitize-pref]:checkbox').prop('checked', toBoolean(newPageState.sanitize));
-  }
 
   if (newPageState.locked !== undefined) {
     changeLockButton(toBoolean(newPageState.locked));
@@ -523,6 +526,7 @@ Telemetry.init(function () {
   });
 
   $('input[name=evo-type]:radio').change(function () {
+    console.log("I am in init in change   ");
     var evoType = $('input[name=evo-type]:radio:checked').val();
     gHistogramFilterObjects.forEach(function (x) {
       x.histogramfilter('option', 'evolutionOver', evoType);
