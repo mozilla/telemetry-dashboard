@@ -389,7 +389,6 @@ function setAggregateSelectorOptions(options, changeCb) {
   var selector = $("<select multiple id=aggregateSelector>");
   selector.addClass("multiselect");
 
-
   if (!arraysEqual(prevOptions, options)) {
     $('#multipercentile').empty().append(selector);
     var n = options.length;
@@ -415,9 +414,9 @@ function setAggregateSelectorOptions(options, changeCb) {
   // If "Select All" is checked, select all the new options.
   if (prevSelected.length === 0 || prevSelected.indexOf("multiselect-all") !== -1) {
     selector.multiselect("select", options);
+    selector.multiselect("select", "multiselect-all");
   } else {
     selector.multiselect("select", prevSelected);
-
   }
   //XXX
   //updateUrlHashIfNeeded();
