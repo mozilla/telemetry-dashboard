@@ -4,7 +4,6 @@ var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var cookie;
-var oldSelectionFromUrl = "";
 var gHashSetFromCode = false;
 function setCookie(cname,cvalue,exdays) {
   var d = new Date();
@@ -245,17 +244,10 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.aggregates !== undefined) {
     // TODO: $("#aggregateSelector").val(newPageState.aggregates);
-    if (oldSelectionFromUrl == "")
-      oldSelectionFromUrl = newPageState.aggregates;
-    if ("oldSelectionFromUrl" !== "")
-    {
       /*$("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
        var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
        var selector = $("<select multiple id=aggregateSelector>");
        selector.addClass("multiselect");*/
-
-    }
-
   }
 
   return true;
