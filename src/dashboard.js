@@ -1,5 +1,4 @@
 var setVisible = true;
-var gHistogramEvolutions = {};
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = true;
 var gStatesOnPlot = [];
@@ -204,7 +203,6 @@ function restoreFromPageState(newPageState, curPageState) {
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
     $('#newHistoFilter').empty();
 
-    gHistogramEvolutions = {};
     gHistogramFilterObjects = [];
 
     var states = newPageState.filter;
@@ -338,30 +336,32 @@ function plot(firstChanged) {
   $("#content").fadeIn();
   $("#spinner").fadeOut();
 
-  gHistogramEvolutions = {};
-
   if (firstChanged && gSyncWithFirst) {
     syncStateWithFirst();
   }
 
-  var filterStates = {};
   var pgState = computePageState();
-  var evOver = pgState.evoOver;
-  var sanitize = pgState.sanitize;
+
+  var filterStates = {};
   gHistogramFilterObjects.forEach(function (hfilter) {
-    filterStates[hfilter.histogramfilter("state") + " " + evOver + sanitize] = 1; });
+    var key = hfilter.histogramfilter("state") + " " + pgState.evoOver + pgState.sanitize;
+    filterStates[key] = 1;
+  });
+
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
     return;
   }
 
   gStatesOnPlot = Object.keys(filterStates);
+
+  var hgramEvos = {};
   gHistogramFilterObjects.forEach(function (f) {
     var hist = f.histogramfilter('histogram');
     if (hist != null){
-      gHistogramEvolutions[f.histogramfilter('state')] = hist;
+      hgramEvos[f.histogramfilter('state')] = hist;
     }
   });
-  update(gHistogramEvolutions);
+  update(hgramEvos);
   updateUrlHashIfNeeded();
 }
 
