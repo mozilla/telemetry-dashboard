@@ -43,6 +43,7 @@ function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
+  var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
   var pgState = computePageState();
   dataKey = state + " " + pgState.evoOver + " " +  pgState.sanitize;
   if (dataKey in cachedData) {
@@ -84,8 +85,7 @@ function prepareData(state, hgramEvo) {
     hgramEvo.each(function (date, hgram) {
       date = date.getTime();
       //TODO sanitizeData
-      //if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
-      if (hgram.submissions() >= submissionsCutoff) {
+      if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
         var mean = hgram.mean();
         if (mean >= 0) {
           means.push({
