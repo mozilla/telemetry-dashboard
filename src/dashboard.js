@@ -416,8 +416,7 @@ function setAggregateSelectorOptions(options, changeCb) {
     includeSelectAllOption: true,
     onChange : function(option, checked) {
       changeCb();
-      //XXX
-      //updateUrlHashIfNeeded();
+      updateUrlHashIfNeeded();
     }
   });
 
