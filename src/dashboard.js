@@ -9,22 +9,20 @@ var oldSelectionFromUrl = "";
 var gHashSetFromCode = false;
 function setCookie(cname,cvalue,exdays) {
   var d = new Date();
-  d.setTime(d.getTime()+(exdays*24*60*60*1000));
-  var expires = "expires="+d.toGMTString();
+  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+  var expires = "expires=" + d.toGMTString();
   document.cookie = cname + "=" + cvalue + "; " + expires;
 }
 
-function setUrlHash(hash){
+function setUrlHash(hash) {
   gHashSetFromCode = true;
   window.location.hash = hash;
 }
 
-function getCookie(cname)
-{
+function getCookie(cname) {
   var name = cname + "=";
   var ca = document.cookie.split(';');
-  for(var i=0; i < ca.length; i++)
-  {
+  for(var i=0; i < ca.length; i++) {
     var c = ca[i].trim();
     if (c.indexOf(name)==0) {
       return c.substring(name.length, c.length);
@@ -33,15 +31,11 @@ function getCookie(cname)
   return "";
 }
 
-function checkCookie()
-{
-  var stateFromUrl=getCookie("stateFromUrl");
-  if (stateFromUrl!="" && stateFromUrl != null)
-  {
+function checkCookie() {
+  var stateFromUrl = getCookie("stateFromUrl");
+  if (stateFromUrl != "" && stateFromUrl != null) {
     return stateFromUrl;
-  }
-  else
-  {
+  } else {
     return "";
   }
 }
@@ -202,8 +196,8 @@ function toBoolean(x) {
 
 function restoreFromPageState(newPageState, curPageState) {
   if (newPageState === undefined ||
-      newPageState.filter === undefined ||
-      newPageState.filter.length === 0) {
+    newPageState.filter === undefined ||
+    newPageState.filter.length === 0) {
     return false;
   }
 
@@ -254,13 +248,13 @@ function restoreFromPageState(newPageState, curPageState) {
   if (newPageState.aggregates !== undefined) {
     // TODO: $("#aggregateSelector").val(newPageState.aggregates);
     if (oldSelectionFromUrl == "")
-        oldSelectionFromUrl = newPageState.aggregates;
+      oldSelectionFromUrl = newPageState.aggregates;
     if ("oldSelectionFromUrl" !== "")
     {
       /*$("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
-      var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-      var selector = $("<select multiple id=aggregateSelector>");
-      selector.addClass("multiselect");*/
+       var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
+       var selector = $("<select multiple id=aggregateSelector>");
+       selector.addClass("multiselect");*/
 
     }
 
@@ -294,8 +288,8 @@ function urlHashToPageState(url) {
   var fragments = url.split("&");
   var pageState = {};
   for(var i = 0; i < fragments.length; i++) {
-      var l = fragments[i].split("=");
-      pageState[decodeURIComponent(l[0])] = decodeURIComponent(l[1]);
+    var l = fragments[i].split("=");
+    pageState[decodeURIComponent(l[0])] = decodeURIComponent(l[1]);
   }
 
   if (pageState.filter !== undefined) {
@@ -313,10 +307,10 @@ function updateUrlHashIfNeeded() {
   var pageState = computePageState();
   var urlPageState = urlHashToPageState(window.location.hash);
   if (!arraysEqual(pageState.filter, urlPageState.filter) ||
-      !arraysEqual(pageState.aggregates, urlPageState.aggregates) ||
-      "" + pageState.locked !== "" + urlPageState.locked ||
-      "" + pageState.evoOver !== "" + urlPageState.evoOver ||
-      "" + pageState.sanitize !== "" + urlPageState.sanitize) {
+    !arraysEqual(pageState.aggregates, urlPageState.aggregates) ||
+    "" + pageState.locked !== "" + urlPageState.locked ||
+    "" + pageState.evoOver !== "" + urlPageState.evoOver ||
+    "" + pageState.sanitize !== "" + urlPageState.sanitize) {
     setUrlHash(pageStateToUrlHash(pageState));
     cookie = pageStateToUrlHash(pageState);
     setCookie("stateFromUrl",cookie,3);
@@ -372,7 +366,7 @@ function plot(firstChanged) {
 }
 
 
-function syncStateWithFirst() {  
+function syncStateWithFirst() {
   if (gHistogramFilterObjects.length == 0 || anyHsLoading()) {
     return;
   }
@@ -385,13 +379,13 @@ function syncStateWithFirst() {
   for (var i = 0; i < segmParts.length; i++) {
     segment += '/' + segmParts[i];
   }
-  
+
   for (var j = 1; j < gHistogramFilterObjects.length; j++) {
     var segmParts = gHistogramFilterObjects[j].histogramfilter('state').split("/");
-    var currentVersion = segmParts[0] + '/' + segmParts[1];    
+    var currentVersion = segmParts[0] + '/' + segmParts[1];
     gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
   }
-   //XXX
+  //XXX
   //updateUrlHashIfNeeded();
 }
 
@@ -434,7 +428,7 @@ function setAggregateSelectorOptions(options, changeCb) {
     selector.multiselect("select", prevSelected);
 
   }
-   //XXX
+  //XXX
   //updateUrlHashIfNeeded();
 }
 
@@ -449,7 +443,7 @@ Telemetry.init(function () {
     //cookie should be set from #
     var pgState = urlHashToPageState(cookie);
     restoreFromPageState(pgState, {});
-    } else if (!restoreFromPg) {
+  } else if (!restoreFromPg) {
     addHistogramFilter(true, null); //  first filter
     changeLockButton(true);
   }
@@ -628,7 +622,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
   } else {
     createRemoveButton(f);
   }
-  
+
   $('#newHistoFilter').append(f);
 
   var locked = false;
@@ -679,7 +673,7 @@ function renderHistogramGraph(hgram) {
   if(setVisible == true) {
     $('#histogram').show();
   }
-  
+
   nv.addGraph(function () {
     var total = hgram.count();
     var vals = hgram.map(function (count, start, end, index) {
@@ -710,9 +704,9 @@ function renderHistogramGraph(hgram) {
 
     nv.utils.windowResize(
 
-    function () {
-      //chart.update();
-    });
+      function () {
+        //chart.update();
+      });
     return chart;
   });
 }
