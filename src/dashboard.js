@@ -495,6 +495,17 @@ Telemetry.init(function () {
     restoreFromPageState(newPageState, curPageState);
   });
 
+  $('input[name=render-type]:radio').change(function () {
+    var hgramEvos = {};
+    var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
+    if (currentHistogram != null)
+    {
+      hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram
+      update(hgramEvos);
+    }
+    // TODO: add updateUrlHashIfNeeded + add to state?
+  });
+
   $("#addVersionButton").click(function () {
     var state = null;
     if (gHistogramFilterObjects.length != 0) {
@@ -532,10 +543,7 @@ Telemetry.init(function () {
     updateUrlHashIfNeeded();
   });
 
-  $('input[name=render-type]:radio').change(function () {
-    plot(true);
-    // TODO: add updateUrlHashIfNeeded + add to state?
-  });
+
 
   $('input[name=sanitize-pref]:checkbox').change(function () {
     console.log("I've got sanitize event   ");
@@ -699,7 +707,7 @@ function renderHistogramTable(hgram) {
     $('#histogram-table').show();
   }
 
-  var body = $('#histogram-table').find('tbody')
+  var body = $('#histogram-table').find('tbody');
   body.empty();
 
   body.append.apply(body, hgram.map(function (count, start, end, index) {
