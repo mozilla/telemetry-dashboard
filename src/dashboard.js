@@ -454,7 +454,8 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
       selector.multiselect("select", prevSelected);
     }
   }
-
+  changeCb();
+  
 /*
   // If "Select All" is checked, select all the new options.
   if ((prevOptions.length === 0 && defaultToAll) || prevSelected.indexOf("multiselect-all") !== -1) {
