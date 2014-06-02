@@ -778,8 +778,8 @@ function update(hgramEvos) {
     });
 
     $.each(series, function(i, entry) {
-      entry.tableState = state;
-      entry.tableKey = entry.key;
+      entry.fullState = state;
+      entry.title = entry.key;
       entry.key = state + ": " + entry.key;
     });
 
@@ -803,7 +803,7 @@ function update(hgramEvos) {
 
     if (toBeSelected === null) toBeSelected = [];
     for (var i = 0; i < cDatas.length; i++) {
-      if (toBeSelected.indexOf(cDatas[i].tableKey) !== -1 && toBeSelected.length !== 0) {
+      if (toBeSelected.indexOf(cDatas[i].title) !== -1 && toBeSelected.length !== 0) {
         cDatas[i].disabled = false;
       } else {
         cDatas[i].disabled = true;

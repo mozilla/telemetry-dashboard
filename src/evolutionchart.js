@@ -113,15 +113,15 @@ var evolutionchart = function() {
     }
 
     var series = d3.selectAll("#evolution").datum().filter(function(e){return !e.disabled});
-    var aggregates = extractField(series, "tableKey");
+    var aggregates = extractField(series, "title");
 
     /*
      * series: list of Objects
      bar: true
      key: "nightly/32/CYCLE_COLLECTOR: Submissions (left axis)"
      originalKey: "nightly/32/CYCLE_COLLECTOR: Submissions"
-     tableKey: "Submissions"
-     tableState: "nightly/32/CYCLE_COLLECTOR"
+     title: "Submissions"
+     fullState: "nightly/32/CYCLE_COLLECTOR"
      values: Array[27] objects like: {series: 0, x: 1398754800000, y: 346493}
      */
 
@@ -140,9 +140,9 @@ var evolutionchart = function() {
       var versions = [];
       // versions: [  Object {key: versions+measure === state, val: "none" or number}
       for (var j = 0; j < series.length; j++) {
-        if (aggregate !== series[j].tableKey)
+        if (aggregate !== series[j].title)
           continue;
-        var state = series[j].tableState;
+        var state = series[j].fullState;
         var color = series[j].color;
 
         var numericValue = "none";
