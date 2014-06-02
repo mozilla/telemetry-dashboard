@@ -300,12 +300,10 @@ function urlHashToPageState(url) {
 
 function updateUrlHashIfNeeded() {
   if (gHistogramFilterObjects.length === 0) {
-    console.log("updateUrlHashIfNeeded: gHistogramFilterObjects empty. Bad Kitty, no URL for you!");
     return;
   }
 
   if (anyHsLoading()) {
-    console.log("updateUrlHashIfNeeded: anyHsLoading true. Bad Kitty, no URL for you!");
     return;
   }
 
@@ -316,11 +314,9 @@ function updateUrlHashIfNeeded() {
       "" + pageState.locked === "" + urlPageState.locked &&
       "" + pageState.evoOver === "" + urlPageState.evoOver &&
       "" + pageState.sanitize === "" + urlPageState.sanitize) {
-    console.log("updateUrlHashIfNeeded: same state. Bad Kitty, no URL for you!", pageState, urlPageState);
     return;
   }
 
-  console.trace("updateUrlHashIfNeeded: YEY: pageState (newUrl): ", pageState, "oldUrlPageState:", urlPageState);
   setUrlHash(pageStateToUrlHash(pageState));
 }
 
