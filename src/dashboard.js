@@ -84,7 +84,6 @@ function prepareData(state, hgramEvo) {
     });
     hgramEvo.each(function (date, hgram) {
       date = date.getTime();
-      //TODO sanitizeData
       if (!sanitizeData || hgram.submissions() >= submissionsCutoff) {
         var mean = hgram.mean();
         if (mean >= 0) {
@@ -192,8 +191,6 @@ function toBoolean(x) {
 }
 
 function restoreFromPageState(newPageState, curPageState) {
-  console.trace("restoreFromPageState newPageState:", newPageState, "curPageState:", curPageState);
-
   if (newPageState === undefined ||
     newPageState.filter === undefined ||
     newPageState.filter.length === 0) {
@@ -356,8 +353,9 @@ function plot(firstChanged) {
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
     return;
   }
-
-  gStatesOnPlot = Object.keys(filterStates);
+  if (!anyHsLoading()) {
+    gStatesOnPlot = Object.keys(filterStates);
+  }
 
   var hgramEvos = {};
   gHistogramFilterObjects.forEach(function (f) {
@@ -394,19 +392,13 @@ function syncStateWithFirst() {
 
 
 function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
-  console.trace("setAggregateSelectorOptions: options:", options, "defaultToAll: ", defaultToAll);
-
   if (options.length === 0) {
-    console.log("setAggregateSelectorOptions: options empty, not doing anything: ", options);
     return;
   }
   
   var prevOptions = [];
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-
-  console.trace("setAggregateSelectorOptions: prevSelected:", prevSelected, "defaultToAll: ", defaultToAll);
-  console.trace("setAggregateSelectorOptions: prevOptions:", prevOptions, "defaultToAll: ", defaultToAll);
 
   var selector = $("<select multiple id=aggregateSelector>");
   selector.addClass("multiselect");
@@ -451,17 +443,6 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
     }
   }
   changeCb();
-  
-/*
-  // If "Select All" is checked, select all the new options.
-  if ((prevOptions.length === 0 && defaultToAll) || prevSelected.indexOf("multiselect-all") !== -1) {
-    selector.multiselect("select", options);
-    selector.multiselect("updateSelectAll");
-    changeCb();  // TODO
-  } else {
-    selector.multiselect("select", prevSelected);
-  }
-*/
   updateUrlHashIfNeeded();
 }
 
@@ -546,9 +527,6 @@ Telemetry.init(function () {
 
 
   $('input[name=sanitize-pref]:checkbox').change(function () {
-    console.log("I've got sanitize event   ");
-    //TODO
-    //updateUrlHashIfNeeded();
     plot(true);
   });
 
@@ -692,9 +670,13 @@ function addHistogramFilter(firstHistogramFilter, state) {
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", function(event, args) {
+    if (firstHistogramFilter && gSyncWithFirst) {
+      syncStateWithFirst();
+    }
     if (args.doneLoading) {
       plot(firstHistogramFilter);
     }
+
   });
   gHistogramFilterObjects.push(f);
 }
@@ -926,8 +908,6 @@ function update(hgramEvos) {
       }
     }, 100);
   }
-
-
 
   nv.addGraph(function () {
     //top was 10

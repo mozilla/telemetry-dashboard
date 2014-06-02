@@ -205,6 +205,7 @@ $.widget("telemetry.histogramfilter", {
   /** Create new histogramfilter */
   _create: function histogramfilter__create() {
     // Bind event handlers to this
+    this._loading = true;
     this._versionChanged    = $.proxy(this._versionChanged,     this);
     this._measureChanged    = $.proxy(this._measureChanged,     this);
     this._filterChanged     = $.proxy(this._filterChanged,      this);
@@ -286,6 +287,10 @@ $.widget("telemetry.histogramfilter", {
   histogram: function histogramfilter_histogram() {
     // Get filter list length
     var n = this._filterList.length;
+
+    if (this._loading) {
+      return null;
+    }
 
     // If there is a last filter, get the histogram from it and apply the
     // select option, if not default
@@ -742,6 +747,7 @@ $.widget("telemetry.histogramfilter", {
   _triggerChange: function histogramfilter__triggerChange(doneLoading) {
     // Version should be channel/version, and we wish to treat this as two
     // fragments with respect to serialization
+    this._loading = !doneLoading;
     var fragments = this._versionSelector.val().split("/");
     if (fragments.length != 2) {
       // We need the version to be on format <channel>/<version> this is fairly
