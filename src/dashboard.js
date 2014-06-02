@@ -1,3 +1,4 @@
+//naming convention gVariableName - global var
 var setVisible = true;
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = true;
@@ -39,6 +40,7 @@ function readCookie() {
   }
 }
 
+//if cached return data in not prepare it and cache it
 function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
   // Whether we actually filter submissions is controllable via the
@@ -190,13 +192,13 @@ function toBoolean(x) {
   throw x;
 }
 
+//take params from obj pageState and restore the page by setting all the attributes
 function restoreFromPageState(newPageState, curPageState) {
   if (newPageState === undefined ||
     newPageState.filter === undefined ||
     newPageState.filter.length === 0) {
     return false;
   }
-
 
   if (newPageState.sanitize !== undefined) {
     $('input[name=sanitize-pref]:checkbox').prop('checked', toBoolean(newPageState.sanitize));
@@ -221,7 +223,7 @@ function restoreFromPageState(newPageState, curPageState) {
       addHistogramFilter(false, states[i]);
     }
 
-    // TODO: re-enable AKA another button for first state
+    // TODO:another button for restore to first state
     if (states.length > 1 ) {
       if (document.getElementById("summary") !== null) {
         document.getElementById("summary").remove();
@@ -239,7 +241,6 @@ function restoreFromPageState(newPageState, curPageState) {
     }
   }
 
-
   if (newPageState.locked !== undefined) {
     changeLockButton(toBoolean(newPageState.locked));
   }
@@ -252,6 +253,7 @@ function restoreFromPageState(newPageState, curPageState) {
   return true;
 }
 
+//encode page state in url
 function pageStateToUrlHash(pageState) {
   var fragments = [];
   $.each(pageState, function(k, v) {
@@ -292,6 +294,7 @@ function urlHashToPageState(url) {
   return pageState;
 }
 
+//if something changed in the page state update url
 function updateUrlHashIfNeeded() {
   if (gHistogramFilterObjects.length === 0) {
     return;
@@ -314,6 +317,7 @@ function updateUrlHashIfNeeded() {
   setUrlHash(pageStateToUrlHash(pageState));
 }
 
+//check if filters are loading
 function anyHsLoading() {
   var anyLoading = false;
   gHistogramFilterObjects.forEach(function (filter) {
@@ -324,7 +328,7 @@ function anyHsLoading() {
   return anyLoading;
 }
 
-// `firstChanged true if first filter changed and I need to sync all hidden filters
+//firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
   if (anyHsLoading()) {
     $("#content").fadeOut();
@@ -364,7 +368,7 @@ function plot(firstChanged) {
   update(hgramEvos);
 }
 
-
+//if lock == true all filters are sync with first
 function syncStateWithFirst() {
   if (gHistogramFilterObjects.length == 0 || anyHsLoading()) {
     return;
@@ -387,7 +391,7 @@ function syncStateWithFirst() {
 
 }
 
-
+//construct selector and set selected aggregates
 function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   if (options.length === 0) {
     return;
@@ -447,6 +451,7 @@ Telemetry.init(function () {
   createButtonTinyUrl();
 
   var urlPageState = urlHashToPageState(window.location.hash);
+  //if I don't come with a custom url I check for a cookie
   if (!restoreFromPageState(urlPageState, {})) {
     var cookie = readCookie();
     if (cookie) {
@@ -548,6 +553,20 @@ function createRemoveButton(parent) {
   return button;
 }
 
+function createLockButton(parent){
+  var button = $('<button type="button" class="btn btn-default " >');
+  var span = $('<span id="lock-button" class="glyphicon">');
+
+  span.addClass(gSyncWithFirst ? "glyphicon-lock" : "glyphicon-ok");
+  span.appendTo(button);
+
+  parent.append(button);
+  button.click(function() {
+    changeLockButton(!gSyncWithFirst);
+  });
+  return button;
+}
+
 function changeLockButton(newValue) {
   if (gSyncWithFirst === newValue) {
     return;
@@ -611,21 +630,6 @@ function createButtonTinyUrl() {
     $.ajax(request);
 
   })
-
-}
-
-function createLockButton(parent){
-  var button = $('<button type="button" class="btn btn-default " >');
-  var span = $('<span id="lock-button" class="glyphicon">');
-
-  span.addClass(gSyncWithFirst ? "glyphicon-lock" : "glyphicon-ok");
-  span.appendTo(button);
-
-  parent.append(button);
-  button.click(function() {
-    changeLockButton(!gSyncWithFirst);
-  });
-  return button;
 }
 
 function addHistogramFilter(firstHistogramFilter, state) {
@@ -669,7 +673,6 @@ function addHistogramFilter(firstHistogramFilter, state) {
   });
   gHistogramFilterObjects.push(f);
 }
-
 
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
