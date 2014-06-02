@@ -204,7 +204,6 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.evoOver !== undefined) {
     $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
-    console.log("restore state in evolutionOver",    $('input[name=evo-type]:radio:checked').val());
   }
 
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
@@ -246,9 +245,7 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.aggregates !== undefined) {
-    console.log("restoreFromPageState: newPageState.aggregates: ", newPageState.aggregates);
     setAggregateSelectorOptions(newPageState.aggregates, function() {
-      console.trace("changeCb set from restoreFromPageState->setAggregateSelectorOptions, called with: ", arguments);
     }, false);
   }
 
@@ -420,7 +417,6 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   selector.multiselect({
     includeSelectAllOption: true,
     onChange : function(option, checked) {
-      console.log("setAggregateSelectorOptions: onChange: changeCb:", changeCb);
       selector.multiselect("updateSelectAll");
       changeCb();
       updateUrlHashIfNeeded();
@@ -455,7 +451,6 @@ Telemetry.init(function () {
     var cookie = readCookie();
     if (cookie) {
       // cookie should be set from #
-      console.log("cookie: ", cookie);
       var pgState = urlHashToPageState(cookie);
       restoreFromPageState(pgState, {});
     } else {
@@ -466,7 +461,6 @@ Telemetry.init(function () {
   }
 
   $(window).bind("hashchange", function () {
-    console.trace("hashchange event: gHashSetFromCode: ", gHashSetFromCode, window.location.hash);
     if (gHashSetFromCode) {
       gHashSetFromCode = false;
       return;
@@ -484,7 +478,6 @@ Telemetry.init(function () {
       hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram
       update(hgramEvos);
     }
-    // TODO: add updateUrlHashIfNeeded + add to state?
   });
 
   $("#addVersionButton").click(function () {
@@ -515,7 +508,6 @@ Telemetry.init(function () {
   });
 
   $('input[name=evo-type]:radio').change(function () {
-    console.log("I am in init in change   ");
     var evoType = $('input[name=evo-type]:radio:checked').val();
     gHistogramFilterObjects.forEach(function (x) {
       x.histogramfilter('option', 'evolutionOver', evoType);
@@ -551,7 +543,6 @@ function createRemoveButton(parent) {
       return x !== parent;
     });
     plot(false);
-//I need this here for a corner case --when got two identical filters, remove one the url needs to be updated even if I don't make a plot
     updateUrlHashIfNeeded();
   });
   return button;
@@ -563,7 +554,6 @@ function changeLockButton(newValue) {
   }
 
   gSyncWithFirst = newValue;
-  console.log("changeLockButton: set gSysncWithFirst to:", gSyncWithFirst);
   var lockButton = $("#lock-button");
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
@@ -585,8 +575,7 @@ function changeLockButton(newValue) {
   plot(false);
 }
 
-function createButtonTinyUrl()
-{
+function createButtonTinyUrl() {
   var valOfTinyUrl;
   var button = $('<button type="button" class="btn btn-default">');
   button.text(" tinyUrl");
@@ -595,7 +584,7 @@ function createButtonTinyUrl()
   $("#tinyUrl").append(tiny);
 
 
-  button.click(function(){
+  button.click(function() {
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
 
@@ -731,18 +720,13 @@ function renderHistogramGraph(hgram) {
       return fmt(bucket[0]);
     });
     d3.select("#histogram").datum(data).transition().duration(500).call(chart);
-
-    nv.utils.windowResize(
-
-      function () {
-        //chart.update();
-      });
+    nv.utils.windowResize();
     return chart;
   });
 }
 
 var renderHistogramTime = null;
-var lastHistogramEvo = null;
+var lastHistogramEvos = null;
 var _exportHgram = null;
 var _lastBlobUrl = null;
 // Generate download on mousedown

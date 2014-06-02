@@ -52,39 +52,6 @@ var BootstrapSelector = (function($){
         this._select.select2({data: data});
         this._select.select2("val", options[0]);
       }
-
-        if (false) {
-
-          // Clear existing options
-          this._select.empty();
-
-          var parent = this._select;
-          var n = options.length;
-          for(var i = 0; i < n; i++) {
-            var option = options[i];
-
-            var label = option;
-            // Special label if we're displaying versions
-            if (this._filterName === "version") {
-              var opts = option.split("/");
-              if (opts[0] !== parent.attr("label")) {
-                parent = $("<optgroup>", {label: opts[0]});
-                this._select.append(parent);
-              }
-              var label = label.replace("/", " ");
-            }
-
-            // Add <option>
-            parent.append($("<option>", {
-              text:       label,
-              value:      option
-            }));
-          }
-
-        // Store options for another time
-        this._options = options;
-
-      }
       return this._options;
     },
 
