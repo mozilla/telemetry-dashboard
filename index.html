@@ -54,8 +54,8 @@
                 <div>
                     <figure><svg id="evolution"></svg></figure>
                     <figure>
-                        <svg id="histogram"></svg>
-                        <table id="histogram-table" class="table table-condensed">
+                        <svg id="histogram" class="single-histogram-only"></svg>
+                        <table id="histogram-table" class="table table-condensed" class="single-histogram-only">
                             <thead>
                                 <tr>
                                     <th>Start</th>
@@ -90,20 +90,20 @@
                             </label>
                         </div>
                     </div>
-                    <div id="renderHistogram" class="form-group">
-                        <label>Render histogram as</label>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="render-type" value="Graph" checked>
+                    <div id="renderHistogram" class="form-group" class="single-histogram-only">
+                        <label class="single-histogram-only">Render histogram as</label>
+                        <div class="radio" class="single-histogram-only">
+                            <label class="single-histogram-only">
+                                <input type="radio" name="render-type" value="Graph" checked class="single-histogram-only">
                                 Graph
                             </label>
                         </div>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="render-type" value="Table">
+                        <div class="radio" class="single-histogram-only">
+                            <label class="single-histogram-only">
+                                <input type="radio" name="render-type" value="Table" class="single-histogram-only">
                                 Table
                             </label>
-                            (<a id="export-link" target="_blank">download as csv</a>)
+                            <label class="single-histogram-only">(<a id="export-link" target="_blank">download as csv</a>)</label>
                         </div>
                     </div>
                     <div class="form-group">
@@ -117,18 +117,18 @@
                     </div>
                     <div id="tinyUrl"></div>
                 </form>
-                <h2 id="summary" >Summary</h2>
-                <dl id= "summaryDetails" class="dl-horizontal">
-                    <dt>Kind</dt>
-                        <dd id="prop-kind"></dd>
-                    <dt>Submissions</dt>
-                        <dd id="prop-submissions"></dd>
-                    <dt>Count</dt>
-                        <dd id="prop-count"></dd>
-                    <dt>Number of dates</dt>
-                        <dd id="prop-dates"></dd>
-                    <dt>Selected Dates</dt>
-                        <dd id="prop-date-range"></dd>
+                <h2 id="summary" class="single-histogram-only" >Summary</h2>
+                <dl id= "summaryDetails" class="dl-horizontal" class="single-histogram-only">
+                    <dt class="single-histogram-only" >Kind</dt>
+                        <dd id="prop-kind" class="single-histogram-only"></dd>
+                    <dt class="single-histogram-only">Submissions</dt>
+                        <dd id="prop-submissions" class="single-histogram-only"></dd>
+                    <dt class="single-histogram-only">Count</dt>
+                        <dd id="prop-count" class="single-histogram-only"></dd>
+                    <dt class="single-histogram-only">Number of dates</dt>
+                        <dd id="prop-dates" class="single-histogram-only"></dd>
+                    <dt class="single-histogram-only">Selected Dates</dt>
+                        <dd id="prop-date-range" class="single-histogram-only"></dd>
                     <span class="linear-only">
                         <hr>
                         <dt>Mean</dt>

@@ -492,23 +492,7 @@ Telemetry.init(function () {
     }
 
     addHistogramFilter(false, state);
-    $('#histogram-table').hide();
-    setVisible = false;
-
-    if (document.getElementById("summary") !== null) {
-      document.getElementById("summary").remove();
-      document.getElementById('summaryDetails').remove();
-    }
-
-    if (document.getElementById('measure') !== null)
-      document.getElementById('measure').remove();
-    if (document.getElementById('description') !== null)
-      document.getElementById('description').remove();
-    if (document.getElementById('renderHistogram') !== null) {
-      $('#histogram').hide();
-      document.getElementById('renderHistogram').remove();
-    }
-
+    $('.single-histogram-only').hide();
     updateUrlHashIfNeeded();
   });
 
@@ -547,6 +531,10 @@ function createRemoveButton(parent) {
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
       return x !== parent;
     });
+    console.log("this is my length", gHistogramFilterObjects.length);
+    if (gHistogramFilterObjects.length == 1)
+      $('.single-histogram-only').show();
+
     plot(false);
     updateUrlHashIfNeeded();
   });
