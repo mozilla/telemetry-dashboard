@@ -127,7 +127,7 @@ var releaseURL = "http://telemetry.mozilla.org/v1/telemetry.js";
 // Check if the current browser includes telemetry.js from the release url.
 // ignore browsers that don't support `document.currentScript`, there is
 // probably not a lot of developers who use IE for development anyway.
-if (document.currentScript && document.currentScript.src != releaseURL) {
+if (document && document.currentScript && document.currentScript.src != releaseURL) {
   // Let's print a long grim warning message, hopefully people will pay
   // attention, the issue is fairly well explained here.
   console.log([
@@ -170,26 +170,13 @@ function _get(path, cb) {
     path = path.join("/");
   }
 
-  var url = _data_folder + "/" + path;
-  if (_telemetryAjaxCache[url] !== undefined) {
-    cb.apply(this, [JSON.parse(_telemetryAjaxCache[url])]);
-    return;
-  }
-
-  // Create HTTP request
-  var xhr = new XMLHttpRequest();
-  xhr.onload = function (e) {
-    if (e.target.status == 200) {
-      var resp = this.responseText;
-      _telemetryAjaxCache[url] = resp;
-      cb.apply(this, [JSON.parse(resp)]);
-    } else {
-      console.log("Telemetry._get: Failed loading " + path + " with " +
-                  e.target.status);
+  Telemetry.getUrl(_data_folder + "/" + path, function(err, data) {
+    if (err) {
+      console.log("Telemetry._get: Failed loading " + path + " with " + err);
+      return;
     }
-  };
-  xhr.open("get", _data_folder + "/" + path, true);
-  xhr.send();
+    cb.call(null, data);
+  });
 }
 
 /**
@@ -216,6 +203,33 @@ Telemetry.init = function Telemetry_load(cb) {
     _versions = Object.keys(data).sort();
     cb();
   });
+};
+
+/**
+ * Get remote URL. `cb()` will be invoked when resource is acquired.
+ * Overwrite this function when using something without XMLHttpRequest()
+ *
+ *     Telemetry.getUrl('example.com', function(){
+ *       alert('found!');
+ *     });
+ *
+ *
+ * @param {String}    url     URL to be retreived
+ * @param {Function}  cb      Callback to be invoked
+ */
+Telemetry.getUrl = function(url, cb) {
+  // Create HTTP request
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function (e) {
+    if (e.target.status == 200) {
+      cb(null, JSON.parse(e.target.responseText));
+    } else {
+      console.log("Telemetry._get: Failed loading " + url + " with " +
+                  e.target.status);
+    }
+  };
+  xhr.open("get", url, true);
+  xhr.send();
 };
 
 /**
