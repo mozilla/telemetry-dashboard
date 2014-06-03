@@ -131,7 +131,6 @@ header h1{
    display: inline-block !important;
 }
 
-.selectorPadding {
-    padding: 2px 1px;
-    margin: 2px 1px;
+.btn {
+    padding: 2px 9px;
 }
