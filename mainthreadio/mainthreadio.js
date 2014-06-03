@@ -19,6 +19,7 @@ var lastWeekEnd = new Date(thisWeekEnd);
 lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
 
 var version_filters = [];
+var versions_seen = {}
 
 var fileio_data = {};
 
@@ -53,20 +54,24 @@ function clean_version(ver) {
 }
 
 function update_version_filter(key) {
-  if (version_filters.length == 0) {
-    var vermap = {};
-    for (var i = 0; i < fileio_data[key].length; i++) {
-      vermap[clean_version(fileio_data[key][i][VER_COLUMN])] = 1;
-    }
-    version_filters = Object.keys(vermap);
-    version_filters.sort(function(a, b) {
-      // Sort descending
-      return parseInt(b) - parseInt(a);
-    });
-    // Populate the filter list:
-    var version_select = $('#filter_version');
-    for (var j = 0; j < version_filters.length; j++) {
-      version_select.append($('<option>', {text: version_filters[j]}));
+  var vermap = {};
+  for (var i = 0; i < fileio_data[key].length; i++) {
+    vermap[clean_version(fileio_data[key][i][VER_COLUMN])] = 1;
+  }
+  version_filters = Object.keys(vermap);
+  version_filters.sort(function(a, b) {
+    // Sort descending
+    return parseInt(b) - parseInt(a);
+  });
+  // Populate the filter list:
+  var version_select = $('#filter_version');
+  for (var j = 0; j < version_filters.length; j++) {
+    var version = version_filters[j]
+    if (versions_seen[version]) {
+      continue;
+    } else {
+      version_select.append($('<option>', {text: version}));
+      versions_seen[version] = true;
     }
   }
 }
@@ -121,13 +126,11 @@ function populate_table(table_id, key, label) {
   tbody.empty();
 
   if (!fileio_data[key] || fileio_data[key].length == 0) {
-    var trow = $('<tr>', {id: label + "1"});
-
-    trow.append($('<td>', {colspan: "6", id: label + "1rank", text: "No Data for " + key}));
-    tbody.append(trow);
+    missing_data_warning(tbody, label, "No data for " + key);
   } else {
     var maxRows = parseInt($('#filter_rowcount').find(":selected").val());
     var rank = 1;
+    var is_empty = true;
 
     for (var i = 0; i < fileio_data[key].length; i++) {
       if (rank > maxRows)
@@ -139,6 +142,7 @@ function populate_table(table_id, key, label) {
           drow[CHAN_COLUMN] === filter_channel &&
           drow[INTERVAL_COLUMN] === filter_interval) {
         var trow = $('<tr>', {id: label + rank});
+        is_empty = false;
 
         trow.append($('<td>', {id: label + rank + "rank", text: rank}));
         trow.append($('<td>', {id: label + rank + "q", text: drow[FILENAME_COLUMN]}));
@@ -150,7 +154,15 @@ function populate_table(table_id, key, label) {
         rank++;
       }
     }
+
+    is_empty && missing_data_warning(tbody, label, "No data found with the requested filtering criteria.")
   }
+}
+
+function missing_data_warning(tbody, label, message) {
+  var trow = $('<tr>', {id: label + "1"});
+  trow.append($('<td>', {colspan: "6", id: label + "1rank", text: message}));
+  tbody.append(trow);
 }
 
 function update_week_over_week(lastWeekKey, thisWeekKey) {
