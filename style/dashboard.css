@@ -127,3 +127,11 @@ header h1{
 
 .single-histogram-only {
 }
+.select2-container {
+   display: inline-block !important;
+}
+
+.selectorPadding {
+    padding: 2px 1px;
+    margin: 2px 1px;
+}

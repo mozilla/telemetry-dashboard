@@ -405,8 +405,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
 
-  var selector = $("<select multiple id=aggregateSelector>");
-  selector.addClass("multiselect");
+  var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
 
   if (!arraysEqual(prevOptions, options)) {
     $('#multipercentile').empty().append(selector);
@@ -552,7 +551,7 @@ function fmt(number) {
 }
 
 function createRemoveButton(parent) {
-  var button = $('<button type="button" class="btn btn-default " >');
+  var button = $('<button type="button" class="btn btn-default " class="button-resize" style="padding: 2px 7px;">');
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   parent.append(button);
   button.click(function () {
@@ -572,7 +571,7 @@ function createRemoveButton(parent) {
 }
 
 function createLockButton(parent){
-  var button = $('<button type="button" class="btn btn-default " >');
+  var button = $('<button type="button" class="btn btn-default " style="padding: 2px 7px;" >');
   var span = $('<span id="lock-button" class="glyphicon">');
 
   span.addClass(gSyncWithFirst ? "glyphicon-lock" : "glyphicon-ok");
@@ -614,7 +613,7 @@ function changeLockButton(newValue) {
 
 function createButtonTinyUrl() {
   var valOfTinyUrl;
-  var button = $('<button type="button" class="btn btn-default">');
+  var button = $('<button type="button" class="btn btn-default" style="padding: 2px 7px;">');
   button.text(" tinyUrl");
   $("#tinyUrl").append(button);
   var tiny = $("<div>");
