@@ -517,7 +517,7 @@ $.widget("telemetry.histogramfilter", {
       // Get filter options
       var options = hgram.filterOptions();
 
-      // Prepend default optionf
+      // Prepend default option
       var defaultOption = filterName + "*";
       options.unshift(defaultOption);
 
