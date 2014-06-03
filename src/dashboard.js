@@ -328,6 +328,18 @@ function plot(firstChanged) {
     return;
   }
 
+  if (gHistogramFilterObjects.length !== 0) {
+    // Send new state to google analytics
+    var state = gHistogramFilterObjects[0].histogramfilter('option', 'state');
+    ga('send', 'event', 'states', 'changed', state, 1);
+    var parts = state.split('/');
+    // Report channel, version, measure and filter independently
+    ga('send', 'event', 'states', 'channel', parts[0], 1);
+    ga('send', 'event', 'states', 'version', parts[1], 1);
+    ga('send', 'event', 'states', 'measure', parts[2], 1);
+    ga('send', 'event', 'states', 'filter', parts.slice(3).join('/'), 1);
+  }
+
   $("#content").fadeIn();
   $("#spinner").fadeOut();
 
@@ -469,11 +481,13 @@ Telemetry.init(function () {
   $('input[name=render-type]:radio').change(function () {
     var hgramEvos = {};
     var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
-    if (currentHistogram != null)
-    {
+    if (currentHistogram != null) {
       hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram
       update(hgramEvos);
     }
+    // Inform google analytics of click
+    var renderType = $('input[name=render-type]:radio:checked').val();
+    ga('send', 'event', 'click', 'render-type', renderType);
   });
   if (gHistogramFilterObjects.length > 1) {
     setVisible = false;
@@ -503,17 +517,22 @@ Telemetry.init(function () {
 
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
+    // Inform google analytics of click
     gHistogramFilterObjects.forEach(function (x) {
       x.histogramfilter('option', 'evolutionOver', evoType);
     });
     plot(false);
     updateUrlHashIfNeeded();
+    ga('send', 'event', 'click', 'evolution-type', evoType);
   });
 
 
 
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
+    // Inform google analytics of click
+    var value = $('input[name=sanitize-pref]:checkbox').is(':checked');
+    ga('send', 'event', 'click', 'sanitize-data', value + '');
   });
 
   if (gHistogramFilterObjects.length > 1) {
@@ -745,6 +764,8 @@ $('#export-link').mousedown(function () {
   $('#export-link')[0].download = _exportHgram.measure() + ".csv";
 });
 
+var hasReportedDateRangeSelectorUsedInThisSession = false;
+
 function update(hgramEvos) {
   var evosVals = [];
   $.each(hgramEvos, function (key, value) {
@@ -834,6 +855,11 @@ function update(hgramEvos) {
       dates = dates.filter(function (date) {
         return start <= date && date <= end;
       });
+      // Report it the first time the date-range selector is used in a session
+      if (!hasReportedDateRangeSelectorUsedInThisSession) {
+	  hasReportedDateRangeSelectorUsedInThisSession = true;
+	  ga('send', 'event', 'report', 'date-range-selector', 'used-in-session', 1);
+      }
     } else {
       hgram = hgramEvo.range();
     }
