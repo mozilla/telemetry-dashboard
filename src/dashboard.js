@@ -217,27 +217,19 @@ function restoreFromPageState(newPageState, curPageState) {
     addHistogramFilter(true, states[0]);
     if (states.length == 1) {
       setVisible = true;
+      $('.single-histogram-only').show();
     }
 
     for (var i = 1; i < states.length; i++) {
       addHistogramFilter(false, states[i]);
     }
 
-    // TODO:another button for restore to first state
     if (states.length > 1 ) {
-      if (document.getElementById("summary") !== null) {
-        document.getElementById("summary").remove();
-      }
+      setVisible = true;
+      $("#histogram").hide();
+      $('#histogram-table').hide();
+      $('.single-histogram-only').hide();
 
-      if (document.getElementById('summaryDetails') !== null) {
-        document.getElementById('summaryDetails').remove();
-      }
-
-      if (document.getElementById('renderHistogram') !== null) {
-        $('#histogram').hide();
-        $('#histogram').remove();
-        document.getElementById('renderHistogram').remove();
-      }
     }
   }
 
@@ -449,7 +441,6 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
 
 Telemetry.init(function () {
   createButtonTinyUrl();
-
   var urlPageState = urlHashToPageState(window.location.hash);
   //if I don't come with a custom url I check for a cookie
   if (!restoreFromPageState(urlPageState, {})) {
@@ -484,6 +475,11 @@ Telemetry.init(function () {
       update(hgramEvos);
     }
   });
+  if (gHistogramFilterObjects.length > 1) {
+    setVisible = false;
+    $('.single-histogram-only').hide();
+  }
+
 
   $("#addVersionButton").click(function () {
     var state = null;
@@ -492,9 +488,18 @@ Telemetry.init(function () {
     }
 
     addHistogramFilter(false, state);
+
+    setVisible = false;
+
+    $('input[name=render-type]:radio:checked').val(['Graph']);
+
+    $("#histogram").hide;
+    $('#histogram-table').hide();
     $('.single-histogram-only').hide();
     updateUrlHashIfNeeded();
   });
+
+
 
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
@@ -510,6 +515,11 @@ Telemetry.init(function () {
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
   });
+
+  if (gHistogramFilterObjects.length > 1) {
+    $('.single-histogram-only').hide();
+  }
+
 
 });
 /** Format numbers */
@@ -531,9 +541,10 @@ function createRemoveButton(parent) {
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
       return x !== parent;
     });
-    console.log("this is my length", gHistogramFilterObjects.length);
-    if (gHistogramFilterObjects.length == 1)
-      $('.single-histogram-only').show();
+    if (gHistogramFilterObjects.length == 1) {
+      setVisible = true;
+      $('input[value="Graph"]').prop('checked',true);
+      $('.single-histogram-only').show();}
 
     plot(false);
     updateUrlHashIfNeeded();
@@ -665,9 +676,9 @@ function addHistogramFilter(firstHistogramFilter, state) {
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
   $('#histogram-table').hide();
-  if(setVisible == true) {
-    $('#histogram-table').show();
-  }
+  //$('#histogram').hide();
+  if (setVisible)
+   $('#histogram-table').show();
 
   var body = $('#histogram-table').find('tbody');
   body.empty();
@@ -680,10 +691,8 @@ function renderHistogramTable(hgram) {
 function renderHistogramGraph(hgram) {
   $('#histogram-table').hide();
   $('#histogram').hide();
-  if(setVisible == true) {
+  if (setVisible)
     $('#histogram').show();
-  }
-
   nv.addGraph(function () {
     var total = hgram.count();
     var vals = hgram.map(function (count, start, end, index) {
