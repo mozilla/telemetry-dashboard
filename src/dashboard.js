@@ -12,7 +12,7 @@ function event() {
   args.unshift('event');
   args.unshift('send');
   ga.call(ga, args)
-  //console.log("Event: " + args.join(' > '));
+  console.log("Event: " + args.join(' > '));
 }
 
 function setCookie(cname, cvalue, exdays) {
@@ -331,14 +331,12 @@ function anyHsLoading() {
 
 function gaLogFilter(state)
 {
-  console.log(" state logged is ", state);
-  ga('send', 'event', 'states', 'changed', state, 1);
+  event('states', 'changed', state, 1);
   var parts = state.split('/');
-  // Report channel, version, measure and filter independently
-  ga('send', 'event', 'states', 'channel', parts[0], 1);
-  ga('send', 'event', 'states', 'version', parts[1], 1);
-  ga('send', 'event', 'states', 'measure', parts[2], 1);
-  ga('send', 'event', 'states', 'filter', parts.slice(3).join('/'), 1);
+  event( 'states', 'channel', parts[0], 1);
+  event( 'version', parts[1], 1);
+  event('states', 'measure', parts[2], 1);
+  event('states', 'filter', parts.slice(3).join('/'), 1);
 }
 
 
@@ -440,7 +438,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
 
     }
     var allOptions = options.join('/');
-    ga('send', 'event', 'click', 'aggregates_options', allOptions);
+    event('click', 'aggregates_options', allOptions);
 
   }
 
@@ -449,8 +447,9 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
     onChange : function(option, checked) {
       selector.multiselect("updateSelectAll");
       console.log("aggregate selected", option.text());
-      if(option.is(':selected'))
-        ga('send', 'event', 'click', 'aggregates_selected', option.text());
+      if(option.is(':selected')) {
+        event('click', 'aggregates_options', allOptions);
+      }
       changeCb();
       updateUrlHashIfNeeded();
     }
@@ -512,8 +511,7 @@ Telemetry.init(function () {
     }
     // Inform google analytics of click
     var renderType = $('input[name=render-type]:radio:checked').val();
-    console.log("renderType", renderType);
-    ga('send', 'event', 'click', 'render-type', renderType);
+    event('click', 'render-type', renderType);
   });
   if (gHistogramFilterObjects.length > 1) {
     setVisible = false;
@@ -525,8 +523,7 @@ Telemetry.init(function () {
 
   $("#addVersionButton").click(function () {
     var state = null;
-    console.log("just added version");
-    ga('send', 'event', 'click', 'addVersion', 'addVersion');
+    event('click', 'addVersion', 'addVersion');
 
     if (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
@@ -556,8 +553,7 @@ Telemetry.init(function () {
     });
     plot(false);
     updateUrlHashIfNeeded();
-    console.log("evo type is", evoType);
-    ga('send', 'event', 'click', 'evolution-type', evoType);
+    event('click', 'evolution-type', evoType);
   });
 
 
@@ -566,8 +562,7 @@ Telemetry.init(function () {
     plot(true);
     // Inform google analytics of click
     var value = $('input[name=sanitize-pref]:checkbox').is(':checked');
-    console.log("sanitize data", sanitize);
-    ga('send', 'event', 'click', 'sanitize-data', value + '');
+    event('click', 'sanitize-data', value );
   });
 
   if (gHistogramFilterObjects.length > 1) {
@@ -591,8 +586,7 @@ function createRemoveButton(parent) {
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   parent.append(button);
   button.click(function () {
-    console.log("removed filter");
-    ga('send', 'event', 'click', 'removeButton', 'removeButton');
+    event('click', 'removeButton', 'removeButton');
     parent.remove();
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
       return x !== parent;
@@ -636,15 +630,13 @@ function changeLockButton(newValue) {
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
     lockButton.addClass("glyphicon-ok");
-    console.log("lock unset");
-    ga('send', 'event', 'click', 'lockButton', 'edit');
+    event('click', 'lockButton', 'edit');
 
 
   } else {
     lockButton.addClass("glyphicon-lock");
     lockButton.removeClass("glyphicon-ok");
-    console.log("lock set");
-    ga('send', 'event', 'click', 'lockButton', 'lock');
+    event('click', 'lockButton', 'lock');
 
   }
 
@@ -670,8 +662,7 @@ function createButtonTinyUrl() {
 
 
   button.click(function() {
-    console.log("tiny url");
-    ga('send', 'event', 'click', 'tinyUrl', 'generatedTinyUrl');
+    event('click', 'tinyUrl', 'generatedTinyUrl');
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
 
@@ -837,8 +828,7 @@ $('#export-link').mousedown(function () {
   _lastBlobUrl = URL.createObjectURL(new Blob([csv]));
   $('#export-link')[0].href = _lastBlobUrl;
   $('#export-link')[0].download = _exportHgram.measure() + ".csv";
-  console.log("download csv");
-  ga('send', 'event', 'click', 'download csv', 'download csv');
+  event('click','download csv', 'download csv');
 
 });
 
@@ -931,9 +921,9 @@ function update(hgramEvos) {
       });
       // Report it the first time the date-range selector is used in a session
       if (!hasReportedDateRangeSelectorUsedInThisSession) {
-	  hasReportedDateRangeSelectorUsedInThisSession = true;
-    console.log("i reported date range selector");
-	  ga('send', 'event', 'report', 'date-range-selector', 'used-in-session', 1);
+	     hasReportedDateRangeSelectorUsedInThisSession = true;
+       event('report', 'date-range-selector', 'used-in-session', 1);
+
       }
     } else {
       hgram = hgramEvo.range();
