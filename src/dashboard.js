@@ -617,7 +617,8 @@ function createButtonTinyUrl() {
   button.text(" tinyUrl");
   $("#tinyUrl").append(button);
   var tiny = $("<div>");
-  $("#tinyUrl").append(tiny);
+  var code = $("<code>");
+
 
 
   button.click(function() {
@@ -637,10 +638,11 @@ function createButtonTinyUrl() {
       success: function( response ) {
         var longUrl = Object.keys(response.results)[0];
         var shortUrl = response.results[longUrl].shortUrl;
+        code.remove();
+        code = $("<code>");
         var a = $('<a></a>').attr("href","#").append(" " + shortUrl);
-        tiny.remove();
-        $("#tinyUrl").append(" shorter url: ");
-        $("#tinyUrl").append(a);
+        code.append(a);
+        $("#tinyUrl").append(code);
       }
     };
     $.ajax(request);
