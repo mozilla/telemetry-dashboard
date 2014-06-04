@@ -6,6 +6,15 @@ var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
 
+
+function event() {
+  var args = Array.prototype.slice.call(arguments);
+  args.unshift('event');
+  args.unshift('send');
+  ga.call(ga, args)
+  //console.log("Event: " + args.join(' > '));
+}
+
 function setCookie(cname, cvalue, exdays) {
   var d = new Date();
   d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -801,7 +810,11 @@ function renderHistogramGraph(hgram) {
       return fmt(bucket[0]);
     });
     d3.select("#histogram").datum(data).transition().duration(500).call(chart);
-    nv.utils.windowResize();
+    nv.utils.windowResize(
+      function() {
+        chart.update();
+      }
+    );
     return chart;
   });
 }
