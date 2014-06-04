@@ -320,6 +320,20 @@ function anyHsLoading() {
   return anyLoading;
 }
 
+function gaLogFilter(state)
+{
+  console.log(" state logged is ", state);
+  ga('send', 'event', 'states', 'changed', state, 1);
+  var parts = state.split('/');
+  // Report channel, version, measure and filter independently
+  ga('send', 'event', 'states', 'channel', parts[0], 1);
+  ga('send', 'event', 'states', 'version', parts[1], 1);
+  ga('send', 'event', 'states', 'measure', parts[2], 1);
+  ga('send', 'event', 'states', 'filter', parts.slice(3).join('/'), 1);
+}
+
+
+
 //firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
   if (anyHsLoading()) {
@@ -330,14 +344,10 @@ function plot(firstChanged) {
 
   if (gHistogramFilterObjects.length !== 0) {
     // Send new state to google analytics
-    var state = gHistogramFilterObjects[0].histogramfilter('option', 'state');
-    ga('send', 'event', 'states', 'changed', state, 1);
-    var parts = state.split('/');
-    // Report channel, version, measure and filter independently
-    ga('send', 'event', 'states', 'channel', parts[0], 1);
-    ga('send', 'event', 'states', 'version', parts[1], 1);
-    ga('send', 'event', 'states', 'measure', parts[2], 1);
-    ga('send', 'event', 'states', 'filter', parts.slice(3).join('/'), 1);
+    gHistogramFilterObjects.forEach(function(f) {
+      var state = f.histogramfilter('option', 'state');
+      //gaLogFilter(state);
+    });
   }
 
   $("#content").fadeIn();
@@ -418,13 +428,19 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
         text: label,
         value: option,
       }));
+
     }
+    var allOptions = options.join('/');
+    ga('send', 'event', 'click', 'aggregates_options', allOptions);
+
   }
 
   selector.multiselect({
     includeSelectAllOption: true,
     onChange : function(option, checked) {
       selector.multiselect("updateSelectAll");
+      console.log("aggregate selected", option.text());
+      ga('send', 'event', 'click', 'aggregates_selected', option.text());
       changeCb();
       updateUrlHashIfNeeded();
     }
@@ -496,6 +512,8 @@ Telemetry.init(function () {
 
   $("#addVersionButton").click(function () {
     var state = null;
+    ga('send', 'event', 'click', 'addVersion', 'addVersion');
+
     if (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
@@ -555,6 +573,7 @@ function createRemoveButton(parent) {
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   parent.append(button);
   button.click(function () {
+    ga('send', 'event', 'click', 'removeButton', 'removeButton');
     parent.remove();
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
       return x !== parent;
@@ -594,10 +613,14 @@ function changeLockButton(newValue) {
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
     lockButton.addClass("glyphicon-ok");
+    ga('send', 'event', 'click', 'lockButton', 'edit');
+
 
   } else {
     lockButton.addClass("glyphicon-lock");
     lockButton.removeClass("glyphicon-ok");
+    ga('send', 'event', 'click', 'lockButton', 'lock');
+
   }
 
   gHistogramFilterObjects.slice(1).forEach(function (x) {
@@ -622,6 +645,7 @@ function createButtonTinyUrl() {
 
 
   button.click(function() {
+    ga('send', 'event', 'click', 'tinyUrl', 'generatedTinyUrl');
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
 
@@ -681,15 +705,19 @@ function addHistogramFilter(firstHistogramFilter, state) {
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", function(event, args) {
-    if (firstHistogramFilter && gSyncWithFirst) {
+        if (firstHistogramFilter && gSyncWithFirst) {
       syncStateWithFirst();
     }
     if (args.doneLoading) {
+      var state = f.histogramfilter('option', 'state');
+      gaLogFilter(state);
       plot(firstHistogramFilter);
     }
 
   });
   gHistogramFilterObjects.push(f);
+  var state = f.histogramfilter('option', 'state');
+
 }
 
 function renderHistogramTable(hgram) {
