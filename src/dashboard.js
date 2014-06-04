@@ -440,7 +440,8 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
     onChange : function(option, checked) {
       selector.multiselect("updateSelectAll");
       console.log("aggregate selected", option.text());
-      ga('send', 'event', 'click', 'aggregates_selected', option.text());
+      if(option.is(':selected'))
+        ga('send', 'event', 'click', 'aggregates_selected', option.text());
       changeCb();
       updateUrlHashIfNeeded();
     }
@@ -502,16 +503,20 @@ Telemetry.init(function () {
     }
     // Inform google analytics of click
     var renderType = $('input[name=render-type]:radio:checked').val();
+    console.log("renderType", renderType);
     ga('send', 'event', 'click', 'render-type', renderType);
   });
   if (gHistogramFilterObjects.length > 1) {
     setVisible = false;
     $('.single-histogram-only').hide();
+    $("#description").text(hgram.description()).hide();
+
   }
 
 
   $("#addVersionButton").click(function () {
     var state = null;
+    console.log("just added version");
     ga('send', 'event', 'click', 'addVersion', 'addVersion');
 
     if (gHistogramFilterObjects.length != 0) {
@@ -526,6 +531,8 @@ Telemetry.init(function () {
 
     $("#histogram").hide;
     $('#histogram-table').hide();
+    $('#measure').hide();
+    $("#description").hide();
     $('.single-histogram-only').hide();
     updateUrlHashIfNeeded();
   });
@@ -540,6 +547,7 @@ Telemetry.init(function () {
     });
     plot(false);
     updateUrlHashIfNeeded();
+    console.log("evo type is", evoType);
     ga('send', 'event', 'click', 'evolution-type', evoType);
   });
 
@@ -549,6 +557,7 @@ Telemetry.init(function () {
     plot(true);
     // Inform google analytics of click
     var value = $('input[name=sanitize-pref]:checkbox').is(':checked');
+    console.log("sanitize data", sanitize);
     ga('send', 'event', 'click', 'sanitize-data', value + '');
   });
 
@@ -573,6 +582,7 @@ function createRemoveButton(parent) {
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   parent.append(button);
   button.click(function () {
+    console.log("removed filter");
     ga('send', 'event', 'click', 'removeButton', 'removeButton');
     parent.remove();
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
@@ -581,7 +591,11 @@ function createRemoveButton(parent) {
     if (gHistogramFilterObjects.length == 1) {
       setVisible = true;
       $('input[value="Graph"]').prop('checked',true);
-      $('.single-histogram-only').show();}
+      $('.single-histogram-only').show();
+      $('#measure').show();
+      $("#description").show();
+
+    }
 
     plot(false);
     updateUrlHashIfNeeded();
@@ -613,12 +627,14 @@ function changeLockButton(newValue) {
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
     lockButton.addClass("glyphicon-ok");
+    console.log("lock unset");
     ga('send', 'event', 'click', 'lockButton', 'edit');
 
 
   } else {
     lockButton.addClass("glyphicon-lock");
     lockButton.removeClass("glyphicon-ok");
+    console.log("lock set");
     ga('send', 'event', 'click', 'lockButton', 'lock');
 
   }
@@ -645,6 +661,7 @@ function createButtonTinyUrl() {
 
 
   button.click(function() {
+    console.log("tiny url");
     ga('send', 'event', 'click', 'tinyUrl', 'generatedTinyUrl');
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
@@ -723,10 +740,18 @@ function addHistogramFilter(firstHistogramFilter, state) {
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
   $('#histogram-table').hide();
+  $("#description").text(hgram.description()).hide();
+  $("#measure").text(hgram.measure()).hide();
+  console.log("TABLE and visibility is", setVisible);
   //$('#histogram').hide();
-  if (setVisible)
-   $('#histogram-table').show();
+  if (setVisible) {
+    console.log("TABLE and visibility is", setVisible);
 
+    $("#description").text(hgram.description()).show();
+    $("#measure").text(hgram.measure()).show();
+
+    $('#histogram-table').show();
+  }
   var body = $('#histogram-table').find('tbody');
   body.empty();
 
@@ -738,8 +763,17 @@ function renderHistogramTable(hgram) {
 function renderHistogramGraph(hgram) {
   $('#histogram-table').hide();
   $('#histogram').hide();
-  if (setVisible)
+  $("#description").text(hgram.description()).hide();
+  $("#measure").text(hgram.measure()).hide();
+  console.log("GRAPH and visibility is", setVisible);
+
+  if (setVisible) {
+    console.log("GRAPH and visibility is", setVisible);
+
+    $("#measure").text(hgram.measure()).show();
+    $("#description").text(hgram.description()).show();
     $('#histogram').show();
+  }
   nv.addGraph(function () {
     var total = hgram.count();
     var vals = hgram.map(function (count, start, end, index) {
@@ -790,6 +824,9 @@ $('#export-link').mousedown(function () {
   _lastBlobUrl = URL.createObjectURL(new Blob([csv]));
   $('#export-link')[0].href = _lastBlobUrl;
   $('#export-link')[0].download = _exportHgram.measure() + ".csv";
+  console.log("download csv");
+  ga('send', 'event', 'click', 'download csv', 'download csv');
+
 });
 
 var hasReportedDateRangeSelectorUsedInThisSession = false;
@@ -865,10 +902,6 @@ function update(hgramEvos) {
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
-
-  $("#measure").text(hgramEvo.measure());
-  $("#description").text(hgramEvo.description());
-
   function updateProps(extent) {
     var hgram;
     var dates = hgramEvo.dates();
@@ -886,6 +919,7 @@ function update(hgramEvos) {
       // Report it the first time the date-range selector is used in a session
       if (!hasReportedDateRangeSelectorUsedInThisSession) {
 	  hasReportedDateRangeSelectorUsedInThisSession = true;
+    console.log("i reported date range selector");
 	  ga('send', 'event', 'report', 'date-range-selector', 'used-in-session', 1);
       }
     } else {
