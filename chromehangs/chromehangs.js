@@ -58,9 +58,9 @@ function update_version_filter(key) {
     if (version_filters.length == 0) {
         var vermap = {};
         for (var i = 0; i < chromehangs_data[key].length; i++) {
-            if (i == 0) {
-                console.log("Checking version for: " + chromehangs_data[key][i])
-            }
+            // if (i == 0) {
+            //     console.log("Checking version for: " + chromehangs_data[key][i])
+            // }
             vermap[clean_version(chromehangs_data[key][i][VER_COLUMN])] = 1;
         }
         version_filters = Object.keys(vermap);
@@ -86,7 +86,7 @@ function fetch_data(key, cb) {
     $('#throbber').fadeIn(500);
     console.log("Fetching: " + key);
     var xhr = new XMLHttpRequest();
-    var url = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/chromehangs/data/weekly_" + key + ".csv.gz";
+    var url = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/chromehangs_weekly/data/weekly_" + key + ".csv.gz";
     //var url = "http://localhost:8000/weekly_" + key + ".csv";
     console.log("Fetching url: " + url);
     xhr.open("GET", url, true);
@@ -138,13 +138,27 @@ function colourize(aStack) {
     var elements = aStack.split(/[|]/);
     var stackElement = $("<ul>");
     elements.forEach(function (e) {
+        var italic = false;
         var lib = getLibrary(e);
         var c = cssMap[lib];
         if (!c) {
             cssMap[lib] = maxClass++;
             c = cssMap[lib];
         }
-        stackElement.append($("<li>", {text: e, class: "c" + c}));
+        if (e.match("^-0x1")) {
+            e = "Unknown Frame";
+            if (lib != 'unknown') {
+                e += " (in " + lib + ")";
+            }
+            italic = true;
+        } else if (e.match(/^js::/) || e.match("^JS Frame")) {
+            //e = "JS Frame";
+            italic = true;
+        }
+        var li = $("<li>", {text: e, class: "c" + c});
+        if (italic)
+            li.css("font-style", "italic");
+        stackElement.append(li);
     });
     return stackElement;
 }
@@ -242,12 +256,12 @@ function update_week_over_week(lastWeekKey, thisWeekKey) {
     });
 }
 
-function get_slowsql_type() {
-    return $('input[name=slowsql_type]:radio:checked').val();
+function get_sort_type() {
+    return $('input[name=sort_type]:radio:checked').val();
 }
 
 function get_key(start, end) {
-    return get_slowsql_type() + "_" + yyyymmdd(start) + "-" + yyyymmdd(end);
+    return get_sort_type() + "_" + yyyymmdd(start) + "-" + yyyymmdd(end);
 }
 
 function update_data() {
@@ -287,7 +301,7 @@ $(function () {
     });
     $('#filter_rowcount').change(update_data);
     $('#filter_version').change(update_data);
-    $('input[name=slowsql_type]').change(update_data);
+    $('input[name=sort_type]').change(update_data);
 
     update_data();
     //$('#current_data_header').html("This Week: " + yyyymmdd(thisWeekStart) + " to " + yyyymmdd(thisWeekEnd));
