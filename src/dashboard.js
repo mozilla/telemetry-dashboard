@@ -12,7 +12,7 @@ function event() {
   args.unshift('event');
   args.unshift('send');
   ga.call(ga, args)
-  console.log("Event: " + args.join(' > '));
+  //console.log("Event: " + args.join(' > '));
 }
 
 function setCookie(cname, cvalue, exdays) {
@@ -171,6 +171,7 @@ function computePageState() {
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
   pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
+  pageState.renderhistogram = $('input[name=render-type]:radio:checked').val();
   return pageState;
 }
 
@@ -215,7 +216,9 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.evoOver !== undefined) {
     $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
+
   }
+
 
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
     $('#newHistoFilter').empty();
@@ -240,6 +243,13 @@ function restoreFromPageState(newPageState, curPageState) {
       $('.single-histogram-only').hide();
 
     }
+  }
+  $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
+
+  if (newPageState.renderhistogram !== undefined && gHistogramFilterObjects.length == 1) {
+    setVisible = true;
+    $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
+    $("#histogram").show();
   }
 
   if (newPageState.locked !== undefined) {
@@ -311,7 +321,8 @@ function updateUrlHashIfNeeded() {
       arraysEqual(pageState.aggregates, urlPageState.aggregates) &&
       "" + pageState.locked === "" + urlPageState.locked &&
       "" + pageState.evoOver === "" + urlPageState.evoOver &&
-      "" + pageState.sanitize === "" + urlPageState.sanitize) {
+      "" + pageState.sanitize === "" + urlPageState.sanitize &&
+      "" + pageState.renderhistogram === "" + urlPageState.renderhistogram) {
     return;
   }
 
@@ -446,7 +457,6 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
     includeSelectAllOption: true,
     onChange : function(option, checked) {
       selector.multiselect("updateSelectAll");
-      console.log("aggregate selected", option.text());
       if(option.is(':selected')) {
         event('click', 'aggregates_options', allOptions);
       }
@@ -581,6 +591,9 @@ function fmt(number) {
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 
+
+
+
 function createRemoveButton(parent) {
   var button = $('<button type="button" class="btn btn-default " class="button-resize" style="padding: 2px 7px;">');
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
@@ -593,10 +606,17 @@ function createRemoveButton(parent) {
     });
     if (gHistogramFilterObjects.length == 1) {
       setVisible = true;
+      var hgramEvos = {};
+      var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
+      if (currentHistogram != null) {
+        hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram
+        update(hgramEvos);
+      }
       $('input[value="Graph"]').prop('checked',true);
       $('.single-histogram-only').show();
       $('#measure').show();
       $("#description").show();
+      $("#histogram").show();
 
     }
 
@@ -742,11 +762,8 @@ function renderHistogramTable(hgram) {
   $('#histogram-table').hide();
   $("#description").text(hgram.description()).hide();
   $("#measure").text(hgram.measure()).hide();
-  console.log("TABLE and visibility is", setVisible);
-  //$('#histogram').hide();
-  if (setVisible) {
-    console.log("TABLE and visibility is", setVisible);
 
+  if (setVisible) {
     $("#description").text(hgram.description()).show();
     $("#measure").text(hgram.measure()).show();
 
@@ -765,11 +782,7 @@ function renderHistogramGraph(hgram) {
   $('#histogram').hide();
   $("#description").text(hgram.description()).hide();
   $("#measure").text(hgram.measure()).hide();
-  console.log("GRAPH and visibility is", setVisible);
-
   if (setVisible) {
-    console.log("GRAPH and visibility is", setVisible);
-
     $("#measure").text(hgram.measure()).show();
     $("#description").text(hgram.description()).show();
     $('#histogram').show();
