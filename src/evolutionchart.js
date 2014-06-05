@@ -191,6 +191,7 @@ var evolutionchart = function() {
         colorBar.addClass("legendColorBar");
         colorBar.css("background-color", legendData[i].versions[j].color);
         var innerLi = $("<li>");
+        innerLi.attr("title", v.key + ": " + v.val);
         innerUl.addClass("no-bullets");
 
         if (v.val !== "none") {

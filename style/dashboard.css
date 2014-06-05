@@ -123,9 +123,6 @@ header h1{
     list-style-type: none;
     padding: 0px;
     margin: 0px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
 }
 
 .single-histogram-only {
@@ -143,4 +140,9 @@ header h1{
 }
 .page-end {
     margin-bottom: 30px;
+}
+.no-bullets li {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
