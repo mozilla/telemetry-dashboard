@@ -245,6 +245,7 @@ function restoreFromPageState(newPageState, curPageState) {
     }
   }
   $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
+  $('input:radio[name=render-type]').trigger("click");
 
   if (newPageState.renderhistogram !== undefined && gHistogramFilterObjects.length == 1) {
     setVisible = true;
@@ -559,7 +560,6 @@ Telemetry.init(function () {
 
     $('input[name=render-type]:radio:checked').val(['Graph']);
     if (!gSyncWithFirst) {
-      console.log("not sync with state");
       $('#measure').hide();
       $("#description").hide();
     }
