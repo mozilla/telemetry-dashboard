@@ -138,3 +138,9 @@ header h1{
     padding: 2px 9px;
     margin: 1px 10px;
 }
+.navbar {
+    margin-bottom: 0px;
+}
+.page-end {
+    margin-bottom: 30px;
+}

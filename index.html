@@ -66,7 +66,7 @@
                     </figure>
                 </div>
             </div>
-            <aside class="col-md-4">
+            <aside class="col-md-4 page-end">
 
                 <h2>Legend</h2>
                 <div id="legend"></div>
@@ -89,19 +89,19 @@
                         </div>
                     </div>
                     <div id="renderHistogram" class="form-group, single-histogram-only">
-                        <label class="single-histogram-only">Render histogram as</label>
-                        <div class="radio" class="single-histogram-only">
-                            <label class="single-histogram-only">
-                                <input type="radio" name="render-type" value="Graph" checked class="single-histogram-only">
+                        <label>Render histogram as</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="render-type" value="Graph">
                                 Graph
                             </label>
                         </div>
-                        <div class="radio" class="single-histogram-only">
-                            <label class="single-histogram-only">
-                                <input type="radio" name="render-type" value="Table" class="single-histogram-only">
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="render-type" value="Table">
                                 Table
                             </label>
-                            <label class="single-histogram-only">(<a id="export-link" target="_blank">download as csv</a>)</label>
+                            <label>(<a id="export-link" target="_blank">download as csv</a>)</label>
                         </div>
                     </div>
                     <div class="form-group">
@@ -134,27 +134,27 @@
                         <dt class="single-histogram-only">Std. dev.</dt>
                             <dd id="prop-standardDeviation" class="single-histogram-only"></dd>
                     </span>
-                    <span class="exponential-only" class="single-histogram-only">
+                    <span class="exponential-only, single-histogram-only">
                         <hr>
-                        <dt class="single-histogram-only">Mean</dt>
-                            <dd id="prop-mean2" class="single-histogram-only"></dd>
-                        <dt class="single-histogram-only">Geo. mean</dt>
-                            <dd id="prop-geometricMean" class="single-histogram-only"></dd>
+                        <dt>Mean</dt>
+                            <dd id="prop-mean2"></dd>
+                        <dt>Geo. mean</dt>
+                            <dd id="prop-geometricMean"></dd>
                         <dt class="single-histogram-only" >Geo. std. dev.</dt>
-                            <dd id="prop-geometricStandardDeviation" class="single-histogram-only"></dd>
+                            <dd id="prop-geometricStandardDeviation"></dd>
                     </span>
-                    <span class="linear-only exponential-only">
+                    <span class="linear-only exponential-only single-histogram-only">
                         <hr>
-                        <dt class="single-histogram-only">5th Percentile</dt>
-                            <dd id="prop-p5" class="single-histogram-only"></dd>
-                        <dt class="single-histogram-only">25th Percentile</dt>
-                            <dd class="single-histogram-only" id="prop-p25"></dd>
-                        <dt class="single-histogram-only">Median</dt>
-                            <dd id="prop-p50" class="single-histogram-only"></dd>
-                        <dt class="single-histogram-only">75th Percentile</dt>
-                            <dd class="single-histogram-only" id="prop-p75"></dd>
-                        <dt class="single-histogram-only">95th Percentile</dt>
-                            <dd id="prop-p95" class="single-histogram-only"></dd>
+                        <dt>5th Percentile</dt>
+                            <dd id="prop-p5"></dd>
+                        <dt>25th Percentile</dt>
+                            <dd id="prop-p25"></dd>
+                        <dt>Median</dt>
+                            <dd id="prop-p50"></dd>
+                        <dt>75th Percentile</dt>
+                            <dd id="prop-p75"></dd>
+                        <dt>95th Percentile</dt>
+                            <dd id="prop-p95"></dd>
                         <br>
                         <div class="single-histogram-only" class="alert alert-warning" class="single-histogram-only">
                             <strong class="single-histogram-only" class="single-histogram-only" >Notice</strong> percentiles are estimated based on
