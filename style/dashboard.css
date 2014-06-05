@@ -119,10 +119,13 @@ header h1{
     margin-right: 10px;
 }
 
-.removeBullets {
+.no-bullets {
     list-style-type: none;
-    padding:0;
-    margin:0;
+    padding: 0px;
+    margin: 0px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .single-histogram-only {
