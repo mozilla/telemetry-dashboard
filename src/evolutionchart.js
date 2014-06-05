@@ -134,6 +134,22 @@ var evolutionchart = function() {
      *        - val: numeric value or "none"
      */
 
+    var lock = true;
+    function getMeasure(f) {
+      var x = f.split("/");
+      x.shift();
+      x.shift();
+      var z = x.join("/");
+      return z;
+    }
+
+    var measure = getMeasure(series[0].fullState);
+    for (var i = 0; i < series.length; i++) {
+      if (measure !== getMeasure(series[i].fullState)) {
+        lock = false;
+      }
+    }
+
     var legendData = [];
     for (var i = 0; i < aggregates.length; i++) {
       var aggregate = aggregates[i];
@@ -143,6 +159,11 @@ var evolutionchart = function() {
         if (aggregate !== series[j].title)
           continue;
         var state = series[j].fullState;
+
+        var x = state.split("/");
+        var y = x[0] + " " + x[1];
+        if (lock)
+          state = y;
         var color = series[j].color;
 
         var numericValue = "none";

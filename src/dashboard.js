@@ -254,6 +254,13 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.locked !== undefined) {
     changeLockButton(toBoolean(newPageState.locked));
+    if (newPageState.locked) {
+      var x = states[0].split('/');
+      x.shift();
+      x.shift();
+      var y = x.join("/")
+      $("#measure").text(y);
+    }
   }
 
   if (newPageState.aggregates !== undefined) {
@@ -421,6 +428,13 @@ function syncStateWithFirst() {
     gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
   }
 
+  var x = gHistogramFilterObjects[0].histogramfilter('state').split("/");
+  x.shift();
+  x.shift();
+  var y = x.join("/");
+  $("#measure").text(y);
+  $('#measure').show();
+
 }
 
 //construct selector and set selected aggregates
@@ -516,7 +530,7 @@ Telemetry.init(function () {
     var hgramEvos = {};
     var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
     if (currentHistogram != null) {
-      hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram
+      hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram;
       update(hgramEvos);
     }
     // Inform google analytics of click
@@ -526,7 +540,7 @@ Telemetry.init(function () {
   if (gHistogramFilterObjects.length > 1) {
     setVisible = false;
     $('.single-histogram-only').hide();
-    $("#description").text(hgram.description()).hide();
+    $('#description').hide();
 
   }
 
@@ -544,11 +558,14 @@ Telemetry.init(function () {
     setVisible = false;
 
     $('input[name=render-type]:radio:checked').val(['Graph']);
-
+    if (!gSyncWithFirst) {
+      console.log("not sync with state");
+      $('#measure').hide();
+      $("#description").hide();
+    }
     $("#histogram").hide;
     $('#histogram-table').hide();
-    $('#measure').hide();
-    $("#description").hide();
+    //$("#description").hide();
     $('.single-histogram-only').hide();
     updateUrlHashIfNeeded();
   });
@@ -609,7 +626,7 @@ function createRemoveButton(parent) {
       var hgramEvos = {};
       var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
       if (currentHistogram != null) {
-        hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram
+        hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram;
         update(hgramEvos);
       }
       $('input[value="Graph"]').prop('checked',true);
@@ -621,6 +638,7 @@ function createRemoveButton(parent) {
     }
 
     plot(false);
+    //not sure we need this
     updateUrlHashIfNeeded();
   });
   return button;
@@ -644,18 +662,24 @@ function changeLockButton(newValue) {
   if (gSyncWithFirst === newValue) {
     return;
   }
-
+  //console.log("******", gHistogramFilterObjects.length);
   gSyncWithFirst = newValue;
   var lockButton = $("#lock-button");
+  if (!gSyncWithFirst && gHistogramFilterObjects.length !== 1) {
+    $("#measure").hide();
+    $("#description").hide();
+  }
+
   if (!gSyncWithFirst) {
     lockButton.removeClass("glyphicon-lock");
     lockButton.addClass("glyphicon-ok");
     event('click', 'lockButton', 'edit');
 
-
   } else {
     lockButton.addClass("glyphicon-lock");
     lockButton.removeClass("glyphicon-ok");
+    var measure = gHistogramFilterObjects[0].histogramfilter('state');
+    $('#measure').text(measure);
     event('click', 'lockButton', 'lock');
 
   }
@@ -760,8 +784,10 @@ function addHistogramFilter(firstHistogramFilter, state) {
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
   $('#histogram-table').hide();
-  $("#description").text(hgram.description()).hide();
-  $("#measure").text(hgram.measure()).hide();
+  if (!gSyncWithFirst) {
+    $("#description").text(hgram.description()).hide();
+    $("#measure").text(hgram.measure()).hide();
+  }
 
   if (setVisible) {
     $("#description").text(hgram.description()).show();
@@ -780,8 +806,10 @@ function renderHistogramTable(hgram) {
 function renderHistogramGraph(hgram) {
   $('#histogram-table').hide();
   $('#histogram').hide();
-  $("#description").text(hgram.description()).hide();
-  $("#measure").text(hgram.measure()).hide();
+  if (!gSyncWithFirst) {
+    $("#description").text(hgram.description()).hide();
+    $("#measure").text(hgram.measure()).hide();
+  }
   if (setVisible) {
     $("#measure").text(hgram.measure()).show();
     $("#description").text(hgram.description()).show();
