@@ -19,10 +19,6 @@ header h1 {
   margin:             -10px 0 0 -10px;
 }
 
-#histogram-filter .bootstrap-select{
-  margin-right:       4px;
-}
-
 .filter-version {
   width:  120px !important;
 }
@@ -45,6 +41,7 @@ header h1 {
   right: 0px;
   left: 0px;
 }
+
 .affix {
   position:     fixed;
   top:            0px;
@@ -115,7 +112,6 @@ header h1 {
     width: 10px;
     height: 10px;
     display: inline-block;
-    /*padding-right: 10px;*/
     margin-right: 10px;
 }
 
