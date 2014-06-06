@@ -487,6 +487,9 @@ Telemetry.init(function () {
       addHistogramFilter(true, null); //  first filter
       changeLockButton(true);  // default: locked
     }
+
+    $('input[value="Graph"]').prop('checked',true);
+
   }
 
   $(window).bind("hashchange", function () {
@@ -507,9 +510,8 @@ Telemetry.init(function () {
       hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram;
       update(hgramEvos);
     }
-
+    
     // Inform google analytics of click
-    var renderType = $('input[name=render-type]:radio:checked').val();
     event('click', 'render-type', renderType);
   });
 
