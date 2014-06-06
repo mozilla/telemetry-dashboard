@@ -26,9 +26,9 @@
 </head>
 <body>
     <header>
-        <h1>Telemetry Dashboard </h1>
+        <h1>Telemetry Dashboard</h1>
     </header>
-    <nav class="navbar navbar-default  "  role="navigation">
+    <nav class="navbar navbar-default"  role="navigation">
         <div class=" navbar-left">
             <form id="histogram-filters" class=" navbar-form  form-inline " style= "margin: 3px;"></form>
         </div>
@@ -117,7 +117,7 @@
                     </div>
                 </form>
                 <h2 id="summary" class="single-histogram-only dl-horizontal">Summary</h2>
-                <dl id="summaryDetails" class="dl-horizontal single-histogram-only">
+                <dl class="dl-horizontal single-histogram-only">
                     <dt >Kind</dt>
                         <dd id="prop-kind"></dd>
                     <dt>Submissions</dt>
@@ -246,7 +246,7 @@
     <script src="src/bootstrap-selector.js"></script>
     <script src="lib/jquery.ui.widget.js"></script>
     <script src="src/jquery.telemetry.js"></script>
-    <script src="select2.js"></script>
+    <script src="lib/select2.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
         $('.select2').select2();

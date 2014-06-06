@@ -510,7 +510,7 @@ Telemetry.init(function () {
       hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram;
       update(hgramEvos);
     }
-    
+
     // Inform google analytics of click
     event('click', 'render-type', renderType);
   });
