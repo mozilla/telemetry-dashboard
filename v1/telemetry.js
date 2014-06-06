@@ -109,7 +109,7 @@
  * fairly non-trivial to implement. Luckily, they are provided as an individual
  * component in `jquery.telemetry.js`, this requires the jQuery UI widget
  * factory, which can be found in `jquery.ui.widget.js`. You may also optionally
- * use `bootstrap-selector.js` with
+ * use `custom-selector.js` with
  * [bootstrap-select](http://silviomoreto.github.io/bootstrap-select/) to get
  * pretty [twitter-bootstrap](http://getbootstrap.com/) selectors.
  *

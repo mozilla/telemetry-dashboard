@@ -3,8 +3,8 @@
  * defined in `jquery.telemetry.js`. This uses bootstrap-select for rendering
  * selectors, creating a very nice UI.
  */
-var BootstrapSelector = (function($){
-  function BootstrapSelector(filterName) {
+var CustomSelector = (function($){
+  function CustomSelector(filterName) {
     this._filterName = filterName;
     this._span = $("<span>");
     this._select = $("<input >");
@@ -23,7 +23,7 @@ var BootstrapSelector = (function($){
     this._select.select2({data: []});
   }
 
-  $.extend(BootstrapSelector.prototype, {
+  $.extend(CustomSelector.prototype, {
     element: function BootstrapSelector_element() {
       return this._span;
     },
@@ -83,5 +83,5 @@ var BootstrapSelector = (function($){
     },
   });
 
-  return BootstrapSelector;
+  return CustomSelector;
 })(jQuery);

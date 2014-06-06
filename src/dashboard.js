@@ -511,6 +511,7 @@ Telemetry.init(function () {
       update(hgramEvos);
     }
 
+    var renderType = $('input[name=render-type]:radio:checked').val();
     // Inform google analytics of click
     event('click', 'render-type', renderType);
   });
@@ -529,7 +530,6 @@ Telemetry.init(function () {
     }
     addHistogramFilter(false, state);
     gSingleSeriesMode = false;
-    $('input[name=render-type]:radio:checked').val(['Graph']);
 
     if (!gSyncWithFirst) {
       $('#measure').hide();
@@ -720,7 +720,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
-    selectorType: BootstrapSelector,
+    selectorType: CustomSelector,
     locked: locked,
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
