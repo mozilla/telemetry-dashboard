@@ -35,25 +35,6 @@ header h1 {
   width: 100px !important;
 }
 
-.navbar-affix-top {
-  border-radius: 0;
-  z-index: 1030;
-  right: 0px;
-  left: 0px;
-}
-
-.affix {
-  position:     fixed;
-  top:            0px;
-  border-width:   0 0 1px 0;
-}
-.affix-top  {
-  position: absolute;
-  top: 70px;
-  border-width:   1px 0 1px 0;
-}
-.affix-bottom {}
-
 #measure {
   text-overflow: ellipsis;
   overflow: hidden;
