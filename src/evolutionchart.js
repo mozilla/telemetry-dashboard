@@ -206,20 +206,19 @@ var evolutionchart = function() {
       li.appendTo(outList);
     }
     outList.appendTo(legend);
-
   }
+
   var showTooltip = function(e, offsetElement) {
     if (extent) {
       e.pointIndex += Math.ceil(extent[0]);
     }
     var pos = findPos(offsetElement);
     var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
-      top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
+         top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
     var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
     var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
     var   content = tooltip(e.series.key, x, y, e, chart);
     drawLegend(e.point.x);
-
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };

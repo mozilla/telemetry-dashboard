@@ -59,7 +59,6 @@ function prepareData(state, hgramEvo) {
   if (dataKey in cachedData) {
     return cachedData[dataKey];
   }
-
   var submissions = hgramEvo.map(function (date, hgram) {
     if (hgram.submissions() > maxSubmissions) {
       maxSubmissions = hgram.submissions();
@@ -85,6 +84,7 @@ function prepareData(state, hgramEvo) {
   // The cutoff is the lesser of 100 or 1% of the maximum number of
   // submissions we saw.
   var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
+
   if (hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
     var means = [];
     // Percentile series
@@ -161,11 +161,12 @@ function getPageState() {
   for (var i = 0; i < gHistogramFilterObjects.length; i++) {
     pageState.filter.push(gHistogramFilterObjects[i].histogramfilter('state'));
   }
-
   pageState.aggregates = $("#aggregateSelector").multiselect("getSelected").val();
+
   if (pageState.aggregates === undefined || pageState.aggregates === null) {
     pageState.aggregates = [];
   }
+
   pageState.aggregates = pageState.aggregates.filter(function(e) { return e !== "";});
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
@@ -175,7 +176,7 @@ function getPageState() {
 }
 
 // Only works on array of objects which can be compared with == (string, numbers, etc.)
-function arraysEqual(a, b) {
+function multisetEqual(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
   if (a.length != b.length) return false;
@@ -215,25 +216,20 @@ function restoreFromPageState(newPageState, curPageState) {
 
   if (newPageState.evoOver !== undefined) {
     $('input[name=evo-type][value=' + newPageState.evoOver + ']:radio').prop("checked", true);
-
   }
 
-  if (!arraysEqual(newPageState.filter, curPageState.filter)) {
+  if (!multisetEqual(newPageState.filter, curPageState.filter)) {
     $('#histogram-filters').empty();
-
     gHistogramFilterObjects = [];
-
     var states = newPageState.filter;
     addHistogramFilter(true, states[0]);
     if (states.length == 1) {
       gSingleSeriesMode = true;
       $('.single-histogram-only').show();
     }
-
     for (var i = 1; i < states.length; i++) {
       addHistogramFilter(false, states[i]);
     }
-
     if (states.length > 1 ) {
       gSingleSeriesMode = true;
       $("#histogram").hide();
@@ -241,6 +237,7 @@ function restoreFromPageState(newPageState, curPageState) {
       $('.single-histogram-only').hide();
     }
   }
+
   $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
   $('input:radio[name=render-type]').trigger("click");
 
@@ -265,7 +262,6 @@ function restoreFromPageState(newPageState, curPageState) {
     setAggregateSelectorOptions(newPageState.aggregates, function() {
     }, false);
   }
-
   return true;
 }
 
@@ -278,7 +274,6 @@ function pageStateToUrlHash(pageState) {
     }
     fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
   });
-
   var newUrl = fragments.join("&");
   return newUrl;
 }
@@ -306,7 +301,6 @@ function urlHashToPageState(url) {
   if (pageState.aggregates !== undefined) {
     pageState.aggregates = pageState.aggregates.split("!");
   }
-
   return pageState;
 }
 
@@ -370,14 +364,13 @@ function plot(firstChanged) {
   }
 
   var pgState = getPageState();
-
   var filterStates = {};
   gHistogramFilterObjects.forEach(function (hfilter) {
     var key = hfilter.histogramfilter("state") + " " + pgState.evoOver + " " + pgState.sanitize;
     filterStates[key] = 1;
   });
 
-  if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
+  if (multisetEqual(gStatesOnPlot, Object.keys(filterStates))) {
     return;
   }
 
@@ -413,7 +406,6 @@ function syncStateWithFirst() {
     var currentVersion = segmParts[0] + '/' + segmParts[1];
     gHistogramFilterObjects[j].histogramfilter('state', currentVersion + segment);
   }
-
   var x = gHistogramFilterObjects[0].histogramfilter('state').split("/");
   x.shift();
   x.shift();
@@ -427,13 +419,13 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   if (options.length === 0) {
     return;
   }
-  
+
   var prevOptions = [];
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
   var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
 
-  if (!arraysEqual(prevOptions, options)) {
+  if (!multisetEqual(prevOptions, options)) {
     $('#multipercentile').empty().append(selector);
     var n = options.length;
     for (var i = 0; i < n; i++) {
@@ -444,11 +436,9 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
         text: label,
         value: option,
       }));
-
     }
     var allOptions = options.join('/');
     event('click', 'aggregates_options', allOptions);
-
   }
 
   selector.multiselect({
@@ -484,6 +474,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
 
 Telemetry.init(function () {
   var urlPageState = urlHashToPageState(window.location.hash);
+
   //if I don't come with a custom url I check for a cookie
   if (!restoreFromPageState(urlPageState, {})) {
     var cookie = readCookie();
@@ -503,18 +494,20 @@ Telemetry.init(function () {
       gHashSetFromCode = false;
       return;
     }
+
     var curPageState = getPageState();
     var newPageState = urlHashToPageState(window.location.hash);
     restoreFromPageState(newPageState, curPageState);
   });
-
   $('input[name=render-type]:radio').change(function () {
     var hgramEvos = {};
     var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
+
     if (currentHistogram != null) {
       hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram;
       update(hgramEvos);
     }
+
     // Inform google analytics of click
     var renderType = $('input[name=render-type]:radio:checked').val();
     event('click', 'render-type', renderType);
@@ -524,29 +517,25 @@ Telemetry.init(function () {
     gSingleSeriesMode = false;
     $('.single-histogram-only').hide();
     $('#description').hide();
-
   }
 
   $("#addVersionButton").click(function () {
     var state = null;
     event('click', 'addVersion', 'addVersion');
-
     if (gHistogramFilterObjects.length != 0) {
       state = gHistogramFilterObjects[0].histogramfilter('state');
     }
-
     addHistogramFilter(false, state);
-
     gSingleSeriesMode = false;
-
     $('input[name=render-type]:radio:checked').val(['Graph']);
+
     if (!gSyncWithFirst) {
       $('#measure').hide();
       $("#description").hide();
     }
+
     $("#histogram").hide;
     $('#histogram-table').hide();
-    //$("#description").hide();
     $('.single-histogram-only').hide();
     updateUrlHashIfNeeded();
   });
@@ -554,18 +543,16 @@ Telemetry.init(function () {
   $('#tinyUrl').click(function() {
     var tinyUrlArea = $("<input type=text>");
     event('click', 'tinyUrl', 'generatedTinyUrl');
+
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
-
       // tell jQuery we're expecting JSONP
       dataType: "jsonp",
-
       // tell YQL what we want and that we want JSON
       data: {
         longUrl: window.location.href ,  access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
         format: "json"
       },
-
       // work with the response
       success: function(response) {
         var longUrl = Object.keys(response.results)[0];
@@ -573,7 +560,6 @@ Telemetry.init(function () {
         $("#txtContainer").empty();
         tinyUrlArea.val(shortUrl);
         $("#txtContainer").append(tinyUrlArea);
-
         tinyUrlArea.focus(function() {
           var $this = $(this);
           $this.select();
@@ -586,8 +572,8 @@ Telemetry.init(function () {
         });
       }
     };
-    $.ajax(request);
 
+    $.ajax(request);
   });
 
   $('input[name=evo-type]:radio').change(function () {
@@ -611,7 +597,6 @@ Telemetry.init(function () {
   if (gHistogramFilterObjects.length > 1) {
     $('.single-histogram-only').hide();
   }
-
 });
 
 /** Format numbers */
@@ -627,6 +612,7 @@ function createRemoveButton(parent) {
   var button = $('<button type="button" class="btn btn-default " class="button-resize" style="padding: 2px 7px;">');
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
   parent.append(button);
+
   button.click(function () {
     event('click', 'removeButton', 'removeButton');
     parent.remove();
@@ -638,30 +624,32 @@ function createRemoveButton(parent) {
       gSingleSeriesMode = true;
       var hgramEvos = {};
       var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
+
       if (currentHistogram != null) {
         hgramEvos[gHistogramFilterObjects[0].histogramfilter('state')] = currentHistogram;
         update(hgramEvos);
       }
+
       $('input[value="Graph"]').prop('checked',true);
       $('.single-histogram-only').show();
       $('#measure').show();
       $("#description").show();
       $("#histogram").show();
     }
+
     plot(false);
     //not sure we need this
     updateUrlHashIfNeeded();
   });
+
   return button;
 }
 
 function createLockButton(parent){
   var button = $('<button type="button" class="btn btn-default " style="padding: 2px 7px;" >');
   var span = $('<span id="lock-button" class="glyphicon">');
-
   span.addClass(gSyncWithFirst ? "glyphicon-lock" : "glyphicon-ok");
   span.appendTo(button);
-
   parent.append(button);
   button.click(function() {
     changeLockButton(!gSyncWithFirst);
@@ -673,8 +661,10 @@ function changeLockButton(newValue) {
   if (gSyncWithFirst === newValue) {
     return;
   }
+
   gSyncWithFirst = newValue;
   var lockButton = $("#lock-button");
+
   if (!gSyncWithFirst && gHistogramFilterObjects.length !== 1) {
     $("#measure").hide();
     $("#description").hide();
@@ -684,14 +674,12 @@ function changeLockButton(newValue) {
     lockButton.removeClass("glyphicon-lock");
     lockButton.addClass("glyphicon-ok");
     event('click', 'lockButton', 'edit');
-
   } else {
     lockButton.addClass("glyphicon-lock");
     lockButton.removeClass("glyphicon-ok");
     var measure = gHistogramFilterObjects[0].histogramfilter('state');
     $('#measure').text(measure);
     event('click', 'lockButton', 'lock');
-
   }
 
   gHistogramFilterObjects.slice(1).forEach(function (x) {
@@ -707,6 +695,7 @@ function changeLockButton(newValue) {
 
 function addHistogramFilter(firstHistogramFilter, state) {
   var f = $("<div>");
+
   if (firstHistogramFilter) {
     createLockButton(f);
   } else {
@@ -716,11 +705,10 @@ function addHistogramFilter(firstHistogramFilter, state) {
   $('#histogram-filters').append(f);
 
   var locked = false;
-
   if (gHistogramFilterObjects.length >= 1 && gSyncWithFirst) {
-
     locked = gSyncWithFirst;
   }
+
   f.histogramfilter({
     synchronizeStateWithHash: false,
     defaultVersion: function (versions) {
@@ -735,6 +723,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
     state: state,
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
+
   f.bind("histogramfilterchange", function(event, args) {
     if (firstHistogramFilter && gSyncWithFirst) {
       syncStateWithFirst();
@@ -744,7 +733,6 @@ function addHistogramFilter(firstHistogramFilter, state) {
       gaLogFilter(state);
       plot(firstHistogramFilter);
     }
-
   });
   gHistogramFilterObjects.push(f);
 }
@@ -752,6 +740,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
 function renderHistogramTable(hgram) {
   $('#histogram').hide();
   $('#histogram-table').hide();
+
   if (!gSyncWithFirst) {
     $("#description").text(hgram.description()).hide();
     $("#measure").text(hgram.measure()).hide();
@@ -763,9 +752,9 @@ function renderHistogramTable(hgram) {
 
     $('#histogram-table').show();
   }
+
   var body = $('#histogram-table').find('tbody');
   body.empty();
-
   body.append.apply(body, hgram.map(function (count, start, end, index) {
     return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
   }));
@@ -774,15 +763,18 @@ function renderHistogramTable(hgram) {
 function renderHistogramGraph(hgram) {
   $('#histogram-table').hide();
   $('#histogram').hide();
+
   if (!gSyncWithFirst) {
     $("#description").text(hgram.description()).hide();
     $("#measure").text(hgram.measure()).hide();
   }
+
   if (gSingleSeriesMode) {
     $("#measure").text(hgram.measure()).show();
     $("#description").text(hgram.description()).show();
     $('#histogram').show();
   }
+
   nv.addGraph(function () {
     var total = hgram.count();
     var vals = hgram.map(function (count, start, end, index) {
@@ -798,17 +790,18 @@ function renderHistogramGraph(hgram) {
       values: vals,
       color: "#0000ff"
     }];
-
     var chart = histogramchart().margin({
       top: 20,
       right: 80,
       bottom: 40,
       left: 80
     });
+
     chart.yAxis.tickFormat(fmt);
     chart.xAxis.tickFormat(function (bucket) {
       return fmt(bucket[0]);
     });
+
     d3.select("#histogram").datum(data).transition().duration(500).call(chart);
     nv.utils.windowResize(
       function() {
@@ -896,11 +889,9 @@ function update(hgramEvos) {
     if (toBeSelected === undefined) {
       return;
     }
-
     if (toBeSelected === null) {
       toBeSelected = [];
     }
-
     var count = 0;
     for(var j = 0; j < cDatas.length; j++) {
       if (toBeSelected.indexOf(cDatas[j].title) !== -1) {
@@ -921,6 +912,7 @@ function update(hgramEvos) {
       }
     }
   }
+
   updateDisabledAggregates();
 
   // Add a show-<kind> class to #content
@@ -945,7 +937,6 @@ function update(hgramEvos) {
       if (!hasReportedDateRangeSelectorUsedInThisSession) {
 	     hasReportedDateRangeSelectorUsedInThisSession = true;
        event('report', 'date-range-selector', 'used-in-session', 1);
-
       }
     } else {
       hgram = hgramEvo.range();

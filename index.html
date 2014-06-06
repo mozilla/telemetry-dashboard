@@ -28,21 +28,18 @@
     <header>
         <h1>Telemetry Dashboard </h1>
     </header>
-
-
-    <nav 
-         class="navbar navbar-default  "  role="navigation">
-         <div class=" navbar-left">
-             <form id="histogram-filters" class=" navbar-form  form-inline " style= "margin: 3px;">
-         </form></div>
-         <div class="navbar-form navbar-right">
+    <nav class="navbar navbar-default  "  role="navigation">
+        <div class=" navbar-left">
+            <form id="histogram-filters" class=" navbar-form  form-inline " style= "margin: 3px;"></form>
+        </div>
+        <div class="navbar-form navbar-right">
            <div id="addVersionButton">
-             <button type="button" class="btn btn-default" style="padding: 2px 7px;"><span class="glyphicon glyphicon-plus"></span>Add series</button>
+              <button type="button" class="btn btn-default" style="padding: 2px 7px;"><span class="glyphicon glyphicon-plus"></span>Add series</button>
            </div>           
            <div id ="multipercentile"></div>
-         </div>
-      <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
-      </form>
+        </div>
+        <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
+        </form>
     </nav>
     <section style="margin: 0px auto; width: 100%;" class="container">
         <div id="content" class="row">
@@ -50,7 +47,7 @@
                 <div>
                     <h2 id="measure">Measure</h2>
                     <i id="description">Description</i>
-                    <figure><svg id="evolution"></svg></figure>
+                    <figure style="margin: 15px;"><svg id="evolution"></svg></figure>
                     <figure>
                         <svg id="histogram" class="single-histogram-only"></svg>
                         <table id="histogram-table" class="table table-condensed" class="single-histogram-only">
@@ -224,8 +221,7 @@
     <script src="lib/nv.d3.js"></script>
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
-    
-    
+
     <!-- nvd3 chart hacks -->
     <script src="src/evolutionchart.js"></script>
     <script src="src/histogramchart.js"></script>
@@ -250,18 +246,11 @@
     <script src="lib/jquery.ui.widget.js"></script>
     <script src="src/jquery.telemetry.js"></script>
     <script src="select2.js"></script>
-
-
-
-
-
-    
     <script type="text/javascript">
       $(document).ready(function() {
         $('.select2').select2();
       });
     </script>
-    
 
     <!-- Dashboard specific Javascript -->
     <script src="src/dashboard.js"></script>
