@@ -21,6 +21,7 @@ var BootstrapSelector = (function($){
     }
     this._select.addClass("filter-" + this._filterName);
     this._select.select2({data: []});
+
   }
 
   $.extend(BootstrapSelector.prototype, {
@@ -49,7 +50,7 @@ var BootstrapSelector = (function($){
 
       if (options !== undefined) {
         this._options = options;
-        this._select.select2({data: data});
+        this._select.select2({data: data, dropdownAutoWidth: true});
         this._select.select2("val", options[0]);
       }
       return this._options;
@@ -66,6 +67,7 @@ var BootstrapSelector = (function($){
       if (value !== undefined) {
         this._select.select2("readonly", !value);
       }
+
       return this._select.select2("enable");
     },
 

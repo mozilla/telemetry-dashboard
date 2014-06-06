@@ -159,11 +159,11 @@ var evolutionchart = function() {
         if (aggregate !== series[j].title)
           continue;
         var state = series[j].fullState;
-
-        var x = state.split("/");
-        var y = x[0] + " " + x[1];
-        if (lock)
+        if (lock) {
+          var x = state.split("/");
+          var y = x[0] + " " + x[1];
           state = y;
+        }
         var color = series[j].color;
 
         var numericValue = "none";

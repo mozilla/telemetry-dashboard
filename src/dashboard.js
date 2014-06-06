@@ -431,7 +431,6 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   var prevOptions = [];
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-
   var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
 
   if (!arraysEqual(prevOptions, options)) {
@@ -890,7 +889,22 @@ function update(hgramEvos) {
       return;
     }
 
-    if (toBeSelected === null) toBeSelected = [];
+    if (toBeSelected === null) {
+      toBeSelected = [];
+    }
+
+    var count = 0;
+    for(var j = 0; j < cDatas.length; j++) {
+      if (toBeSelected.indexOf(cDatas[j].title) !== -1) {
+        count++;
+      }
+    }
+    if (count == 0) {
+      toBeSelected = [cDatas[0].title];
+      $("#aggregateSelector").children().removeAttr("selected");
+      $("#aggregateSelector").multiselect("select", toBeSelected);
+
+    }
     for (var i = 0; i < cDatas.length; i++) {
       if (toBeSelected.indexOf(cDatas[i].title) !== -1 && toBeSelected.length !== 0) {
         cDatas[i].disabled = false;
