@@ -552,6 +552,7 @@ Telemetry.init(function () {
   });
 
   $('#tinyUrl').click(function() {
+    var tinyUrlArea = $("<input type=text>");
     event('click', 'tinyUrl', 'generatedTinyUrl');
     var request = {
       url: "https://api-ssl.bitly.com/shorten",
@@ -566,16 +567,23 @@ Telemetry.init(function () {
       },
 
       // work with the response
-      success: function( response ) {
+      success: function(response) {
         var longUrl = Object.keys(response.results)[0];
         var shortUrl = response.results[longUrl].shortUrl;
-        code.remove();
-        code = $("<code>");
-        var a = $('<a></a>').attr("href",shortUrl);
-        a.text(shortUrl);
-        code.append(a);
-        $("#tiny").append(code);
+        $("#txtContainer").empty();
+        tinyUrlArea.val(shortUrl);
+        $("#txtContainer").append(tinyUrlArea);
 
+        tinyUrlArea.focus(function() {
+          var $this = $(this);
+          $this.select();
+          // Work around Chrome's little problem(http://stackoverflow.com/questions/5797539)
+          $this.mouseup(function() {
+            // Prevent further mouseup intervention
+            $this.unbind("mouseup");
+            return false;
+          });
+        });
       }
     };
     $.ajax(request);
