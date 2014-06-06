@@ -156,6 +156,7 @@ var _dataFolderMap = null;
 // List of versions present in _dataFolderMap
 var _versions = null;
 
+var _telemetryAjaxCache = {};
 /*! Auxiliary function to GET files from _data_folder */
 function _get(path, cb) {
   // Check that we've been initialized
@@ -174,7 +175,7 @@ function _get(path, cb) {
       console.log("Telemetry._get: Failed loading " + path + " with " + err);
       return;
     }
-    cb.call(data);
+    cb.call(null, data);
   });
 }
 
