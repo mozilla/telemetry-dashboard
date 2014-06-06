@@ -1,11 +1,10 @@
 //naming convention gVariableName - global var
-var setVisible = true;
+var gSingleSeriesMode = true;
 var gHistogramFilterObjects = [];
 var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
-
 
 function event() {
   var args = Array.prototype.slice.call(arguments);
@@ -55,7 +54,7 @@ function prepareData(state, hgramEvo) {
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
   var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
-  var pgState = computePageState();
+  var pgState = getPageState();
   dataKey = state + " " + pgState.evoOver + " " +  pgState.sanitize;
   if (dataKey in cachedData) {
     return cachedData[dataKey];
@@ -156,7 +155,7 @@ function prepareData(state, hgramEvo) {
   return data;
 }
 
-function computePageState() {
+function getPageState() {
   var pageState = {};
   pageState.filter = [];
   for (var i = 0; i < gHistogramFilterObjects.length; i++) {
@@ -199,7 +198,7 @@ function toBoolean(x) {
     return true;
   if (x === "false" || x === false)
     return false;
-  throw x;
+  throw new Error("a boolean could not be inferred from x = " + x );
 }
 
 //take params from obj pageState and restore the page by setting all the attributes
@@ -219,16 +218,15 @@ function restoreFromPageState(newPageState, curPageState) {
 
   }
 
-
   if (!arraysEqual(newPageState.filter, curPageState.filter)) {
-    $('#newHistoFilter').empty();
+    $('#histogram-filters').empty();
 
     gHistogramFilterObjects = [];
 
     var states = newPageState.filter;
     addHistogramFilter(true, states[0]);
     if (states.length == 1) {
-      setVisible = true;
+      gSingleSeriesMode = true;
       $('.single-histogram-only').show();
     }
 
@@ -237,18 +235,17 @@ function restoreFromPageState(newPageState, curPageState) {
     }
 
     if (states.length > 1 ) {
-      setVisible = true;
+      gSingleSeriesMode = true;
       $("#histogram").hide();
       $('#histogram-table').hide();
       $('.single-histogram-only').hide();
-
     }
   }
   $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
   $('input:radio[name=render-type]').trigger("click");
 
   if (newPageState.renderhistogram !== undefined && gHistogramFilterObjects.length == 1) {
-    setVisible = true;
+    gSingleSeriesMode = true;
     $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
     $("#histogram").show();
   }
@@ -323,17 +320,10 @@ function updateUrlHashIfNeeded() {
     return;
   }
 
-  var pageState = computePageState();
-  var urlPageState = urlHashToPageState(window.location.hash);
-  if (arraysEqual(pageState.filter, urlPageState.filter) &&
-      arraysEqual(pageState.aggregates, urlPageState.aggregates) &&
-      "" + pageState.locked === "" + urlPageState.locked &&
-      "" + pageState.evoOver === "" + urlPageState.evoOver &&
-      "" + pageState.sanitize === "" + urlPageState.sanitize &&
-      "" + pageState.renderhistogram === "" + urlPageState.renderhistogram) {
+  var pageState = getPageState();
+  if (window.location.hash.split("#")[1] === pageStateToUrlHash(pageState)) {
     return;
   }
-
   setUrlHash(pageStateToUrlHash(pageState));
 }
 
@@ -348,8 +338,7 @@ function anyHsLoading() {
   return anyLoading;
 }
 
-function gaLogFilter(state)
-{
+function gaLogFilter(state) {
   event('states', 'changed', state, 1);
   var parts = state.split('/');
   event( 'states', 'channel', parts[0], 1);
@@ -357,8 +346,6 @@ function gaLogFilter(state)
   event('states', 'measure', parts[2], 1);
   event('states', 'filter', parts.slice(3).join('/'), 1);
 }
-
-
 
 //firstChanged true if first filter changed and I need to sync all hidden filters
 function plot(firstChanged) {
@@ -372,7 +359,6 @@ function plot(firstChanged) {
     // Send new state to google analytics
     gHistogramFilterObjects.forEach(function(f) {
       var state = f.histogramfilter('option', 'state');
-      //gaLogFilter(state);
     });
   }
 
@@ -383,7 +369,7 @@ function plot(firstChanged) {
     syncStateWithFirst();
   }
 
-  var pgState = computePageState();
+  var pgState = getPageState();
 
   var filterStates = {};
   gHistogramFilterObjects.forEach(function (hfilter) {
@@ -394,6 +380,7 @@ function plot(firstChanged) {
   if (arraysEqual(gStatesOnPlot, Object.keys(filterStates))) {
     return;
   }
+
   if (!anyHsLoading()) {
     gStatesOnPlot = Object.keys(filterStates);
   }
@@ -405,6 +392,7 @@ function plot(firstChanged) {
       hgramEvos[f.histogramfilter('state')] = hist;
     }
   });
+
   update(hgramEvos);
 }
 
@@ -418,15 +406,12 @@ function syncStateWithFirst() {
   var segmParts = stateSegment.split("/");
   segmParts.shift();
   segmParts.shift();
-  var segment = "";
-  for (var i = 0; i < segmParts.length; i++) {
-    segment += '/' + segmParts[i];
-  }
-
+  var segment = segmParts.join("/");
+  segment = "/" + segment;
   for (var j = 1; j < gHistogramFilterObjects.length; j++) {
     var segmParts = gHistogramFilterObjects[j].histogramfilter('state').split("/");
     var currentVersion = segmParts[0] + '/' + segmParts[1];
-    gHistogramFilterObjects[j].histogramfilter('state', currentVersion+segment);
+    gHistogramFilterObjects[j].histogramfilter('state', currentVersion + segment);
   }
 
   var x = gHistogramFilterObjects[0].histogramfilter('state').split("/");
@@ -435,7 +420,6 @@ function syncStateWithFirst() {
   var y = x.join("/");
   $("#measure").text(y);
   $('#measure').show();
-
 }
 
 //construct selector and set selected aggregates
@@ -499,9 +483,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   updateUrlHashIfNeeded();
 }
 
-
 Telemetry.init(function () {
-  createButtonTinyUrl();
   var urlPageState = urlHashToPageState(window.location.hash);
   //if I don't come with a custom url I check for a cookie
   if (!restoreFromPageState(urlPageState, {})) {
@@ -522,7 +504,7 @@ Telemetry.init(function () {
       gHashSetFromCode = false;
       return;
     }
-    var curPageState = computePageState();
+    var curPageState = getPageState();
     var newPageState = urlHashToPageState(window.location.hash);
     restoreFromPageState(newPageState, curPageState);
   });
@@ -538,13 +520,13 @@ Telemetry.init(function () {
     var renderType = $('input[name=render-type]:radio:checked').val();
     event('click', 'render-type', renderType);
   });
+
   if (gHistogramFilterObjects.length > 1) {
-    setVisible = false;
+    gSingleSeriesMode = false;
     $('.single-histogram-only').hide();
     $('#description').hide();
 
   }
-
 
   $("#addVersionButton").click(function () {
     var state = null;
@@ -556,7 +538,7 @@ Telemetry.init(function () {
 
     addHistogramFilter(false, state);
 
-    setVisible = false;
+    gSingleSeriesMode = false;
 
     $('input[name=render-type]:radio:checked').val(['Graph']);
     if (!gSyncWithFirst) {
@@ -570,7 +552,36 @@ Telemetry.init(function () {
     updateUrlHashIfNeeded();
   });
 
+  $('#tinyUrl').click(function() {
+    event('click', 'tinyUrl', 'generatedTinyUrl');
+    var request = {
+      url: "https://api-ssl.bitly.com/shorten",
 
+      // tell jQuery we're expecting JSONP
+      dataType: "jsonp",
+
+      // tell YQL what we want and that we want JSON
+      data: {
+        longUrl: window.location.href ,  access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+        format: "json"
+      },
+
+      // work with the response
+      success: function( response ) {
+        var longUrl = Object.keys(response.results)[0];
+        var shortUrl = response.results[longUrl].shortUrl;
+        code.remove();
+        code = $("<code>");
+        var a = $('<a></a>').attr("href",shortUrl);
+        a.text(shortUrl);
+        code.append(a);
+        $("#tiny").append(code);
+
+      }
+    };
+    $.ajax(request);
+
+  });
 
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
@@ -583,8 +594,6 @@ Telemetry.init(function () {
     event('click', 'evolution-type', evoType);
   });
 
-
-
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
     // Inform google analytics of click
@@ -596,10 +605,9 @@ Telemetry.init(function () {
     $('.single-histogram-only').hide();
   }
 
-
 });
-/** Format numbers */
 
+/** Format numbers */
 function fmt(number) {
   if (number == Infinity) return "Infinity";
   if (number == -Infinity) return "-Infinity";
@@ -607,9 +615,6 @@ function fmt(number) {
   var prefix = d3.formatPrefix(number, 's');
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
-
-
-
 
 function createRemoveButton(parent) {
   var button = $('<button type="button" class="btn btn-default " class="button-resize" style="padding: 2px 7px;">');
@@ -621,8 +626,9 @@ function createRemoveButton(parent) {
     gHistogramFilterObjects = gHistogramFilterObjects.filter(function (x) {
       return x !== parent;
     });
+
     if (gHistogramFilterObjects.length == 1) {
-      setVisible = true;
+      gSingleSeriesMode = true;
       var hgramEvos = {};
       var currentHistogram = gHistogramFilterObjects[0].histogramfilter('histogram');
       if (currentHistogram != null) {
@@ -634,9 +640,7 @@ function createRemoveButton(parent) {
       $('#measure').show();
       $("#description").show();
       $("#histogram").show();
-
     }
-
     plot(false);
     //not sure we need this
     updateUrlHashIfNeeded();
@@ -662,7 +666,6 @@ function changeLockButton(newValue) {
   if (gSyncWithFirst === newValue) {
     return;
   }
-  //console.log("******", gHistogramFilterObjects.length);
   gSyncWithFirst = newValue;
   var lockButton = $("#lock-button");
   if (!gSyncWithFirst && gHistogramFilterObjects.length !== 1) {
@@ -695,46 +698,6 @@ function changeLockButton(newValue) {
   plot(false);
 }
 
-function createButtonTinyUrl() {
-  var valOfTinyUrl;
-  var button = $('<button type="button" class="btn btn-default" style="padding: 2px 7px;">');
-  button.text(" tinyUrl");
-  $("#tinyUrl").append(button);
-  var tiny = $("<div>");
-  var code = $("<code>");
-
-
-
-  button.click(function() {
-    event('click', 'tinyUrl', 'generatedTinyUrl');
-    var request = {
-      url: "https://api-ssl.bitly.com/shorten",
-
-      // tell jQuery we're expecting JSONP
-      dataType: "jsonp",
-
-      // tell YQL what we want and that we want JSON
-      data: {
-        longUrl: window.location.href ,  access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
-        format: "json"
-      },
-
-      // work with the response
-      success: function( response ) {
-        var longUrl = Object.keys(response.results)[0];
-        var shortUrl = response.results[longUrl].shortUrl;
-        code.remove();
-        code = $("<code>");
-        var a = $('<a></a>').attr("href","#").append(" " + shortUrl);
-        code.append(a);
-        $("#tinyUrl").append(code);
-      }
-    };
-    $.ajax(request);
-
-  })
-}
-
 function addHistogramFilter(firstHistogramFilter, state) {
   var f = $("<div>");
   if (firstHistogramFilter) {
@@ -743,7 +706,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
     createRemoveButton(f);
   }
 
-  $('#newHistoFilter').append(f);
+  $('#histogram-filters').append(f);
 
   var locked = false;
 
@@ -766,7 +729,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
     evolutionOver: $('input[name=evo-type]:radio:checked').val(),
   });
   f.bind("histogramfilterchange", function(event, args) {
-        if (firstHistogramFilter && gSyncWithFirst) {
+    if (firstHistogramFilter && gSyncWithFirst) {
       syncStateWithFirst();
     }
     if (args.doneLoading) {
@@ -777,8 +740,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
 
   });
   gHistogramFilterObjects.push(f);
-  var state = f.histogramfilter('option', 'state');
-
+  //var state = f.histogramfilter('option', 'state');
 }
 
 function renderHistogramTable(hgram) {
@@ -789,7 +751,7 @@ function renderHistogramTable(hgram) {
     $("#measure").text(hgram.measure()).hide();
   }
 
-  if (setVisible) {
+  if (gSingleSeriesMode) {
     $("#description").text(hgram.description()).show();
     $("#measure").text(hgram.measure()).show();
 
@@ -810,7 +772,7 @@ function renderHistogramGraph(hgram) {
     $("#description").text(hgram.description()).hide();
     $("#measure").text(hgram.measure()).hide();
   }
-  if (setVisible) {
+  if (gSingleSeriesMode) {
     $("#measure").text(hgram.measure()).show();
     $("#description").text(hgram.description()).show();
     $('#histogram').show();
@@ -870,7 +832,6 @@ $('#export-link').mousedown(function () {
   $('#export-link')[0].href = _lastBlobUrl;
   $('#export-link')[0].download = _exportHgram.measure() + ".csv";
   event('click','download csv', 'download csv');
-
 });
 
 var hasReportedDateRangeSelectorUsedInThisSession = false;
@@ -915,7 +876,6 @@ function update(hgramEvos) {
 
     datas.push(series);
   });
-
 
   // from list of lists to list
   var cDatas = [].concat.apply([], datas);

@@ -32,14 +32,15 @@
 
     <nav 
          class="navbar navbar-default  "  role="navigation">
-         <div class=" navbar-left"><form id="newHistoFilter" class=" navbar-form  form-inline " style= "margin: 3px;">
+         <div class=" navbar-left">
+             <form id="histogram-filters" class=" navbar-form  form-inline " style= "margin: 3px;">
          </form></div>
          <div class="navbar-form navbar-right">
            <div id="addVersionButton">
              <button type="button" class="btn btn-default" style="padding: 2px 7px;"><span class="glyphicon glyphicon-plus"></span>Add series</button>
              
            </div>           
-           <div id = "multipercentile"></div>
+           <div id ="multipercentile"></div>
          </div>
       <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
       </form>
@@ -113,10 +114,13 @@
                             </label>
                         </div>
                     </div>
-                    <div id="tinyUrl"></div>
+                    <div id="tiny">
+                        <button id="tinyUrl" type="button" class="btn btn-default" style="padding: 2px 7px;">TinyUrl</button>
+                        <div id="code"></div>
+                    </div>
                 </form>
-                <h2 id="summary" class="single-histogram-only" >Summary</h2>
-                <dl id= "summaryDetails" class="dl-horizontal single-histogram-only">
+                <h2 id="summary" class="single-histogram-only dl-horizontal">Summary</h2>
+                <dl id="summaryDetails" class="dl-horizontal single-histogram-only">
                     <dt >Kind</dt>
                         <dd id="prop-kind"></dd>
                     <dt>Submissions</dt>
@@ -157,7 +161,7 @@
                             <dd id="prop-p95"></dd>
                         <br>
                         <div class="single-histogram-only" class="alert alert-warning">
-                            <strong class="single-histogram-only" >Notice</strong> percentiles are estimated based on
+                            <strong >Notice</strong> percentiles are estimated based on
                             values in the histogram. Validity of small changes can be
                             argued.
                         </div>

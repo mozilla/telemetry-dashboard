@@ -188,7 +188,7 @@ var evolutionchart = function() {
       for (var j = 0; j < legendData[i].versions.length; j++) {
         var v = legendData[i].versions[j];
         var colorBar = $("<div>");
-        colorBar.addClass("legendColorBar");
+        colorBar.addClass("legend-color-bar");
         colorBar.css("background-color", legendData[i].versions[j].color);
         var innerLi = $("<li>");
         innerLi.attr("title", v.key + ": " + v.val);
