@@ -9,11 +9,12 @@
           href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
     <link rel="stylesheet"
           href="//netdna.bootstrapcdn.com/font-awesome/4.0.2/css/font-awesome.min.css">
-    <link rel="stylesheet"
-          href="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.css">
+    <link rel="stylesheet" href="lib/nv.d3.css">
     <link rel="stylesheet" href="lib/bootstrap-select.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style/dashboard.css">
+    <link rel="stylesheet" href="style/select2.css">
+    
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -25,23 +26,31 @@
 </head>
 <body>
     <header>
-        <h1 style="float:left;">Telemetry Dashboard</h1>
+        <h1>Telemetry Dashboard</h1>
     </header>
-    <nav data-spy="affix" data-offset-top="70"
-         class="navbar navbar-default navbar-affix-top" role="navigation">
-      <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
-      </form>
+    <nav class="navbar navbar-default"  role="navigation">
+        <div class=" navbar-left">
+            <form id="histogram-filters" class=" navbar-form  form-inline " style= "margin: 3px;"></form>
+        </div>
+        <div class="navbar-form navbar-right">
+           <div id="addVersionButton">
+              <button type="button" class="btn btn-default" style="padding: 2px 7px;"><span class="glyphicon glyphicon-plus"></span>Add series</button>
+           </div>           
+           <div id ="multipercentile"></div>
+        </div>
+        <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
+        </form>
     </nav>
-    <section>
+    <section style="margin: 0px auto; width: 100%;" class="container">
         <div id="content" class="row">
             <div class="col-md-8">
                 <div>
-                    <h2 id="measure">My measure</h2>
-                    <i id="description">My description</i>
-                    <figure><svg id="evolution"></figure>
+                    <h2 id="measure">Measure</h2>
+                    <i id="description">Description</i>
+                    <figure style="margin: 15px;"><svg id="evolution"></svg></figure>
                     <figure>
-                        <svg id="histogram"></svg>
-                        <table id="histogram-table" class="table table-condensed">
+                        <svg id="histogram" class="single-histogram-only"></svg>
+                        <table id="histogram-table" class="table table-condensed" class="single-histogram-only">
                             <thead>
                                 <tr>
                                     <th>Start</th>
@@ -54,8 +63,12 @@
                     </figure>
                 </div>
             </div>
-            <aside class="col-md-4">
-                <h2>Preferences</h2>
+            <aside class="col-md-4 page-end">
+
+                <h2>Legend</h2>
+                <div id="legend"></div>
+                <h2>Preferences
+                </h2>
                 <form role="form">
                     <div class="form-group">
                         <label>Show evolution over</label>
@@ -72,11 +85,11 @@
                             </label>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div id="renderHistogram" class="form-group, single-histogram-only">
                         <label>Render histogram as</label>
                         <div class="radio">
                             <label>
-                                <input type="radio" name="render-type" value="Graph" checked>
+                                <input type="radio" name="render-type" value="Graph">
                                 Graph
                             </label>
                         </div>
@@ -85,7 +98,7 @@
                                 <input type="radio" name="render-type" value="Table">
                                 Table
                             </label>
-                            (<a id="export-link" target="_blank">download as csv</a>)
+                            <label>(<a id="export-link" target="_blank">download as csv</a>)</label>
                         </div>
                     </div>
                     <div class="form-group">
@@ -97,10 +110,15 @@
                             </label>
                         </div>
                     </div>
+                    <div id="tiny">
+                        <button id="tinyUrl" type="button" class="btn btn-default inline" style="padding: 1px 8px; float: left; ">TinyUrl</button>
+                        <div id="txtContainer" style="float: left;"></div>
+                        <div style = "clear : left"></div>
+                    </div>
                 </form>
-                <h2>Summary</h2>
-                <dl class="dl-horizontal">
-                    <dt>Kind</dt>
+                <h2 id="summary" class="single-histogram-only dl-horizontal">Summary</h2>
+                <dl class="dl-horizontal single-histogram-only">
+                    <dt >Kind</dt>
                         <dd id="prop-kind"></dd>
                     <dt>Submissions</dt>
                         <dd id="prop-submissions"></dd>
@@ -139,8 +157,8 @@
                         <dt>95th Percentile</dt>
                             <dd id="prop-p95"></dd>
                         <br>
-                        <div class="alert alert-warning">
-                            <strong>Notice</strong> percentiles are estimated based on
+                        <div class="single-histogram-only" class="alert alert-warning">
+                            <strong >Notice</strong> percentiles are estimated based on
                             values in the histogram. Validity of small changes can be
                             argued.
                         </div>
@@ -198,12 +216,13 @@
     </div>
     <!-- jQuery, Bootstrap and d3 -->
     <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js">
-    </script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
     <script src="lib/bootstrap-select.min.js"></script>
     <script src="lib/d3.js"></script>
-    <script src="lib/nv.d3.js">
-    </script>
+    <script src="lib/nv.d3.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+
     <!-- nvd3 chart hacks -->
     <script src="src/evolutionchart.js"></script>
     <script src="src/histogramchart.js"></script>
@@ -216,17 +235,22 @@
             - telemetry.mozilla.org/v1/telemetry.js
         (we'll try to keep it backwards compatible)
      -->
-    <script src="v1/big.js"></script>
-    <script src="v1/telemetry.js"></script>
+    <script src="//telemetry.mozilla.org/v1/big.js"></script>
+    <script src="//telemetry.mozilla.org/v1/telemetry.js"></script>
 
     <!--
         telemetry.jquery.js and jQuery UI widget factory for stateful plugins.
         These are not required for using telemtry.js, but they make filtering
         very easy, and come in handy for custom dashboards.
     -->
-    <script src="src/bootstrap-selector.js"></script>
+    <script src="src/custom-selector.js"></script>
     <script src="lib/jquery.ui.widget.js"></script>
-    <script src="src/jquery.telemetry.js">
+    <script src="src/jquery.telemetry.js"></script>
+    <script src="lib/select2.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+        $('.select2').select2();
+      });
     </script>
 
     <!-- Dashboard specific Javascript -->

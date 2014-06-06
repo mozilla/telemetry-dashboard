@@ -5,6 +5,7 @@ var evolutionchart = function() {
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
+  var labelToColor = [];
 
   var lines = nv.models.line()
     , lines2 = nv.models.line()
@@ -34,7 +35,7 @@ var evolutionchart = function() {
     , selectionChangeCallback = null
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
-        return '<b>' + key + '</b>' +
+      return '<b>' + key + '</b>' +
                '<p>' +  y + ' on ' + x + '</p>';
       }
     , x
@@ -98,16 +99,126 @@ var evolutionchart = function() {
     return [curleft,curtop];
   }
 
+  function drawLegend(xCoord) {
+    function extractField(data, field) {
+      var d = {};
+      for(var i = 0; i < data.length; i++) {
+        var v = data[i][field];
+        d[v] = 1;
+      }
+      var l = [];
+      $.each(d, function(v, i) { l.push(v); });
+      l.sort();
+      return l;
+    }
+
+    var series = d3.selectAll("#evolution").datum().filter(function(e){return !e.disabled});
+    var aggregates = extractField(series, "title");
+
+    /*
+     * series: list of Objects
+     bar: true
+     key: "nightly/32/CYCLE_COLLECTOR: Submissions (left axis)"
+     originalKey: "nightly/32/CYCLE_COLLECTOR: Submissions"
+     title: "Submissions"
+     fullState: "nightly/32/CYCLE_COLLECTOR"
+     values: Array[27] objects like: {series: 0, x: 1398754800000, y: 346493}
+     */
+
+    /*
+     * legendData => list of entries for each aggregate (mean, p5, etc.)
+     * Each entry has:
+     *    - title: e.g. mean, p5, etc.
+     *    - versions: list of objects:
+     *        - key: version + measure (e.g. nightly/32 + CYCLE_COLLECTOR)
+     *        - val: numeric value or "none"
+     */
+
+    var lock = true;
+    function getMeasure(f) {
+      var x = f.split("/");
+      x.shift();
+      x.shift();
+      var z = x.join("/");
+      return z;
+    }
+
+    var measure = getMeasure(series[0].fullState);
+    for (var i = 0; i < series.length; i++) {
+      if (measure !== getMeasure(series[i].fullState)) {
+        lock = false;
+      }
+    }
+
+    var legendData = [];
+    for (var i = 0; i < aggregates.length; i++) {
+      var aggregate = aggregates[i];
+      var versions = [];
+      // versions: [  Object {key: versions+measure === state, val: "none" or number}
+      for (var j = 0; j < series.length; j++) {
+        if (aggregate !== series[j].title)
+          continue;
+        var state = series[j].fullState;
+        if (lock) {
+          var x = state.split("/");
+          var y = x[0] + " " + x[1];
+          state = y;
+        }
+        var color = series[j].color;
+
+        var numericValue = "none";
+        for (var k = 0; k < series[j].values.length; k++) {
+          if (series[j].values[k].x == xCoord) {
+            numericValue = series[j].values[k].y;
+          }
+        }
+        versions.push({key: state, val: numericValue, color: color});
+      }
+      legendData.push({title: aggregate, versions: versions});
+    }
+
+    var formatFunct = d3.format(".3s");
+    var legend = $("#legend");
+    legend.empty();
+    var outList = $("<ul>");
+    for (var i = 0; i < legendData.length; i++) {
+      var li = $("<li>");
+      li.text(legendData[i].title);
+      var innerUl = $("<ul>");
+      for (var j = 0; j < legendData[i].versions.length; j++) {
+        var v = legendData[i].versions[j];
+        var colorBar = $("<div>");
+        colorBar.addClass("legend-color-bar");
+        colorBar.css("background-color", legendData[i].versions[j].color);
+        var innerLi = $("<li>");
+        innerLi.attr("title", v.key + ": " + v.val);
+        innerUl.addClass("no-bullets");
+
+        if (v.val !== "none") {
+          v.val = formatFunct(v.val);
+        }
+        innerLi.text(v.key + ": " + v.val);
+        innerLi.prepend(colorBar);
+
+        innerLi.appendTo(innerUl);
+      }
+      innerUl.appendTo(li);
+      li.appendTo(outList);
+    }
+    outList.appendTo(legend);
+  }
+
   var showTooltip = function(e, offsetElement) {
     if (extent) {
-        e.pointIndex += Math.ceil(extent[0]);
+      e.pointIndex += Math.ceil(extent[0]);
     }
     var pos = findPos(offsetElement);
     var left = e.pos[0] + pos[0],//( offsetElement.offsetLeft || 0 ),
-        top = e.pos[1] + pos[1],//( offsetElement.offsetTop || 0),
-        x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex)),
-        y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex)),
-        content = tooltip(e.series.key, x, y, e, chart);
+         top = e.pos[1] + pos[1];//( offsetElement.offsetTop || 0),
+    var   x = xAxis.tickFormat()(lines.x()(e.point, e.pointIndex));
+    var   y = (e.series.bar ? y1Axis : y2Axis).tickFormat()(lines.y()(e.point, e.pointIndex));
+    var   content = tooltip(e.series.key, x, y, e, chart);
+    drawLegend(e.point.x);
 
     nv.tooltip.show([left, top], content, e.value < 0 ? 'n' : 's', 0, offsetElement);
   };
@@ -127,29 +238,44 @@ var evolutionchart = function() {
                              - margin.top - margin.bottom - height2,
           availableHeight2 = height2 - margin2.top - margin2.bottom;
 
-      chart.update = function() { container.transition().duration(transitionDuration).call(chart); };
+      function updateNoData(noData) {
+        if (noData) {
+          var noDataText = container.selectAll('.nv-noData').data([chart.noData()]);
+
+          noDataText.enter().append('text')
+            .attr('class', 'nvd3 nv-noData')
+            .attr('dy', '-.7em')
+            .style('text-anchor', 'middle');
+
+          noDataText
+            .attr('x', margin.left + availableWidth / 2)
+            .attr('y', margin.top + availableHeight1 / 2)
+            .text(function(d) { return d });
+
+          container.selectAll('g.nv-wrap.nv-linePlusBar').remove();
+          drawLegend(0);
+        } else {
+          container.selectAll('.nv-noData').remove();
+        }
+      }
+
+      chart.update = function() {
+        var series = container.datum().filter(function(e) { return !e.disabled;});
+        var noData = series.length === 0;
+        updateNoData(noData);
+        if (!noData) {
+          container.transition().duration(transitionDuration).call(chart);
+        }
+      };
       chart.container = this;
 
 
       //------------------------------------------------------------
       // Display No Data message if there's nothing to show.
-
-      if (!data || !data.length || !data.filter(function(d) { return d.values.length }).length) {
-        var noDataText = container.selectAll('.nv-noData').data([noData]);
-
-        noDataText.enter().append('text')
-          .attr('class', 'nvd3 nv-noData')
-          .attr('dy', '-.7em')
-          .style('text-anchor', 'middle');
-
-        noDataText
-          .attr('x', margin.left + availableWidth / 2)
-          .attr('y', margin.top + availableHeight1 / 2)
-          .text(function(d) { return d });
-
+      var noData = (!data || !data.length || !data.filter(function(d) { return d.values.length }).length);
+      updateNoData(noData);
+      if (noData) {
         return chart;
-      } else {
-        container.selectAll('.nv-noData').remove();
       }
 
       //------------------------------------------------------------
@@ -223,30 +349,6 @@ var evolutionchart = function() {
 
 
       //------------------------------------------------------------
-      // Legend
-
-      if (showLegend) {
-        legend.width( availableWidth  );
-
-        g.select('.nv-legendWrap')
-            .datum(data.map(function(series) {
-              series.originalKey = series.originalKey === undefined ? series.key : series.originalKey;
-              series.key = series.originalKey + (series.bar ? ' (left axis)' : ' (right axis)');
-              return series;
-            }))
-          .call(legend);
-
-        if ( margin.top != legend.height()) {
-          margin.top = legend.height();
-          availableHeight1 = (height || parseInt(container.style('height')) || 400)
-                             - margin.top - margin.bottom - height2;
-        }
-
-        g.select('.nv-legendWrap')
-            .attr('transform', 'translate(' + (0 ) + ',' + (-margin.top) +')');
-      }
-
-      //------------------------------------------------------------
 
 
       wrap.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -259,7 +361,13 @@ var evolutionchart = function() {
         .width(availableWidth)
         .height(availableHeight2)
         .color(data.map(function(d,i) {
-          return d.color || color(d, i);
+          var c = color(d, i);
+          labelToColor.push({
+            key:   d,
+            value: c
+          });
+          d.color = c;
+          return d.color || c;
         }).filter(function(d,i) { return !data[i].disabled && data[i].bar }));
 
       lines2
@@ -371,13 +479,10 @@ var evolutionchart = function() {
       //============================================================
       // Event Handling/Dispatching (in chart's scope)
       //------------------------------------------------------------
-
-      legend.dispatch.on('stateChange', function(newState) { 
-        chart.update();
-      });
-
       dispatch.on('tooltipShow', function(e) {
-        if (tooltips) showTooltip(e, that.parentNode);
+        if (tooltips) {
+          showTooltip(e, that.parentNode);
+        }
       });
 
       //============================================================
@@ -451,7 +556,7 @@ var evolutionchart = function() {
         .width(availableWidth)
         .height(availableHeight1)
         .color(data.map(function(d,i) {
-          return d.color || color(d, i);
+            return d.color || color(d, i);
         }).filter(function(d,i) { return !data[i].disabled && !data[i].bar }));
 
         var focusBarsWrap = g.select('.nv-focus .nv-barsWrap')
@@ -547,6 +652,16 @@ var evolutionchart = function() {
       //============================================================
 
       onBrush();
+
+
+      //------------------------------------------------------------
+      // Legend
+
+      if (showLegend) {
+        // NOTE: all value in the legend will be "none" as there's no point selected yet.
+        var startXCoord = 0;
+        drawLegend(startXCoord);
+      }
 
     });
 

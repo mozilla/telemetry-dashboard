@@ -36,7 +36,11 @@ $.widget("telemetry.histogramfilter", {
   
   /** Default options */
   options: {
+    /** Bool: lock or unlock measure and filters */
+    locked:                        false,
+    
     /** Class use to style <select> elements */
+   
     selectorClass:                  "histogram-filter",
 
     /** Initial state of histogram filter */
@@ -75,7 +79,8 @@ $.widget("telemetry.histogramfilter", {
 
     /** Prefix for state() if synchronizeStateWithHash is true */
     windowHashPrefix:               "",
-
+    
+    
     /**
      * Load histogram evolution over "Builds" or "Time".
      *
@@ -86,6 +91,8 @@ $.widget("telemetry.histogramfilter", {
      * information.
      */
     evolutionOver:                  "Builds",
+    
+    
 
     /**
      * Constructor for type to use for selectors. The default constructor
@@ -95,6 +102,7 @@ $.widget("telemetry.histogramfilter", {
      *  - element()       Get jQuery wrapped element to add to container
      *  - options(opts)   Get/set list of options.
      *  - val(v)          Get/set currently selected option
+     *  - enable(v)       Enable/disable the selector
      *  - change(cb)      Set value changed callback, invoked as
      *                    cb(selectorTypeInstance, value)
      *  - destroy()       Remove jQuery wrapped element, unbind event listeners,
@@ -165,6 +173,14 @@ $.widget("telemetry.histogramfilter", {
           return this._select.val();
         },
 
+        /** Enable/disable (gray-out) this selector */
+        enable: function DefaultSelector_enable(value) {
+          if (value !== undefined) {
+            this._select.prop("disabled", !value);
+          }
+          return this._select.prop("disabled");
+        },
+
         /**
          * Set change callback, only one callback supported, invocation without
          * the callback argument unbinds previous callback. The callback is
@@ -189,6 +205,7 @@ $.widget("telemetry.histogramfilter", {
   /** Create new histogramfilter */
   _create: function histogramfilter__create() {
     // Bind event handlers to this
+    this._loading = true;
     this._versionChanged    = $.proxy(this._versionChanged,     this);
     this._measureChanged    = $.proxy(this._measureChanged,     this);
     this._filterChanged     = $.proxy(this._filterChanged,      this);
@@ -197,6 +214,10 @@ $.widget("telemetry.histogramfilter", {
     // Create version and measure selectors
     this._versionSelector = new this.options.selectorType('version');
     this._measureSelector = new this.options.selectorType('measure');
+    if (this.options.locked) {
+      this._measureSelector.enable(false);
+    }
+   
     this._versionSelector.options(Telemetry.versions());
     this._versionSelector.element().addClass(this.options.selectorClass);
     this._measureSelector.element().addClass(this.options.selectorClass);
@@ -266,6 +287,10 @@ $.widget("telemetry.histogramfilter", {
   histogram: function histogramfilter_histogram() {
     // Get filter list length
     var n = this._filterList.length;
+
+    if (this._loading) {
+      return null;
+    }
 
     // If there is a last filter, get the histogram from it and apply the
     // select option, if not default
@@ -368,7 +393,13 @@ $.widget("telemetry.histogramfilter", {
         $(window).unbind("hashchange", this._windowHashChanged);
       }
 
-    } else {
+     } else if (option == "locked"){
+       this.options.locked = value;
+       this._measureSelector.enable(!value);
+       this._filterList.forEach(function(x){
+         x.select.enable(!value);
+       });
+     } else {
       this.options[option] = value;
     }
   },
@@ -404,7 +435,7 @@ $.widget("telemetry.histogramfilter", {
     this._ignoreChanges = false;
 
     // Report that we're loading
-    this._triggerChange();
+    this._triggerChange(false);
 
     // Load measures for selected version
     Telemetry.measures(version, $.proxy(function(measures) {
@@ -452,7 +483,7 @@ $.widget("telemetry.histogramfilter", {
     var version = this._versionSelector.val();
 
     // Report that we're loading
-    this._triggerChange();
+    this._triggerChange(false);
 
     // Load histogram for desired measure
     var loader = "loadEvolutionOver" + this.options.evolutionOver;
@@ -496,7 +527,10 @@ $.widget("telemetry.histogramfilter", {
         histogram:      hgram
       };
 
-      // Populate select with options and style it
+      if (this.options.locked) {
+        filter.select.enable(false);
+      }
+            
       filter.select.options(options);
       filter.select.element().addClass(this.options.selectorClass);
 
@@ -526,12 +560,12 @@ $.widget("telemetry.histogramfilter", {
       } else {
         // If we selected default options then no filters follows and we should
         // trigger a change
-        this._triggerChange();
+        this._triggerChange(true);
       }
     } else {
       // If there's no filter available, then we've drilled all the way down and
       // should trigger a change event
-      this._triggerChange();
+      this._triggerChange(true);
     }
   },
 
@@ -668,7 +702,7 @@ $.widget("telemetry.histogramfilter", {
       this._restoreFilters(filter.histogram.filter(option), clearedFilters);
     } else {
       // Otherwise, trigger the change event
-      this._triggerChange();
+      this._triggerChange(true);
     }
   },
 
@@ -710,9 +744,10 @@ $.widget("telemetry.histogramfilter", {
   },
 
   /** Trigger the histogramfilterchange event */
-  _triggerChange: function histogramfilter__triggerChange() {
+  _triggerChange: function histogramfilter__triggerChange(doneLoading) {
     // Version should be channel/version, and we wish to treat this as two
     // fragments with respect to serialization
+    this._loading = !doneLoading;
     var fragments = this._versionSelector.val().split("/");
     if (fragments.length != 2) {
       // We need the version to be on format <channel>/<version> this is fairly
@@ -775,7 +810,8 @@ $.widget("telemetry.histogramfilter", {
     // Now trigger the histogramfilterchange event
     this._trigger("change", null, {
       state:      this.options.state,
-      histogram:  histogram
+      histogram:  histogram,
+      doneLoading: doneLoading,
     });
   },
 
@@ -788,7 +824,8 @@ $.widget("telemetry.histogramfilter", {
 
     // Destroy widget base class
     $.Widget.prototype.destroy.call(this);
-  }
+  },
+  
 });
 
 })(jQuery);
