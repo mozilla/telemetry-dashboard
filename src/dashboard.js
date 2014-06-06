@@ -740,7 +740,6 @@ function addHistogramFilter(firstHistogramFilter, state) {
 
   });
   gHistogramFilterObjects.push(f);
-  //var state = f.histogramfilter('option', 'state');
 }
 
 function renderHistogramTable(hgram) {
