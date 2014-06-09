@@ -957,14 +957,6 @@ function update(hgramEvos) {
       var last = dates.length - 1;
       var startDate = dates[0];
       var endDate = dates[last];
-      for (var i = 0; i < dates.length; i++) {
-        if (dates[i] < startDate) {
-          startDate = dates[i];
-        }
-        if (dates[i] > endDate) {
-          endDate = dates[i];
-        }
-      }
       dateRange = dateFormat(startDate) + " to " + dateFormat(endDate);
     }
 
