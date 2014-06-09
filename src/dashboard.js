@@ -955,9 +955,7 @@ function update(hgramEvos) {
       dateRange = dateFormat(dates[0]);
     } else {
       var last = dates.length - 1;
-      var startDate = dates[0];
-      var endDate = dates[last];
-      dateRange = dateFormat(startDate) + " to " + dateFormat(endDate);
+      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);
     }
 
     // Set common properties
