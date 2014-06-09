@@ -781,7 +781,7 @@ HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
   for(var date in this._data) {
     dates.push(_parseDateString(date));
   }
-  return dates.sort();
+  return dates.sort(function(a, b){return a - b;});
 };
 
 /**
@@ -905,7 +905,7 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
   for(var date in this._data) {
     dates.push(date);
   }
-  dates.sort();
+  dates.sort(function(a, b) {return a - b;});
 
   // Find filter ids
   var filterIds = _listFilterIds(this._filter_tree);

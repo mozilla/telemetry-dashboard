@@ -921,6 +921,7 @@ function update(hgramEvos) {
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
+
   function updateProps(extent) {
     var hgram;
     var dates = hgramEvo.dates();
