@@ -921,6 +921,7 @@ function update(hgramEvos) {
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
+
   function updateProps(extent) {
     var hgram;
     var dates = hgramEvo.dates();
@@ -954,7 +955,17 @@ function update(hgramEvos) {
       dateRange = dateFormat(dates[0]);
     } else {
       var last = dates.length - 1;
-      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);
+      var start = dates[0];
+      var stop = dates[last];
+      for (var i = 0; i < dates.length; i++) {
+        if (dates[i] < start) {
+          start = dates[i];
+        }
+        if (dates[i] > stop) {
+          stop = dates[i];
+        }
+      }
+      dateRange = dateFormat(start) + " to " + dateFormat(stop);
     }
 
     // Set common properties
