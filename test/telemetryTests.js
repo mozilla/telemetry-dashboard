@@ -130,8 +130,8 @@ describe('tests for telemetry.js', function(){
           assert.equal(histogram.submissions(), 0);
 
           //dates should be sorted
-          assert.equal(histogramEvolution.dates()[0], "Mon May 19 2014 00:00:00 GMT-0700 (PDT)");
-          assert.equal(histogramEvolution.dates()[2], "Sat May 31 2014 00:00:00 GMT-0700 (PDT)");
+          assert.equal(histogramEvolution.dates()[0].toJSON(), "2014-05-19T07:00:00.000Z");
+          assert.equal(histogramEvolution.dates()[2].toJSON(), "2014-05-31T07:00:00.000Z");
           var submissionsSortedByDate = [12255, 12873, 19163];
           histogramEvolution.each(function(date, histogram, index) {
             assert.equal(histogram.submissions(), submissionsSortedByDate[index]);
