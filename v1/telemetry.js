@@ -1,7 +1,3 @@
-if (typeof module !== 'undefined') { // running on nodejs
-  XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-}
-
 (function(exports){
 "use strict";
 
