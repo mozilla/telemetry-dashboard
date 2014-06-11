@@ -1,4 +1,5 @@
-var x = require('../v1/Telemetry');
+var x = require('../v1/telemetry');
+var data = require('./testData');
 var assert = require('assert');
 
 //overwrite getUrl from Telemetry.js
@@ -7,15 +8,15 @@ x.Telemetry.getUrl = function f(url, cb) {
   var y = x[x.length - 1].split(".");
   var z = y[0];
   if (z == "versions") {
-    cb(null, versions);
+    cb(null, data.versions);
   } else if (z == "histograms") {
-    cb(null, histograms);
+    cb(null, data.histograms);
   } else if (z == "CYCLE_COLLECTOR-by-build-date") {
-    cb(null, CYCLE_COLLECTOR_by_build_date);
+    cb(null, data.CYCLE_COLLECTOR_by_build_date);
   } else if  (z == "filter-tree") {
-    cb(null, filter_tree);
+    cb(null, data.filter_tree);
   } else if (z == "A11Y_CONSUMERS-by-build-date") {
-    cb(null, A11Y_CONSUMERS_by_build_date);
+    cb(null, data.A11Y_CONSUMERS_by_build_date);
   } else {
     throw "URL NOT RECOGNISED: " + url;
   }
@@ -25,7 +26,9 @@ x.Telemetry.getUrl = function f(url, cb) {
 describe('tests for telemetry.js', function(){
   before(function(done){
     x.Telemetry.init(function() {
+      console.log(x.Telemetry);
       var sortedVersions = x.Telemetry.versions();
+
       assert.equal(sortedVersions[0], 'nightly/30', "list of versions should be sorted");
       done();
     });

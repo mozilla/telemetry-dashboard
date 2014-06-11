@@ -1,13 +1,13 @@
 //this file contains mock data for telemetryTests
-versions = {"nightly/31": "20140609201622-31-nightly", "nightly/30": "20140609190749-30-nightly", "nightly/32": "20140609192901-32-nightly"};
-histograms = {
+exports.versions = {"nightly/31": "20140609201622-31-nightly", "nightly/30": "20140609190749-30-nightly", "nightly/32": "20140609192901-32-nightly"};
+exports.histograms = {
   "PLUGIN_CALLED_DIRECTLY": {"expires_in_version": "never", "kind": "flag", "description": "A plugin object was successfully invoked as a function"},
   "A11Y_CONSUMERS": {"expires_in_version": "never", "kind": "enumerated", "description": "Accessibility client by enum id", "n_values": 11},
   "CYCLE_COLLECTOR": {"high": "10000", "expires_in_version": "never", "kind": "exponential", "description": "Time spent on one cycle collection (ms)", "n_buckets": 50},
   "APPLICATION_REPUTATION_COUNT": {"expires_in_version": "never", "kind": "boolean", "description": "Application reputation query count (both local and remote)"},
   "COOKIES_3RDPARTY_NUM_ATTEMPTS_BLOCKED": {"kind": "linear", "description": "The total number of distinct attempts by third-party sites to place cookies which have been rejected.  Measures are normalized per 24h.", "high": "500", "expires_in_version": "never", "low": "10", "n_buckets": "50"},
 }
-A11Y_CONSUMERS_by_build_date = {"20140519": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 400, -1, -1, 4000, 0, 40, 40],
+exports.A11Y_CONSUMERS_by_build_date = {"20140519": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 0, 400, -1, -1, 4000, 0, 40, 40],
                                              [7, 0, 0, 0, 0, 0, 0, 0, 3, 5, 2437, 140, 25979, -1, -1, 261237, 0, 2585, 34],
                                              [19, 8, 0, 0, 0, 0, 0, 0, 0, 8, 2976, 263, 32733, -1, -1, 330079, 0, 3248, 33],
                                              [4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 1281, 127, 14211, -1, -1, 143471, 0, 1408, 28],
@@ -36,10 +36,10 @@ A11Y_CONSUMERS_by_build_date = {"20140519": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 40, 
                                              [0, 0, 0, 0, 0, 0, 0, 0, 3, 10, 3757, 249, 40423, -1, -1, 406831, 0, 4019, 34],
                                              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 110, -1, -1, 1100, 0, 11, 40],
                                              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 0, 510, -1, -1, 5100, 0, 51, 23]]};
-CYCLE_COLLECTOR_by_build_date = {"20140531": [[0, 13, 114, 368, 465, 605, 618, 586, 1056, 547, 100, 95, 69, 78, 82, 285, 1661, 815, 249, 135, 305, 311, 173, 388, 200, 296, 249, 253, 292, 287, 308, 300, 295, 255, 274, 239, 219, 213, 199, 198, 443, 169, 49, 14, 8, 1, 5, 0, 0, 0, 4739885, 0, 0, -1, -1, 319, 7],
+exports.CYCLE_COLLECTOR_by_build_date = {"20140531": [[0, 13, 114, 368, 465, 605, 618, 586, 1056, 547, 100, 95, 69, 78, 82, 285, 1661, 815, 249, 135, 305, 311, 173, 388, 200, 296, 249, 253, 292, 287, 308, 300, 295, 255, 274, 239, 219, 213, 199, 198, 443, 169, 49, 14, 8, 1, 5, 0, 0, 0, 4739885, 0, 0, -1, -1, 319, 7],
                                               [0, 0, 0, 2, 14, 59, 55, 9, 41, 7, 0, 0, 0, 0, 0, 70, 1402, 361, 72, 91, 171, 57, 389, 668, 99, 70, 47, 29, 21, 24, 10, 18, 12, 15, 7, 8, 4, 3, 0, 3, 2, 1, 0, 1, 0, 1, 0, 1, 1, 1, 380298, 0, 0, -1, -1, 4, 82]]};
 
-filter_tree = {
+exports.filter_tree = {
   "_id":0,
   "name":"reason",
   "saved_session":{
