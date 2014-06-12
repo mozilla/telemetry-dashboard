@@ -1,0 +1,16 @@
+{
+  "private":  true,
+  "scripts": {
+    "test":   "mocha test/telemetryTests.js"
+  },
+  "repository": {
+    "type":   "git",
+    "url":    "https://github.com/mozilla/telemetry-dashboard.git"
+  },
+  "devDependencies": {
+    "mocha":                            "1.18.2"
+  },
+  "engines": {
+    "node":                             "0.10.x"
+  }
+}
