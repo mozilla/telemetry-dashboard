@@ -114,16 +114,16 @@ describe('tests for telemetry.js', function(){
           var d = new Date("May 31, 2014");
           var futureDate = new Date("July 21, 2917");
           histogram = histogramEvolution.range(d);
-          assert.equal(histogram.submissions(), 19163);
+          assert.equal(histogram.submissions(), 12873);
 
           histogram = histogramEvolution.range(null, d);
           assert.equal(histogram.submissions(), x);
 
           histogram = histogramEvolution.range(d, null);
-          assert.equal(histogram.submissions(), 19163);
+          assert.equal(histogram.submissions(), 12873);
 
           histogram = histogramEvolution.range(d, d);
-          assert.equal(histogram.submissions(), 19163);
+          assert.equal(histogram.submissions(), 12873);
 
           histogram = histogramEvolution.range(futureDate);
 
@@ -132,7 +132,7 @@ describe('tests for telemetry.js', function(){
           //dates should be sorted
           assert.equal(histogramEvolution.dates()[0].toJSON(), "2014-05-19T00:00:00.000Z");
           assert.equal(histogramEvolution.dates()[2].toJSON(), "2014-05-31T00:00:00.000Z");
-          var submissionsSortedByDate = [12255, 12873, 19163];
+          var submissionsSortedByDate = [12255,19163, 12873];
           histogramEvolution.each(function(date, histogram, index) {
             assert.equal(histogram.submissions(), submissionsSortedByDate[index]);
           });
@@ -144,9 +144,9 @@ describe('tests for telemetry.js', function(){
             };
           });
 
-          testData = [ { x: 1400482800000, y: 12255 },
-                       { x: 1401433200000, y: 12873 },
-                       { x: 1401519600000, y: 19163 } ];
+          testData = [ { x: 1400457600000, y: 12255 },
+                       { x: 1401433200000, y: 19163 },
+                       { x: 1401519600000, y: 12873 } ];
 
           assert.equal(data[0].x, testData[0].x);
           assert.equal(data[2].y, testData[2].y);
