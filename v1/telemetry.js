@@ -126,7 +126,7 @@ var releaseURL = "http://telemetry.mozilla.org/v1/telemetry.js";
 // Check if the current browser includes telemetry.js from the release url.
 // ignore browsers that don't support `document.currentScript`, there is
 // probably not a lot of developers who use IE for development anyway.
-if (typeof document !== 'undefined' && document.currentScript && document.currentScript.src != releaseURL) {
+if (typeof(document) !== 'undefined' && document.currentScript && document.currentScript.src != releaseURL) {
   // Let's print a long grim warning message, hopefully people will pay
   // attention, the issue is fairly well explained here.
   console.log([
@@ -297,6 +297,7 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
   var data_folder = _dataFolderMap[channel_version];
   _get([data_folder, "histograms.json"], function(data) {
     var measures = {};
+
     // For each measure fetched
     for(var measure in data) {
       // Add measure id
@@ -305,6 +306,7 @@ Telemetry.measures = function Telemetry_measures(channel_version, cb) {
         description:  data[measure].description
       }
     }
+    
     // Return measures by callback
     cb(measures);
   });
