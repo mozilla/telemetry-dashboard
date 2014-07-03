@@ -74,3 +74,7 @@ body {
     position: relative;
     margin: 5px;
 }
+
+table a {
+    cursor: pointer;
+}

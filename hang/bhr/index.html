@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>ANR Dashboard</title>
+    <title>BHR Dashboard</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
@@ -29,13 +29,13 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <span class="navbar-brand">ANR Dashboard</span>
+          <span class="navbar-brand">BHR Dashboard</span>
         </div>
 
         <div class="navbar-collapse collapse">
           <form class="navbar-form navbar-link navbar-left">
             Displaying
-            <span id="navbar-count"></span> reports
+            <span id="navbar-count"></span> hangs
             <span id="navbar-filtered" class="hide"> (filtered) </span>from
             <select id="navbar-from" class="form-control">
               <option>last week</option>
@@ -47,8 +47,8 @@
             <select id="navbar-groupby" class="form-control">
             </select>
             <div class="btn-group" data-toggle="buttons">
-              <label class="btn btn-default">
-                <input id="navbar-normalize" type="checkbox">
+              <label class="btn btn-default active">
+                <input id="navbar-normalize" type="checkbox" checked>
                 <span class="glyphicon glyphicon-indent-right"></span>
                 <span>Normalize</span>
               </label>
@@ -68,7 +68,7 @@
         <div class="row">
           <div class="col-md-6 plot-holder">
             <form class="text-center form-inline">
-              <label>Top hangs <span id="report-units"></span>
+              <label>Top hangs <span id="report-units">(per 1k user-hours)</span>
                 <small class="text-muted">(click on bars for details)</small>
               </label>
             </form>
@@ -89,6 +89,20 @@
         </div>
       </div>
 
+      <div class="well">
+        <div class="small-plot-holder">
+          <form class="text-center form-inline">
+            <label>Responsiveness for
+              <select id="activity-dim-value" class="form-control">
+              </select>
+              <span id="activity-dim-name"></span>
+            </label>
+          </form>
+          <i class="fa fa-spinner fa-spin"></i>
+          <div id="activity-plot" class="plot"></div>
+        </div>
+      </div>
+
       <div>
         <table class="table table-condensed table-hover">
           <thead>
@@ -97,7 +111,7 @@
               <th>
                 <span id="reports-dim-name"></span>
                 (hangs)
-                <span id="reports-units"></span>
+                <span id="reports-units">(per 1k user-hours)</span>
               </th>
               <th>Top frame</th>
             </tr>
@@ -150,6 +164,18 @@
                   </div>
                 </div>
               </div>
+              <div class="panel panel-default">
+                <div class="panel-heading panel-title" data-toggle="collapse"
+                     data-parent="#report-plots" data-target="#report-plots-activity">
+                  Hang times
+                </div>
+                <div id="report-plots-activity" class="panel-collapse collapse">
+                  <div class="panel-body small-plot-holder">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    <div id="report-activity-plot" class="plot"></div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="panel-group" id="report-stacks">
               <div class="panel panel-default hide" id="report-stacks-thread">
@@ -186,7 +212,7 @@
       $(function() {
         var dashboard = new Dashboard(
             "https://s3-us-west-2.amazonaws.com" +
-            "/telemetry-public-analysis/anr/data/anr-{from}-{to}");
+            "/telemetry-public-analysis/bhr/data/bhr-{from}-{to}");
       });
     </script>
   </body>
