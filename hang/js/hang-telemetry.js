@@ -131,7 +131,7 @@ HangTelemetry.prototype = {
     },
 
     _countHistograms: function(histograms) {
-        var max = 0, maxSum = 0;
+        var max = 0, maxSum = -1;
         for (var info in histograms) {
             var count = 0;
             var histogram = histograms[info];
