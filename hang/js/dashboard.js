@@ -96,8 +96,76 @@ function smartPercent(v) {
     return (v * 100).toPrecision(3) + "%";
 }
 
-function replaceBrackets(str) {
+function escapeHTML(str) {
     return str && str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function transformFrame(frame, plain) {
+    var mxr;
+    frame = frame.replace(/\(mxr:([\w-]+):([\da-fA-F]+)\)/,
+        function(match, repo, rev) {
+            mxr = [repo, rev];
+            return "";
+        }).trim();
+
+    if (!plain && mxr) {
+        var search = true, string = frame, regexp, line;
+        var parts = frame.match(/(.+):(\d+)/);
+        if (parts && parts.length >= 3) {
+            search = false;
+            string = parts[1];
+            regexp = false;
+            line = parts[2];
+        }
+
+        parts = frame.match(/(.+)::(.+)/);
+        if (parts && parts.length >= 3) {
+            search = true;
+            string = 'PROFILER_LABEL.*"' + parts[1] + '".*"' + parts[2] + '"';
+            regexp = true;
+            if (string.length > 28) {
+                string = 'LABEL.*"' + parts[1] + '".*"' + parts[2] + '"';
+            }
+            if (string.length > 28) {
+                string = '"' + parts[1] + '".*"' + parts[2] + '"';
+            }
+            if (string.length > 28) {
+                string = '"' + (parts[1].length > parts[2].length ?
+                                parts[1] : parts[2]) + '"';
+                regexp = false;
+            }
+            line = null;
+        }
+
+        return '<a href="' +
+               'https://mxr.mozilla.org/' + encodeURIComponent(mxr[0]) +
+               '/' + (search ? 'search' : 'find') +
+               '?rev=' + encodeURIComponent(mxr[1]) +
+               '&string=' + encodeURIComponent(string) +
+               (regexp ? '&regexp=1&case=on' : '') +
+               (line ? '&line=' + encodeURIComponent(line) : '') +
+               '" target="_blank">' + escapeHTML(frame) + '</a>';
+    }
+
+    var hg;
+    frame = frame.replace(/\(hg:.+\/([\w-]+):(.+):([\da-fA-F]+):(\d+)\)/,
+        function(match, repo, file, rev, line) {
+            hg = [repo, file, rev, line];
+            return "";
+        }).trim();
+
+    if (!plain && hg) {
+        if (hg[1].indexOf('obj-') === 0) {
+            return escapeHTML(frame);
+        }
+        return '<a href="' +
+               'https://mxr.mozilla.org/' + encodeURIComponent(hg[0]) +
+               '/source/' + hg[1] +
+               '?rev=' + encodeURIComponent(hg[2]) +
+               '#' + encodeURIComponent(hg[3]) +
+               '" target="_blank">' + escapeHTML(frame) + '</a>';
+    }
+    return escapeHTML(frame);
 }
 
 function fillReportModal(modal, report, dimValue, sessions, options) {
@@ -122,6 +190,17 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
     function addThreads(threads, append) {
         var out = $();
         threads.forEach(function(thread) {
+            var dim;
+            var name = thread.name().replace(/\(dim:(.+):(.+)\)/,
+                function(match, dimname, dimval) {
+                    dim = [dimname, dimval];
+                    return dimValue ? "" : ("(" + dimval + " " + dimname + ")");
+                });
+            if (dim && (dim[0] !== $("#navbar-groupby").val() ||
+                        (dimValue && dimValue !== dimdim[1]))) {
+                return;
+            }
+
             var clone = template.clone()
                 .removeAttr("id").removeClass("hide");
             var body = clone.find(".panel-body");
@@ -135,7 +214,7 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
                 var lib = frame.libName();
                 var text = func + (lib ? " (" + lib + ")" : "")
                                 + (line ? " (line " + line + ")" : "");
-                $("<li/>").text(text)
+                $("<li/>").html(transformFrame(text))
                           .addClass(muteNative && frame.isNative() ? "text-muted" : "")
                           .appendTo(body);
             });
@@ -145,7 +224,7 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
                  .attr("id", id)
                  .addClass(append ? "" : "in");
             clone.find(".panel-heading")
-                 .text(thread.name() + " stack")
+                 .text(name + " stack")
                  .attr("data-target", "#" + id);
             out.add(append ? clone.appendTo(stacks)
                            : clone.prependTo(stacks));
@@ -181,7 +260,8 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
             !activityPlotted && $("#report-plots-activity").hasClass("in")) {
             var hangtime = sessions.byName("hangtime").filter(
                 function(name, dimval, info, val) {
-                    return dimval === dimValue && val === report.name();
+                    return (!dimValue || dimval === dimValue) &&
+                           val === report.name();
                 }
             );
             replotActivities(activityPlot, [hangtime], dimValue,
@@ -254,14 +334,14 @@ function replotReports(elem, reports, sessions, options) {
       return (!uptimes || num >= 10) ? smartPrefix(Math.round(num))
                                      : num.toPrecision(2);
     }
-    function formatFrame(frame, skipNative) {
+    function formatFrame(frame, skipNative, plain) {
       if ((skipNative && frame.isNative()) ||
           (!skipNative && !isNaN(parseInt(frame.functionName())))) {
           return null;
       }
       var line = frame.lineNumber();
-      return replaceBrackets(frame.functionName() +
-          (line ? " (line " + line + ")" : ""));
+      return transformFrame(frame.functionName() +
+          (line ? " (line " + line + ")" : ""), plain);
     }
 
     var reportslist = $("#reports-list");
@@ -308,7 +388,7 @@ function replotReports(elem, reports, sessions, options) {
         stackobj.some(function(frame, index) {
           var formatted = formatFrame(frame, skipNative);
           if (formatted) {
-            topframe.text(formatted);
+            topframe.html(formatted);
           }
           return !!formatted;
         });
@@ -322,7 +402,7 @@ function replotReports(elem, reports, sessions, options) {
                   " hang" + (num === 1 ? "" : "s");
         options.normalize && (tip += " / 1k user-hrs");
         var report = item.series.report;
-        tip = replaceBrackets(tip);
+        tip = escapeHTML(tip);
         if (!report) {
             return tip;
         }
@@ -334,7 +414,7 @@ function replotReports(elem, reports, sessions, options) {
             var skipNative = stackobj.some(
                 function(frame) { return !frame.isNative(); });
             stackobj.every(function(frame, index) {
-                var formatted = formatFrame(frame, skipNative);
+                var formatted = formatFrame(frame, skipNative, "plain");
                 if (!formatted) {
                     return true;
                 }
@@ -503,7 +583,7 @@ function replotInfo(elem, reports, value, sessions, options) {
     }
 
     function _tooltip(label, xval, yval, item) {
-        return replaceBrackets(item.series.info[item.dataIndex] + " : " +
+        return escapeHTML(item.series.info[item.dataIndex] + " : " +
                Math.round(item.series.data[item.dataIndex][0]) + "%");
     }
     function _tooltipHover(item, tooltip) {
@@ -570,11 +650,13 @@ function replotBuild(elem, reports, value, sessions, options) {
         });
     }
 
-    var builds = reports.infoDistribution(value).appBuildID;
+    var builds = $.extend(true, {},
+        reports.infoDistribution(value).appBuildID);
     var versions = {};
     var buildids = {};
     Object.keys(builds).forEach(function(build) {
         if (uptimes && !uptimes[build]) {
+            delete builds[build];
             return;
         }
         var comps = build.split("-");
@@ -630,11 +712,17 @@ function replotBuild(elem, reports, value, sessions, options) {
         return bucket;
     }, [])) / (1 - upperCount / buildsKeys.length);
 
+    buildsKeys.sort(function(a, b) {
+        return builds[a] - builds[b];
+    });
+    upperBound = Math.max(upperBound,
+        2 * builds[buildsKeys[Math.floor(buildsKeys.length / 2)]]);
+
     function _tooltip(label, xval, yval, item) {
         var num = item.series.data[item.dataIndex][1];
-        var tip = replaceBrackets(buildids[
+        var tip = escapeHTML(buildids[
                     item.series.data[item.dataIndex][0]]) + "<br>" +
-                  replaceBrackets((!uptimes || num >= 10) ? smartPrefix(Math.round(num))
+                  escapeHTML((!uptimes || num >= 10) ? smartPrefix(Math.round(num))
                                            : num.toPrecision(2)) +
                   " hang" + (num === 1 ? "" : "s");
         options.normalize && (tip += " / 1k user-hrs");
@@ -755,7 +843,7 @@ function replotActivities(elem, activities, value, options) {
 
     function _tooltip(label, xval, yval, item) {
         var labelFn = function(val) {
-            return replaceBrackets(options.normalize ?
+            return escapeHTML(options.normalize ?
                 smartPercent(val) : smartPrefix(val));
         };
         var at = labelFn(item.series.data[item.dataIndex][1]);
@@ -763,12 +851,12 @@ function replotActivities(elem, activities, value, options) {
                 function(prev, d) { return prev + d[1]; }, 0));
         var above = labelFn(item.series.data.slice(item.dataIndex + 1).reduce(
                 function(prev, d) { return prev + d[1]; }, 0));
-        var prevtime = (item.dataIndex === 0 ? "" : replaceBrackets(
+        var prevtime = (item.dataIndex === 0 ? "" : escapeHTML(
             smartTime(item.series.data[item.dataIndex - 1][0] / 1000)));
-        var time = replaceBrackets(smartTime(
+        var time = escapeHTML(smartTime(
             item.series.data[item.dataIndex][0] / 1000));
         return (options.noname ? "" :
-                replaceBrackets(item.series.label) + "<br>") +
+                escapeHTML(item.series.label) + "<br>") +
             (item.dataIndex === 0 ? "&lt;" + time + ": " + at + "<br>"
                                   : prevtime + "-" + time + ": " + at + "<br>" +
                                     "&lt;" + prevtime + ": " + below + "<br>") +

@@ -69,6 +69,9 @@ HangTelemetry.prototype = {
 
     _getThreads: function(type, key, data, cache, cb) {
         function _getCached() {
+            if (!cache[type][key]) {
+                return cb([]);
+            }
             return cb(cache[type][key].map(function(thread) {
                 return new Thread(thread);
             }));
