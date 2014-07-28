@@ -10,8 +10,7 @@ function event() {
   var args = Array.prototype.slice.call(arguments);
   args.unshift('event');
   args.unshift('send');
-  ga.call(ga, args)
-  //console.log("Event: " + args.join(' > '));
+  ga.apply(ga, args);
 }
 
 function setCookie(cname, cvalue, exdays) {
