@@ -165,10 +165,12 @@ var evolutionchart = function() {
           state = y;
         }
         var color = series[j].color;
-
         var numericValue = "none";
         for (var k = 0; k < series[j].values.length; k++) {
           if (series[j].values[k].x == xCoord) {
+            var dt=new Date(Date.parse(new Date(xCoord)));
+            var formattedDate =dt.getFullYear() + "/" + (dt.getMonth() + 1) + "/" + dt.getDate();
+            document.getElementById('info').innerHTML = "hovered date: " + formattedDate;
             numericValue = series[j].values[k].y;
           }
         }
