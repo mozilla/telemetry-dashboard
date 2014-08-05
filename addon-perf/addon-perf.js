@@ -240,6 +240,7 @@ function update_data() {
 
 $(function () {
     $('#previous_week').click(function() {
+        console.log("previous week");
         thisWeekStart.setDate(thisWeekStart.getDate() - 7);
         thisWeekEnd.setDate(thisWeekEnd.getDate() - 7);
         lastWeekStart.setDate(lastWeekStart.getDate() - 7);
@@ -247,6 +248,7 @@ $(function () {
         update_data();
     });
     $('#next_week').click(function() {
+        console.log("next week");
         thisWeekStart.setDate(thisWeekStart.getDate() + 7);
         thisWeekEnd.setDate(thisWeekEnd.getDate() + 7);
         lastWeekStart.setDate(lastWeekStart.getDate() + 7);
