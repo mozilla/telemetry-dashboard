@@ -27,14 +27,15 @@ var addon_data = {};
 var APP_COLUMN          = 0;
 var PLATFORM_COLUMN     = 1;
 var ID_COLUMN           = 2;
-var NAME_COLUMN         = 3;
-var MEASURE_COLUMN      = 4;
-var SESSIONS_COLUMN     = 5;
-var POPULARITY_COLUMN   = 6;
-var IMPACT_COLUMN       = 7;
-var MEDIAN_COLUMN       = 8;
-var P75_COLUMN          = 9;
-var P95_COLUMN          = 10;
+var VERSION_COLUMN      = 3;
+var NAME_COLUMN         = 4;
+var MEASURE_COLUMN      = 5;
+var SESSIONS_COLUMN     = 6;
+var POPULARITY_COLUMN   = 7;
+var IMPACT_COLUMN       = 8;
+var MEDIAN_COLUMN       = 9;
+var P75_COLUMN          = 10;
+var P95_COLUMN          = 11;
 var LAST_COLUMN = P95_COLUMN;
 
 function zpad(aNum) {
@@ -59,9 +60,10 @@ function fetch_data(key, cb) {
     console.log("Fetching: " + key);
     var xhr = new XMLHttpRequest();
     var url = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_perf/data/weekly_addons_" + key + ".csv.gz";
-    //var url = "weekly_" + key + ".csv";
+    // var url = "weekly_addons_" + key + ".csv";
     console.log("Fetching url: " + url);
     xhr.open("GET", url, true);
+    xhr.responseType = "text";
     xhr.onload = function() {
         console.log("onload:" + xhr.status);
         if (xhr.status != 200 && xhr.status != 0) {
@@ -69,10 +71,17 @@ function fetch_data(key, cb) {
             addon_data[key] = []
         } else {
             console.log("Got the data for " + url + ", processing");
-            addon_data[key] = $.csv.toArrays(xhr.responseText);
-            // Delete the header row from the CSV
-            addon_data[key].shift();
-            console.log("done processing for " + key + ", got " + addon_data[key].length + " rows");
+            try {
+              addon_data[key] = $.csv.toArrays(xhr.responseText);
+              // Delete the header row from the CSV
+              addon_data[key].shift();
+              console.log("done processing for " + key + ", got " + addon_data[key].length + " rows");
+            }
+            catch(e) {
+              console.log("CSV parse failed for " + url + ": " + e);
+              addon_data[key] = [];
+              cb(key);
+            }
         }
         //$('#throbber').fadeOut(500);
         //$('#addon_data').fadeIn(500);
@@ -83,7 +92,7 @@ function fetch_data(key, cb) {
         console.log("Failed to fetch: " + url);
         //$('#throbber').fadeOut(500);
         //$('#addon_data').fadeIn(500);
-        addon_data[key] = []
+        addon_data[key] = [];
         cb(key);
     };
     try {
@@ -98,12 +107,11 @@ function fetch_data(key, cb) {
 }
 
 // map ao_type to table column for sorting
-// Rank column isn't in data table
 var key_columns = {
-  'Impact': 7,
-  'Popularity': 6,
-  'Median': 8,
-  '75 %': 9
+  'Impact': IMPACT_COLUMN,
+  'Popularity': POPULARITY_COLUMN,
+  'Median': MEDIAN_COLUMN,
+  '75 %': P75_COLUMN
 };
 
 function populate_table(table_id, key, label) {
