@@ -2,7 +2,8 @@ $(function() {
 
 "use strict";
 
-var serverUri = "http://people.mozilla.org/~nchen/bhrs/bhr-{from}-{to}/summary.txt";
+var serverUri = "https://s3-us-west-2.amazonaws.com" +
+                "/telemetry-public-analysis/bhr/data/bhr-{from}-{to}");
 
 var toDate = Date.today().last().saturday();
 if (Date.today().isBefore(

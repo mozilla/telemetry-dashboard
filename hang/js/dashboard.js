@@ -1,14 +1,32 @@
 (function(exports) {
 
+/**
+ * Code for both the ANR and BHR dashboards.
+ *
+ * @param serverUri URI to the server data directory in the format
+ *     https://example.com/foo/bar-{from}-{to}, where {from} and {to} are dates in the format
+ *     YYYYmmdd. The exact dates depend on the what is stored on the server, but usually {from}
+ *     is a Sunday and {to} is the following Saturday.
+ */
 exports.Dashboard = function (serverUri) {
 
+/**
+ * All hang reports are grouped by "dimensions". Each dimension has a name and a list of values.
+ * For example, hang reports under the "arch" dimension with value "x86" will only contain hangs
+ * that happened on x86 architecture.
+ */
 "use strict";
 
+// HangTelemetry object from hang-telemetry.js
 var telemetry = null;
+// Default dimension name
 var defaultDimension = "appName";
 
+// Max number of stack frames to display in the chart tooltip
 var maxStackFrames = 10;
+// Max number of individual reports to show in the chart; other reports are grouped together.
 var topReports = 10;
+// List of colors to use for each report in the chart; contains (topReports+1) elements.
 var reportColors = (function() {
     var colors = [];
     for (var i = 0; i <= topReports; i++) {
@@ -21,6 +39,7 @@ var reportColors = (function() {
     return colors;
 })();
 
+// Make each plot fill its container.
 $(".plot").each(function(i, plot) {
     $(plot).height($(plot).parent().height() - $(plot).position().top);
 });
@@ -33,6 +52,11 @@ $("#navbar-filter").popover({
 });
 
 var re_grouping = /\D+|\d+(\.\d+)?[ETGMkmμnpf]?/g;
+/**
+ * Smart comparison function used with Array.prototype.sort. It is able to compare numbers
+ * and suffixes by value rather than by character. For example, '1MB' will come before '1GB',
+ * and 'v10' will come after 'v9'.
+ */
 function smartSort(str1, str2) {
     var match1 = (str1 + '').match(re_grouping);
     var match2 = (str2 + '').match(re_grouping);
@@ -54,6 +78,7 @@ function smartSort(str1, str2) {
     }
     return match1.length - match2.length;
 }
+// Same as smartSort but reversed
 function revSmartSort(str1, str2) {
     return -smartSort(str1, str2);
 }
@@ -81,25 +106,58 @@ function _revSmartUnits(values, names) {
         return parseFloat(value);
     };
 }
+
+/**
+ * Format a floating-point number by adding the appropriate SI-prefix and rounding to
+ * appropriate digits. e.g. smartPrefix(0.001) === '1m'
+ */
 var smartPrefix = _smartUnits(
     [1e15, 1e12, 1e9, 1e6, 1e3, 1, 1e-3, 1e-6, 1e-9, 1e-12, 1e-15],
     ['E', 'T', 'G', 'M', 'k', '', 'm', 'μ', 'n', 'p', 'f', ''],
     [3]);
+
+/**
+ * Parse a string of a number with SI-prefix into its equivalent floating-point number.
+ * e.g. revSmartPrefix('1m') === 0.001
+ */
 var revSmartPrefix = _revSmartUnits(
     [1e15, 1e12, 1e9, 1e6, 1e3, 1e-3, 1e-6, 1e-9, 1e-12, 1e-15, 1],
     ['E', 'T', 'G', 'M', 'k', 'm', 'μ', 'n', 'p', 'f', '']);
+
+/**
+ * Format a number of seconds into appropriate time units. e.g. smartTime(3600) === '1h'
+ */
 var smartTime = _smartUnits(
     [31556952, 604800, 86400, 3600, 60, 1, 1e-3, 1e-6, 1e-9, 1e-12],
     ['y', 'w', 'd', 'h', 'm', 's', 'ms', 'μs', 'ns', 'ps', ''],
     [2, 2, 2, 2, 2, 2, 3]);
+
+/**
+ * Format a fraction number into a percentage. e.g. smartPercent(0.1) === '10.0%'
+ */
 function smartPercent(v) {
     return (v * 100).toPrecision(3) + "%";
 }
 
+/**
+ * Replace '<' and '>' with their HTML entities.
+ */
 function escapeHTML(str) {
     return str && str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/**
+ * Parse a stack frame with metadata into an HTML or plain string for output.
+ *
+ * Supported metadata are,
+ *
+ *  (mxr:{repo}:{rev})  Generate a link that will use MXR to search for the stack frame string
+ *                      under the {repo} repository and {rev} revision. Pseudostack label and
+ *                      file name searches are supported.
+ *
+ *  (hg:{repo}:{file}:{rev}:{line})  Generate a link that will open file {file} at line {line}
+ *                                   in MXR under the {repo} repository and {rev} revision.
+ */
 function transformFrame(frame, plain) {
     var mxr;
     frame = frame.replace(/\(mxr:([\w-]+):([\da-fA-F]+)\)/,
@@ -168,6 +226,15 @@ function transformFrame(frame, plain) {
     return escapeHTML(frame);
 }
 
+/**
+ * Populate the reports dialog with info given in arguments and show the dialog.
+ *
+ * @param modal Modal DOM element
+ * @param report Report object to populate the dialog with
+ * @param dimValue Limit information shown in the dialog by this dimension value.
+ * @param sessions Sessions data for normalizing report data
+ * @param options Options to be passed to replotInfo() and replotActivities()
+ */
 function fillReportModal(modal, report, dimValue, sessions, options) {
     options = options || {};
     var infoPlot = $("#report-info-plot");
@@ -185,8 +252,19 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
 
     var stacks = $("#report-stacks");
     var template = $("#report-stacks-thread");
+    // Remove all previous stacks except the template.
     stacks.children().not(template).not(".spinner-holder").remove();
 
+    /**
+     * Add thread stacks to the dialog. The following metadata in the thread name are supported,
+     *
+     * (dim:{name}:{val})  If dimValue is not null, only generate the stack if {name} matches
+     *                     the current dimension name and {val} matches dimValue. If dimValue
+     *                     is null, indicate {name} and {val} in the thread name.
+     *
+     * @param threads Array of Thread objects to obtain the stack
+     * @param append Append to the stacks list if true, or otherwise prepend to the list.
+     */
     function addThreads(threads, append) {
         var out = $();
         threads.forEach(function(thread) {
@@ -197,17 +275,20 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
                     return dimValue ? "" : ("(" + dimval + " " + dimname + ")");
                 });
             if (dim && (dim[0] !== $("#navbar-groupby").val() ||
-                        (dimValue && dimValue !== dimdim[1]))) {
+                        (dimValue && dimValue !== dim[1]))) {
                 return;
             }
 
+            // Create a copy of the template to fill out.
             var clone = template.clone()
                 .removeAttr("id").removeClass("hide");
             var body = clone.find(".panel-body");
             var stack = thread.stack();
+            // Mute native frames if we also have non-native frames.
             var muteNative = stack.some(function(frame) {
                 return !frame.isNative();
             });
+            // Fill out each stack frame.
             stack.forEach(function(frame) {
                 var line = frame.lineNumber();
                 var func = frame.functionName();
@@ -219,6 +300,7 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
                           .appendTo(body);
             });
 
+            // Generate a unique ID so that the panel can be collapsed on clicking.
             var id = "report-stacks-" + stacks.children().length;
             clone.find(".panel-collapse")
                  .attr("id", id)
@@ -233,18 +315,25 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
     }
 
     var hideSpinner = 2;
+    // Generate the main thread stack by prepending.
     report.mainThread(function(threads) {
         addThreads(threads, /* append */ false);
         if (!(--hideSpinner)) {
             modal.find(".spinner-holder i").stop().fadeOut();
         }
     });
+
+    // Generate the background thread stacks by appending.
     report.backgroundThreads(function(threads) {
+        threads.sort(function(a,b) {
+            return smartSort(a.name(), b.name());
+        });
         addThreads(threads, /* append */ true);
         if (!(--hideSpinner)) {
             modal.find(".spinner-holder i").stop().fadeOut();
         }
     });
+
     function _plot() {
         if (!infoPlotted && $("#report-plots-info").hasClass("in")) {
             replotInfo(infoPlot, report, dimValue, sessions, options);
@@ -258,6 +347,7 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
         }
         if (activityPlot.length &&
             !activityPlotted && $("#report-plots-activity").hasClass("in")) {
+            // Only plot hang times that match the current report / dimension value.
             var hangtime = sessions.byName("hangtime").filter(
                 function(name, dimval, info, val) {
                     return (!dimValue || dimval === dimValue) &&
@@ -270,34 +360,55 @@ function fillReportModal(modal, report, dimValue, sessions, options) {
             activityPlotted = true;
         }
     }
+
+    // Perform plotting only when a panel is expanded.
     $("#report-plots-info").on("shown.bs.collapse", _plot);
     $("#report-plots-build").on("shown.bs.collapse", _plot);
     $("#report-plots-activity").on("shown.bs.collapse", _plot);
-    modal.on("shown.bs.modal", _plot).on("hidden.bs.modal", function(event) {
-        $.plot(infoPlot, [[0, 0]], {grid: {show: false}});
-        $.plot(buildPlot, [[0, 0]], {grid: {show: true}});
-        $.plot(activityPlot, [[0, 0]], {grid: {show: true}});
-    });
+
+    modal.on("shown.bs.modal", _plot)
+        .on("hidden.bs.modal", function(event) {
+            // Reset the plots when the dialog is hidden.
+            $.plot(infoPlot, [[0, 0]], {grid: {show: false}});
+            $.plot(buildPlot, [[0, 0]], {grid: {show: true}});
+            $.plot(activityPlot, [[0, 0]], {grid: {show: true}});
+        });
 }
 
+/**
+ * Generate the top hangs chart and the list of all hangs.
+ *
+ * @param elem Chart DOM element
+ * @param reports Reports object containing reports to plot
+ * @param sessions Sessions data for normalizing report data
+ * @param options Options object. Supported properties are,
+ *                normalize  Use sessions data to normalize hang count according to uptime
+ */
 function replotReports(elem, reports, sessions, options) {
     var values = reports.dimensionValues();
     options = options || {};
 
     var uptimes = null;
     if (options.normalize) {
+        // Generate a hash mapping dimension values to uptimes corresponding to each dimension
+        // value. e.g. uptimes["Firefox"] == 100 (k user-hours).
         var uptimeSession = sessions.byName('uptime');
         uptimes = {};
         values.forEach(function(value) {
+            // Calculate number of 1000 hours from minutes
             uptimes[value] = uptimeSession.count(value) / 60000;
         });
+        // To reduce noise, we only keep uptimes that are more than 100 user-hours.
         values = values.filter(function(value) {
             return (uptimes[value] || 0) >= 0.1;
         });
     }
+    // Plot dimension values in smart sorting order.
     values.sort(smartSort);
 
     var reports = reports.all();
+    // Return the sum of hang counts across all dimension values, with each count normalized
+    // to uptime for that dimension value.
     function sumNormalizedCount(report) {
         return values.reduce(function(prev, value) {
             return prev + report.count(value) / uptimes[value];
@@ -309,8 +420,10 @@ function replotReports(elem, reports, sessions, options) {
         }
         return sumNormalizedCount(r1) - sumNormalizedCount(r2);
     });
+    // Separate out reports outside of "top reports" to be grouped together.
     var otherReports = reports.slice(0, -topReports);
 
+    // First generate the "other" block in the chart.
     var data = [{
         label: "other",
         data: values.map(function(value, index) {
@@ -320,7 +433,9 @@ function replotReports(elem, reports, sessions, options) {
         }),
         report: null,
     }];
+
     reports.slice(-topReports).forEach(function(report) {
+        // Generate a block in the chart for each top report.
         data.push({
             data: values.map(function(value, index) {
                 return [index, report.count(value) /
@@ -330,10 +445,13 @@ function replotReports(elem, reports, sessions, options) {
         });
     });
 
+    // Format hang count depending on if we're normalizing or not.
     function formatCount(num) {
       return (!uptimes || num >= 10) ? smartPrefix(Math.round(num))
                                      : num.toPrecision(2);
     }
+
+    // Format a stack frame to be displayed in the tooltip.
     function formatFrame(frame, skipNative, plain) {
       if ((skipNative && frame.isNative()) ||
           (!skipNative && !isNaN(parseInt(frame.functionName())))) {
@@ -344,10 +462,13 @@ function replotReports(elem, reports, sessions, options) {
           (line ? " (line " + line + ")" : ""), plain);
     }
 
+    // Generate the hangs list.
     var reportslist = $("#reports-list");
     reportslist.empty();
     reports.forEach(function (report, index) {
       var rank = reports.length - index;
+
+      var topframe = $("<td/>");
       var dimvalues = $("<td/>").append(
         $("<a/>").text("All (" +
             formatCount(!uptimes ? report.count()
@@ -355,13 +476,15 @@ function replotReports(elem, reports, sessions, options) {
           .click(function() {
             showModal(report, null, rank);
           }));
-      var topframe = $("<td/>");
+
+      // A row consists of the rank number, the list of dimension values, and the top frame.
       $("<tr/>").append([
         $("<td/>").text(rank),
         dimvalues,
         topframe,
       ]).prependTo(reportslist);
 
+      // For the dimension values column, we added "All" above; now add individual values.
       var reportvals = values.filter(function(value) {
         return report.hasDimensionValue(value) && report.count(value);
       });
@@ -381,6 +504,7 @@ function replotReports(elem, reports, sessions, options) {
           .appendTo(dimvalues);
       });
 
+      // Fill the top frame.
       report.mainThread(function(threads) {
         var stackobj = threads[0].stack();
         var skipNative = stackobj.some(
@@ -395,7 +519,9 @@ function replotReports(elem, reports, sessions, options) {
       });
     });
 
+    // Generate the tooltip for hovering over a block in the chart
     function _tooltip(label, xval, yval, item) {
+        var out = null;
         var num = item.series.data[item.dataIndex][1];
         var tip = values[item.dataIndex] + " : " +
                   formatCount(num) +
@@ -406,7 +532,8 @@ function replotReports(elem, reports, sessions, options) {
         if (!report) {
             return tip;
         }
-        var out = null;
+
+        // Generate the stack in the tooltip.
         report.mainThread(function(threads) {
             var stack = "<hr>";
             var count = 0;
@@ -437,6 +564,7 @@ function replotReports(elem, reports, sessions, options) {
         return tip + out;
     }
 
+    // Style and position the tooltip correctly.
     function _tooltipHover(item, tooltip) {
         var baroffset = plotobj.pointOffset({
             x: item.datapoint[0] + 0.5,
@@ -453,6 +581,7 @@ function replotReports(elem, reports, sessions, options) {
         });
     }
 
+    // Generate the actual plot.
     var plotobj = $.plot(elem, data, {
         series: {
             stack: true,
@@ -494,7 +623,9 @@ function replotReports(elem, reports, sessions, options) {
     }
 
     elem.off("plotclick").on("plotclick", function(event, pos, item) {
+        // Show the report dialog when a block is clicked on.
         if (!item || !item.series.report) {
+            // Don't show a dialog for the other reports block.
             return;
         }
         var report = item.series.report;
@@ -504,6 +635,17 @@ function replotReports(elem, reports, sessions, options) {
     });
 }
 
+/**
+ * Generate the info distribution plot, which is shown on the main page and in the
+ * report dialog.
+ *
+ * @param elem Plot DOM element
+ * @param reports Reports object containing reports to plot
+ * @param value Dimension value to limit the info distribution to
+ * @param sessions Sessions data for normalizing report data
+ * @param options Options object. Supported properties are,
+ *                normalize  Use sessions data to normalize hang count according to uptime
+ */
 function replotInfo(elem, reports, value, sessions, options) {
     var agg = reports.infoDistribution(value);
     options = options || {};
@@ -513,10 +655,12 @@ function replotInfo(elem, reports, value, sessions, options) {
         uptimes = sessions.byName('uptime').infoDistribution(value);
         Object.keys(uptimes).forEach(function(info) {
             var uptime = uptimes[info];
+            // Calculate the total uptime.
             uptime[''] = Object.keys(uptime).reduce(
                 function(prev, val) {
                     var v = uptime[val];
                     if (v < 6000) {
+                        // Discard uptimes less than 100 user-hours to reduce noise.
                         delete uptime[val];
                     }
                     return prev + v;
@@ -528,16 +672,20 @@ function replotInfo(elem, reports, value, sessions, options) {
     var infos = Object.keys(agg);
     infos.sort(revSmartSort);
     var data = infos.map(function(info, index) {
+        // For each info type, generate a line in the plot.
+        // histogram is a hash mapping the info value to hang count.
         var histogram = agg[info];
         var valuesarray = Object.keys(histogram);
         seriescount = Math.max(seriescount, valuesarray.length);
         valuesarray = valuesarray.map(function(value) {
+            // For each info value, return the value and noramlized hang count.
             return [value, histogram[value] / (!uptimes ? 1 :
                            (uptimes[info][value] || uptimes[info]['']))];
         });
         valuesarray.sort(function(val1, val2) {
             return val2[1] - val1[1];
         });
+        // Calculate (total hang count / 100) so we can ge the percentag for each hang count.
         var total = valuesarray.reduce(function(prev, value) {
             return prev + value[1];
         }, 0) / 100;
@@ -547,6 +695,8 @@ function replotInfo(elem, reports, value, sessions, options) {
     });
 
     var plotdata = [];
+    // Assign each hang count to a "bin". We have 100 bins, each with a different color.
+    // This way, we can differentiate hang counts by color.
     data.forEach(function(info, infoindex) {
         var prevmapto = -1;
         info.forEach(function(series, index) {
@@ -569,6 +719,7 @@ function replotInfo(elem, reports, value, sessions, options) {
         });
     });
 
+    // Generate the color for each "bin".
     var colors = [];
     for (var i = 0; i <= 100; i++) {
         var scale = Math.pow(i / 100, 4);
@@ -579,6 +730,8 @@ function replotInfo(elem, reports, value, sessions, options) {
         }).hexString());
     }
     for (var i = 0; i < seriescount; i++) {
+        // Overflow "bins" for when we have more than 100 hang counts,
+        // so that we can still assign each hang count to a unique "bin".
         colors.push(Color({h: 200, s: 44, l: 55}).hexString());
     }
 
@@ -586,6 +739,8 @@ function replotInfo(elem, reports, value, sessions, options) {
         return escapeHTML(item.series.info[item.dataIndex] + " : " +
                Math.round(item.series.data[item.dataIndex][0]) + "%");
     }
+
+    // Style and position the tooltip correctly.
     function _tooltipHover(item, tooltip) {
         var baroffset = plotobj.pointOffset({
             x: (item.datapoint[0] + item.datapoint[2]) / 2,
@@ -635,6 +790,16 @@ function replotInfo(elem, reports, value, sessions, options) {
     });
 }
 
+/**
+ * Generate the build IDs plot, which is shown in the report dialog.
+ *
+ * @param elem Plot DOM element
+ * @param reports Reports object containing reports to plot
+ * @param value Dimension value to limit the info distribution to
+ * @param sessions Sessions data for normalizing report data
+ * @param options Options object. Supported properties are,
+ *                normalize  Use sessions data to normalize hang count according to uptime
+ */
 function replotBuild(elem, reports, value, sessions, options) {
     options = options || {};
 
@@ -643,8 +808,10 @@ function replotBuild(elem, reports, value, sessions, options) {
         uptimes = sessions.byName('uptime').infoDistribution(value).appBuildID;
         Object.keys(uptimes).forEach(function(val) {
             if (uptimes[val] < 6000) {
+                // Discard uptimes less than 100 user-hours to reduce noise.
                 delete uptimes[val];
             } else {
+                // Calculate uptime in 1k user-hour units.
                 uptimes[val] = uptimes[val] / 60000;
             }
         });
@@ -656,9 +823,11 @@ function replotBuild(elem, reports, value, sessions, options) {
     var buildids = {};
     Object.keys(builds).forEach(function(build) {
         if (uptimes && !uptimes[build]) {
+            // Don't show the build if we're normalizing and the uptime total is not high enough.
             delete builds[build];
             return;
         }
+        // Each build ID string has the format {version}-{buildId}.
         var comps = build.split("-");
         var version = (comps.length === 1) ? "all" : comps[0];
         var buildid = (comps.length === 1) ? comps[0] : comps[1];
@@ -676,6 +845,7 @@ function replotBuild(elem, reports, value, sessions, options) {
         var builds = versions[version];
         var ids = Object.keys(builds).sort(smartSort);
 
+        // Generate ticks for the x-axis, making sure to not place too many ticks.
         function addTick(id) {
             var index = buildids.indexOf(id);
             if (ticks.some(function(tick) {
@@ -698,6 +868,8 @@ function replotBuild(elem, reports, value, sessions, options) {
         };
     });
 
+    // Limit the plot range to a certain max value so that an unusually high hang count
+    // doesn't push the smaller values off the chart.
     var buildsKeys = Object.keys(builds);
     var upperCount = Math.min(10, Math.ceil(0.1 * buildsKeys.length));
     var upperBound = Math.min.apply(Math, buildsKeys.reduce(function(bucket, build) {
@@ -728,6 +900,8 @@ function replotBuild(elem, reports, value, sessions, options) {
         options.normalize && (tip += " / 1k user-hrs");
         return tip;
     }
+
+    // Style and position the tooltip correctly.
     function _tooltipHover(item, tooltip) {
         var baroffset = plotobj.pointOffset({
             x: item.datapoint[0],
@@ -777,13 +951,24 @@ function replotBuild(elem, reports, value, sessions, options) {
     });
 }
 
+/**
+ * Generate the hang times plot, which is shown on the main page and in the report dialog.
+ *
+ * @param elem Plot DOM element
+ * @param activities Array of time histograms
+ * @param value Dimension value to limit the info distribution to
+ * @param options Options object. Supported properties are,
+ *                normalize  If true, plot percentages instead of raw numbers.
+ */
 function replotActivities(elem, activities, value, options) {
     options = options || {};
     var times = [];
     for (var i = 2; i < 4294967296; i *= 2) {
         times.push(i - 1);
     }
+
     var minratio = 1;
+    // Calculate the range covered by the time histograms.
     var endtimes = activities.reduce(function(prev, act) {
         var count = act.rawCount(null);
         var alltimes = Object.keys(count);
@@ -796,6 +981,7 @@ function replotActivities(elem, activities, value, options) {
             max: Math.max(prev.max, Math.max.apply(Math, alltimes)),
         };
     }, {min: times[times.length - 1], max: times[0]});
+
     var plotdata = activities.map(function(act) {
         if (!act.hasDimensionValue(value)) {
             return {};
@@ -814,6 +1000,7 @@ function replotActivities(elem, activities, value, options) {
     });
     minratio = 1 - Math.ceil(Math.log(minratio) / Math.LN10);
 
+    // Plot times on x-axis with log2 scale.
     function _xTransform(v) {
         return Math.log(v) / Math.LN2;
     }
@@ -821,6 +1008,7 @@ function replotActivities(elem, activities, value, options) {
         return Math.pow(2, v);
     }
 
+    // Plot numbers/percentages on y-axis with log10 scale.
     function _yTransform(v) {
         return Math.max(0, minratio + Math.log(v) / Math.LN10);
     }
@@ -828,6 +1016,7 @@ function replotActivities(elem, activities, value, options) {
         return Math.pow(10, v - minratio);
     }
 
+    // Generate appropriate ticks for the axes.
     function _getTicks(logbase, label, startexp, maxticks) {
         return function(axis) {
             var end = Math.ceil(Math.log(axis.max) / logbase);
@@ -841,6 +1030,7 @@ function replotActivities(elem, activities, value, options) {
         };
     }
 
+    // Generate content for the tooltip.
     function _tooltip(label, xval, yval, item) {
         var labelFn = function(val) {
             return escapeHTML(options.normalize ?
@@ -862,6 +1052,8 @@ function replotActivities(elem, activities, value, options) {
                                     "&lt;" + prevtime + ": " + below + "<br>") +
             "&gt;" + time + ": " + above;
     }
+
+    // Style and position the tooltip correctly.
     function _tooltipHover(item, tooltip) {
         var baroffset = plotobj.pointOffset({
             x: item.datapoint[0],
@@ -919,6 +1111,7 @@ function replotActivities(elem, activities, value, options) {
 }
 
 $("#navbar-groupby").change(function() {
+    // When the current dimension name changes, regenerate everything.
     var repcount = $("#navbar-count").text(0);
     var normbtn = $("#navbar-normalize").off("change");
     var infodim = $("#info-dim-value");
@@ -950,6 +1143,7 @@ $("#navbar-groupby").change(function() {
     var normalize = normbtn.prop("checked");
     var plottedVars = {};
 
+    // Replot on-demand as data come in; keep track of what we have and have not plotted.
     function replot() {
         var updateVars = {};
         if (!reports || !sessions) {
@@ -1048,6 +1242,8 @@ $("#navbar-groupby").change(function() {
 }).trigger("change");
 
 $("#navbar-from").change(function() {
+    // Refetch all data and regenerate everything if the user selects a different date range.
+    // Date ranges go from a Sunday to the next Saturday.
     var toDate = Date.today().last().saturday();
     if (Date.today().isBefore(
             toDate.clone().next().day()
@@ -1072,6 +1268,7 @@ $("#navbar-from").change(function() {
         dims.forEach(function(dim) {
             groupby.append($("<option/>").text(dim));
         });
+        // Set the dimension name and kick off regenerating data.
         groupby.val(dims.indexOf(oldgroupby) >= 0
                     ? oldgroupby
                     : defaultDimension).trigger("change");
