@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+var BUCKET = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_perf/data/";
+var COMPRESSED = ".gz"
+// var BUCKET = "";
+// var COMPRESSED = "";
+
 var yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 7);
 //console.log("Set yesterday to " + yyyymmdd(yesterday));
@@ -23,13 +28,13 @@ var version_filters = [];
 
 var addon_data = {};
 
-// app_name,platform,addon ID,names,measure,Total Sessions,Sessions with this add-on,Impact (popularity * median time),Median time (ms),75% time,95% time
+// app_name,platform,addon ID,version,name,measure,% Sessions with this add-on,Impact (popularity * median time),Median time (ms),75% time,95% time
 var APP_COLUMN          = 0;
 var PLATFORM_COLUMN     = 1;
 var ID_COLUMN           = 2;
-var NAME_COLUMN         = 3;
-var MEASURE_COLUMN      = 4;
-var SESSIONS_COLUMN     = 5;
+var VERSION_COLUMN      = 3;
+var NAME_COLUMN         = 4;
+var MEASURE_COLUMN      = 5;
 var POPULARITY_COLUMN   = 6;
 var IMPACT_COLUMN       = 7;
 var MEDIAN_COLUMN       = 8;
@@ -58,10 +63,11 @@ function fetch_data(key, cb) {
     $('#throbber').fadeIn(500);
     console.log("Fetching: " + key);
     var xhr = new XMLHttpRequest();
-    var url = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_perf/data/weekly_addons_" + key + ".csv.gz";
-    //var url = "weekly_" + key + ".csv";
+    var url = BUCKET + "weekly_addons_" + key + ".csv" + COMPRESSED;
     console.log("Fetching url: " + url);
     xhr.open("GET", url, true);
+    xhr.overrideMimeType("text/csv; charset=UTF-8");
+    xhr.responseType = "text";
     xhr.onload = function() {
         console.log("onload:" + xhr.status);
         if (xhr.status != 200 && xhr.status != 0) {
@@ -125,7 +131,7 @@ function populate_table(table_id, key, label) {
         var rank = 1;
         var is_empty = true;
         // sort highest-lowest based on the chosen numeric column
-        addon_data[key].sort((a, b) => (b[sort_col] - a[sort_col]));
+        addon_data[key].sort((a, b) => (parseFloat(b[sort_col]) - parseFloat(a[sort_col])));
         for (var i = 0; i < addon_data[key].length; i++) {
             if (rank > maxRows) break;
             var drow = addon_data[key][i];
@@ -151,7 +157,8 @@ function populate_table(table_id, key, label) {
 
 function missing_data_warning(tbody, label, message) {
   var trow = $('<tr>', {id: label + "1"});
-  trow.append($('<td>', {colspan: "6", id: label + "1rank", text: message}));
+  // Add one for Rank column, one for zero-based column numbering
+  trow.append($('<td>', {colspan: LAST_COLUMN + 2, id: label + "1rank", text: message}));
   tbody.append(trow);
 }
 
