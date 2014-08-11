@@ -75,10 +75,17 @@ function fetch_data(key, cb) {
             addon_data[key] = []
         } else {
             console.log("Got the data for " + url + ", processing");
-            addon_data[key] = $.csv.toArrays(xhr.responseText);
-            // Delete the header row from the CSV
-            addon_data[key].shift();
-            console.log("done processing for " + key + ", got " + addon_data[key].length + " rows");
+            try {
+              addon_data[key] = $.csv.toArrays(xhr.responseText);
+              // Delete the header row from the CSV
+              addon_data[key].shift();
+              console.log("done processing for " + key + ", got " + addon_data[key].length + " rows");
+            }
+            catch(e) {
+              console.log("CSV parse failed for " + url + ": " + e);
+              addon_data[key] = [];
+              cb(key);
+            }
         }
         //$('#throbber').fadeOut(500);
         //$('#addon_data').fadeIn(500);
@@ -89,7 +96,7 @@ function fetch_data(key, cb) {
         console.log("Failed to fetch: " + url);
         //$('#throbber').fadeOut(500);
         //$('#addon_data').fadeIn(500);
-        addon_data[key] = []
+        addon_data[key] = [];
         cb(key);
     };
     try {
@@ -104,12 +111,11 @@ function fetch_data(key, cb) {
 }
 
 // map ao_type to table column for sorting
-// Rank column isn't in data table
 var key_columns = {
-  'Impact': 7,
-  'Popularity': 6,
-  'Median': 8,
-  '75 %': 9
+  'Impact': IMPACT_COLUMN,
+  'Popularity': POPULARITY_COLUMN,
+  'Median': MEDIAN_COLUMN,
+  '75 %': P75_COLUMN
 };
 
 function populate_table(table_id, key, label) {
@@ -239,6 +245,7 @@ function update_data() {
 
 $(function () {
     $('#previous_week').click(function() {
+        console.log("previous week");
         thisWeekStart.setDate(thisWeekStart.getDate() - 7);
         thisWeekEnd.setDate(thisWeekEnd.getDate() - 7);
         lastWeekStart.setDate(lastWeekStart.getDate() - 7);
@@ -246,6 +253,7 @@ $(function () {
         update_data();
     });
     $('#next_week').click(function() {
+        console.log("next week");
         thisWeekStart.setDate(thisWeekStart.getDate() + 7);
         thisWeekEnd.setDate(thisWeekEnd.getDate() + 7);
         lastWeekStart.setDate(lastWeekStart.getDate() + 7);
