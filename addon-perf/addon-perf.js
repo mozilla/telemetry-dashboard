@@ -9,7 +9,8 @@ var COMPRESSED = ".gz"
 // var COMPRESSED = "";
 
 var yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 7);
+// Telemetry extract lags by about 1.5 days
+yesterday.setDate(yesterday.getDate() - 2);
 //console.log("Set yesterday to " + yyyymmdd(yesterday));
 
 // Monday is 1, so we adjust offset accordingly
@@ -118,7 +119,12 @@ var key_columns = {
   '75 %': P75_COLUMN
 };
 
-function populate_table(table_id, key, label) {
+var KEY_COLUMNS = [APP_COLUMN, PLATFORM_COLUMN, ID_COLUMN, VERSION_COLUMN, MEASURE_COLUMN];
+
+/*
+ * Return an Object map of key => {rank, tableRow} for each row added to the table
+ */
+function populate_table(table_id, key) {
     console.log("Populating " + table_id + " table");
     var tbody = $('#' + table_id + ' > tbody');
     var filter_app = $('#filter_application').find(":selected").val();
@@ -131,92 +137,77 @@ function populate_table(table_id, key, label) {
 
     tbody.empty();
     if (!addon_data[key] || addon_data[key].length == 0) {
-        missing_data_warning(tbody, label, "No data for " + key);
-    } else {
-        var maxRows = parseInt($('#filter_rowcount').find(":selected").val());
-        var rank = 1;
-        var is_empty = true;
-        // sort highest-lowest based on the chosen numeric column
-        addon_data[key].sort((a, b) => (parseFloat(b[sort_col]) - parseFloat(a[sort_col])));
-        for (var i = 0; i < addon_data[key].length; i++) {
-            if (rank > maxRows) break;
-            var drow = addon_data[key][i];
-            if ((filter_app == "ALL" || drow[APP_COLUMN] === filter_app) &&
-                (filter_platform == "ALL" || drow[PLATFORM_COLUMN] === filter_platform) &&
-                (filter_measure == "ALL" || drow[MEASURE_COLUMN] === filter_measure)) {
-                var trow = $('<tr>', {id: label + rank});
-                is_empty = false;
-                trow.append($('<td>', {id: label + rank + "rank", text: rank}));
-                for (var j = 0; j < LAST_COLUMN; j++) {
-                    trow.append($('<td>', {text: drow[j]}));
-                }
-                trow.append($('<td>', {id: label + rank + "q", text: drow[LAST_COLUMN]}));
-                tbody.append(trow);
-                rank++;
-            // } else {
-            //    console.log("skipping row " + [drow[APP_COLUMN], drow[PLATFORM_COLUMN], drow[MEASURE_COLUMN]].join(", "));
-            }
-        }
-        is_empty && missing_data_warning(tbody, label, "No data found with the requested filtering criteria.")
+        missing_data_warning(tbody, "No data for " + key);
+        return {};
     }
+    var maxRows = parseInt($('#filter_rowcount').find(":selected").val());
+    var rank = 1;
+    var ranks = {};
+    var is_empty = true;
+    // sort highest-lowest based on the chosen numeric column
+    addon_data[key].sort((a, b) => (parseFloat(b[sort_col]) - parseFloat(a[sort_col])));
+    for (var i = 0; i < addon_data[key].length; i++) {
+        if (rank > maxRows) break;
+        var drow = addon_data[key][i];
+        if ((filter_app == "ALL" || drow[APP_COLUMN] === filter_app) &&
+            (filter_platform == "ALL" || drow[PLATFORM_COLUMN] === filter_platform) &&
+            (filter_measure == "ALL" || drow[MEASURE_COLUMN] === filter_measure)) {
+            var trow = $('<tr>');
+            is_empty = false;
+            trow.append($('<td>', {text: rank}));
+            for (var j = 0; j <= LAST_COLUMN; j++) {
+              trow.append($('<td>', {text: drow[j]}));
+            }
+            tbody.append(trow);
+            var rowKey = "";
+            KEY_COLUMNS.forEach(function(column) {
+              rowKey += drow[column] + ":";
+            });
+            ranks[rowKey] = {rank: rank, tableRow: trow};
+            rank++;
+        // } else {
+        //    console.log("skipping row " + [drow[APP_COLUMN], drow[PLATFORM_COLUMN], drow[MEASURE_COLUMN]].join(", "));
+        }
+    }
+    if (is_empty) {
+      missing_data_warning(tbody, "No data found with the requested filtering criteria.");
+    }
+    return ranks;
 }
 
-function missing_data_warning(tbody, label, message) {
-  var trow = $('<tr>', {id: label + "1"});
+function missing_data_warning(tbody, message) {
+  var trow = $('<tr>');
   // Add one for Rank column, one for zero-based column numbering
-  trow.append($('<td>', {colspan: LAST_COLUMN + 2, id: label + "1rank", text: message}));
+  trow.append($('<td>', {colspan: LAST_COLUMN + 2, text: message}));
   tbody.append(trow);
 }
 
-function update_week_over_week(lastWeekKey, thisWeekKey) {
-    var thisWeekQueryRank = {};
-    var lastWeekQueryRank = {};
-    var maxRows = parseInt($('#filter_rowcount').find(":selected").val());
-    for (var i = 1; i <= maxRows; i++) {
-        var query = $('#tw' + i + 'q').text();
-        //console.log("This week's rank " + i + " is " + query);
-        if (query) {
-            thisWeekQueryRank[query] = i;
-        }
-        query = $('#lw' + i + 'q').text();
-        if (query) {
-            lastWeekQueryRank[query] = i;
-        }
+function update_week_over_week(lastRanks, thisRanks) {
+  // go through this week's entries and see where they were last week
+  for (var thisKey in thisRanks) {
+    var thisRow = thisRanks[thisKey];
+    if (!(thisKey in lastRanks)) {
+      // it wasn't in last week, so it's new
+      thisRow.tableRow.addClass("new");
+      continue;
     }
-
-    var lastWeekKeys = Object.keys(lastWeekQueryRank);
-    var thisWeekKeys = Object.keys(thisWeekQueryRank);
-    for (var i = 0; i < lastWeekKeys.length; i++) {
-        var key = lastWeekKeys[i];
-        //console.log("Checking " + key);
-        if (!thisWeekQueryRank[key]) {
-            //console.log("missing in this week: " + key);
-            $('#lw' + lastWeekQueryRank[key] + "> td").addClass("missing");
-        } else if (thisWeekQueryRank[key] != lastWeekQueryRank[key]) {
-            if(thisWeekQueryRank[key] < lastWeekQueryRank[key]) {
-                //console.log("moved up this week: " + key);
-                $('#tw' + thisWeekQueryRank[key] + "> td").addClass("up");
-
-            } else if(thisWeekQueryRank[key] > lastWeekQueryRank[key]) {
-                //console.log("moved down this week: " + key);
-                $('#tw' + thisWeekQueryRank[key] + "> td").addClass("down");
-            }
-            var thisrank = thisWeekQueryRank[key];
-            var lastrank = lastWeekQueryRank[key];
-            var ranktext = thisrank + " (was " + lastrank + ")";
-            $('#tw' + thisWeekQueryRank[key] + "rank").html(ranktext);
-        //} else {
-        //    console.log("no change: " + key);
-        }
+    var lastRow = lastRanks[thisKey];
+    delete lastRanks[thisKey];
+    if (thisRow.rank == lastRow.rank) {
+      continue;
     }
-
-    console.log("Looking for new queries this week");
-    thisWeekKeys.forEach(function(key, idx, arr) {
-        if (!lastWeekQueryRank[key]) {
-            //console.log("new this week: " + key);
-            $('#tw' + thisWeekQueryRank[key] + "> td").addClass("new");
-        }
-    });
+    var rank = thisRow.tableRow.children().first();
+    rank.text(rank.text() + " (was " + lastRow.rank + ")");
+    if (thisRow.rank < lastRow.rank) {
+      thisRow.tableRow.addClass("up");
+    } else if (thisRow.rank > lastRow.rank) {
+      thisRow.tableRow.addClass("down");
+    }
+  }
+  // Anything left in last week's data was missing this week
+  for (var lastKey in lastRanks) {
+    lastRanks[lastKey].tableRow.addClass("missing");
+  }
 }
 
 function get_key(start) {
@@ -234,9 +225,9 @@ function update_data() {
     // Load the requested data
     fetch_data(thisWeekKey, function(){
         fetch_data(lastWeekKey, function() {
-            populate_table("current_data_table", thisWeekKey, "tw");
-            populate_table("previous_data_table", lastWeekKey, "lw");
-            update_week_over_week(lastWeekKey, thisWeekKey);
+            var thisRanks = populate_table("current_data_table", thisWeekKey);
+            var lastRanks = populate_table("previous_data_table", lastWeekKey);
+            update_week_over_week(lastRanks, thisRanks);
             $('#throbber').fadeOut(500);
             $('#addon_data').fadeIn(500);
         });
