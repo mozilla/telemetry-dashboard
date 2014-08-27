@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+    <title>Telemetry Add-on Performance</title>
+    <meta charset="UTF-8" />
+    <script type="text/javascript" src="https://code.jquery.com/jquery.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script type="text/javascript" src="addon-perf.js"></script>
+    <script src="http://jquery-csv.googlecode.com/git/src/jquery.csv.js"></script>
+    <!-- <script src="jquery.csv.js"></script> -->
+    <link rel="stylesheet" href="addon-perf.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-49796218-2', 'mozilla.org');
+      ga('send', 'pageview');
+    </script>
+</head>
+<body>
+<!--
+<a href="https://github.com/mreid-moz/slowsql-dashboard"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+-->
+<div id="header">Telemetry Add-on Performance</div>
+<div id="subheader">Bootstrap add-on start up and shut down times</div>
+<div id="navbar">
+    <strong>Sort Top Add-ons by:</strong><br/>
+    <input id="type_impact" type="radio" name="ao_type" value="Impact" checked>
+    <label for="type_impact">Highest Impact (popularity * median duration)</label></input>
+    <input id="type_popular" type="radio" name="ao_type" value="Popularity">
+    <label for="type_popular">Most Popular</label></input>
+    <input id="type_median" type="radio" name="ao_type" value="Median">
+    <label for="type_median">Median Duration</label></input>
+    <input id="type_75" type="radio" name="ao_type" value="75 %">
+    <label for="type_75">75% Duration</label></input>
+    <br/>
+    <strong>Filter by:</strong><br/>
+    Application: <select id="filter_application">
+        <option>ALL</option>
+        <option>Firefox</option>
+        <option>Fennec</option>
+    </select>
+    Platform: <select id="filter_platform">
+        <option>ALL</option>
+        <option>WINNT</option>
+        <option>Linux</option>
+        <option>Darwin</option>
+        <option>Android</option>
+    </select>
+    Measure: <select id="filter_measure">
+      <option>ALL</option>
+      <option>startup_MS</option>
+      <option>shutdown_MS</option>
+    </select>
+    Limit: <select id="filter_rowcount">
+        <option value="10">Top 10</option>
+        <option value="25">Top 25</option>
+        <option value="50">Top 50</option>
+        <option value="100">Top 100</option>
+    </select>
+
+    <div id="week_nav">
+      <button class="week_nav_button" id="previous_week">&lt;-- Previous Week</button>
+      <button class="week_nav_button" id="next_week">Next Week --&gt;</button>
+    </div>
+</div>
+
+<div id="graphs">
+    <div id="throbber">
+        <div id="throbber-fg">
+            <div><img src="throbber.gif"/></div>
+            <div id="loading">Loading files...</div>
+        </div>
+        <div id="throbber-bg"></div>
+    </div>
+
+    <div id="current_data">
+      <div>
+        <div id="current_data_header">This week's data</div>
+        <div id="current_data_legend">
+          <span class="up">Moved Up in rank</span>
+          <span class="down">Moved Down in rank</span>
+          <span class="new">New</span>
+          <span class="missing">Gone</span>
+        </div>
+      </div>
+
+      <table id="current_data_table" class="data">
+      <thead>
+      <tr>
+      <th>Rank</th>
+      <th title="Application">App</th>
+      <th title="Platform">OS</th>
+      <th title="Add-on ID">Add-on ID</th>
+      <th title="Version">Version</th>
+      <th title="Add-on Name">Name</th>
+      <th title="Bootstrap method">Measure</th>
+      <th title="% of submissions that include this add-on">Popularity</th>
+      <th title="Popularity * median duration">Impact</th>
+      <th title="Median duration">Median</th>
+      <th title="75th percentile duration">75 %</th>
+      <th title="95th percentile duration">95 %</th>
+      </tr>
+      </thead>
+      <tbody>
+          <tr>
+          <td colspan="12">No Data</td>
+          </tr>
+      </tbody>
+      </table>
+    </div>
+    <br/>
+    Compare with:
+    <div id="previous_data">
+    <div id="previous_data_header">Last week's data</div>
+    <table id="previous_data_table" class="data">
+    <thead>
+    <tr>
+    <th>Rank</th>
+    <th title="Application">App</th>
+    <th title="Platform">OS</th>
+    <th title="Add-on ID">Add-on ID</th>
+    <th title="Version">Version</th>
+    <th title="Add-on Name">Name</th>
+    <th title="Bootstrap method">Measure</th>
+    <th title="% of submissions that include this add-on">Popularity</th>
+    <th title="Popularity * median duration">Impact</th>
+    <th title="Median duration">Median</th>
+    <th title="75th percentile duration">75 %</th>
+    <th title="95th percentile duration">95 %</th>
+    </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td colspan="12">No Data</td>
+      </tr>
+    </tbody>
+    </table>
+    </div>
+</div>
+<div id='footer'></div>
+</body>
+</html>
+
