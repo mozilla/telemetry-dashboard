@@ -517,9 +517,9 @@ $.widget("telemetry.histogramfilter", {
       // Get filter options
       var options = hgram.filterOptions();
 
-      // Prepend default option
-      var defaultOption = filterName + "*";
-      options.unshift(defaultOption);
+      // Prepend an option to select all data for this filter so no filtering is done at this level.
+      var starOption = filterName + "*";
+      options.unshift(starOption);
 
       // Create a filter entry for the _filterList
       var filter = {
@@ -542,7 +542,20 @@ $.widget("telemetry.histogramfilter", {
 
       // If option is invalid or default, we restore default and clear fragments
       if (options.indexOf(option) <= 0) {
-        option = defaultOption;
+        var preferredDefaults = {
+          "reason": "saved_session",
+          "appName": "Firefox"
+        };
+
+        if (filterName === "reason" || filterName === "appName") {
+          if (options.indexOf(preferredDefaults[filterName]) < 0) {
+            option = options[1];
+          } else {
+            option = preferredDefaults[filterName];
+          }
+        } else {
+          option = starOption;
+        }
         fragments = [];
       }
 
@@ -553,12 +566,12 @@ $.widget("telemetry.histogramfilter", {
       filter.select.change(this._filterChanged);
       this.element.append(filter.select.element());
 
-      if (option != defaultOption) {
-        // If we didn't select the default option, filter histogram and continue
+      if (option != starOption) {
+        // If we didn't select the star option, filter histogram and continue
         // to recursively restore remaining fragments
         this._restoreFilters(hgram.filter(option), fragments);
       } else {
-        // If we selected default options then no filters follows and we should
+        // If we selected star option then no filters follows and we should
         // trigger a change
         this._triggerChange(true);
       }
