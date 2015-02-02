@@ -422,6 +422,11 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   var prevOptions = [];
   $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
   var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
+  // Find the intersection of the previously selected and the valid options so
+  // we don't get an error trying to select non-existent options for a probe.
+  var optionsToSelect = prevSelected.filter(function(prevOption) {
+    return options.indexOf(prevOption) !== -1;
+  });
   var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
 
   if (!multisetEqual(prevOptions, options)) {
@@ -464,7 +469,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
       selector.multiselect("select", options);
       selector.multiselect("updateSelectAll");
     } else {
-      selector.multiselect("select", prevSelected);
+      selector.multiselect("select", optionsToSelect);
     }
   }
   changeCb();
