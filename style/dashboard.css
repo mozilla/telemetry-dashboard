@@ -7,6 +7,13 @@ header h1 {
   padding:            15px;
 }
 
+#warning {
+    color: red;
+    text-decoration: underline;
+    font-weight: bold;
+    font-size: 20px;
+}
+
 #content {
   display:            none;
 }
