@@ -1358,6 +1358,27 @@ Histogram.prototype.count = function Histogram_count() {
 };
 
 /**
+ * Returns the sum of all measurements in this histogram.
+ *
+ *    // Print sum
+ *    if (histogram.kind() == 'count' || histogram.kind() == 'linear' ||
+ *        histogram.kind() == 'exponential') {
+ *      console.log("sum: " + histogram.sum());
+ *    }
+ *
+ * **Remark**, this method is **only supported** for `'count'`, `'linear'`, and
+ * `'exponential'` histograms. See `Histogram.kind()` to see what kind of
+ * histogram you have. Invoking this method on any other kind of histogram will
+ * throw an exception.
+ */
+Histogram.prototype.sum = function Histogram_sum() {
+  if (this.kind() != "count" && this.kind() != "linear" && this.kind() != "exponential") {
+    throw new Error("Histogram.sum() is only available for count/linear/exponential histograms");
+  }
+  return _aggregate(DataOffsets.SUM, this);
+};
+
+/**
  * Returns the [mean](http://en.wikipedia.org/wiki/Mean) of all data points in
  * this histogram.
  *
@@ -1370,14 +1391,14 @@ Histogram.prototype.count = function Histogram_count() {
  *       console.log("mean: " + histogram.mean());
  *     }
  *
- * **Remark**, this method in **only supported** for `'linear'` and
- * `'exponential'` histograms, see `Histogram.kind()` to see what kind of
+ * **Remark**, this method is **only supported** for `'linear'` and
+ * `'exponential'` histograms. See `Histogram.kind()` to see what kind of
  * histogram you have. Invoking this method on any other kind of histogram will
  * throw an exception.
  */
 Histogram.prototype.mean = function Histogram_mean() {
   if (this.kind() != "linear" && this.kind() != "exponential") {
-     throw new Error("Histogram.geometricMean() is only available for " +
+     throw new Error("Histogram.mean() is only available for " +
                      "linear and exponential histograms");
   }
   var sum = _aggregate(DataOffsets.SUM, this);
@@ -1397,7 +1418,7 @@ Histogram.prototype.mean = function Histogram_mean() {
  *       console.log("std dev: " + histogram.mean());
  *     }
  *
- * **Remark**, this method in **only supported** for `'linear'` histograms, see
+ * **Remark**, this method is **only supported** for `'linear'` histograms. See
  * `Histogram.kind()` to see what kind of histogram you have. Invoking this
  * method on any other kind of histogram will throw an exception.
  */
@@ -1433,8 +1454,8 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
  *       console.log("Geo mean: " + histogram.geometricMean());
  *     }
  *
- * **Remark**, this method in **only supported** for `'exponential'` histograms,
- * see `Histogram.kind()` to see what kind of histogram you have. Invoking this
+ * **Remark**, this method is **only supported** for `'exponential'` histograms.
+ * See `Histogram.kind()` to see what kind of histogram you have. Invoking this
  * method on any other kind of histogram will throw an exception.
  */
 Histogram.prototype.geometricMean = function Histogram_geometricMean() {
