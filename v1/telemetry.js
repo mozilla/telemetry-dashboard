@@ -126,7 +126,7 @@ var releaseURL = "http://telemetry.mozilla.org/v1/telemetry.js";
 // Check if the current browser includes telemetry.js from the release url.
 // ignore browsers that don't support `document.currentScript`, there is
 // probably not a lot of developers who use IE for development anyway.
-if (typeof(document) !== 'undefined' && document.currentScript && document.currentScript.src != releaseURL) {
+if (typeof(document) !== 'undefined' && document.currentScript && document.currentScript.src != releaseURL && document.currentScript.src != releaseURL.replace('http://', 'https://')) {
   // Let's print a long grim warning message, hopefully people will pay
   // attention, the issue is fairly well explained here.
   console.log([
