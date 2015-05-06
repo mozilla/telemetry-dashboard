@@ -52,6 +52,9 @@
                     <h2 id="measure">Measure</h2>
                     <i id="description">Description</i>
                     <figure style="margin: 15px;"><svg id="evolution"></svg></figure>
+                    <div class="alert alert-info">
+                      Adjust the start and end dates by dragging and dropping within the date range selector.
+                    </div>
                     <figure>
                         <svg id="histogram" class="single-histogram-only"></svg>
                         <table id="histogram-table" class="table table-condensed" class="single-histogram-only">
@@ -69,7 +72,7 @@
             </div>
             <aside class="col-md-4 page-end">
                 <h2>Legend</h2>
-                <span id="info" class="legend">please hover the graph</span>
+                <span id="info" class="legend">please hover over the graph</span>
                 <div id="legend"></div>
                 <h2>Preferences</h2>
                 <form role="form">
@@ -121,30 +124,30 @@
                 </form>
                 <h2 id="summary" class="single-histogram-only dl-horizontal">Summary</h2>
                 <dl class="dl-horizontal single-histogram-only">
-                    <dt >Kind</dt>
+                    <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Kind</dt>
                         <dd id="prop-kind"></dd>
-                    <dt>Submissions</dt>
+                    <dt title="Total number of Telemetry pings shown">Submissions</dt>
                         <dd id="prop-submissions"></dd>
-                    <dt>Count</dt>
+                    <dt title="Total number of measurements in the histogram">Count</dt>
                         <dd id="prop-count"></dd>
-                    <dt>Number of dates</dt>
+                    <dt title="Number of distinct dates shown">Number of dates</dt>
                         <dd id="prop-dates"></dd>
-                    <dt>Selected Dates</dt>
+                    <dt title="Range of dates currently shown">Selected Dates</dt>
                         <dd id="prop-date-range"></dd>
                     <span class="linear-only">
                         <hr>
-                        <dt>Mean</dt>
+                        <dt title="Simple average of all values">Mean</dt>
                             <dd id="prop-mean"></dd>
-                        <dt>Std. dev.</dt>
+                        <dt title="Standard deviation of all values">Std. dev.</dt>
                             <dd id="prop-standardDeviation"></dd>
                     </span>
                     <span class="exponential-only">
                         <hr>
-                        <dt>Mean</dt>
+                        <dt title="Simple average of all values">Mean</dt>
                             <dd id="prop-mean2"></dd>
-                        <dt>Geo. mean</dt>
+                        <dt title="Log-scale average of all values">Geo. mean</dt>
                             <dd id="prop-geometricMean"></dd>
-                        <dt>Geo. std. dev.</dt>
+                        <dt title="Log-scale standard deviation of all values">Geo. std. dev.</dt>
                             <dd id="prop-geometricStandardDeviation"></dd>
                     </span>
                     <span class="linear-only exponential-only">
@@ -161,9 +164,7 @@
                             <dd id="prop-p95"></dd>
                         <br>
                         <div class="single-histogram-only" class="alert alert-warning">
-                            <strong >Notice</strong> percentiles are estimated based on
-                            values in the histogram. Validity of small changes can be
-                            argued.
+                            <strong >Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
                         </div>
                     </span>
                 </dl>
