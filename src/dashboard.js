@@ -5,6 +5,7 @@ var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
+var gCurrentHistogram = null;
 
 function event() {
   var args = Array.prototype.slice.call(arguments);
@@ -546,6 +547,7 @@ Telemetry.init(function () {
     updateUrlHashIfNeeded();
   });
 
+  // Shortened permalink button
   $('#tinyUrl').click(function() {
     var tinyUrlArea = $("<input type=text>");
     event('click', 'tinyUrl', 'generatedTinyUrl');
@@ -582,6 +584,7 @@ Telemetry.init(function () {
     $.ajax(request);
   });
 
+  // Radio button for changing the plot type
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
     // Inform google analytics of click
@@ -593,6 +596,7 @@ Telemetry.init(function () {
     event('click', 'evolution-type', evoType);
   });
 
+  // Toggle whether to throw out data points from sources that haven't submitted enough
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
     // Inform google analytics of click
@@ -780,41 +784,39 @@ function renderHistogramGraph(hgram) {
     $("#description").text(hgram.description()).show();
     $('#histogram').show();
   }
-
-  nv.addGraph(function () {
-    var total = hgram.count();
-    var vals = hgram.map(function (count, start, end, index) {
-      return {
-        x: [start, end],
-        y: count,
-        percent: count / total
-      };
-    });
-
-    var data = [{
-      key: "Count",
-      values: vals,
-      color: "#0000ff"
-    }];
-    var chart = histogramchart().margin({
-      top: 20,
-      right: 80,
-      bottom: 40,
-      left: 80
-    });
-
-    chart.yAxis.tickFormat(fmt);
-    chart.xAxis.tickFormat(function (bucket) {
-      return fmt(bucket[0]);
-    });
-
-    d3.select("#histogram").datum(data).transition().duration(500).call(chart);
-    nv.utils.windowResize(
-      function() {
-        chart.update();
-      }
-    );
-    return chart;
+  
+  // Compute chart data values
+  var labels = hgram.map(function (count, start, end, index) {
+      return start;
+    })
+  var total = hgram.count();
+  var tooltipLabels = {};
+  hgram.each(function(count, start, end, index) {
+    tooltipLabels[start] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+  });
+  var data = hgram.map(function (count, start, end, index) { return count; });
+  
+  // Plot the data using Chartjs
+  if (gCurrentHistogram !== null) {
+    gCurrentHistogram.destroy();
+  }
+  var ctx = document.getElementById("histogram").getContext("2d");
+  Chart.defaults.global.responsive = true;
+  gCurrentHistogram = new Chart(ctx).Bar({
+    labels: labels,
+    datasets: [{
+      fillColor: "rgba(151, 187, 205, 0.5)",
+      strokeColor: "rgba(151, 187, 205, 0.8)",
+      data: data,
+    }]
+  }, {
+    barValueSpacing : 0,
+    barDatasetSpacing : 0,
+    scaleShowGridLines : true,
+    scaleGridLineWidth : 1,
+    scaleShowHorizontalLines: true,
+    scaleShowVerticalLines: true,
+    tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label]; },
   });
 }
 
@@ -842,6 +844,7 @@ $('#export-link').mousedown(function () {
 var hasReportedDateRangeSelectorUsedInThisSession = false;
 
 function update(hgramEvos) {
+  // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
   $.each(hgramEvos, function (key, value) {
     evosVals.push(value);
@@ -857,7 +860,6 @@ function update(hgramEvos) {
 
   var datas = [];
   var labels = [];
-
   $.each(hgramEvos, function (state, evo) {
     var series = prepareData(state,evo);
     for (var x in series) {
