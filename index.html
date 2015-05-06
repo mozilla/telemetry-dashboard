@@ -52,7 +52,10 @@
                     <h2 id="measure">Measure</h2>
                     <i id="description">Description</i>
                     
-                    <figure style="margin: 15px;"><svg id="evolution"></svg></figure>
+                    <!-- main evolution chart -->
+                    <figure style="margin: 15px;"><canvas id="evolution"></canvas></figure>
+                    
+                    <!-- single-plot histogram or table -->
                     <figure>
                         <canvas id="histogram"></canvas>
                         <table id="histogram-table" class="table table-condensed" class="single-histogram-only">
@@ -238,6 +241,7 @@
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="lib/Chart.Scatter.js"></script>
 
     <!-- nvd3 chart hacks -->
     <script src="src/evolutionchart.js"></script>

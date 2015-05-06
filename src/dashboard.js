@@ -102,21 +102,14 @@ function prepareData(state, hgramEvo) {
             y: mean
           });
         }[5, 25, 50, 75, 95].forEach(function (p) {
-          var v = hgram.percentile(p);
-          // Weird negative values can cause d3 etc. to freak out - see Bug 984928
-          if (v >= 0) {
-            ps[p].push({
-              x: date,
-              y: v
-            });
-          }
+          ps[p].push({
+            x: date,
+            y: hgram.percentile(p)
+          });
         });
       } else {
-        // Set everything to zero to keep the graphs looking nice.
-        means.push({
-          x: date,
-          y: 0
-        });
+        // Histogram doesn't have enough submissions, so set everything to zero to keep the graphs looking nice
+        means.push({x: date, y: 0});
         [5, 25, 50, 75, 95].forEach(function (p) {
           ps[p].push({
             x: date,
@@ -250,7 +243,8 @@ function restoreFromPageState(newPageState, curPageState) {
   if (newPageState.locked !== undefined) {
     changeLockButton(toBoolean(newPageState.locked));
     if (newPageState.locked) {
-      var x = states[0].split('/');
+      // Set the measure to the state (excluding the version and version number)
+      var x = newPageState.filter[0].split('/');
       x.shift();
       x.shift();
       var y = x.join("/")
@@ -618,6 +612,12 @@ function fmt(number) {
   return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
 }
 
+function unique(array) {
+  return $.grep(array, function (el, index) {
+    return index == $.inArray(el, array);
+  });
+}
+
 function createRemoveButton(parent) {
   var button = $('<button type="button" class="btn btn-default " class="button-resize" style="padding: 2px 7px;">');
   $('<span class="glyphicon glyphicon-remove">').appendTo(button);
@@ -812,16 +812,11 @@ function renderHistogramGraph(hgram) {
   }, {
     barValueSpacing : 0,
     barDatasetSpacing : 0,
-    scaleShowGridLines : true,
-    scaleGridLineWidth : 1,
-    scaleShowHorizontalLines: true,
-    scaleShowVerticalLines: true,
     tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label]; },
   });
 }
 
 var renderHistogramTime = null;
-var lastHistogramEvos = null;
 var _exportHgram = null;
 var _lastBlobUrl = null;
 // Generate download on mousedown
@@ -841,8 +836,9 @@ $('#export-link').mousedown(function () {
   event('click','download csv', 'download csv');
 });
 
-var hasReportedDateRangeSelectorUsedInThisSession = false;
-
+var gHasReportedDateRangeSelectorUsedInThisSession = false;
+var gLastHistogramEvos = null;
+var gCurrentHistogramEvolutionPlots = null;
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
@@ -854,10 +850,11 @@ function update(hgramEvos) {
     return;
   }
   if (!hgramEvos) {
-    hgramEvos = lastHistogramEvos;
+    hgramEvos = gLastHistogramEvos;
   }
-  lastHistogramEvos = hgramEvos;
+  gLastHistogramEvos = hgramEvos;
 
+  // Compute data and bucket labels
   var datas = [];
   var labels = [];
   $.each(hgramEvos, function (state, evo) {
@@ -866,15 +863,14 @@ function update(hgramEvos) {
       labels.push(series[x].key);
     }
 
-    // shallow clone for each item: don't change the original series because it's cached by prepareData.
+    // Shallow clone each item in the series to avoid changing the original series, which is still cached by prepareData
     series = series.map(function(e) {
       var d = {};
-      $.each(e, function (k, v) {
-        d[k] = v;
-      });
+      $.each(e, function (k, v) { d[k] = v; });
       return d;
     });
 
+    // Add fields to the series
     $.each(series, function(i, entry) {
       entry.fullState = state;
       entry.title = entry.key;
@@ -883,14 +879,10 @@ function update(hgramEvos) {
 
     datas.push(series);
   });
+  labels = unique(labels);
 
-  // from list of lists to list
+  // Flatten the list
   var cDatas = [].concat.apply([], datas);
-  function unique(array) {
-    return $.grep(array, function (el, index) {
-      return index == $.inArray(el, array);
-    });
-  }
 
   function updateDisabledAggregates() {
     var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
@@ -903,7 +895,7 @@ function update(hgramEvos) {
     var count = 0;
     for(var j = 0; j < cDatas.length; j++) {
       if (toBeSelected.indexOf(cDatas[j].title) !== -1) {
-        count++;
+        count ++;
       }
     }
     if (count == 0) {
@@ -943,8 +935,8 @@ function update(hgramEvos) {
         return start <= date && date <= end;
       });
       // Report it the first time the date-range selector is used in a session
-      if (!hasReportedDateRangeSelectorUsedInThisSession) {
-	     hasReportedDateRangeSelectorUsedInThisSession = true;
+      if (!gHasReportedDateRangeSelectorUsedInThisSession) {
+	     gHasReportedDateRangeSelectorUsedInThisSession = true;
        event('report', 'date-range-selector', 'used-in-session', 1);
       }
     } else {
@@ -955,13 +947,10 @@ function update(hgramEvos) {
 
     dateFormat = d3.time.format('%Y/%m/%d');
     var dateRange = "";
-    if (dates.length == 0) {
-      dateRange = "None";
-    } else if (dates.length == 1) {
+    if (dates.length == 1) {
       dateRange = dateFormat(dates[0]);
     } else {
-      var last = dates.length - 1;
-      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);
+      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[dates.length - 1]);
     }
 
     // Set common properties
@@ -1006,41 +995,37 @@ function update(hgramEvos) {
     }, 100);
   }
 
-  nv.addGraph(function () {
-    //top was 10
-    var focusChart = evolutionchart().margin({
-      top: 10,
-      right: 80,
-      bottom: 40,
-      left: 80
+  // Compute chart data values
+  var datasets = Array.concat.apply([], datas.map(function(data) {
+    return data.map(function (series) {
+      var color = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
+                  ", " + Math.floor(Math.random() * 256) + ", 0.8)";
+      return {
+        label: series.key,
+        pointColor: color,
+        strokeColor: color,
+        data: series.values,
+      };
     });
-
-    focusChart.xAxis.tickFormat(function (d) {
-      return d3.time.format('%Y/%m/%d')(new Date(d));
-    });
-    focusChart.x2Axis.tickFormat(function (d) {
-      return d3.time.format('%Y/%m/%d')(new Date(d));
-    });
-    focusChart.y1Axis.tickFormat(fmt);
-    focusChart.y2Axis.tickFormat(fmt);
-    focusChart.y3Axis.tickFormat(fmt);
-    focusChart.y4Axis.tickFormat(fmt);
-
-    // Fix nvd3 bug: addGraph called on a non-empty svg breaks tooltips.
-    // Clear the svg to avoid this.
-    $("#evolution").empty();
-    d3.select("#evolution").datum(cDatas).call(focusChart);
-    nv.utils.windowResize(function () { focusChart.update(); });
-    focusChart.setSelectionChangeCallback(updateProps);
-
-    labels = unique(labels);
-
-    setAggregateSelectorOptions(labels, function () {
-      updateDisabledAggregates();
-      focusChart.update();
-    }, true);
-
-    updateUrlHashIfNeeded();
+  }));
+  
+  // Plot the data using Chartjs
+  if (gCurrentHistogramEvolutionPlots !== null) {
+    gCurrentHistogramEvolutionPlots.destroy();
+  }
+  var ctx = document.getElementById("evolution").getContext("2d");
+  Chart.defaults.global.responsive = true;
+  var myLineChart = new Chart(ctx).Scatter(datasets, {
+    scaleType: "date",
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    tooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
+    },
+    multiTooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
+    },
+    pointDot: false,
+    bezierCurveTension: 0.3,
   });
 
   updateProps();
