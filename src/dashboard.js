@@ -197,6 +197,7 @@ function toBoolean(x) {
 
 //take params from obj pageState and restore the page by setting all the attributes
 function restoreFromPageState(newPageState, curPageState) {
+console.log(newPageState);
   if (newPageState === undefined ||
     newPageState.filter === undefined ||
     newPageState.filter.length === 0) {
@@ -293,7 +294,7 @@ function urlHashToPageState(url) {
   }
 
   if (pageState.aggregates !== undefined) {
-    pageState.aggregates = pageState.aggregates.split("!");
+    pageState.aggregates = pageState.aggregates.split("!").filter(function(e) { return e !== "";});
   }
   return pageState;
 }
@@ -427,7 +428,6 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   if (!multisetEqual(prevOptions, options)) {
     $('#multipercentile').empty().append(selector);
     var n = options.length;
-    console.log(options);
     for (var i = 0; i < n; i++) {
       var option = options[i];
       // Add <option> to the aggregate selector
@@ -468,6 +468,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   updateUrlHashIfNeeded();
 }
 
+// Entry point
 Telemetry.init(function () {
   var urlPageState = urlHashToPageState(window.location.hash);
 
@@ -784,7 +785,7 @@ function renderHistogramGraph(hgram) {
   
   // Compute chart data values
   var labels = hgram.map(function (count, start, end, index) {
-      return start;
+      return fmt(start);
     })
   var total = hgram.count();
   var tooltipLabels = {};
@@ -809,26 +810,24 @@ function renderHistogramGraph(hgram) {
   }, {
     barValueSpacing : 0,
     barDatasetSpacing : 0,
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label]; },
   });
 }
 
 var gCurrentHistogramEvolutionPlots = null;
-function renderHistogramEvolution(datas) {
+function renderHistogramEvolution(lines) {
   // Compute chart data values
-  var datasets = Array.concat.apply([], datas.map(function(data) {
-    return data.map(function (series) {
-      var color = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
-                  ", " + Math.floor(Math.random() * 256) + ", 0.8)";
-      return {
-        label: series.key,
-        pointColor: color,
-        strokeColor: color,
-        data: series.values,
-      };
-    });
-  }));
+  var datasets = lines.filter(function(line) {
+    return !line.disabled;
+  }).map(function (line) {
+    return {
+      label: line.key,
+      strokeColor: line.color,
+      data: line.values,
+    };
+  });
   
   // Plot the data using Chartjs
   if (gCurrentHistogramEvolutionPlots !== null) {
@@ -837,6 +836,7 @@ function renderHistogramEvolution(datas) {
   var ctx = document.getElementById("evolution").getContext("2d");
   Chart.defaults.global.responsive = true;
   gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(datasets, {
+    animation: false,
     scaleType: "date",
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
@@ -888,7 +888,7 @@ function update(hgramEvos) {
   }
   gLastHistogramEvos = hgramEvos;
 
-  // Compute data and bucket labels
+  // Compute data (a list of datasets, which are lists of series) and bucket labels
   var datas = [];
   var labels = [];
   $.each(hgramEvos, function (state, evo) {
@@ -906,6 +906,8 @@ function update(hgramEvos) {
 
     // Add fields to the series
     $.each(series, function(i, entry) {
+      entry.color = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
+                    ", " + Math.floor(Math.random() * 256) + ", 0.8)";;
       entry.fullState = state;
       entry.title = entry.key;
       entry.key = state + ": " + entry.key;
@@ -915,35 +917,35 @@ function update(hgramEvos) {
   });
   labels = unique(labels);
 
-  // Flatten the list
-  var cDatas = [].concat.apply([], datas);
+  // Obtain list of individual series by flattening the list of datasets
+  var lines = [].concat.apply([], datas);
 
   // Select the required aggregates in the data
-  var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
-  if (toBeSelected !== undefined) {
+  function updateDisabledAggregates() {
+    var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
+    if (toBeSelected === undefined) {
+      return;
+    }
     if (toBeSelected === null) {
       toBeSelected = [];
     }
-    var count = 0;
-    for(var j = 0; j < cDatas.length; j++) {
-      if (toBeSelected.indexOf(cDatas[j].title) !== -1) {
-        count ++;
+    var linesAreSelected = false;
+    lines.forEach(function(line) {
+      if (toBeSelected.indexOf(line.title) !== -1) {
+        linesAreSelected = true;
       }
-    }
-    if (count == 0) {
-      toBeSelected = [cDatas[0].title];
+    });
+    if (!linesAreSelected) {
+      toBeSelected = [lines[0].title];
       $("#aggregateSelector").children().removeAttr("selected");
       $("#aggregateSelector").multiselect("select", toBeSelected);
-
     }
-    for (var i = 0; i < cDatas.length; i++) {
-      if (toBeSelected.indexOf(cDatas[i].title) !== -1 && toBeSelected.length !== 0) {
-        cDatas[i].disabled = false;
-      } else {
-        cDatas[i].disabled = true;
-      }
-    }
+    lines.forEach(function(line) {
+      line.disabled = toBeSelected.indexOf(line.title) === -1 || toBeSelected.length === 0;
+    });
   }
+
+  updateDisabledAggregates();
 
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
@@ -1024,8 +1026,13 @@ function update(hgramEvos) {
       }
     }, 100);
   }
-
-  renderHistogramEvolution(datas);
-
+  renderHistogramEvolution(lines);
+  
   updateProps();
+  
+  setAggregateSelectorOptions(labels, function() {
+    updateDisabledAggregates();
+    renderHistogramEvolution(lines);
+  }, true);
+  updateUrlHashIfNeeded();
 }
