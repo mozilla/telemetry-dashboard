@@ -427,14 +427,11 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   if (!multisetEqual(prevOptions, options)) {
     $('#multipercentile').empty().append(selector);
     var n = options.length;
+    console.log(options);
     for (var i = 0; i < n; i++) {
       var option = options[i];
-      var label = option;
-      // Add <option>
-      selector.append($("<option>", {
-        text: label,
-        value: option,
-      }));
+      // Add <option> to the aggregate selector
+      selector.append($("<option>", {text: option, value: option}));
     }
     var allOptions = options.join('/');
     event('click', 'aggregates_options', allOptions);
@@ -812,7 +809,45 @@ function renderHistogramGraph(hgram) {
   }, {
     barValueSpacing : 0,
     barDatasetSpacing : 0,
+    tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label]; },
+  });
+}
+
+var gCurrentHistogramEvolutionPlots = null;
+function renderHistogramEvolution(datas) {
+  // Compute chart data values
+  var datasets = Array.concat.apply([], datas.map(function(data) {
+    return data.map(function (series) {
+      var color = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
+                  ", " + Math.floor(Math.random() * 256) + ", 0.8)";
+      return {
+        label: series.key,
+        pointColor: color,
+        strokeColor: color,
+        data: series.values,
+      };
+    });
+  }));
+  
+  // Plot the data using Chartjs
+  if (gCurrentHistogramEvolutionPlots !== null) {
+    gCurrentHistogramEvolutionPlots.destroy();
+  }
+  var ctx = document.getElementById("evolution").getContext("2d");
+  Chart.defaults.global.responsive = true;
+  gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(datasets, {
+    scaleType: "date",
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    tooltipFontSize: 10,
+    tooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
+    },
+    multiTooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
+    },
+    pointDot: false,
+    bezierCurveTension: 0.3,
   });
 }
 
@@ -838,7 +873,6 @@ $('#export-link').mousedown(function () {
 
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gLastHistogramEvos = null;
-var gCurrentHistogramEvolutionPlots = null;
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
@@ -884,11 +918,9 @@ function update(hgramEvos) {
   // Flatten the list
   var cDatas = [].concat.apply([], datas);
 
-  function updateDisabledAggregates() {
-    var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
-    if (toBeSelected === undefined) {
-      return;
-    }
+  // Select the required aggregates in the data
+  var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
+  if (toBeSelected !== undefined) {
     if (toBeSelected === null) {
       toBeSelected = [];
     }
@@ -912,8 +944,6 @@ function update(hgramEvos) {
       }
     }
   }
-
-  updateDisabledAggregates();
 
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
@@ -995,43 +1025,7 @@ function update(hgramEvos) {
     }, 100);
   }
 
-  // Compute chart data values
-  var datasets = Array.concat.apply([], datas.map(function(data) {
-    return data.map(function (series) {
-      var color = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
-                  ", " + Math.floor(Math.random() * 256) + ", 0.8)";
-      return {
-        label: series.key,
-        pointColor: color,
-        strokeColor: color,
-        data: series.values,
-      };
-    });
-  }));
-  
-  // Plot the data using Chartjs
-  if (gCurrentHistogramEvolutionPlots !== null) {
-    gCurrentHistogramEvolutionPlots.destroy();
-  }
-  var ctx = document.getElementById("evolution").getContext("2d");
-  Chart.defaults.global.responsive = true;
-  var myLineChart = new Chart(ctx).Scatter(datasets, {
-    scaleType: "date",
-    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
-    tooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
-    },
-    multiTooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
-    },
-    pointDot: false,
-    bezierCurveTension: 0.3,
-  });
+  renderHistogramEvolution(datas);
 
   updateProps();
 }
-
-
-  
-  
-  
