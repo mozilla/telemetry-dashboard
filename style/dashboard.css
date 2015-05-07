@@ -34,10 +34,6 @@ header h1 {
   width:  300px !important;
 }
 
-.filter-reason {
-  width: 130px !important;
-}
-
 .filter-appName, .filter-OS, .filter-osVersion, .filter-arch {
   width: 100px !important;
 }
