@@ -969,6 +969,7 @@ function updateRendering(hgramEvo, lines) {
 
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gLastHistogramEvos = null;
+var gLineColors = {};
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
@@ -984,37 +985,32 @@ function update(hgramEvos) {
   }
   gLastHistogramEvos = hgramEvos;
 
-  // Compute data (a list of datasets, which are lists of series) and bucket labels
-  var datas = [];
+  // Compute list of each individual series and bucket labels
+  var lines = [];
   var labels = [];
   $.each(hgramEvos, function (state, evo) {
-    var series = prepareData(state,evo);
+    var series = prepareData(state, evo);
     for (var x in series) {
       labels.push(series[x].key);
     }
 
-    // Shallow clone each item in the series to avoid changing the original series, which is still cached by prepareData
-    series = series.map(function(e) {
-      var d = {};
-      $.each(e, function (k, v) { d[k] = v; });
-      return d;
+    // Create new series with updated fields for each entry
+    series = $.map(series, function(entry, i) {
+      if (gLineColors[entry.key] === undefined) {
+        gLineColors[entry.key] = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
+                                 ", " + Math.floor(Math.random() * 256) + ", 0.8)";
+      }
+      return $.extend({
+        color: gLineColors[entry.key],
+        fullState: state,
+        title: entry.key,
+        key: state + ": " + entry.key,
+      }, entry);
     });
 
-    // Add fields to the series
-    $.each(series, function(i, entry) {
-      entry.color = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
-                    ", " + Math.floor(Math.random() * 256) + ", 0.8)";;
-      entry.fullState = state;
-      entry.title = entry.key;
-      entry.key = state + ": " + entry.key;
-    });
-
-    datas.push(series);
+    $.merge(lines, series);
   });
   labels = unique(labels);
-
-  // Obtain list of individual series by flattening the list of datasets
-  var lines = [].concat.apply([], datas);
 
   // Select the required aggregates in the data
   function updateDisabledAggregates() {
