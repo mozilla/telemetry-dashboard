@@ -5,6 +5,7 @@ var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
+var gCurrentHistogramPlot = null;
 var gCurrentHistogram = null;
 
 function event() {
@@ -197,7 +198,6 @@ function toBoolean(x) {
 
 //take params from obj pageState and restore the page by setting all the attributes
 function restoreFromPageState(newPageState, curPageState) {
-console.log(newPageState);
   if (newPageState === undefined ||
     newPageState.filter === undefined ||
     newPageState.filter.length === 0) {
@@ -488,7 +488,7 @@ Telemetry.init(function () {
     $('input[value="Graph"]').prop('checked',true);
 
   }
-
+  
   $(window).bind("hashchange", function () {
     if (gHashSetFromCode) {
       gHashSetFromCode = false;
@@ -518,7 +518,10 @@ Telemetry.init(function () {
     $('.single-histogram-only').hide();
     $('#description').hide();
   }
-
+  
+  $("#dateRange").daterangepicker();
+  
+  // Add series button
   $("#addVersionButton").click(function () {
     var state = null;
     event('click', 'addVersion', 'addVersion');
@@ -790,17 +793,17 @@ function renderHistogramGraph(hgram) {
   var total = hgram.count();
   var tooltipLabels = {};
   hgram.each(function(count, start, end, index) {
-    tooltipLabels[start] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+    tooltipLabels[fmt(start)] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
   });
   var data = hgram.map(function (count, start, end, index) { return count; });
   
   // Plot the data using Chartjs
-  if (gCurrentHistogram !== null) {
-    gCurrentHistogram.destroy();
-  }
   var ctx = document.getElementById("histogram").getContext("2d");
   Chart.defaults.global.responsive = true;
-  gCurrentHistogram = new Chart(ctx).Bar({
+  if (gCurrentHistogramPlot !== null) {
+    gCurrentHistogramPlot.destroy();
+  }
+  gCurrentHistogramPlot = new Chart(ctx).Bar({
     labels: labels,
     datasets: [{
       fillColor: "rgba(151, 187, 205, 0.5)",
@@ -812,22 +815,23 @@ function renderHistogramGraph(hgram) {
     barDatasetSpacing : 0,
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
-    tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label]; },
+    tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
   });
 }
 
 var gCurrentHistogramEvolutionPlots = null;
-function renderHistogramEvolution(lines) {
-  // Compute chart data values
-  var datasets = lines.filter(function(line) {
-    return !line.disabled;
-  }).map(function (line) {
+var gUserSelectedRange = false;
+function renderHistogramEvolution(lines, minDate, maxDate) {
+  var drawnLines = lines.filter(function(line) { return !line.disabled; });
+  
+  // Filter out the points that are outside of the time range
+  var filteredDatasets = drawnLines.map(function (line) {
     return {
       label: line.key,
       strokeColor: line.color,
-      data: line.values,
+      data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
     };
-  });
+  })
   
   // Plot the data using Chartjs
   if (gCurrentHistogramEvolutionPlots !== null) {
@@ -835,7 +839,7 @@ function renderHistogramEvolution(lines) {
   }
   var ctx = document.getElementById("evolution").getContext("2d");
   Chart.defaults.global.responsive = true;
-  gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(datasets, {
+  gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(filteredDatasets, {
     animation: false,
     scaleType: "date",
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
@@ -852,7 +856,6 @@ function renderHistogramEvolution(lines) {
 }
 
 var renderHistogramTime = null;
-var _exportHgram = null;
 var _lastBlobUrl = null;
 // Generate download on mousedown
 $('#export-link').mousedown(function () {
@@ -861,15 +864,108 @@ $('#export-link').mousedown(function () {
     _lastBlobUrl = null;
   }
   var csv = "start,\tend,\tcount\n";
-  csv += _exportHgram.map(function (count, start, end, index) {
+  csv += gCurrentHistogram.map(function (count, start, end, index) {
     return [start, end, count].join(",\t");
   }).join("\n");
 
   _lastBlobUrl = URL.createObjectURL(new Blob([csv]));
   $('#export-link')[0].href = _lastBlobUrl;
-  $('#export-link')[0].download = _exportHgram.measure() + ".csv";
-  event('click','download csv', 'download csv');
+  $('#export-link')[0].download = gCurrentHistogram.measure() + ".csv";
+  event('click', 'download csv', 'download csv');
 });
+
+function updateRendering(hgramEvo, lines) {
+  // Filter dates
+  var dates = hgramEvo.dates();
+  var start = dates[0], end = dates[dates.length - 1];
+
+  // Update the start and end range and update the selection if necessary
+  var picker = $("#dateRange").data("daterangepicker");
+  var startMoment = moment(start), endMoment = moment(end);
+  picker.setOptions({
+    format: "MM/DD/YYYY h:mm A",
+    minDate: startMoment,
+    maxDate: endMoment,
+    showDropdowns: true,
+    ranges: {
+       "All": [startMoment, endMoment],
+       "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
+       "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
+    },
+  }, function(start, end, label) {
+    // Report it the first time the date-range selector is used in a session
+    if (!gHasReportedDateRangeSelectorUsedInThisSession) {
+     gHasReportedDateRangeSelectorUsedInThisSession = true;
+     event('report', 'date-range-selector', 'used-in-session', 1);
+    }
+  
+    gUserSelectedRange = true;
+    updateRendering(hgramEvo, lines);
+  });
+  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment)) {
+    gUserSelectedRange = false;
+  }
+  if (!gUserSelectedRange) {
+    picker.setStartDate(start);
+    picker.setEndDate(end);
+  }
+  var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
+  
+  var hgram;
+  hgram = hgramEvo.range(start, end);
+  gCurrentHistogram = hgram;
+
+  var dateRange = "";
+  if (dates.length == 1) {
+    dateRange = moment(minDate).format("YYYY/MM/DD");
+  } else {
+    dateRange = moment(minDate).format("YYYY/MM/DD") + " to " + moment(maxDate).format("YYYY/MM/DD");
+  }
+
+  renderHistogramEvolution(lines, minDate, maxDate);
+  
+  // Set common properties in the summary
+  $('#prop-kind').text(hgram.kind());
+  $('#prop-submissions').text(fmt(hgram.submissions()));
+  $('#prop-count').text(fmt(hgram.count()));
+  $('#prop-dates').text(d3.format('s')(dates.length));
+  $('#prop-date-range').text(dateRange);
+
+  // Set linear only properties in the summary
+  if (hgram.kind() == 'linear') {
+    $('#prop-mean').text(fmt(hgram.mean()));
+    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+  }
+
+  // Set exponential only properties in the summary
+  if (hgram.kind() == 'exponential') {
+    $('#prop-mean2').text(fmt(hgram.mean()));
+    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
+    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
+  }
+
+  // Set percentiles in the summary if linear or exponential
+  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
+    $('#prop-p5').text(fmt(hgram.percentile(5)));
+    $('#prop-p25').text(fmt(hgram.percentile(25)));
+    $('#prop-p50').text(fmt(hgram.percentile(50)));
+    $('#prop-p75').text(fmt(hgram.percentile(75)));
+    $('#prop-p95').text(fmt(hgram.percentile(95)));
+  }
+  
+  // Schedule redraw of histogram
+  if (renderHistogramTime) {
+    clearTimeout(renderHistogramTime);
+  }
+  renderHistogramTime = setTimeout(function () {
+    var renderType = $('input[name=render-type]:radio:checked').val();
+    if (renderType == 'Table') {
+      renderHistogramTable(hgram);
+    } else {
+      renderHistogramGraph(hgram);
+    }
+  }, 100);
+}
 
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gLastHistogramEvos = null;
@@ -951,88 +1047,10 @@ function update(hgramEvos) {
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
-
-  function updateProps(extent) {
-    var hgram;
-    var dates = hgramEvo.dates();
-    if (extent) {
-      var start = new Date(extent[0]);
-      var end = new Date(extent[1]);
-      // Normalize dates
-      start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-      end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-      hgram = hgramEvo.range(start, end);
-      // Filter dates
-      dates = dates.filter(function (date) {
-        return start <= date && date <= end;
-      });
-      // Report it the first time the date-range selector is used in a session
-      if (!gHasReportedDateRangeSelectorUsedInThisSession) {
-	     gHasReportedDateRangeSelectorUsedInThisSession = true;
-       event('report', 'date-range-selector', 'used-in-session', 1);
-      }
-    } else {
-      hgram = hgramEvo.range();
-    }
-
-    _exportHgram = hgram;
-
-    dateFormat = d3.time.format('%Y/%m/%d');
-    var dateRange = "";
-    if (dates.length == 1) {
-      dateRange = dateFormat(dates[0]);
-    } else {
-      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[dates.length - 1]);
-    }
-
-    // Set common properties
-    $('#prop-kind').text(hgram.kind());
-    $('#prop-submissions').text(fmt(hgram.submissions()));
-    $('#prop-count').text(fmt(hgram.count()));
-    $('#prop-dates').text(d3.format('s')(dates.length));
-    $('#prop-date-range').text(dateRange);
-
-    // Set linear only properties
-    if (hgram.kind() == 'linear') {
-      $('#prop-mean').text(fmt(hgram.mean()));
-      $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
-    }
-
-    // Set exponential only properties
-    if (hgram.kind() == 'exponential') {
-      $('#prop-mean2').text(fmt(hgram.mean()));
-      $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
-      $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
-    }
-
-    // Set percentiles if linear or exponential
-    if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-      $('#prop-p5').text(fmt(hgram.percentile(5)));
-      $('#prop-p25').text(fmt(hgram.percentile(25)));
-      $('#prop-p50').text(fmt(hgram.percentile(50)));
-      $('#prop-p75').text(fmt(hgram.percentile(75)));
-      $('#prop-p95').text(fmt(hgram.percentile(95)));
-    }
-
-    if (renderHistogramTime) {
-      clearTimeout(renderHistogramTime);
-    }
-    renderHistogramTime = setTimeout(function () {
-      var renderType = $('input[name=render-type]:radio:checked').val();
-      if (renderType == 'Table') {
-        renderHistogramTable(hgram);
-      } else {
-        renderHistogramGraph(hgram);
-      }
-    }, 100);
-  }
-  renderHistogramEvolution(lines);
-  
-  updateProps();
   
   setAggregateSelectorOptions(labels, function() {
     updateDisabledAggregates();
-    renderHistogramEvolution(lines);
+    updateRendering(hgramEvo, lines);
   }, true);
   updateUrlHashIfNeeded();
 }
