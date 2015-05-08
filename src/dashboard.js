@@ -336,13 +336,6 @@ function plot(firstChanged) {
     return;
   }
 
-  if (gHistogramFilterObjects.length !== 0) {
-    // Send new state to google analytics
-    gHistogramFilterObjects.forEach(function(f) {
-      var state = f.histogramfilter('option', 'state');
-    });
-  }
-
   $("#content").fadeIn();
   $("#spinner").fadeOut();
 
@@ -822,7 +815,7 @@ function renderHistogramGraph(hgram) {
   
   // Assign random colors to make it easy to differentiate between bars
   gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
-    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.3)";
   });
   gCurrentHistogramPlot.update();
 }
@@ -858,8 +851,9 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     multiTooltipTemplate: function(valuesObject) {
       return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
     },
-    pointDot: false,
     bezierCurveTension: 0.3,
+    pointDotStrokeWidth: 0,
+    pointDotRadius: 3,
   });
 }
 
