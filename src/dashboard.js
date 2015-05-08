@@ -74,8 +74,6 @@ function prepareData(state, hgramEvo) {
   var data = [{
     key: "Submissions",
     bar: true,
-    // This is hacked :)
-    yAxis: 2,
     values: submissions,
   }];
 
@@ -121,27 +119,21 @@ function prepareData(state, hgramEvo) {
     });
     data.push({
       key: "Mean",
-      yAxis: 1,
       values: means,
     }, {
       key: "5th percentile",
-      yAxis: 1,
       values: ps['5'],
     }, {
       key: "25th percentile",
-      yAxis: 1,
       values: ps['25'],
     }, {
       key: "median",
-      yAxis: 1,
       values: ps['50'],
     }, {
       key: "75th percentile",
-      yAxis: 1,
       values: ps['75'],
     }, {
       key: "95th percentile",
-      yAxis: 1,
       values: ps['95'],
     });
   }
@@ -609,8 +601,18 @@ function fmt(number) {
   if (number == Infinity) return "Infinity";
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
-  var prefix = d3.formatPrefix(number, 's');
-  return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
+  var mag = Math.abs(number);
+  if (mag < 1) {
+    return (Math.round(number * 100 * 1000) / 100) + "m";
+  } else if (mag < 1000) {
+    return Math.round(number * 100) / 100;
+  } else if (mag < 1000000) {
+    return (Math.round(number * 100 / 1000) / 100) + "k";
+  } else if (mag < 1000000000) {
+    return (Math.round(number * 100 / 1000000) / 100) + "M";
+  } else if (mag < 1000000000000) {
+    return (Math.round(number * 100 / 1000000000) / 100) + "B";
+  }
 }
 
 function unique(array) {
@@ -787,19 +789,19 @@ function renderHistogramGraph(hgram) {
   }
   
   // Compute chart data values
-  var labels = hgram.map(function (count, start, end, index) {
-      return fmt(start);
-    })
   var total = hgram.count();
   var tooltipLabels = {};
-  hgram.each(function(count, start, end, index) {
-    tooltipLabels[fmt(start)] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+  var labels = hgram.map(function (count, start, end, index) {
+    var label = fmt(start);
+    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+    return label;
   });
   var data = hgram.map(function (count, start, end, index) { return count; });
   
   // Plot the data using Chartjs
   var ctx = document.getElementById("histogram").getContext("2d");
   Chart.defaults.global.responsive = true;
+  Chart.defaults.global.animation = false;
   if (gCurrentHistogramPlot !== null) {
     gCurrentHistogramPlot.destroy();
   }
@@ -855,25 +857,26 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   });
 }
 
-var renderHistogramTime = null;
-var _lastBlobUrl = null;
+var gPreviousBlobUrl = null;
 // Generate download on mousedown
 $('#export-link').mousedown(function () {
   if (_lastBlobUrl) {
-    URL.revokeObjectURL(_lastBlobUrl);
-    _lastBlobUrl = null;
+    URL.revokeObjectURL(gPreviousBlobUrl);
+    gPreviousBlobUrl = null;
   }
   var csv = "start,\tend,\tcount\n";
   csv += gCurrentHistogram.map(function (count, start, end, index) {
     return [start, end, count].join(",\t");
   }).join("\n");
 
-  _lastBlobUrl = URL.createObjectURL(new Blob([csv]));
-  $('#export-link')[0].href = _lastBlobUrl;
+  gPreviousBlobUrl = URL.createObjectURL(new Blob([csv]));
+  $('#export-link')[0].href = gPreviousBlobUrl;
   $('#export-link')[0].download = gCurrentHistogram.measure() + ".csv";
   event('click', 'download csv', 'download csv');
 });
 
+var gHasReportedDateRangeSelectorUsedInThisSession = false;
+var gDrawTimer = null;
 function updateRendering(hgramEvo, lines) {
   // Filter dates
   var dates = hgramEvo.dates();
@@ -912,52 +915,15 @@ function updateRendering(hgramEvo, lines) {
   var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
   
   var hgram;
-  hgram = hgramEvo.range(start, end);
+  hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
   gCurrentHistogram = hgram;
-
-  var dateRange = "";
-  if (dates.length == 1) {
-    dateRange = moment(minDate).format("YYYY/MM/DD");
-  } else {
-    dateRange = moment(minDate).format("YYYY/MM/DD") + " to " + moment(maxDate).format("YYYY/MM/DD");
-  }
-
-  renderHistogramEvolution(lines, minDate, maxDate);
-  
-  // Set common properties in the summary
-  $('#prop-kind').text(hgram.kind());
-  $('#prop-submissions').text(fmt(hgram.submissions()));
-  $('#prop-count').text(fmt(hgram.count()));
-  $('#prop-dates').text(d3.format('s')(dates.length));
-  $('#prop-date-range').text(dateRange);
-
-  // Set linear only properties in the summary
-  if (hgram.kind() == 'linear') {
-    $('#prop-mean').text(fmt(hgram.mean()));
-    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
-  }
-
-  // Set exponential only properties in the summary
-  if (hgram.kind() == 'exponential') {
-    $('#prop-mean2').text(fmt(hgram.mean()));
-    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
-    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
-  }
-
-  // Set percentiles in the summary if linear or exponential
-  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-    $('#prop-p5').text(fmt(hgram.percentile(5)));
-    $('#prop-p25').text(fmt(hgram.percentile(25)));
-    $('#prop-p50').text(fmt(hgram.percentile(50)));
-    $('#prop-p75').text(fmt(hgram.percentile(75)));
-    $('#prop-p95').text(fmt(hgram.percentile(95)));
-  }
   
   // Schedule redraw of histogram
-  if (renderHistogramTime) {
-    clearTimeout(renderHistogramTime);
+  if (gDrawTimer) {
+    clearTimeout(gDrawTimer);
   }
-  renderHistogramTime = setTimeout(function () {
+  gDrawTimer = setTimeout(function () {
+    renderHistogramEvolution(lines, minDate, maxDate);
     var renderType = $('input[name=render-type]:radio:checked').val();
     if (renderType == 'Table') {
       renderHistogramTable(hgram);
@@ -965,9 +931,34 @@ function updateRendering(hgramEvo, lines) {
       renderHistogramGraph(hgram);
     }
   }, 100);
+  
+  // Update summary
+  var hgram = hgramEvo.range();
+  var dates = hgramEvo.dates();
+  $('#prop-kind').text(hgram.kind());
+  $('#prop-submissions').text(fmt(hgram.submissions()));
+  $('#prop-count').text(fmt(hgram.count()));
+  $('#prop-dates').text(fmt(dates.length));
+  $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
+    "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  if (hgram.kind() == 'linear') {
+    $('#prop-mean').text(fmt(hgram.mean()));
+    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+  }
+  else if (hgram.kind() == 'exponential') {
+    $('#prop-mean2').text(fmt(hgram.mean()));
+    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
+    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
+  }
+  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
+    $('#prop-p5').text(fmt(hgram.percentile(5)));
+    $('#prop-p25').text(fmt(hgram.percentile(25)));
+    $('#prop-p50').text(fmt(hgram.percentile(50)));
+    $('#prop-p75').text(fmt(hgram.percentile(75)));
+    $('#prop-p95').text(fmt(hgram.percentile(95)));
+  }
 }
 
-var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gLastHistogramEvos = null;
 var gLineColors = {};
 function update(hgramEvos) {
@@ -1036,8 +1027,6 @@ function update(hgramEvos) {
       line.disabled = toBeSelected.indexOf(line.title) === -1 || toBeSelected.length === 0;
     });
   }
-
-  updateDisabledAggregates();
 
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
