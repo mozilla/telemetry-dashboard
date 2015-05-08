@@ -809,16 +809,22 @@ function renderHistogramGraph(hgram) {
     labels: labels,
     datasets: [{
       fillColor: "rgba(151, 187, 205, 0.5)",
-      strokeColor: "rgba(151, 187, 205, 0.8)",
       data: data,
     }]
   }, {
-    barValueSpacing : 0,
+    barValueSpacing : 2,
     barDatasetSpacing : 0,
+    barShowStroke: false,
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
   });
+  
+  // Assign random colors to make it easy to differentiate between bars
+  gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
+    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+  });
+  gCurrentHistogramPlot.update();
 }
 
 var gCurrentHistogramEvolutionPlots = null;
@@ -988,8 +994,7 @@ function update(hgramEvos) {
     // Create new series with updated fields for each entry
     series = $.map(series, function(entry, i) {
       if (gLineColors[entry.key] === undefined) {
-        gLineColors[entry.key] = "rgba(" + Math.floor(Math.random() * 256) + ", " + Math.floor(Math.random() * 256) +
-                                 ", " + Math.floor(Math.random() * 256) + ", 0.8)";
+        gLineColors[entry.key] = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
       }
       return $.extend({
         color: gLineColors[entry.key],
