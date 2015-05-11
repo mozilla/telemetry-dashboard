@@ -8,6 +8,27 @@ var gHashSetFromCode = false;
 var gCurrentHistogramPlot = null;
 var gCurrentHistogram = null;
 
+function Telemetry_doAsync(action, thisValue, args, callback) {
+  var worker = new Worker("src/telemetry-worker.js");
+  worker.onmessage = function(e) {
+    var payload = e.data;
+    for (var key in payload.thisValue) {
+      if (payload.thisValue.hasOwnProperty(key)) {
+        thisValue[key] = payload.thisValue[key];
+      }
+    }
+    callback(thisValue, payload.result);
+  }
+  worker.postMessage({"action": action, "thisValue": thisValue, "args": []});
+}
+
+/*
+Telemetry_doAsync("Histogram-count", gCurrentHistogram, [], function(histogram, count) {
+  console.log(gCurrentHistogram);
+  console.log(count);
+})
+*/
+
 function event() {
   var args = Array.prototype.slice.call(arguments);
   args.unshift('event');
