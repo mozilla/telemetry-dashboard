@@ -305,7 +305,7 @@ $.widget("telemetry.histogramfilter", {
       // Get selected option
       var option = (typeof filter.select.val === "function") ?
                    filter.select.val() : filter.select;
-      option = this._getOptionRealValue(histogram.filterName(), option);
+      option = this._getHumanReadableOptionRealValue(histogram.filterName(), option);
 
       // If selected option isn't the default option and the option is available
       if (option != this._getStarName(histogram.filterName()) &&
@@ -325,29 +325,25 @@ $.widget("telemetry.histogramfilter", {
     return prettyNames.hasOwnProperty(filterName) ? prettyNames[filterName] : "Any " + filterName;
   },
   
+  _systemNames: {"WINNT": "Windows", "Darwin": "OS X"},
   _windowsVersionNames: {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "10.0": "10"},
-  _getOptions: function histogramfilter__getOptions(filterName, options) {
+  _darwinVersionPrefixes: {
+    "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
+    "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
+    "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
+  },
+  _archNames: {"x86": "32-bit", "x86-64": "64-bit"},
+  _getHumanReadableOptions: function histogramfilter__getHumanReadableOptions(filterName, options) {
     if (filterName === "OS") {
       // Replace OS names with pretty OS names where possible
-      var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
+      var systemNames = this._systemNames;
       return options.map(function(option) {
         return systemNames.hasOwnProperty(option) ? systemNames[option] : option;
       });
     } else if (filterName === "osVersion") {
-      // look for the selected OS filter in order to determine which pretty OS names to use
-      // or give up if we can't find it
-      var system = null;
-      var realValue = this._getOptionRealValue;
-      this._filterList.forEach(function(filter){
-        if (filter.histogram.filterName() == "OS") {
-          system = (typeof filter.select.val === "function") ?
-                   filter.select.val() : filter.select;
-          system = realValue("OS", system);
-        }
-      });
-      if (system === null) {
-        return options;
-      }
+      // get the currently selected OS
+      var system = $("#histogram-filters input.filter-OS").val() || this._getStarName("OS");
+      system = this._getHumanReadableOptionRealValue("OS", system);
       
       if (system === "WINNT") {
         var versionNames = this._windowsVersionNames;
@@ -355,22 +351,18 @@ $.widget("telemetry.histogramfilter", {
           return versionNames.hasOwnProperty(option) ? versionNames[option] : option;
         });
       } else if (system === "Darwin") {
-        var versionPrefixNames = {
-          "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
-          "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
-          "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
-        };
+        var versionPrefixes = this._darwinVersionPrefixes;
         return options.map(function(option) {
-          for (var prefix in versionPrefixNames) {
+          for (var prefix in versionPrefixes) {
             if (option.startsWith(prefix)) {
-              return option + " (" + versionPrefixNames[prefix] + ")";
+              return option + " (" + versionPrefixes[prefix] + ")";
             }
           }
           return option;
         });
       }
     } else if (filterName === "arch") {
-      var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
+      var archNames = this._archNames;
       return options.map(function(option) {
         return archNames.hasOwnProperty(option) ? archNames[option] : option;
       });
@@ -378,30 +370,33 @@ $.widget("telemetry.histogramfilter", {
     return options;
   },
   
-  _getOptionRealValue: function histogramfilter__getOptionRealValue(filterName, value) {
+  _getHumanReadableOptionRealValue: function histogramfilter__getHumanReadableOptionRealValue(filterName, humanReadableOption) {
     if (filterName == "OS") {
-      var realSystemNames = {"Windows": "WINNT", "OS X": "Darwin"};
-      if (realSystemNames.hasOwnProperty(value)) {
-        return realSystemNames[value];
+      for (var key in this._systemNames) {
+        if (this._systemNames[key] === humanReadableOption) {
+          return key;
+        }
       }
     } else if (filterName === "osVersion") {
       // check for WINNT names
       for (var key in this._windowsVersionNames) {
-        if (this._windowsVersionNames[key] === value)
+        if (this._windowsVersionNames[key] === humanReadableOption) {
           return key;
+        }
       }
       
       // check for Darwin/OS X names
-      if (value.indexOf(" (") >= 0 && value[value.length - 1] === ")") {
-        return value.split(" ")[0];
+      if (humanReadableOption.indexOf(" (") >= 0 && humanReadableOption[humanReadableOption.length - 1] === ")") {
+        return humanReadableOption.split(" ")[0];
       }
     } else if (filterName == "arch") {
-      var realArchNames = {"32-bit": "x86", "64-bit": "x86-64"};
-      if (realArchNames.hasOwnProperty(value)) {
-        return realArchNames[value];
+      for (var key in this._archNames) {
+        if (this._archNames[key] === humanReadableOption) {
+          return key;
+        }
       }
     }
-    return value;
+    return humanReadableOption;
   },
   
   /** Set option */
@@ -648,11 +643,12 @@ $.widget("telemetry.histogramfilter", {
         }
         
         // Set filter options
-        filter.select.options(this._getOptions(filterName, options));
+        filter.select.options(this._getHumanReadableOptions(filterName, options));
         filter.select.element().addClass(this.options.selectorClass);
         
         // Set option, listen for changes, and append to root element
-        filter.select.val(option);
+        var humanReadableOption = this._getHumanReadableOptions(filterName, [option])[0];
+        filter.select.val(humanReadableOption);
         filter.select.change(this._filterChanged);
         this.element.append(filter.select.element());
       }
@@ -803,7 +799,7 @@ $.widget("telemetry.histogramfilter", {
       clearedFilters = [];
     }
 
-    option = this._getOptionRealValue(filter.histogram.filterName(), option);
+    option = this._getHumanReadableOptionRealValue(filter.histogram.filterName(), option);
     
     // If we haven't chosen the default option, restore filters, or at least
     // create next filter and trigger change event
@@ -837,7 +833,7 @@ $.widget("telemetry.histogramfilter", {
       // Get selected option
       var option = (typeof filter.select.val === "function") ?
                    filter.select.val() : filter.select;
-      option = this._getOptionRealValue(filter.histogram.filterName(), option);
+      option = this._getHumanReadableOptionRealValue(filter.histogram.filterName(), option);
 
       // If this isn't the last filter or we haven't selected the default option
       // add it to the list of options
@@ -884,7 +880,7 @@ $.widget("telemetry.histogramfilter", {
       // Append select option
       var option = (typeof filter.select.val === "function") ?
                    filter.select.val() : filter.select;
-      option = this._getOptionRealValue(filter.histogram.filterName(), option);
+      option = this._getHumanReadableOptionRealValue(filter.histogram.filterName(), option);
       fragments.push(option);
     }
 
@@ -901,7 +897,7 @@ $.widget("telemetry.histogramfilter", {
       // Get selected option
       var option = (typeof filter.select.val === "function") ?
                    filter.select.val() : filter.select;
-      option = this._getOptionRealValue(filterName, option);
+      option = this._getHumanReadableOptionRealValue(filterName, option);
 
       // If selected option isn't the default option and the option is available
       if (option != this._getStarName(filterName) && histogram.filterOptions().indexOf(option) != -1) {
