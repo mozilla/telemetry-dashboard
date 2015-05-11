@@ -797,12 +797,9 @@ function renderHistogramGraph(hgram) {
   }
   gCurrentHistogramPlot = new Chart(ctx).Bar({
     labels: labels,
-    datasets: [{
-      fillColor: "rgba(151, 187, 205, 0.5)",
-      data: data,
-    }]
+    datasets: [{data: data}]
   }, {
-    barValueSpacing : 2,
+    barValueSpacing : 0,
     barDatasetSpacing : 0,
     barShowStroke: false,
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
@@ -812,7 +809,7 @@ function renderHistogramGraph(hgram) {
   
   // Assign random colors to make it easy to differentiate between bars
   gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
-    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.3)";
+    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
   });
   gCurrentHistogramPlot.update();
 }
@@ -857,7 +854,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
 var gPreviousBlobUrl = null;
 // Generate download on mousedown
 $('#export-link').mousedown(function () {
-  if (_lastBlobUrl) {
+  if (gPreviousBlobUrl) {
     URL.revokeObjectURL(gPreviousBlobUrl);
     gPreviousBlobUrl = null;
   }
@@ -995,12 +992,14 @@ function update(hgramEvos) {
       if (gLineColors[state + "\n" + entry.key] === undefined) {
         gLineColors[state + "\n" + entry.key] = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
       }
-      return $.extend({
+      var parts = state.split("/");
+      var key = parts[0] + " " + parts[1] + ": " +  entry.key;
+      return $.extend({}, entry, {
         color: gLineColors[state + "\n" + entry.key],
         fullState: state,
         title: entry.key,
-        key: state + ": " + entry.key,
-      }, entry);
+        key: key,
+      });
     });
 
     $.merge(lines, series);
