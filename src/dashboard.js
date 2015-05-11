@@ -952,6 +952,7 @@ function updateRendering(hgramEvo, lines, start, end) {
 
 var gLastHistogramEvos = null;
 var gLineColors = {};
+var gGoodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
@@ -991,7 +992,7 @@ function update(hgramEvos) {
       
       // Add extra fields to the lines such as their cached color
       if (gLineColors[state + "\n" + entry.key] === undefined) {
-        gLineColors[state + "\n" + entry.key] = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+        gLineColors[state + "\n" + entry.key] = gGoodColors.shift();
       }
       var parts = state.split("/");
       var key = parts[0] + " " + parts[1] + ": " +  entry.key;
