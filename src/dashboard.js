@@ -475,6 +475,7 @@ Telemetry.init(function () {
   }
   
   $(window).bind("hashchange", function () {
+    // Ignore hash changes caused programmatically
     if (gHashSetFromCode) {
       gHashSetFromCode = false;
       return;
@@ -589,23 +590,19 @@ Telemetry.init(function () {
   }
 });
 
-/** Format numbers */
+/** Format numbers to two deciaml places with unit suffixes */
 function fmt(number) {
   if (number == Infinity) return "Infinity";
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
   var mag = Math.abs(number);
-  if (mag < 1) {
-    return (Math.round(number * 100 * 1000) / 100) + "m";
-  } else if (mag < 1000) {
-    return Math.round(number * 100) / 100;
-  } else if (mag < 1000000) {
-    return (Math.round(number * 100 / 1000) / 100) + "k";
-  } else if (mag < 1000000000) {
-    return (Math.round(number * 100 / 1000000) / 100) + "M";
-  } else if (mag < 1000000000000) {
-    return (Math.round(number * 100 / 1000000000) / 100) + "B";
+  var exponent = Math.floor(Math.log10(mag));
+  var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
+  var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
+  if (interval in units) {
+    return Math.round(number * 100 / interval) / 100 + units[interval];
   }
+  return Math.round(number * 100) / 100;
 }
 
 function unique(array) {
@@ -877,16 +874,12 @@ $('#export-link').mousedown(function () {
 
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gDrawTimer = null;
-function updateRendering(hgramEvo, lines) {
-  // Filter dates
-  var dates = hgramEvo.dates();
-  var start = dates[0], end = dates[dates.length - 1];
-
+function updateRendering(hgramEvo, lines, start, end) {
   // Update the start and end range and update the selection if necessary
   var picker = $("#dateRange").data("daterangepicker");
   var startMoment = moment(start), endMoment = moment(end);
   picker.setOptions({
-    format: "MM/DD/YYYY h:mm A",
+    format: "MM/DD/YYYY",
     minDate: startMoment,
     maxDate: endMoment,
     showDropdowns: true,
@@ -918,7 +911,7 @@ function updateRendering(hgramEvo, lines) {
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
   gCurrentHistogram = hgram;
   
-  // Schedule redraw of histogram
+  // Schedule redraw of histogram for the first histogram evolution
   if (gDrawTimer) {
     clearTimeout(gDrawTimer);
   }
@@ -932,7 +925,7 @@ function updateRendering(hgramEvo, lines) {
     }
   }, 100);
   
-  // Update summary
+  // Update summary for the first histogram evolution
   var hgram = hgramEvo.range();
   var dates = hgramEvo.dates();
   $('#prop-kind').text(hgram.kind());
@@ -979,6 +972,7 @@ function update(hgramEvos) {
   // Compute list of each individual series and bucket labels
   var lines = [];
   var labels = [];
+  var start = null, end = null;
   $.each(hgramEvos, function (state, evo) {
     var series = prepareData(state, evo);
     for (var x in series) {
@@ -987,11 +981,22 @@ function update(hgramEvos) {
 
     // Create new series with updated fields for each entry
     series = $.map(series, function(entry, i) {
-      if (gLineColors[entry.key] === undefined) {
-        gLineColors[entry.key] = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+      // Update the bounds properly
+      entry.values.forEach(function(point) {
+        if (start === null || point.x < start) {
+          start = point.x;
+        }
+        if (end === null || point.x > end) {
+          end = point.x;
+        }
+      });
+      
+      // Add extra fields to the lines such as their cached color
+      if (gLineColors[state + "\n" + entry.key] === undefined) {
+        gLineColors[state + "\n" + entry.key] = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
       }
       return $.extend({
-        color: gLineColors[entry.key],
+        color: gLineColors[state + "\n" + entry.key],
         fullState: state,
         title: entry.key,
         key: state + ": " + entry.key,
@@ -1001,6 +1006,8 @@ function update(hgramEvos) {
     $.merge(lines, series);
   });
   labels = unique(labels);
+  start = new Date(start);
+  end = new Date(end);
 
   // Select the required aggregates in the data
   function updateDisabledAggregates() {
@@ -1034,7 +1041,7 @@ function update(hgramEvos) {
   
   setAggregateSelectorOptions(labels, function() {
     updateDisabledAggregates();
-    updateRendering(hgramEvo, lines);
+    updateRendering(hgramEvo, lines, start, end);
   }, true);
   updateUrlHashIfNeeded();
 }
