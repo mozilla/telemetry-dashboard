@@ -301,12 +301,14 @@ $.widget("telemetry.histogramfilter", {
 
       // Get histogram
       histogram = filter.histogram;
-
+      
       // Get selected option
-      var option = filter.select.val();
+      var option = (typeof filter.select.val === "function") ?
+                   filter.select.val() : filter.select;
+      option = this._getOptionRealValue(histogram.filterName(), option);
 
       // If selected option isn't the default option and the option is available
-      if (option != histogram.filterName() + "*" &&
+      if (option != this._getStarName(histogram.filterName()) &&
           histogram.filterOptions().indexOf(option) !== -1) {
         
         // Filter the histogram
@@ -318,6 +320,90 @@ $.widget("telemetry.histogramfilter", {
     return histogram;
   },
 
+  _getStarName: function histogramfilter__getStarName(filterName) {
+    var prettyNames = {"appName": "Any App", "osVersion": "Any Version", "arch": "Any Build"};
+    return prettyNames.hasOwnProperty(filterName) ? prettyNames[filterName] : "Any " + filterName;
+  },
+  
+  _windowsVersionNames: {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "10.0": "10"},
+  _getOptions: function histogramfilter__getOptions(filterName, options) {
+    if (filterName === "OS") {
+      // Replace OS names with pretty OS names where possible
+      var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
+      return options.map(function(option) {
+        return systemNames.hasOwnProperty(option) ? systemNames[option] : option;
+      });
+    } else if (filterName === "osVersion") {
+      // look for the selected OS filter in order to determine which pretty OS names to use
+      // or give up if we can't find it
+      var system = null;
+      var realValue = this._getOptionRealValue;
+      this._filterList.forEach(function(filter){
+        if (filter.histogram.filterName() == "OS") {
+          system = (typeof filter.select.val === "function") ?
+                   filter.select.val() : filter.select;
+          system = realValue("OS", system);
+        }
+      });
+      if (system === null) {
+        return options;
+      }
+      
+      if (system === "WINNT") {
+        var versionNames = this._windowsVersionNames;
+        return options.map(function(option) {
+          return versionNames.hasOwnProperty(option) ? versionNames[option] : option;
+        });
+      } else if (system === "Darwin") {
+        var versionPrefixNames = {
+          "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
+          "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
+          "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
+        };
+        return options.map(function(option) {
+          for (var prefix in versionPrefixNames) {
+            if (option.startsWith(prefix)) {
+              return option + " (" + versionPrefixNames[prefix] + ")";
+            }
+          }
+          return option;
+        });
+      }
+    } else if (filterName === "arch") {
+      var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
+      return options.map(function(option) {
+        return archNames.hasOwnProperty(option) ? archNames[option] : option;
+      });
+    }
+    return options;
+  },
+  
+  _getOptionRealValue: function histogramfilter__getOptionRealValue(filterName, value) {
+    if (filterName == "OS") {
+      var realSystemNames = {"Windows": "WINNT", "OS X": "Darwin"};
+      if (realSystemNames.hasOwnProperty(value)) {
+        return realSystemNames[value];
+      }
+    } else if (filterName === "osVersion") {
+      // check for WINNT names
+      for (var key in this._windowsVersionNames) {
+        if (this._windowsVersionNames[key] === value)
+          return key;
+      }
+      
+      // check for Darwin/OS X names
+      if (value.indexOf(" (") >= 0 && value[value.length - 1] === ")") {
+        return value.split(" ")[0];
+      }
+    } else if (filterName == "arch") {
+      var realArchNames = {"32-bit": "x86", "64-bit": "x86-64"};
+      if (realArchNames.hasOwnProperty(value)) {
+        return realArchNames[value];
+      }
+    }
+    return value;
+  },
+  
   /** Set option */
   _setOption: function histogramfilter__setOption(option, value) {
     if (option == "state") {
@@ -393,13 +479,15 @@ $.widget("telemetry.histogramfilter", {
         $(window).unbind("hashchange", this._windowHashChanged);
       }
 
-     } else if (option == "locked"){
-       this.options.locked = value;
-       this._measureSelector.enable(!value);
-       this._filterList.forEach(function(x){
-         x.select.enable(!value);
-       });
-     } else {
+    } else if (option == "locked"){
+      this.options.locked = value;
+      this._measureSelector.enable(!value);
+      this._filterList.forEach(function(x){
+        if (typeof x.select.enable === "function") {
+          x.select.enable(!value);
+        }
+      });
+    } else {
       this.options[option] = value;
     }
   },
@@ -487,7 +575,7 @@ $.widget("telemetry.histogramfilter", {
 
     // Load histogram for desired measure
     var loader = "loadEvolutionOver" + this.options.evolutionOver;
-    Telemetry[loader](version, measure, $.proxy(function(hgram) {
+    Telemetry[loader](version, measure, $.proxy(function(histogram) {
       // Abort if another version or measure have been selected while we loaded
       if (this._versionSelector.val() !== version ||
           this._measureSelector.val() !== measure) {
@@ -498,7 +586,7 @@ $.widget("telemetry.histogramfilter", {
       this._clearFilterList();
 
       // Attempt to restore filters from fragments and trigger change event
-      this._restoreFilters(hgram, fragments);
+      this._restoreFilters(histogram, fragments);
     }, this));
   },
 
@@ -506,73 +594,79 @@ $.widget("telemetry.histogramfilter", {
    * Attempt to restore remaining filters from histogram and state fragments.
    * This method assumes filters for which options are listed in fragments have
    * already been cleared, and that first option of fragments to be applied to
-   * hgram immediately.
+   * histogram immediately.
    */
-  _restoreFilters: function histogramfilter__restoreFilters(hgram, fragments) {
+  _restoreFilters: function histogramfilter__restoreFilters(histogram, fragments) {
     // Get filter name
-    var filterName = hgram.filterName();
+    var filterName = histogram.filterName();
 
     // Try to restore filter if one exists
     if(filterName !== null) {
       // Get filter options
-      var options = hgram.filterOptions();
+      var options = histogram.filterOptions();
 
-      // Prepend an option to select all data for this filter so no filtering is done at this level.
-      var starOption = filterName + "*";
-      options.unshift(starOption);
-
-      // Create a filter entry for the _filterList
-      var filter = {
-        select:         new this.options.selectorType(filterName),
-        histogram:      hgram
-      };
-
-      if (this.options.locked) {
-        filter.select.enable(false);
+      // Prepend an option to select all data for this filter, except for the app name which isn't useful
+      var starOption = this._getStarName(filterName);
+      if (filterName != "appName") {
+        options.unshift(starOption);
       }
-            
-      filter.select.options(options);
-      filter.select.element().addClass(this.options.selectorClass);
 
-      // Now add filter to _filterList so it gets index we assigned above
-      this._filterList.push(filter);
-
+      var fixedOptions = {"reason": "saved_session"};
+      var preferredOptions = {"appName": "Firefox"};
+      
       // Restore option
       var option = fragments.shift();
 
       // If option is invalid or default, we restore default and clear fragments
       if (options.indexOf(option) <= 0) {
-        var preferredDefaults = {
-          "reason": "saved_session",
-          "appName": "Firefox"
-        };
-
-        if (filterName === "reason" || filterName === "appName") {
-          if (options.indexOf(preferredDefaults[filterName]) < 0) {
-            option = options[1];
-          } else {
-            option = preferredDefaults[filterName];
-          }
+        // Choose preferred option if specified
+        if (preferredOptions.hasOwnProperty(filterName)) {
+          option = options.indexOf(preferredOptions[filterName]) < 0 ?
+                   options[1] : preferredOptions[filterName];
         } else {
-          option = starOption;
+          option = options.length > 0 ? options[0] : null;
         }
         fragments = [];
       }
+      
+      // Add filtering selectors
+      if (fixedOptions.hasOwnProperty(filterName)) {
+        // Create a fixed filter entry for the _filterList
+        var filter = {
+          select:         fixedOptions[filterName],
+          histogram:      histogram
+        };
+      } else {
+        // Create a selectable filter entry for the _filterList
+        var filter = {
+          select:         new this.options.selectorType(filterName),
+          histogram:      histogram
+        };
 
-      // Select option
-      filter.select.val(option);
-
-      // Listen for changes and append to root element
-      filter.select.change(this._filterChanged);
-      this.element.append(filter.select.element());
+        if (this.options.locked) {
+          filter.select.enable(false);
+        }
+        
+        // Set filter options
+        filter.select.options(this._getOptions(filterName, options));
+        filter.select.element().addClass(this.options.selectorClass);
+        
+        // Set option, listen for changes, and append to root element
+        filter.select.val(option);
+        filter.select.change(this._filterChanged);
+        this.element.append(filter.select.element());
+      }
+      
+      // Add filter to _filterList so it gets index we assigned above
+      this._filterList.push(filter);
 
       if (option != starOption) {
         // If we didn't select the star option, filter histogram and continue
         // to recursively restore remaining fragments
-        this._restoreFilters(hgram.filter(option), fragments);
+        this._restoreFilters(histogram.filter(option), fragments);
       } else {
-        // If we selected star option then no filters follows and we should
-        // trigger a change
+        // If we selected star option or no option then no filters follows and we
+        // should trigger a change
         this._triggerChange(true);
       }
     } else {
@@ -709,9 +803,11 @@ $.widget("telemetry.histogramfilter", {
       clearedFilters = [];
     }
 
+    option = this._getOptionRealValue(filter.histogram.filterName(), option);
+    
     // If we haven't chosen the default option, restore filters, or at least
     // create next filter and trigger change event
-    if(filter.histogram.filterName() + "*" !== option) {
+    if(this._getStarName(filter.histogram.filterName()) !== option) {
       this._restoreFilters(filter.histogram.filter(option), clearedFilters);
     } else {
       // Otherwise, trigger the change event
@@ -739,16 +835,20 @@ $.widget("telemetry.histogramfilter", {
       var filter = removed[i];
 
       // Get selected option
-      var option = filter.select.val();
+      var option = (typeof filter.select.val === "function") ?
+                   filter.select.val() : filter.select;
+      option = this._getOptionRealValue(filter.histogram.filterName(), option);
 
       // If this isn't the last filter or we haven't selected the default option
       // add it to the list of options
-      if (i != n - 1 || filter.histogram.filterName() + "*" != option) {
+      if (i != n - 1 || this._getStarName(filter.histogram.filterName()) != option) {
         options.push(option);
       }
 
       // Remove filter
-      filter.select.destroy();
+      if (typeof filter.select.destroy === "function") {
+        filter.select.destroy();
+      }
     }
 
     // Return list of removed options, for any body remotely interested in
@@ -782,7 +882,10 @@ $.widget("telemetry.histogramfilter", {
       filter = this._filterList[i];
 
       // Append select option
-      fragments.push(filter.select.val());
+      var option = (typeof filter.select.val === "function") ?
+                   filter.select.val() : filter.select;
+      option = this._getOptionRealValue(filter.histogram.filterName(), option);
+      fragments.push(option);
     }
 
     // If there is a last filter, get the histogram from it and apply the
@@ -791,15 +894,17 @@ $.widget("telemetry.histogramfilter", {
     if (n !== 0) {
       filter = this._filterList[n - 1];
 
-      // Get histogram
+      // Get the last histogram
       histogram = filter.histogram;
+      var filterName = histogram.filterName();
 
       // Get selected option
-      var option = filter.select.val();
+      var option = (typeof filter.select.val === "function") ?
+                   filter.select.val() : filter.select;
+      option = this._getOptionRealValue(filterName, option);
 
       // If selected option isn't the default option and the option is available
-      if (option != histogram.filterName() + "*" &&
-          histogram.filterOptions().indexOf(option) != -1) {
+      if (option != this._getStarName(filterName) && histogram.filterOptions().indexOf(option) != -1) {
         
         // Filter the histogram
         histogram = histogram.filter(option);
@@ -822,8 +927,8 @@ $.widget("telemetry.histogramfilter", {
 
     // Now trigger the histogramfilterchange event
     this._trigger("change", null, {
-      state:      this.options.state,
-      histogram:  histogram,
+      state:       this.options.state,
+      histogram:   histogram,
       doneLoading: doneLoading,
     });
   },
