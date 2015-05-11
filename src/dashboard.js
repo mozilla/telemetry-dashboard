@@ -840,10 +840,10 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
     },
     multiTooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + fmt(valuesObject.y) + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
     },
     bezierCurveTension: 0.3,
     pointDotStrokeWidth: 0,
