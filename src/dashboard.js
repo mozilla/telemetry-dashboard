@@ -911,22 +911,7 @@ function updateRendering(hgramEvo, lines, start, end) {
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
   gCurrentHistogram = hgram;
   
-  // Schedule redraw of histogram for the first histogram evolution
-  if (gDrawTimer) {
-    clearTimeout(gDrawTimer);
-  }
-  gDrawTimer = setTimeout(function () {
-    renderHistogramEvolution(lines, minDate, maxDate);
-    var renderType = $('input[name=render-type]:radio:checked').val();
-    if (renderType == 'Table') {
-      renderHistogramTable(hgram);
-    } else {
-      renderHistogramGraph(hgram);
-    }
-  }, 100);
-  
   // Update summary for the first histogram evolution
-  var hgram = hgramEvo.range(startMoment.toDate(), endMoment.toDate());
   var dates = hgramEvo.dates();
   $('#prop-kind').text(hgram.kind());
   $('#prop-dates').text(fmt(dates.length));
@@ -952,10 +937,25 @@ function updateRendering(hgramEvo, lines, start, end) {
       $('#prop-p95').text(fmt(hgram.percentile(95)));
     }
   });
+  
+  // Schedule redraw of histogram for the first histogram evolution
+  if (gDrawTimer) {
+    clearTimeout(gDrawTimer);
+  }
+  gDrawTimer = setTimeout(function () {
+    renderHistogramEvolution(lines, minDate, maxDate);
+    var renderType = $('input[name=render-type]:radio:checked').val();
+    if (renderType == 'Table') {
+      renderHistogramTable(hgram);
+    } else {
+      renderHistogramGraph(hgram);
+    }
+  }, 100);
 }
 
 var gLastHistogramEvos = null;
 var gLineColors = {};
+var gGoodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
@@ -995,7 +995,7 @@ function update(hgramEvos) {
       
       // Add extra fields to the lines such as their cached color
       if (gLineColors[state + "\n" + entry.key] === undefined) {
-        gLineColors[state + "\n" + entry.key] = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+        gLineColors[state + "\n" + entry.key] = gGoodColors.shift();
       }
       var parts = state.split("/");
       var key = parts[0] + " " + parts[1] + ": " +  entry.key;
