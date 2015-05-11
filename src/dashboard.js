@@ -54,7 +54,7 @@ function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
-  var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
+  var sanitizeData = $('#sanitize-pref').is(':checked');
   var pgState = getPageState();
   dataKey = state + " " + pgState.evoOver + " " +  pgState.sanitize;
   if (dataKey in cachedData) {
@@ -156,7 +156,7 @@ function getPageState() {
   pageState.aggregates = pageState.aggregates.filter(function(e) { return e !== "";});
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
-  pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
+  pageState.sanitize = $('#sanitize-pref').is(':checked');
   pageState.renderhistogram = $('input[name=render-type]:radio:checked').val();
   return pageState;
 }
@@ -197,7 +197,7 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.sanitize !== undefined) {
-    $('input[name=sanitize-pref]:checkbox').prop('checked', toBoolean(newPageState.sanitize));
+    $('#sanitize-pref').prop('checked', toBoolean(newPageState.sanitize));
   }
 
   if (newPageState.evoOver !== undefined) {
@@ -578,10 +578,10 @@ Telemetry.init(function () {
   });
 
   // Toggle whether to throw out data points from sources that haven't submitted enough
-  $('input[name=sanitize-pref]:checkbox').change(function () {
+  $('#sanitize-pref').change(function () {
     plot(true);
     // Inform google analytics of click
-    var value = $('input[name=sanitize-pref]:checkbox').is(':checked');
+    var value = $('#sanitize-pref').is(':checked');
     event('click', 'sanitize-data', value );
   });
 
@@ -844,10 +844,10 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     multiTooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     bezierCurveTension: 0.3,
     pointDotStrokeWidth: 0,

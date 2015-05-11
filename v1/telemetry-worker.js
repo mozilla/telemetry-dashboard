@@ -6,17 +6,31 @@ var gActions = {
     return this.count();
   },
   "Histogram-precompute": function() {
-    this.__proto__ = Telemetry.Histogram.prototype;
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM);
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM);
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM_SQ);
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM_SQ_LO);
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM_SQ_HI);
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUBMISSIONS);
-    this.precomputeAggregateQuantity(Telemetry.DataOffsets.FILTER_ID);
-    var n = this._buckets.length;
+    // Make a shallow copy of the input object that is also a Telemetry.Histogram instance
+    var histogram = new Telemetry.Histogram(this._measure, this._filter_path, this._buckets, this._dataset, this._filter_tree, this._spec);
+    for (var key in this) {
+      if (this.hasOwnProperty(key)) {
+        histogram[key] = this[key];
+      }
+    }
+    
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM);
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM);
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM_SQ);
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM_SQ_LO);
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM_SQ_HI);
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.SUBMISSIONS);
+    histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.FILTER_ID);
+    var n = histogram._buckets.length;
     for (var i = 0; i < n; i++) {
-      this.precomputeAggregateQuantity(i);
+      histogram.precomputeAggregateQuantity(i);
+    }
+    
+    // Copy all the fields back into the input object
+    for (var key in histogram) {
+      if (histogram.hasOwnProperty(key)) {
+        this[key] = histogram[key];
+      }
     }
   },
 }

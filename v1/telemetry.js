@@ -564,7 +564,6 @@ function _parseDateString(d) {
 function _computeBuckets(spec){
   // Find bounds from specification
   var low = 1, high, nbuckets;
-  console.log(spec);
   if(spec.kind == 'boolean' || spec.kind == 'flag') {
     // This is how boolean bucket indexes are generated in mozilla-central we
     // might look into whether or not there is a bug, as it seems rather weird
