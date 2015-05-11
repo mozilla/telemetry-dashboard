@@ -888,22 +888,21 @@ function updateRendering(hgramEvo, lines, start, end) {
        "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
        "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
     },
-  }, function(start, end, label) {
+  }, function(chosenStart, chosenEnd, label) {
     // Report it the first time the date-range selector is used in a session
     if (!gHasReportedDateRangeSelectorUsedInThisSession) {
      gHasReportedDateRangeSelectorUsedInThisSession = true;
      event('report', 'date-range-selector', 'used-in-session', 1);
     }
-  
     gUserSelectedRange = true;
-    updateRendering(hgramEvo, lines);
+    updateRendering(hgramEvo, lines, startMoment, endMoment);
   });
   if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment)) {
     gUserSelectedRange = false;
   }
   if (!gUserSelectedRange) {
-    picker.setStartDate(start);
-    picker.setEndDate(end);
+    picker.setStartDate(startMoment);
+    picker.setEndDate(endMoment);
   }
   var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
   
