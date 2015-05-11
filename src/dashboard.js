@@ -925,7 +925,6 @@ function updateRendering(hgramEvo, lines, start, end) {
   }, 100);
   
   // Update summary for the first histogram evolution
-  var hgram = hgramEvo.range();
   var dates = hgramEvo.dates();
   $('#prop-kind').text(hgram.kind());
   $('#prop-submissions').text(fmt(hgram.submissions()));
