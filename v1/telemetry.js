@@ -205,6 +205,58 @@ Telemetry.init = function Telemetry_load(cb) {
 };
 
 /**
+ * Perform one of a limited set of computationally intense operations in the background using Web Workers.
+ * 
+ * For example, the `"Histogram-count"` operation is the async equivalent to `Telemetry.Histogram.prototype.count`. For example:
+ * 
+ *     Telemetry.doAsync("Histogram-count", someHistogram, [], function(someHistogram, count) {
+ *         console.log("There are " + count + " entries");
+ *     });
+ * 
+ * Is analogous to:
+ * 
+ *     count = someHistogram.count();
+ *     console.log("There are " + count + " entries");
+ * 
+ * There are currently a few actions available:
+ * 
+ *   * "Histogram-count" is an async version of `Telemetry.Histogram.prototype.count`.
+ *   * "Histogram-filter" is an async version of `Telemetry.Histogram.prototype.filter`.
+ * 
+ * @param {String}    action     Name of the action to perform
+ * @param {Object}    thisValue  The object on which to apply the operation
+ * @param {Object}    args       Arguments to pass to the operation
+ * @param {Function}  cb         Callback to be invoked after the operation completes
+ */
+Telemetry.doAsync = function Telemetry_doAsync(action, thisValue, args, callback) {
+  var worker = new Worker("v1/telemetry-worker.js");
+  worker.onmessage = function(e) {
+    if (e.data === null) {
+      throw new Error("Unknown operation: " + action);
+    }
+    var payload = e.data;
+    for (var key in payload.thisValue) {
+      if (payload.thisValue.hasOwnProperty(key)) {
+        thisValue[key] = payload.thisValue[key];
+      }
+    }
+    callback(thisValue, payload.result);
+  }
+  worker.postMessage({"action": action, "thisValue": thisValue, "args": []});
+}
+
+// Offset relative to length for special elements in arrays of raw data
+Telemetry.DataOffsets = {
+  SUM:            -7,   // The following keys are documented in StorageFormat.md
+  LOG_SUM:        -6,   // See the docs/ folder of the telemetry-server
+  LOG_SUM_SQ:     -5,   // Repository. They are essentially part of the
+  SUM_SQ_LO:      -4,   // validated telemetry histogram format
+  SUM_SQ_HI:      -3,
+  SUBMISSIONS:    -2,   // Added in dashboard.py
+  FILTER_ID:      -1    // Added in results2disk.py
+};
+
+/**
  * Get remote URL. `cb()` will be invoked when resource is acquired.
  * Overwrite this function when using something without XMLHttpRequest()
  *
@@ -464,17 +516,6 @@ function _listFilterIds(filter_tree){
   return ids;
 }
 
-// Offset relative to length for special elements in arrays of raw data
-var DataOffsets = {
-  SUM:            -7,   // The following keys are documented in StorageFormat.md
-  LOG_SUM:        -6,   // See the docs/ folder of the telemetry-server
-  LOG_SUM_SQ:     -5,   // Repository. They are essentially part of the
-  SUM_SQ_LO:      -4,   // validated telemetry histogram format
-  SUM_SQ_HI:      -3,
-  SUBMISSIONS:    -2,   // Added in deashboard.py
-  FILTER_ID:      -1    // Added in results2disk.py
-};
-
 /**
  * A `HistogramEvolution` instance is a collection of histograms over dates.
  * These _dates_ can be either build dates or submission dates, depending on
@@ -523,6 +564,7 @@ function _parseDateString(d) {
 function _computeBuckets(spec){
   // Find bounds from specification
   var low = 1, high, nbuckets;
+  console.log(spec);
   if(spec.kind == 'boolean' || spec.kind == 'flag') {
     // This is how boolean bucket indexes are generated in mozilla-central we
     // might look into whether or not there is a bug, as it seems rather weird
@@ -530,12 +572,12 @@ function _computeBuckets(spec){
     high      = 2;
     nbuckets  = 3;
   } else if (spec.kind == 'enumerated') {
-    high      = eval(spec.n_values);
-    nbuckets  = eval(spec.n_values) + 1;
+    high      = parseInt(spec.n_values);
+    nbuckets  = high + 1;
   } else if (spec.kind == 'linear' || spec.kind == 'exponential') {
-    low       = eval(spec.low) || 1;
-    high      = eval(spec.high);
-    nbuckets  = eval(spec.n_buckets)
+    low       = parseFloat(spec.low) || 1;
+    high      = parseFloat(spec.high);
+    nbuckets  = parseInt(spec.n_buckets)
   }
   // Compute buckets
   var buckets = null;
@@ -910,8 +952,9 @@ HistogramEvolution.prototype.each = function HistogramEvolution_each(cb, ctx) {
   var filterIds = _listFilterIds(this._filter_tree);
 
   // Auxiliary function to filter data arrays by filter_id
+  var FILTER_ID = Telemetry.DataOffsets.FILTER_ID;
   function filterByFilterId(data_array) {
-      var filterId = data_array[data_array.length + DataOffsets.FILTER_ID];
+      var filterId = data_array[data_array.length + FILTER_ID];
       return filterIds.indexOf(filterId) != -1;
   }
 
@@ -1096,36 +1139,6 @@ return HistogramEvolution;
  */
 Telemetry.Histogram = (function(){
 
-/*!
- * Auxiliary function to aggregate values of index from histogram dataset
- */
-function _aggregate(index, histogram) {
-  if (histogram._aggregated === undefined) {
-    histogram._aggregated = [];
-  }
-  var sum = histogram._aggregated[index];
-  if (sum === undefined) {
-    // Cache the list of filter ids
-    if (histogram._filterIds === undefined) {
-      histogram._filterIds = _listFilterIds(histogram._filter_tree);
-    }
-    // Aggregate index as sum over histogram
-    sum = 0;
-    var n = histogram._dataset.length;
-    for(var i = 0; i < n; i++) {
-      var data_array = histogram._dataset[i];
-
-      // Check if filter_id is filtered
-      var filter_id_offset = data_array.length + DataOffsets.FILTER_ID;
-      if (histogram._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
-        sum += data_array[index >= 0 ? index : data_array.length + index];
-      }
-    }
-    histogram._aggregated[index] = sum;
-  }
-  return sum;
-}
-
 /*! Auxiliary function for estimating the end of the last bucket */
 function _estimateLastBucketEnd(histogram) {
   // As there is no next bucket for the last bucket, we sometimes need to
@@ -1136,13 +1149,13 @@ function _estimateLastBucketEnd(histogram) {
   for (var i = 0; i < n - 1; i++) {
     var bucket_center = (histogram._buckets[i+1] - histogram._buckets[i]) / 2 +
                          histogram._buckets[i];
-    sum_before_last += _aggregate(i, histogram) * bucket_center;
+    sum_before_last += histogram.precomputeAggregateQuantity(i) * bucket_center;
   }
   // We estimate the sum of data-points in the last bucket by subtracting the
   // estimate of sum of data-points before the last bucket...
-  var sum_last = _aggregate(DataOffsets.SUM, histogram) - sum_before_last;
+  var sum_last = histogram.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM) - sum_before_last;
   // We estimate the mean of the last bucket as follows
-  var last_bucket_mean = sum_last / _aggregate(n - 1, histogram);
+  var last_bucket_mean = sum_last / histogram.precomputeAggregateQuantity(n - 1);
   // We find the start of the last bucket
   var last_bucket_start = histogram._buckets[n - 1];
   // Now estimate the last bucket end
@@ -1165,6 +1178,40 @@ function Histogram(measure, filter_path, buckets, dataset, filter_tree, spec) {
   this._dataset     = dataset;
   this._filter_tree = filter_tree;
   this._spec        = spec;
+}
+
+/**
+ * Precompute and cache an aggregated property in this `Histogram` instance, returning the aggregated property value.
+ *
+ * The aggregated property is simply the sum of the property in each ping in the dataset.
+ * 
+ * @param {Number}     index      Index of the property in each ping.
+ */
+Histogram.prototype.precomputeAggregateQuantity = function Histogram_precomputeAggregateQuantity(index) {
+  if (this._aggregated === undefined) {
+    this._aggregated = [];
+  }
+  var sum = this._aggregated[index];
+  if (sum === undefined) {
+    // Cache the list of filter ids
+    if (this._filterIds === undefined) {
+      this._filterIds = _listFilterIds(this._filter_tree);
+    }
+    // Aggregate index as sum over histogram
+    sum = 0;
+    var n = this._dataset.length;
+    for(var i = 0; i < n; i++) {
+      var data_array = this._dataset[i];
+
+      // Check if this particular array makes it past the filter
+      var filter_id_offset = data_array.length + Telemetry.DataOffsets.FILTER_ID;
+      if (this._filterIds.indexOf(data_array[filter_id_offset]) != -1) {
+        sum += data_array[index >= 0 ? index : data_array.length + index];
+      }
+    }
+    this._aggregated[index] = sum;
+  }
+  return sum;
 }
 
 /**
@@ -1338,7 +1385,7 @@ Histogram.prototype.filter = function Histogram_filter(option) {
  * submissions is the number session aggregated in this histogram.
  */
 Histogram.prototype.submissions = function Histogram_submissions() {
-  return _aggregate(DataOffsets.SUBMISSIONS, this);
+  return this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUBMISSIONS);
 };
 
 /**
@@ -1352,7 +1399,7 @@ Histogram.prototype.count = function Histogram_count() {
   var count = 0;
   var n = this._buckets.length;
   for(var i = 0; i < n; i++) {
-    count += _aggregate(i, this);
+    count += this.precomputeAggregateQuantity(i);
   }
   return count;
 };
@@ -1380,7 +1427,7 @@ Histogram.prototype.mean = function Histogram_mean() {
      throw new Error("Histogram.geometricMean() is only available for " +
                      "linear and exponential histograms");
   }
-  var sum = _aggregate(DataOffsets.SUM, this);
+  var sum = this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM);
   return sum / this.count();
 };
 
@@ -1412,10 +1459,10 @@ Histogram.prototype.standardDeviation = function Histogram_standardDeviation() {
     throw new Error("Histogram.standardDeviation() requires big.js from: " +
                     "https://github.com/MikeMcl/big.js/");
   }
-  var sum       = new Big(_aggregate(DataOffsets.SUM, this));
+  var sum       = new Big(this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM));
   var count     = new Big(this.count());
-  var sum_sq_hi = new Big(_aggregate(DataOffsets.SUM_SQ_HI, this));
-  var sum_sq_lo = new Big(_aggregate(DataOffsets.SUM_SQ_LO, this));
+  var sum_sq_hi = new Big(this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM_SQ_HI));
+  var sum_sq_lo = new Big(this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM_SQ_LO));
   var sum_sq    = sum_sq_lo.plus(sum_sq_hi.times(new Big(2).pow(32)));
 
   // std. dev. = sqrt(count * sum_squares - sum * sum) / count
@@ -1442,7 +1489,7 @@ Histogram.prototype.geometricMean = function Histogram_geometricMean() {
     throw new Error("Histogram.geometricMean() is only available for " +
                     "exponential histograms");
   }
-  var log_sum = _aggregate(DataOffsets.LOG_SUM, this);
+  var log_sum = this.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM);
   return log_sum / this.count();
 };
 
@@ -1468,8 +1515,8 @@ Histogram.prototype.geometricStandardDeviation = function() {
     );
   }
   var count       = this.count();
-  var log_sum     = _aggregate(DataOffsets.LOG_SUM, this);
-  var log_sum_sq  = _aggregate(DataOffsets.LOG_SUM_SQ, this);
+  var log_sum     = this.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM);
+  var log_sum_sq  = this.precomputeAggregateQuantity(Telemetry.DataOffsets.LOG_SUM_SQ);
 
   // Deduced from http://en.wikipedia.org/wiki/Geometric_standard_deviation
   // using wxmaxima... who knows maybe it's correct...
@@ -1540,7 +1587,7 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
   var to_count = count * frac;
   var i, n = this._buckets.length;
   for (i = 0; i < n; i++) {
-    var nb_points = _aggregate(i, this);
+    var nb_points = this.precomputeAggregateQuantity(i);
     if (to_count - nb_points <= 0) {
       break;
     }
@@ -1557,7 +1604,7 @@ Histogram.prototype.percentile = function Histogram_percentile(percent) {
   }
 
   // Fraction indicating where in bucket i the percentile is located
-  var bucket_fraction = to_count / (_aggregate(i, this) + 1);
+  var bucket_fraction = to_count / (this.precomputeAggregateQuantity(i) + 1);
 
   if (this.kind() == "exponential") {
     // Interpolate median assuming an exponential distribution
@@ -1620,7 +1667,7 @@ Histogram.prototype.each = function Histogram_each(cb, ctx) {
   for(var i = 0; i < n; i++) {
 
     // Find count, start and end of bucket
-    var count = _aggregate(i, this),
+    var count = this.precomputeAggregateQuantity(i),
         start = this._buckets[i],
         end   = this._buckets[i+1];
 
