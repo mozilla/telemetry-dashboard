@@ -797,7 +797,10 @@ function renderHistogramGraph(hgram) {
   }
   gCurrentHistogramPlot = new Chart(ctx).Bar({
     labels: labels,
-    datasets: [{data: data}]
+    datasets: [{
+      fillColor: "#555555",
+      data: data,
+    }]
   }, {
     barValueSpacing : 0,
     barDatasetSpacing : 0,
