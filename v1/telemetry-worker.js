@@ -2,8 +2,23 @@ importScripts("telemetry.js", "big.js")
 
 var gActions = {
   "Histogram-count": function() {
-    this.__proto__ = Telemetry.Histogram.prototype;
-    return this.count();
+    // Make a shallow copy of the input object that is also a Telemetry.Histogram instance
+    var histogram = new Telemetry.Histogram(this._measure, this._filter_path, this._buckets, this._dataset, this._filter_tree, this._spec);
+    for (var key in this) {
+      if (this.hasOwnProperty(key)) {
+        histogram[key] = this[key];
+      }
+    }
+    
+    var result = histogram.count();
+    
+    // Copy all the fields back into the input object
+    for (var key in histogram) {
+      if (histogram.hasOwnProperty(key)) {
+        this[key] = histogram[key];
+      }
+    }
+    return result;
   },
   "Histogram-precompute": function() {
     // Make a shallow copy of the input object that is also a Telemetry.Histogram instance
