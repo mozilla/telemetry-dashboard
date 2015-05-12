@@ -325,8 +325,9 @@ $.widget("telemetry.histogramfilter", {
     return prettyNames.hasOwnProperty(filterName) ? prettyNames[filterName] : "Any " + filterName;
   },
   
-  _systemNames: {"WINNT": "Windows", "Darwin": "OS X"},
-  _windowsVersionNames: {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "10.0": "10"},
+  _systemNames: {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"},
+  _windowsVersionNames: {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"},
+  _windowsVersionOrder: {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8},
   _darwinVersionPrefixes: {
     "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
     "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
@@ -347,7 +348,21 @@ $.widget("telemetry.histogramfilter", {
       
       if (system === "WINNT") {
         var versionNames = this._windowsVersionNames;
-        return options.map(function(option) {
+        var versionOrder = this._windowsVersionOrder;
+        var starName = this._getStarName(filterName);
+        return options.sort(function(a, b) {
+          // Sort by explicit version order if available
+          if (a === starName || b == starName) {
+            return a === starName ? -1 : 1;
+          } else if (versionOrder.hasOwnProperty(a) && versionOrder.hasOwnProperty(b)) {
+            return versionOrder[a] < versionOrder[b] ? -1 : (versionOrder[a] > versionOrder[b] ? 1 : 0);
+          } else if (versionOrder.hasOwnProperty(a)) {
+            return -1;
+          } else if (versionOrder.hasOwnProperty(b)) {
+            return 1;
+          }
+          return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+        }).map(function(option) {
           return versionNames.hasOwnProperty(option) ? versionNames[option] : option;
         });
       } else if (system === "Darwin") {
