@@ -756,11 +756,14 @@ function renderHistogramTable(hgram) {
     $('#histogram-table').show();
   }
 
+  // Build table after aggregating in the background worker
   var body = $('#histogram-table').find('tbody');
   body.empty();
-  body.append.apply(body, hgram.map(function (count, start, end, index) {
-    return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
-  }));
+  Telemetry.doAsync("Histogram-count", hgram, [], function(hgram, total) {
+    body.append.apply(body, hgram.map(function (count, start, end, index) {
+      return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
+    }));
+  });
 }
 
 function renderHistogramGraph(hgram) {
