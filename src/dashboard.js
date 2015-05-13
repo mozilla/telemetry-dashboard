@@ -237,8 +237,10 @@ function restoreFromPageState(newPageState, curPageState) {
     }
   }
 
-  $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
-  $('input:radio[name=render-type]').trigger("click");
+  if ($('input:radio[name=render-type]').val() !== newPageState.renderhistogram + "") {
+    $('input:radio[name=render-type]').val([newPageState.renderhistogram + ""]);
+    $('input:radio[name=render-type]').trigger("click");
+  }
 
   if (newPageState.renderhistogram !== undefined && gHistogramFilterObjects.length == 1) {
     gSingleSeriesMode = true;
