@@ -19,6 +19,7 @@ h2 {
   display: inline-block;
   width: 24px;
   height: 24px;
+  margin-right: 6px;
   vertical-align: middle;
   border: 1px solid black;
 }

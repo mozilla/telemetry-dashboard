@@ -121,8 +121,8 @@ function displayHistogram(histogram) {
   var total = hgram.count();
   var tooltipLabels = {};
   var labels = hgram.map(function (count, start, end, index) {
-    var label = fmt(start);
-    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+    var label = formatNumber(start);
+    tooltipLabels[label] = formatNumber(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
     return label;
   });
   var data = hgram.map(function (count, start, end, index) { return count; });
@@ -144,7 +144,7 @@ function displayHistogram(histogram) {
     barValueSpacing : 0,
     barDatasetSpacing : 0,
     barShowStroke: false,
-    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    scaleLabel: function(valuesObject) { return formatNumber(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
   });
@@ -178,7 +178,7 @@ function displayHistogramEvolutions(lines) {
   gCurrentHistogramEvolutionsPlot = new Chart(ctx).Scatter(filteredDatasets, {
     animation: false,
     scaleType: "date",
-    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    scaleLabel: function(valuesObject) { return formatNumber(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
       return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
@@ -202,12 +202,12 @@ function addEvolutionLine(line) {
   
   // Add the new line element
   var lineElement = $(
-    '<a class="evolution-line list-group-item" title="GC_MS - nightly 38 - mean">\n' +
-    '  <span class="legend-color"></span>\n' +
-    '  GC_MS - nightly 38 - mean\n' +
-    '  <div class="evolution-line-description">\n' +
-    '    Any OS - Firefox <button class="evolution-line-remove btn btn-default btn-xs">remove</button>\n' +
-    '  </div>\n' + 
+    '<a class="evolution-line list-group-item" title="GC_MS - nightly 38 - mean">' +
+      '<span class="legend-color"></span>' +
+      '&nbsp;' +
+      '<div class="evolution-line-description">' +
+        '<span></span> <button class="evolution-line-remove btn btn-default btn-xs">remove</button>' +
+      '</div>' +
     '</a>\n'
   );
   lineElement.click(function() {
@@ -215,15 +215,32 @@ function addEvolutionLine(line) {
     var lineElements = $this.parent().find(".evolution-line");
     selectEvolutionLine(lineElements.index($this));
   });
-  lineElement.find(".legend-color").css("background-color", line.color)
   lineElement.find(".evolution-line-remove").click(function() {
     $(this).parents(".evolution-line").remove();
   });
   $("#evolution-line-list").append(lineElement);
   var index = $("#evolution-line-list .evolution-line").size() - 1;
+  refreshEvolutionLine(index);
   if (index === 0) { selectEvolutionLine(0); }
   
   displayHistogramEvolutions(gCurrentEvolutionLines);
+}
+function refreshEvolutionLine(evolutionLineIndex) {
+  var line = gCurrentEvolutionLines[evolutionLineIndex];
+
+  // Set the line label
+  var label = line.measure + " - " + line.channelVersion.replace("/", " ") + " - " + line.aggregate;
+  var lineElement = $($("#evolution-line-list .evolution-line").get(evolutionLineIndex));
+  lineElement.attr("title", label);
+  lineElement.contents().filter(function() { return this.nodeType == 3; }).each(function() { this.textContent = label; });
+  
+  // Set the line filters label
+  //wip: label the filters
+  var filterLabel = "Any OS - Firefox";
+  lineElement.find(".evolution-line-description span").text(filterLabel);
+  
+  // Set the line color
+  lineElement.find(".legend-color").css("background-color", line.color)
 }
 function removeEvolutionLine(evolutionLineIndex) {
   gCurrentEvolutionLines.splice(evolutionLineIndex, 1);
@@ -257,41 +274,6 @@ function selectEvolutionLine(evolutionLineIndex) {
   $("#line-aggregate").val(line.aggregate).trigger("change");
 }
 
-function getHumanReadableOption(filterName, option) {
-  var _systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
-  var _windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
-  var _windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
-  var _darwinVersionPrefixes = {
-    "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
-    "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
-    "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
-  };
-  var _archNames = {"x86": "32-bit", "x86-64": "64-bit"};
-  if (filterName === "OS") {
-    return _systemNames.hasOwnProperty(option) ? _systemNames[option] : option;
-  } else if (filterName === "osVersion") {
-    // get the currently selected OS
-    var selectedSystems = $("#line-filter-OS").val().filter(function(value) {
-      return value !== "multiselect-all";
-    }).map(function(value) {
-      return getHumanReadableOptionRealValue("OS", value);
-    });
-    
-    if (selectedSystems.indexOf("WINNT") >= 0 && _windowsVersionNames.hasOwnProperty(option)) {
-      return _windowsVersionNames[option];
-    }
-    if (selectedSystems.indexOf("Darwin") >= 0) {
-      for (var prefix in _darwinVersionPrefixes) {
-        if (option.startsWith(prefix)) {
-          return option + " (" + _darwinVersionPrefixes[prefix] + ")";
-        }
-      }
-    }
-  } else if (filterName === "arch") {
-    return _archNames.hasOwnProperty(option) ? _archNames[option] : option;
-  }
-  return option;
-}
 
 // Trigger a Google Analytics event
 function event() {
@@ -299,21 +281,6 @@ function event() {
   args.unshift('event');
   args.unshift('send');
   ga.apply(ga, args);
-}
-
-// Format numbers to two deciaml places with unit suffixes
-function fmt(number) {
-  if (number == Infinity) return "Infinity";
-  if (number == -Infinity) return "-Infinity";
-  if (isNaN(number)) return "NaN";
-  var mag = Math.abs(number);
-  var exponent = Math.floor(Math.log10(mag));
-  var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
-  var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
-  if (interval in units) {
-    return Math.round(number * 100 / interval) / 100 + units[interval];
-  }
-  return Math.round(number * 100) / 100;
 }
 
 // Load the current state from the URL
@@ -426,26 +393,26 @@ function updateRendering(hgramEvo, lines, start, end) {
   // Update summary for the first histogram evolution
   var dates = hgramEvo.dates();
   $('#prop-kind').text(hgram.kind());
-  $('#prop-submissions').text(fmt(hgram.submissions()));
-  $('#prop-count').text(fmt(hgram.count()));
-  $('#prop-dates').text(fmt(dates.length));
+  $('#prop-submissions').text(formatNumber(hgram.submissions()));
+  $('#prop-count').text(formatNumber(hgram.count()));
+  $('#prop-dates').text(formatNumber(dates.length));
   $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
     "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
   if (hgram.kind() == 'linear') {
-    $('#prop-mean').text(fmt(hgram.mean()));
-    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+    $('#prop-mean').text(formatNumber(hgram.mean()));
+    $('#prop-standardDeviation').text(formatNumber(hgram.standardDeviation()));
   }
   else if (hgram.kind() == 'exponential') {
-    $('#prop-mean2').text(fmt(hgram.mean()));
-    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
-    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
+    $('#prop-mean2').text(formatNumber(hgram.mean()));
+    $('#prop-geometricMean').text(formatNumber(hgram.geometricMean()));
+    $('#prop-geometricStandardDeviation').text(formatNumber(hgram.geometricStandardDeviation()));
   }
   if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-    $('#prop-p5').text(fmt(hgram.percentile(5)));
-    $('#prop-p25').text(fmt(hgram.percentile(25)));
-    $('#prop-p50').text(fmt(hgram.percentile(50)));
-    $('#prop-p75').text(fmt(hgram.percentile(75)));
-    $('#prop-p95').text(fmt(hgram.percentile(95)));
+    $('#prop-p5').text(formatNumber(hgram.percentile(5)));
+    $('#prop-p25').text(formatNumber(hgram.percentile(25)));
+    $('#prop-p50').text(formatNumber(hgram.percentile(50)));
+    $('#prop-p75').text(formatNumber(hgram.percentile(75)));
+    $('#prop-p95').text(formatNumber(hgram.percentile(95)));
   }
 }
 
@@ -546,4 +513,47 @@ function update(hgramEvos) {
     updateRendering(hgramEvo, lines, start, end);
   }, true);
   updateUrlHashIfNeeded();
+}
+
+function formatOption(filterName, option) {
+  var _systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
+  var _windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
+  var _windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
+  var _darwinVersionPrefixes = {
+    "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
+    "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
+    "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
+  };
+  var _archNames = {"x86": "32-bit", "x86-64": "64-bit"};
+  if (filterName === "OS") {
+    return _systemNames.hasOwnProperty(option) ? _systemNames[option] : option;
+  } else if (filterName === "osVersion") {
+    var selectedSystems = $("#line-filter-OS").val();
+    if (selectedSystems.indexOf("WINNT") >= 0 && _windowsVersionNames.hasOwnProperty(option)) {
+      return _windowsVersionNames[option];
+    }
+    if (selectedSystems.indexOf("Darwin") >= 0) {
+      for (var prefix in _darwinVersionPrefixes) {
+        if (option.startsWith(prefix)) {
+          return option + " (" + _darwinVersionPrefixes[prefix] + ")";
+        }
+      }
+    }
+  } else if (filterName === "arch") {
+    return _archNames.hasOwnProperty(option) ? _archNames[option] : option;
+  }
+  return option;
+}
+function formatNumber(number) {
+  if (number == Infinity) return "Infinity";
+  if (number == -Infinity) return "-Infinity";
+  if (isNaN(number)) return "NaN";
+  var mag = Math.abs(number);
+  var exponent = Math.floor(Math.log10(mag));
+  var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
+  var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
+  if (interval in units) {
+    return Math.round(number * 100 / interval) / 100 + units[interval];
+  }
+  return Math.round(number * 100) / 100;
 }
