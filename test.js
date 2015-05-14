@@ -1,0 +1,549 @@
+var gCurrentEvolutionLines = []; // List of all current histogram evolutions
+var gSelectedEvolutionLine = null; // Currently selected histogram evolution
+var gCurrentHistogramEvolutionPlot = null; // Currently displayed histogram evolution plot
+var gCurrentHistogramPlot = null; // Currently displayed histogram plot
+var gCurrentHistogramEvolutionsPlot = null; // Currently displayed histogram evolution plots
+
+$(".container, .container-fluid").hide(); // Hide the content until the page is fully loaded
+
+// Entry point
+Telemetry.init(function () {
+  $(window).bind("hashchange", function () {
+    $("#permalink-value").hide();
+    
+    var curPageState = getPageState();
+    var newPageState = urlHashToPageState(window.location.hash);
+    restoreFromPageState(newPageState, curPageState);
+  });
+  
+  // Select the contents of the permalink text box on focus
+  $("#permalink-value").hide().focus(function() {
+    var $this = $(this);
+    $this.select();
+    // Work around Chrome's little problem (http://stackoverflow.com/questions/5797539)
+    $this.mouseup(function() {
+      // Prevent further mouseup intervention
+      $this.unbind("mouseup");
+      return false;
+    });
+  });
+  
+  // Shortened permalink button
+  $('#permalink').click(function() {
+    event('click', 'tinyUrl', 'generatedTinyUrl');
+    var request = {
+      url: "https://api-ssl.bitly.com/shorten",
+      dataType: "jsonp",
+      data: {
+        longUrl: window.location.href, access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+        format: "json"
+      },
+      success: function(response) {
+        console.log(response);
+        var longUrl = Object.keys(response.results)[0];
+        var shortUrl = response.results[longUrl].shortUrl;
+        $("#permalink-value").val(shortUrl).show();
+      }
+    };
+    $.ajax(request);
+  });
+  
+  // Add series from either currently selected line, or a default line
+  $("#add-evolution-line").click(function() {
+    var newLine;
+    if (gSelectedEvolutionLine != null) {
+      newLine = $.extend({}, gSelectedEvolutionLine);
+    } else {
+      newLine = {
+        channelVersion: "nightly/40",
+        measure: "GC_MS",
+        aggregate: "median",
+        filters: {OS: "WINNT"},
+        color: "red",
+        key: "something", //wip
+        values: [],
+      };
+    }
+    addEvolutionLine(newLine);
+  });
+  
+  // Export as CSV button
+  var previousCSVBlob = null;
+  $('#export-csv').click(function () {
+    if (gCurrentHistogram === null) {
+      return;
+    }
+    if (previousCSVBlob !== null) {
+      URL.revokeObjectURL(previousCSVBlob);
+      previousCSVBlob = null;
+    }
+    
+    // Generate CSV output
+    var csv = "start,\tend,\tcount\n";
+    csv += gCurrentHistogram.map(function (count, start, end, index) {
+      return [start, end, count].join(",\t");
+    }).join("\n");
+
+    previousCSVBlob = URL.createObjectURL(new Blob([csv]));
+    $('#export-csv')[0].href = previousCSVBlob;
+    $('#export-csv')[0].download = gCurrentHistogram.measure() + ".csv";
+    event('click', 'download csv', 'download csv');
+  });
+  
+  // Export as JSON button
+  var previousJSONBlob = null
+  $('#export-json').click(function () {
+    if (gCurrentHistogram === null) {
+      return;
+    }
+    if (previousJSONBlob !== null) {
+      URL.revokeObjectURL(previousJSONBlob);
+      previousJSONBlob = null;
+    }
+    
+    // Generate JSON output
+    var result = JSON.stringify(gCurrentHistogram.map(function (count, start, end, index) {
+      return {"start": start, "end": end, "count": count};
+    }));
+
+    previousJSONBlob = URL.createObjectURL(new Blob([result]));
+    $('#export-json')[0].href = previousJSONBlob;
+    $('#export-json')[0].download = gCurrentHistogram.measure() + ".json";
+    event('click', 'download json', 'download json');
+  });
+  
+  $("#spinner").hide();
+  $(".container, .container-fluid").show();
+});
+
+function displayHistogram(histogram) {
+  // Compute chart data values
+  var total = hgram.count();
+  var tooltipLabels = {};
+  var labels = hgram.map(function (count, start, end, index) {
+    var label = fmt(start);
+    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+    return label;
+  });
+  var data = hgram.map(function (count, start, end, index) { return count; });
+  
+  // Plot the data using Chartjs
+  var ctx = document.getElementById("histogram").getContext("2d");
+  if (gCurrentHistogramPlot !== null) {
+    gCurrentHistogramPlot.destroy();
+  }
+  Chart.defaults.global.responsive = true;
+  Chart.defaults.global.animation = false;
+  gCurrentHistogramPlot = new Chart(ctx).Bar({
+    labels: labels,
+    datasets: [{
+      fillColor: "#555555",
+      data: data,
+    }]
+  }, {
+    barValueSpacing : 0,
+    barDatasetSpacing : 0,
+    barShowStroke: false,
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    tooltipFontSize: 10,
+    tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
+  });
+  
+  // Assign random colors to make it easy to differentiate between bars
+  gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
+    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+  });
+  gCurrentHistogramPlot.update();
+}
+
+function displayHistogramEvolutions(lines) {
+  //wip: get minDate and maxDate
+  var minDate = 0, maxDate = 10000000;
+  
+  // Filter out the points that are outside of the time range
+  var filteredDatasets = lines.map(function (line) {
+    return {
+      label: line.key,
+      strokeColor: line.color,
+      data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
+    };
+  });
+  
+  // Plot the data using Chartjs
+  var ctx = document.getElementById("evolutions").getContext("2d");
+  if (gCurrentHistogramEvolutionsPlot !== null) {
+    gCurrentHistogramEvolutionsPlot.destroy();
+  }
+  Chart.defaults.global.responsive = true;
+  gCurrentHistogramEvolutionsPlot = new Chart(ctx).Scatter(filteredDatasets, {
+    animation: false,
+    scaleType: "date",
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    tooltipFontSize: 10,
+    tooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+    },
+    multiTooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+    },
+    bezierCurveTension: 0.3,
+    pointDotStrokeWidth: 0,
+    pointDotRadius: 3,
+  });
+}
+
+function clearEvolutionLines() {
+  gCurrentEvolutionLines = [];
+  $("#evolution-line-list .evolution-line").remove();
+  displayHistogramEvolutions(gCurrentEvolutionLines, minDate, maxDate);
+}
+function addEvolutionLine(line) {
+  gCurrentEvolutionLines.push(line);
+  
+  // Add the new line element
+  var lineElement = $(
+    '<a class="evolution-line list-group-item" title="GC_MS - nightly 38 - mean">\n' +
+    '  <span class="legend-color"></span>\n' +
+    '  GC_MS - nightly 38 - mean\n' +
+    '  <div class="evolution-line-description">\n' +
+    '    Any OS - Firefox <button class="evolution-line-remove btn btn-default btn-xs">remove</button>\n' +
+    '  </div>\n' + 
+    '</a>\n'
+  );
+  lineElement.click(function() {
+    var $this = $(this);
+    var lineElements = $this.parent().find(".evolution-line");
+    selectEvolutionLine(lineElements.index($this));
+  });
+  lineElement.find(".legend-color").css("background-color", line.color)
+  lineElement.find(".evolution-line-remove").click(function() {
+    $(this).parents(".evolution-line").remove();
+  });
+  $("#evolution-line-list").append(lineElement);
+  var index = $("#evolution-line-list .evolution-line").size() - 1;
+  if (index === 0) { selectEvolutionLine(0); }
+  
+  displayHistogramEvolutions(gCurrentEvolutionLines);
+}
+function removeEvolutionLine(evolutionLineIndex) {
+  gCurrentEvolutionLines.splice(evolutionLineIndex, 1);
+  $($("evolution-line-list .evolution-line").get(evolutionLineIndex)).remove();
+  displayHistogramEvolutions(gCurrentEvolutionLines);
+}
+function selectEvolutionLine(evolutionLineIndex) {
+  var line = gCurrentEvolutionLines[evolutionLineIndex];
+  gSelectedEvolutionLine = line;
+
+  // Select the line element
+  var lineElements = $("#evolution-line-list .evolution-line");
+  lineElements.filter(".active").removeClass("active");
+  $(lineElements.get(evolutionLineIndex)).addClass("active");
+  
+  // Load measure, channel version, and aggregate
+  Telemetry.measures(line.channelVersion, function(measures) {
+    var options = [];
+    for (var measure in measures) { options.push(measure); }
+    options.sort();
+    var optionStrings = options.map(function(option) {
+      return '<option value="' + option + '">' + option + '</option>';
+    });
+    $("#line-measure").empty().append(optionStrings.join());
+    if (options.length > 0) {
+      var selectedOption = (line && measures[line.measure] !== undefined) ? line.measure : options[0];
+      $("#line-measure").val(selectedOption).trigger("change");
+    }
+  });
+  $("#line-channel-version").val(line.channelVersion).trigger("change");
+  $("#line-aggregate").val(line.aggregate).trigger("change");
+}
+
+function getHumanReadableOption(filterName, option) {
+  var _systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
+  var _windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
+  var _windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
+  var _darwinVersionPrefixes = {
+    "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
+    "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
+    "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
+  };
+  var _archNames = {"x86": "32-bit", "x86-64": "64-bit"};
+  if (filterName === "OS") {
+    return _systemNames.hasOwnProperty(option) ? _systemNames[option] : option;
+  } else if (filterName === "osVersion") {
+    // get the currently selected OS
+    var selectedSystems = $("#line-filter-OS").val().filter(function(value) {
+      return value !== "multiselect-all";
+    }).map(function(value) {
+      return getHumanReadableOptionRealValue("OS", value);
+    });
+    
+    if (selectedSystems.indexOf("WINNT") >= 0 && _windowsVersionNames.hasOwnProperty(option)) {
+      return _windowsVersionNames[option];
+    }
+    if (selectedSystems.indexOf("Darwin") >= 0) {
+      for (var prefix in _darwinVersionPrefixes) {
+        if (option.startsWith(prefix)) {
+          return option + " (" + _darwinVersionPrefixes[prefix] + ")";
+        }
+      }
+    }
+  } else if (filterName === "arch") {
+    return _archNames.hasOwnProperty(option) ? _archNames[option] : option;
+  }
+  return option;
+}
+
+// Trigger a Google Analytics event
+function event() {
+  var args = Array.prototype.slice.call(arguments);
+  args.unshift('event');
+  args.unshift('send');
+  ga.apply(ga, args);
+}
+
+// Format numbers to two deciaml places with unit suffixes
+function fmt(number) {
+  if (number == Infinity) return "Infinity";
+  if (number == -Infinity) return "-Infinity";
+  if (isNaN(number)) return "NaN";
+  var mag = Math.abs(number);
+  var exponent = Math.floor(Math.log10(mag));
+  var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
+  var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
+  if (interval in units) {
+    return Math.round(number * 100 / interval) / 100 + units[interval];
+  }
+  return Math.round(number * 100) / 100;
+}
+
+// Load the current state from the URL
+function loadStateFromUrlAndCookie() {
+  var url = window.location.hash;
+  if (url.length === 0) { return; }
+  url = url[0] === "#" ? url.slice(1) : url;
+  var pageState = {};
+  url.split("&").forEach(function(i, fragment) {
+    var parts = fragment.split("=");
+    pageState[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+  });
+
+  // Load lines if specified
+  if (pageState.filter !== undefined) {
+    pageState.filter = pageState.filter.split("!");
+    clearEvolutionLines();
+    pageState.filter.forEach(function(i, stateString) {
+      //wip
+      addEvolutionLine(line);
+    });
+    
+    // Load the line selection if specified
+    if (pageState.selectedLineIndex !== undefined && pageState.selectedLineIndex >= 0) {
+      selectEvolutionLine(pageState.selectedLineIndex);
+    }
+  }
+}
+// Save the current state to the URL and the page cookie
+function saveStateToUrlAndCookie() {
+  var pageState = {
+    filter: gCurrentEvolutionLines.map(function(line) { return line.state; }),
+    selectedLineIndex: gCurrentEvolutionLines.indexOf(gSelectedEvolutionLine),
+  };
+  var fragments = [];
+  $.each(pageState, function(k, v) {
+    if (v instanceof Array) {
+      v = v.join("!");
+    }
+    fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
+  });
+  var stateString = fragments.join("&");
+  
+  // Save to the URL hash if it changed
+  var url = window.location.hash;
+  url = url[0] === "#" ? url.slice(1) : url;
+  if (url !== stateString) {
+    window.location.hash = hash;
+  }
+  
+  // Save the state in a cookie that expires in 3 days
+  var expiry = new Date();
+  expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
+  document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
+}
+
+var gHasReportedDateRangeSelectorUsedInThisSession = false;
+var gDrawTimer = null;
+var gUserSelectedRange = false;
+function updateRendering(hgramEvo, lines, start, end) {
+  // Update the start and end range and update the selection if necessary
+  var picker = $("#dateRange").data("daterangepicker");
+  var startMoment = moment(start), endMoment = moment(end);
+  picker.setOptions({
+    format: "MM/DD/YYYY",
+    minDate: startMoment,
+    maxDate: endMoment,
+    showDropdowns: true,
+    ranges: {
+       "All": [startMoment, endMoment],
+       "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
+       "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
+    },
+  }, function(chosenStart, chosenEnd, label) {
+    // Report it the first time the date-range selector is used in a session
+    if (!gHasReportedDateRangeSelectorUsedInThisSession) {
+     gHasReportedDateRangeSelectorUsedInThisSession = true;
+     event('report', 'date-range-selector', 'used-in-session', 1);
+    }
+    gUserSelectedRange = true;
+    updateRendering(hgramEvo, lines, startMoment, endMoment);
+  });
+  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment)) {
+    gUserSelectedRange = false;
+  }
+  if (!gUserSelectedRange) {
+    picker.setStartDate(startMoment);
+    picker.setEndDate(endMoment);
+  }
+  var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
+  
+  var hgram;
+  hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
+  gCurrentHistogram = hgram;
+  
+  // Schedule redraw of histogram for the first histogram evolution
+  if (gDrawTimer) {
+    clearTimeout(gDrawTimer);
+  }
+  gDrawTimer = setTimeout(function () {
+    renderHistogramEvolution(lines, minDate, maxDate);
+    var renderType = $('input[name=render-type]:radio:checked').val();
+    if (renderType == 'Table') {
+      renderHistogramTable(hgram);
+    } else {
+      renderHistogramGraph(hgram);
+    }
+  }, 100);
+  
+  // Update summary for the first histogram evolution
+  var dates = hgramEvo.dates();
+  $('#prop-kind').text(hgram.kind());
+  $('#prop-submissions').text(fmt(hgram.submissions()));
+  $('#prop-count').text(fmt(hgram.count()));
+  $('#prop-dates').text(fmt(dates.length));
+  $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
+    "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  if (hgram.kind() == 'linear') {
+    $('#prop-mean').text(fmt(hgram.mean()));
+    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+  }
+  else if (hgram.kind() == 'exponential') {
+    $('#prop-mean2').text(fmt(hgram.mean()));
+    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
+    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
+  }
+  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
+    $('#prop-p5').text(fmt(hgram.percentile(5)));
+    $('#prop-p25').text(fmt(hgram.percentile(25)));
+    $('#prop-p50').text(fmt(hgram.percentile(50)));
+    $('#prop-p75').text(fmt(hgram.percentile(75)));
+    $('#prop-p95').text(fmt(hgram.percentile(95)));
+  }
+}
+
+var gLastHistogramEvos = null;
+var gLineColors = {};
+var gGoodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
+var gGoodColorIndex = 0;
+function update(hgramEvos) {
+  // Obtain a list of histogram evolutions (histogram series)
+  var evosVals = [];
+  $.each(hgramEvos, function (key, value) {
+    evosVals.push(value);
+  });
+  var hgramEvo = evosVals[0];
+  if (hgramEvos === undefined || hgramEvos === []) {
+    return;
+  }
+  if (!hgramEvos) {
+    hgramEvos = gLastHistogramEvos;
+  }
+  gLastHistogramEvos = hgramEvos;
+
+  // Compute list of each individual series and bucket labels
+  var lines = [];
+  var labels = [];
+  var start = null, end = null;
+  $.each(hgramEvos, function (state, evo) {
+    var series = prepareData(state, evo);
+    for (var x in series) {
+      labels.push(series[x].key);
+    }
+
+    // Create new series with updated fields for each entry
+    series = $.map(series, function(entry, i) {
+      // Update the bounds properly
+      entry.values.forEach(function(point) {
+        if (start === null || point.x < start) {
+          start = point.x;
+        }
+        if (end === null || point.x > end) {
+          end = point.x;
+        }
+      });
+      
+      // Add extra fields to the lines such as their cached color
+      if (gLineColors[state + "\n" + entry.key] === undefined) {
+        gGoodColorIndex = (gGoodColorIndex + 1) % gGoodColors.length;
+        gLineColors[state + "\n" + entry.key] = gGoodColors[gGoodColorIndex];
+      }
+      var parts = state.split("/");
+      var key = parts[0] + " " + parts[1] + ": " +  entry.key;
+      return $.extend({}, entry, {
+        color: gLineColors[state + "\n" + entry.key],
+        fullState: state,
+        title: entry.key,
+        key: key,
+      });
+    });
+
+    $.merge(lines, series);
+  });
+  labels = unique(labels);
+  start = new Date(start);
+  end = new Date(end);
+
+  // Select the required aggregates in the data
+  function updateDisabledAggregates() {
+    var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
+    if (toBeSelected === undefined) {
+      return;
+    }
+    if (toBeSelected === null) {
+      toBeSelected = [];
+    }
+    var linesAreSelected = false;
+    lines.forEach(function(line) {
+      if (toBeSelected.indexOf(line.title) !== -1) {
+        linesAreSelected = true;
+      }
+    });
+    if (!linesAreSelected) {
+      toBeSelected = [lines[0].title];
+      $("#aggregateSelector").children().removeAttr("selected");
+      $("#aggregateSelector").multiselect("select", toBeSelected);
+    }
+    lines.forEach(function(line) {
+      line.disabled = toBeSelected.indexOf(line.title) === -1 || toBeSelected.length === 0;
+    });
+  }
+
+  // Add a show-<kind> class to #content
+  $("#content").removeClass('show-linear show-exponential');
+  $("#content").removeClass('show-flag show-boolean show-enumerated');
+  $("#content").addClass('show-' + hgramEvo.kind());
+  
+  setAggregateSelectorOptions(labels, function() {
+    updateDisabledAggregates();
+    updateRendering(hgramEvo, lines, start, end);
+  }, true);
+  updateUrlHashIfNeeded();
+}
