@@ -414,6 +414,10 @@ $.widget("telemetry.histogramfilter", {
     return humanReadableOption;
   },
   
+  formatOption: function histogramfilter_formatOption(filterName, option) {
+    return this._getHumanReadableOptions(filterName, [option])[0];
+  },
+  
   /** Set option */
   _setOption: function histogramfilter__setOption(option, value) {
     if (option == "state") {
