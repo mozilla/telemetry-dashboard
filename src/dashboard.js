@@ -141,6 +141,17 @@ function prepareData(state, hgramEvo) {
   return data;
 }
 
+// Format a state string like "release/28/WINNT/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
+function formatState(stateString) {
+  var stateFilterNames = ["type", "version", "measure", "reason", "product", "OS", "osVersion", "arch"];
+  var parts = stateString.split("/").map(function(component, i) {
+    return gHistogramFilterObjects[0].histogramfilter("formatOption", stateFilterNames[i], component);
+  });
+  return parts[0] + " " + parts[1] +
+    ", " + parts[4] + (parts[7] ? " " + parts[7] : "") +
+    (parts[5] ? " (" + parts[5] + (parts[6] ? " " + parts[6] : "") + ")" : "");
+}
+
 function getPageState() {
   var pageState = {};
   pageState.filter = [];
@@ -779,6 +790,8 @@ function renderHistogramGraph(hgram) {
     $("#measure").text(hgram.measure()).show();
     $("#description").text(hgram.description()).show();
     $('#histogram').show();
+  } else {
+    return;
   }
   
   // Compute chart data values
@@ -822,7 +835,6 @@ function renderHistogramGraph(hgram) {
 }
 
 var gCurrentHistogramEvolutionPlots = null;
-var gUserSelectedRange = false;
 function renderHistogramEvolution(lines, minDate, maxDate) {
   var drawnLines = lines.filter(function(line) { return !line.disabled; });
   
@@ -878,6 +890,7 @@ $('#export-link').mousedown(function () {
 
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gDrawTimer = null;
+var gUserSelectedRange = false;
 function updateRendering(hgramEvo, lines, start, end) {
   // Update the start and end range and update the selection if necessary
   var picker = $("#dateRange").data("daterangepicker");
@@ -959,6 +972,7 @@ function updateRendering(hgramEvo, lines, start, end) {
 var gLastHistogramEvos = null;
 var gLineColors = {};
 var gGoodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
+var gGoodColorIndex = 0;
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
@@ -998,10 +1012,10 @@ function update(hgramEvos) {
       
       // Add extra fields to the lines such as their cached color
       if (gLineColors[state + "\n" + entry.key] === undefined) {
-        gLineColors[state + "\n" + entry.key] = gGoodColors.shift();
+        gGoodColorIndex = (gGoodColorIndex + 1) % gGoodColors.length;
+        gLineColors[state + "\n" + entry.key] = gGoodColors[gGoodColorIndex];
       }
-      var parts = state.split("/");
-      var key = parts[0] + " " + parts[1] + ": " +  entry.key;
+      var key = formatState(state) + ": " +  entry.key;
       return $.extend({}, entry, {
         color: gLineColors[state + "\n" + entry.key],
         fullState: state,
