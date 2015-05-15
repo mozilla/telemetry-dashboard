@@ -325,7 +325,7 @@ $.widget("telemetry.histogramfilter", {
     return prettyNames.hasOwnProperty(filterName) ? prettyNames[filterName] : "Any " + filterName;
   },
   
-  _systemNames: {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"},
+  _systemNames: {"WINNT": "Windows", "Darwin": "OS X"},
   _windowsVersionNames: {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"},
   _windowsVersionOrder: {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8},
   _darwinVersionPrefixes: {
@@ -334,18 +334,17 @@ $.widget("telemetry.histogramfilter", {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   },
   _archNames: {"x86": "32-bit", "x86-64": "64-bit"},
-  _getHumanReadableOptions: function histogramfilter__getHumanReadableOptions(filterName, options) {
+  _getHumanReadableOptions: function histogramfilter__getHumanReadableOptions(filterName, options, os) {
     if (filterName === "OS") {
       // Replace OS names with pretty OS names where possible
       var systemNames = this._systemNames;
-      return options.map(function(option) {
+      return options.filter(function(option) {
+        return option !== "Windows_95" && option !== "Windows_NT"; // Ignore the OSs for old, non-unified pings
+      }).map(function(option) {
         return systemNames.hasOwnProperty(option) ? systemNames[option] : option;
       });
     } else if (filterName === "osVersion") {
-      // get the currently selected OS
-      var system = $("#histogram-filters input.filter-OS").val() || this._getStarName("OS");
-      system = this._getHumanReadableOptionRealValue("OS", system);
-      
+      var system = os || this._getStarName("OS");
       if (system === "WINNT") {
         var versionNames = this._windowsVersionNames;
         var versionOrder = this._windowsVersionOrder;
@@ -414,8 +413,8 @@ $.widget("telemetry.histogramfilter", {
     return humanReadableOption;
   },
   
-  formatOption: function histogramfilter_formatOption(filterName, option) {
-    return this._getHumanReadableOptions(filterName, [option])[0];
+  formatOption: function histogramfilter_formatOption(filterName, option, os) {
+    return this._getHumanReadableOptions(filterName, [option], os)[0];
   },
   
   /** Set option */
@@ -663,11 +662,12 @@ $.widget("telemetry.histogramfilter", {
         }
         
         // Set filter options
-        filter.select.options(this._getHumanReadableOptions(filterName, options));
+        var os = filter.histogram._filter_path[3];
+        filter.select.options(this._getHumanReadableOptions(filterName, options, os));
         filter.select.element().addClass(this.options.selectorClass);
         
         // Set option, listen for changes, and append to root element
-        var humanReadableOption = this._getHumanReadableOptions(filterName, [option])[0];
+        var humanReadableOption = this._getHumanReadableOptions(filterName, [option], os)[0];
         filter.select.val(humanReadableOption);
         filter.select.change(this._filterChanged);
         this.element.append(filter.select.element());

@@ -144,8 +144,9 @@ function prepareData(state, hgramEvo) {
 // Format a state string like "release/28/WINNT/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
 function formatState(stateString) {
   var stateFilterNames = ["type", "version", "measure", "reason", "product", "OS", "osVersion", "arch"];
-  var parts = stateString.split("/").map(function(component, i) {
-    return gHistogramFilterObjects[0].histogramfilter("formatOption", stateFilterNames[i], component);
+  var parts = stateString.split("/");
+  var parts = parts.map(function(component, i) {
+    return gHistogramFilterObjects[0].histogramfilter("formatOption", stateFilterNames[i], component, parts[2] !== undefined ? parts[2] : null);
   });
   return parts[0] + " " + parts[1] +
     ", " + parts[4] + (parts[7] ? " " + parts[7] : "") +
@@ -450,11 +451,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   if (prevOptions.length === 0) {
     // First time drawing the selector, select median if available and otherwise select all
     selector.multiselect("select", options);
-    if (options.indexOf("median") !== -1) {
-      selector.val(["median"]).multiselect("refresh");
-    } else {
-      selector.multiselect("updateSelectAll");
-    }
+    selector.multiselect("updateSelectAll");
   } else {
     // updating existing selector.
     if (prevSelected.indexOf("multiselect-all") !== -1) {
@@ -734,6 +731,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
+    defaultMeasure: "SIMPLE_MEASURES_FIRSTPAINT",
     selectorType: CustomSelector,
     locked: locked,
     state: state,
@@ -1056,7 +1054,8 @@ function update(hgramEvos) {
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
   
-  setAggregateSelectorOptions(labels, function() {
+  // Select just the median if available, otherwise select all the available options
+  setAggregateSelectorOptions(labels.indexOf("median") >= 0 ? ["median"] : labels, function() {
     updateDisabledAggregates();
     updateRendering(hgramEvo, lines, start, end);
   }, true);
