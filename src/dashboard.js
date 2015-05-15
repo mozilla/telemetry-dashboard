@@ -450,7 +450,7 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
 
   if (prevOptions.length === 0) {
     // First time drawing the selector, select median if available and otherwise select all
-    selector.multiselect("select", options);
+    selector.multiselect("select", options.indexOf("median") >= 0 ? ["median"] : options);
     selector.multiselect("updateSelectAll");
   } else {
     // updating existing selector.
@@ -1055,7 +1055,7 @@ function update(hgramEvos) {
   $("#content").addClass('show-' + hgramEvo.kind());
   
   // Select just the median if available, otherwise select all the available options
-  setAggregateSelectorOptions(labels.indexOf("median") >= 0 ? ["median"] : labels, function() {
+  setAggregateSelectorOptions(labels, function() {
     updateDisabledAggregates();
     updateRendering(hgramEvo, lines, start, end);
   }, true);
