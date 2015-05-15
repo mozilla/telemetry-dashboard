@@ -647,9 +647,12 @@ $.widget("telemetry.histogramfilter", {
       if (fixedOptions.hasOwnProperty(filterName)) {
         // Create a fixed filter entry for the _filterList
         var filter = {
-          select:         fixedOptions[filterName],
+          select:         filterName,
           histogram:      histogram
         };
+        this._filterList.push(filter);
+        
+        this._filterChanged(filter.select, fixedOptions[filterName]);
       } else {
         // Create a selectable filter entry for the _filterList
         var filter = {
@@ -662,7 +665,7 @@ $.widget("telemetry.histogramfilter", {
         }
         
         // Set filter options
-        var os = filter.histogram._filter_path[3];
+        var os = filter.histogram._filter_path[3] || null;
         filter.select.options(this._getHumanReadableOptions(filterName, options, os));
         filter.select.element().addClass(this.options.selectorClass);
         
@@ -671,10 +674,9 @@ $.widget("telemetry.histogramfilter", {
         filter.select.val(humanReadableOption);
         filter.select.change(this._filterChanged);
         this.element.append(filter.select.element());
+        
+        this._filterList.push(filter);
       }
-      
-      // Add filter to _filterList so it gets index we assigned above
-      this._filterList.push(filter);
 
       if (option != starOption) {
         // If we didn't select the star option, filter histogram and continue

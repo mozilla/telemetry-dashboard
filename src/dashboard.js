@@ -258,11 +258,6 @@ function restoreFromPageState(newPageState, curPageState) {
       $("#measure").text(y);
     }
   }
-
-  if (newPageState.aggregates !== undefined) {
-    setAggregateSelectorOptions(newPageState.aggregates, function() {
-    }, false);
-  }
   return true;
 }
 
@@ -406,63 +401,6 @@ function syncStateWithFirst() {
   var y = x.join("/");
   $("#measure").text(y);
   $('#measure').show();
-}
-
-//construct selector and set selected aggregates
-function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
-  if (options.length === 0) {
-    return;
-  }
-
-  var prevOptions = [];
-  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
-  var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-  // Find the intersection of the previously selected and the valid options so
-  // we don't get an error trying to select non-existent options for a probe.
-  var optionsToSelect = prevSelected.filter(function(prevOption) {
-    return options.indexOf(prevOption) !== -1;
-  });
-  var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
-
-  if (!multisetEqual(prevOptions, options)) {
-    $('#multipercentile').empty().append(selector);
-    var n = options.length;
-    for (var i = 0; i < n; i++) {
-      var option = options[i];
-      // Add <option> to the aggregate selector
-      selector.append($("<option>", {text: option, value: option}));
-    }
-    var allOptions = options.join('/');
-    event('click', 'aggregates_options', allOptions);
-  }
-
-  selector.multiselect({
-    includeSelectAllOption: true,
-    onChange : function(option, checked) {
-      selector.multiselect("updateSelectAll");
-      if(option.is(':selected')) {
-        event('click', 'aggregates_options', allOptions);
-      }
-      changeCb();
-      updateUrlHashIfNeeded();
-    }
-  });
-
-  if (prevOptions.length === 0) {
-    // First time drawing the selector, select median if available and otherwise select all
-    selector.multiselect("select", options.indexOf("median") >= 0 ? ["median"] : options);
-    selector.multiselect("updateSelectAll");
-  } else {
-    // updating existing selector.
-    if (prevSelected.indexOf("multiselect-all") !== -1) {
-      selector.multiselect("select", options);
-      selector.multiselect("updateSelectAll");
-    } else {
-      selector.multiselect("select", optionsToSelect);
-    }
-  }
-  changeCb();
-  updateUrlHashIfNeeded();
 }
 
 // Entry point
@@ -1055,9 +993,30 @@ function update(hgramEvos) {
   $("#content").addClass('show-' + hgramEvo.kind());
   
   // Select just the median if available, otherwise select all the available options
-  setAggregateSelectorOptions(labels, function() {
-    updateDisabledAggregates();
-    updateRendering(hgramEvo, lines, start, end);
-  }, true);
+  var prevOptions = [];
+  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
+  var selector;
+  if (!multisetEqual(prevOptions, labels)) {
+    selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
+    $('#multipercentile').empty().append(selector);
+    labels.forEach(function(option) { selector.append($("<option>", {text: option, value: option})); });
+    event('click', 'aggregates_options', labels.join('/'));
+  } else { selector = $("#aggregateSelector"); }
+
+  selector.multiselect({
+    includeSelectAllOption: true,
+    onChange : function(option, checked) {
+      selector.multiselect("updateSelectAll");
+      if(option.is(':selected')) { event('click', 'aggregates_options', labels.join('/')); }
+      updateDisabledAggregates();
+      updateRendering(hgramEvo, lines, start, end);
+      updateUrlHashIfNeeded();
+    }
+  });
+  var selected = urlHashToPageState(window.location.hash).aggregates || ["median"];
+  selector.val(selected).multiselect("rebuild");
+  
+  updateDisabledAggregates();
+  updateRendering(hgramEvo, lines, start, end);
   updateUrlHashIfNeeded();
 }
