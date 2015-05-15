@@ -631,8 +631,9 @@ $.widget("telemetry.histogramfilter", {
       // Restore option
       var option = fragments.shift();
 
-      // If option is invalid or default, we restore default and clear fragments
-      if (options.indexOf(option) <= 0) {
+      // If option is invalid, we restore default and clear fragments
+      var index = options.indexOf(option);
+      if (index <= 0) {
         // Choose preferred option if specified
         if (preferredOptions.hasOwnProperty(filterName)) {
           option = options.indexOf(preferredOptions[filterName]) < 0 ?
@@ -640,7 +641,7 @@ $.widget("telemetry.histogramfilter", {
         } else {
           option = options.length > 0 ? options[0] : null;
         }
-        fragments = [];
+        if (index < 0) { fragments = []; }
       }
       
       // Add filtering selectors
