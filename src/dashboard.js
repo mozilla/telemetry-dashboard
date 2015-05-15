@@ -448,9 +448,11 @@ function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
   });
 
   if (prevOptions.length === 0) {
-    // first time drawing the selector.
+    // First time drawing the selector, select median if available and otherwise select all
     selector.multiselect("select", options);
-    if (defaultToAll) {
+    if (options.indexOf("median") !== -1) {
+      selector.val(["median"]).multiselect("refresh");
+    } else {
       selector.multiselect("updateSelectAll");
     }
   } else {
@@ -517,8 +519,6 @@ Telemetry.init(function () {
     $('.single-histogram-only').hide();
     $('#description').hide();
   }
-  
-  $("#dateRange").daterangepicker();
   
   // Add series button
   $("#addVersionButton").click(function () {
@@ -862,7 +862,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     multiTooltipTemplate: function(valuesObject) {
       return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
     },
-    bezierCurveTension: 0.3,
+    bezierCurve: false,
     pointDotStrokeWidth: 0,
     pointDotRadius: 3,
   });
