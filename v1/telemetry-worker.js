@@ -1,7 +1,7 @@
 importScripts("telemetry.js", "big.js")
 
 var gActions = {
-  "Histogram-count": function() {
+  Histogram_count: function() {
     // Make a shallow copy of the input object that is also a Telemetry.Histogram instance
     var histogram = new Telemetry.Histogram(this._measure, this._filter_path, this._buckets, this._dataset, this._filter_tree, this._spec);
     for (var key in this) {
@@ -20,7 +20,7 @@ var gActions = {
     }
     return result;
   },
-  "Histogram-precompute": function() {
+  Histogram_precompute: function() {
     // Make a shallow copy of the input object that is also a Telemetry.Histogram instance
     var histogram = new Telemetry.Histogram(this._measure, this._filter_path, this._buckets, this._dataset, this._filter_tree, this._spec);
     for (var key in this) {

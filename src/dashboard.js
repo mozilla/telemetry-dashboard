@@ -772,7 +772,7 @@ function renderHistogramTable(hgram) {
   // Build table after aggregating in the background worker
   var body = $('#histogram-table').find('tbody');
   body.empty();
-  Telemetry.doAsync("Histogram-count", hgram, [], function(hgram, total) {
+  Telemetry.doAsync("Histogram_count", hgram, [], function(hgram, total) {
     body.append.apply(body, hgram.map(function (count, start, end, index) {
       return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
     }));
@@ -797,7 +797,7 @@ function renderHistogramGraph(hgram) {
   }
   
   // Compute chart data values
-  Telemetry.doAsync("Histogram-count", hgram, [], function(hgram, total) {
+  Telemetry.doAsync("Histogram_count", hgram, [], function(hgram, total) {
     var tooltipLabels = {};
     var labels = hgram.map(function (count, start, end, index) {
       var label = fmt(start);
@@ -935,7 +935,7 @@ function updateRendering(hgramEvo, lines, start, end) {
   $('#prop-dates').text(fmt(dates.length));
   $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
     "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
-  Telemetry.doAsync("Histogram-precompute", hgram, [], function(hgram) {
+  Telemetry.doAsync("Histogram_precompute", hgram, [], function(hgram) {
     $('#prop-submissions').text(fmt(hgram.submissions()));
     $('#prop-count').text(fmt(hgram.count()));
     if (hgram.kind() == 'linear') {
