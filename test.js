@@ -16,6 +16,12 @@ Telemetry.init(function () {
     restoreFromPageState(newPageState, curPageState);
   });
   
+  // Set up the build selectors
+  var versions = Telemetry.versions();
+  $("#min-channel-version, #max-channel-version, #line-channel-version").empty().append(versions.map(function(option) {
+    return '<option value="' + option + '">' + option.replace("/", " ") + '</option>';
+  }).join()).trigger("change");
+  
   // Select the contents of the permalink text box on focus
   $("#permalink-value").hide().focus(function() {
     var $this = $(this);
@@ -39,7 +45,6 @@ Telemetry.init(function () {
         format: "json"
       },
       success: function(response) {
-        console.log(response);
         var longUrl = Object.keys(response.results)[0];
         var shortUrl = response.results[longUrl].shortUrl;
         $("#permalink-value").val(shortUrl).show();
@@ -52,17 +57,10 @@ Telemetry.init(function () {
   $("#add-evolution-line").click(function() {
     var newLine;
     if (gSelectedEvolutionLine != null) {
-      newLine = $.extend({}, gSelectedEvolutionLine);
+      newLine = new Line(gSelectedEvolutionLine.measure, gSelectedEvolutionLine.channelVersion, gSelectedEvolutionLine.aggregate,
+                         gSelectedEvolutionLine.dateRange, gSelectedEvolutionLine.filters, gSelectedEvolutionLine.values);
     } else {
-      newLine = {
-        channelVersion: "nightly/40",
-        measure: "GC_MS",
-        aggregate: "median",
-        filters: {OS: "WINNT"},
-        color: "red",
-        key: "something", //wip
-        values: [],
-      };
+      newLine = new Line("GC_MS", "nightly/40", "median", null, {OS: ["WINNT"]}, "red", []);
     }
     addEvolutionLine(newLine);
   });
@@ -157,8 +155,9 @@ function displayHistogram(histogram) {
 }
 
 function displayHistogramEvolutions(lines) {
+  console.log(lines);
   //wip: get minDate and maxDate
-  var minDate = 0, maxDate = 10000000;
+  var minDate = 0, maxDate = Infinity;
   
   // Filter out the points that are outside of the time range
   var filteredDatasets = lines.map(function (line) {
@@ -192,6 +191,26 @@ function displayHistogramEvolutions(lines) {
   });
 }
 
+var Line = (function(){
+function Line(measure, channelVersion, aggregate, dateRange, filters, color, values) {
+  this.measure = measure;
+  this.channelVersion = channelVersion;
+  this.aggregate = aggregate;
+  this.dateRange = dateRange;
+  this.filters = filters;
+  this.color = color;
+  this.values = values;
+}
+
+function updateHistogramEvolutions() {
+  var minChannelVersion = $("#min-channel-version").val();
+  var maxChannelVersion = $("#max-channel-version").val();
+  
+  //wip: get dates for these builds
+}
+
+return Line;
+})();
 function clearEvolutionLines() {
   gCurrentEvolutionLines = [];
   $("#evolution-line-list .evolution-line").remove();
@@ -215,15 +234,16 @@ function addEvolutionLine(line) {
     var lineElements = $this.parent().find(".evolution-line");
     selectEvolutionLine(lineElements.index($this));
   });
-  lineElement.find(".evolution-line-remove").click(function() {
-    $(this).parents(".evolution-line").remove();
+  lineElement.find(".evolution-line-remove").click(function(event) {
+    var $this = $(this);
+    var lineElements = $this.parent().find(".evolution-line");
+    removeEvolutionLine(lineElements.index($this));
+    event.stopPropagation();
   });
   $("#evolution-line-list").append(lineElement);
   var index = $("#evolution-line-list .evolution-line").size() - 1;
   refreshEvolutionLine(index);
   if (index === 0) { selectEvolutionLine(0); }
-  
-  displayHistogramEvolutions(gCurrentEvolutionLines);
 }
 function refreshEvolutionLine(evolutionLineIndex) {
   var line = gCurrentEvolutionLines[evolutionLineIndex];
@@ -241,13 +261,35 @@ function refreshEvolutionLine(evolutionLineIndex) {
   
   // Set the line color
   lineElement.find(".legend-color").css("background-color", line.color)
+  
+  Telemetry.loadEvolutionOverTime(line.channelVersion, line.measure, function(histogramEvolution) {
+    line.histogramEvolution = histogramEvolution;
+    var filteredHistogramEvolution = line.histogramEvolution; //wip: filter the histogram properly
+    line.values = filteredHistogramEvolution.map(function(date, hgram) {
+      var value;
+      if (line.aggregate === "mean") { value = hgram.mean(); }
+      else if (line.aggregate === "5th-percentile") { value = hgram.percentile(5); }
+      else if (line.aggregate === "25th-percentile") { value = hgram.percentile(25); }
+      else if (line.aggregate === "median") { value = hgram.median(); }
+      else if (line.aggregate === "75th-percentile") { value = hgram.percentile(75); }
+      else if (line.aggregate === "95th-percentile") { value = hgram.percentile(95); }
+      return {x: date, y: value};
+    });
+    displayHistogramEvolutions(gCurrentEvolutionLines);
+  });
 }
 function removeEvolutionLine(evolutionLineIndex) {
   gCurrentEvolutionLines.splice(evolutionLineIndex, 1);
-  $($("evolution-line-list .evolution-line").get(evolutionLineIndex)).remove();
+  $($("#evolution-line-list .evolution-line").get(evolutionLineIndex)).remove();
   displayHistogramEvolutions(gCurrentEvolutionLines);
 }
 function selectEvolutionLine(evolutionLineIndex) {
+  // Handle selecting none of the lines
+  if (evolutionLineIndex < 0) {
+    $("#line-measure").empty().trigger("change");
+    return;
+  }
+  
   var line = gCurrentEvolutionLines[evolutionLineIndex];
   gSelectedEvolutionLine = line;
 
@@ -258,13 +300,10 @@ function selectEvolutionLine(evolutionLineIndex) {
   
   // Load measure, channel version, and aggregate
   Telemetry.measures(line.channelVersion, function(measures) {
-    var options = [];
-    for (var measure in measures) { options.push(measure); }
-    options.sort();
-    var optionStrings = options.map(function(option) {
+    var options = Object.keys(measures).sort();
+    $("#line-measure").empty().append(options.map(function(option) {
       return '<option value="' + option + '">' + option + '</option>';
-    });
-    $("#line-measure").empty().append(optionStrings.join());
+    }).join());
     if (options.length > 0) {
       var selectedOption = (line && measures[line.measure] !== undefined) ? line.measure : options[0];
       $("#line-measure").val(selectedOption).trigger("change");

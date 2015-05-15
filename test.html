@@ -42,16 +42,16 @@
                     <option data-subtext="Time spent running JS GC mark phase (ms)">GC_MARK_MS</option>
                 </select>
                 vs. time from
-                <select class="select2" title="Starting build version">
-                    <option>nightly 38</option>
-                    <option>nightly 39</option>
-                    <option>nightly 40</option>
+                <select class="select2" id="min-channel-version" title="Minimum build version">
+                    <option value="nightly/38">nightly 38</option>
+                    <option value="nightly/39">nightly 39</option>
+                    <option value="nightly/40">nightly 40</option>
                 </select>
                 to
-                <select class="select2" title="Ending build version">
-                    <option>nightly 38</option>
-                    <option>nightly 39</option>
-                    <option>nightly 40</option>
+                <select class="select2" id="max-channel-version" title="Maximum build version">
+                    <option value="nightly/38">nightly 38</option>
+                    <option value="nightly/39">nightly 39</option>
+                    <option value="nightly/40">nightly 40</option>
                 </select>
             </h2>
             <figure class="col-md-9">
@@ -72,9 +72,9 @@
                         <option value="nightly/38">nightly 40</option>
                     </select>
                     <select id="line-aggregate" style="width: 49%" class="select2" title="Aggregate">
-                        <option>mean</option>
-                        <option>median</option>
-                        <option>submissions</option>
+                        <option value="mean">mean</option>
+                        <option value="median">median</option>
+                        <option value="Submissions">submissions</option>
                     </select>
                 </form>
                 
