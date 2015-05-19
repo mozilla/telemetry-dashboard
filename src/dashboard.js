@@ -707,8 +707,13 @@ function renderHistogramTable(hgram) {
 
   var body = $('#histogram-table').find('tbody');
   body.empty();
+  var total = hgram.count();
   body.append.apply(body, hgram.map(function (count, start, end, index) {
-    return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
+    return $('<tr>')
+      .append($('<td>').text(fmt(start)))
+      .append($('<td>').text(fmt(end)))
+      .append($('<td>').text(fmt(count)))
+      .append($('<td>').text(Math.round(100 * count / total) + "%"));
   }));
 }
 
@@ -734,7 +739,7 @@ function renderHistogramGraph(hgram) {
   var tooltipLabels = {};
   var labels = hgram.map(function (count, start, end, index) {
     var label = fmt(start);
-    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total) + "%) between " + start + " and " + end;
     return label;
   });
   var data = hgram.map(function (count, start, end, index) { return count; });
