@@ -141,7 +141,7 @@ function prepareData(state, hgramEvo) {
   return data;
 }
 
-// Format a state string like "release/28/WINNT/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
+// Format a state string like "release/28/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
 function formatState(stateString) {
   var stateFilterNames = ["type", "version", "measure", "reason", "product", "OS", "osVersion", "arch"];
   var parts = stateString.split("/");
@@ -416,7 +416,7 @@ Telemetry.init(function () {
       restoreFromPageState(pgState, {});
     } else {
       // Could not restore from either url or cookie => create a default hs filter.
-      addHistogramFilter(true, null); //  first filter
+      addHistogramFilter(true, "nightly/40/GC_MS/saved_session/Firefox"); //  first filter
       changeLockButton(true);  // default: locked
     }
 

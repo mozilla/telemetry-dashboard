@@ -260,6 +260,10 @@ $.widget("telemetry.histogramfilter", {
 
   /** Get or set state of filter */
   state: function histogramfilter_state(state) {
+    if (state === null) {
+      throw new Error("Invalid state");
+    }
+    
     // Restore state if provided
     if (state !== undefined) {
       // Just set the state as we're restoring it
@@ -647,12 +651,10 @@ $.widget("telemetry.histogramfilter", {
       if (fixedOptions.hasOwnProperty(filterName)) {
         // Create a fixed filter entry for the _filterList
         var filter = {
-          select:         filterName,
+          select:         fixedOptions[filterName],
           histogram:      histogram
         };
         this._filterList.push(filter);
-        
-        this._filterChanged(filter.select, fixedOptions[filterName]);
       } else {
         // Create a selectable filter entry for the _filterList
         var filter = {
