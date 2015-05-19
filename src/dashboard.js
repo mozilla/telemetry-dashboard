@@ -903,7 +903,7 @@ function updateRendering(hgramEvo, lines, start, end) {
 
 var gLastHistogramEvos = null;
 var gLineColors = {};
-var gGoodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
+var gGoodColors = ["aqua", "orange", "purple", "red", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
 var gGoodColorIndex = 0;
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
