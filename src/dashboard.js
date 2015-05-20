@@ -757,9 +757,12 @@ function renderHistogramGraph(hgram) {
       tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
     });
     
-    // Assign random colors to make it easy to differentiate between bars
+    // Assign fixed pseudorandom colors to make it easy to differentiate between bars
+    var seed = 0.2;
     gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
-      bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+      seed = Math.sin(seed) * 10000;
+      var hue = Math.floor((seed - Math.floor(seed)) * 256);
+      bar.fillColor = "hsla(" + hue + ", 80%, 70%, 0.8)";
     });
     gCurrentHistogramPlot.update();
   });
@@ -930,8 +933,13 @@ function update(hgramEvos) {
     }
 
     // Create new series with updated fields for each entry
+    var futureCutoff = moment().add(1, "years").valueOf();
     series = $.map(series, function(entry, i) {
       // Update the bounds properly
+      if (point.x >= futureCutoff) {
+        console.log("Bad point; timestamp is far into the future: " + point.x);
+        continue;
+      }
       entry.values.forEach(function(point) {
         if (start === null || point.x < start) {
           start = point.x;
