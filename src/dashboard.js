@@ -107,14 +107,7 @@ function prepareData(state, hgramEvo) {
           });
         });
       } else {
-        // Histogram doesn't have enough submissions, so set everything to zero to keep the graphs looking nice
-        means.push({x: date, y: 0});
-        [5, 25, 50, 75, 95].forEach(function (p) {
-          ps[p].push({
-            x: date,
-            y: 0
-          });
-        });
+        // Histogram doesn't have enough submissions, so ignore these points entirely
       }
     });
     data.push({
