@@ -54,7 +54,7 @@ function prepareData(state, hgramEvo) {
   var maxSubmissions = 0;
   // Whether we actually filter submissions is controllable via the
   // 'sanitize-pref' preference.
-  var sanitizeData = $('input[name=sanitize-pref]:checkbox').is(':checked');
+  var sanitizeData = $('#sanitize-pref').is(':checked');
   var pgState = getPageState();
   dataKey = state + " " + pgState.evoOver + " " +  pgState.sanitize;
   if (dataKey in cachedData) {
@@ -168,7 +168,7 @@ function getPageState() {
   pageState.aggregates = pageState.aggregates.filter(function(e) { return e !== "";});
   pageState.evoOver = $('input[name=evo-type]:radio:checked').val();
   pageState.locked = gSyncWithFirst;
-  pageState.sanitize = $('input[name=sanitize-pref]:checkbox').is(':checked');
+  pageState.sanitize = $('#sanitize-pref').is(':checked');
   pageState.renderhistogram = $('input[name=render-type]:radio:checked').val();
   return pageState;
 }
@@ -209,7 +209,7 @@ function restoreFromPageState(newPageState, curPageState) {
   }
 
   if (newPageState.sanitize !== undefined) {
-    $('input[name=sanitize-pref]:checkbox').prop('checked', toBoolean(newPageState.sanitize));
+    $('#sanitize-pref').prop('checked', toBoolean(newPageState.sanitize));
   }
 
   if (newPageState.evoOver !== undefined) {
@@ -526,10 +526,10 @@ Telemetry.init(function () {
   });
 
   // Toggle whether to throw out data points from sources that haven't submitted enough
-  $('input[name=sanitize-pref]:checkbox').change(function () {
+  $('#sanitize-pref').change(function () {
     plot(true);
     // Inform google analytics of click
-    var value = $('input[name=sanitize-pref]:checkbox').is(':checked');
+    var value = $('#sanitize-pref').is(':checked');
     event('click', 'sanitize-data', value );
   });
 
@@ -705,16 +705,18 @@ function renderHistogramTable(hgram) {
     $('#histogram-table').show();
   }
 
+  // Build table after aggregating in the background worker
   var body = $('#histogram-table').find('tbody');
   body.empty();
-  var total = hgram.count();
-  body.append.apply(body, hgram.map(function (count, start, end, index) {
-    return $('<tr>')
-      .append($('<td>').text(fmt(start)))
-      .append($('<td>').text(fmt(end)))
-      .append($('<td>').text(fmt(count)))
-      .append($('<td>').text(Math.round(100 * count / total) + "%"));
-  }));
+  Telemetry.doAsync("Histogram_count", hgram, [], function(hgram, total) {
+    body.append.apply(body, hgram.map(function (count, start, end, index) {
+      return $('<tr>')
+        .append($('<td>').text(fmt(start)))
+        .append($('<td>').text(fmt(end)))
+        .append($('<td>').text(fmt(count)))
+        .append($('<td>').text(Math.round(100 * count / total) + "%"));
+    }));
+  });
 }
 
 function renderHistogramGraph(hgram) {
@@ -735,42 +737,43 @@ function renderHistogramGraph(hgram) {
   }
   
   // Compute chart data values
-  var total = hgram.count();
-  var tooltipLabels = {};
-  var labels = hgram.map(function (count, start, end, index) {
-    var label = fmt(start);
-    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total) + "%) between " + start + " and " + end;
-    return label;
+  Telemetry.doAsync("Histogram_count", hgram, [], function(hgram, total) {
+    var tooltipLabels = {};
+    var labels = hgram.map(function (count, start, end, index) {
+      var label = fmt(start);
+      tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
+      return label;
+    });
+    var data = hgram.map(function (count, start, end, index) { return count; });
+    
+    // Plot the data using Chartjs
+    var ctx = document.getElementById("histogram").getContext("2d");
+    Chart.defaults.global.responsive = true;
+    Chart.defaults.global.animation = false;
+    if (gCurrentHistogramPlot !== null) {
+      gCurrentHistogramPlot.destroy();
+    }
+    gCurrentHistogramPlot = new Chart(ctx).Bar({
+      labels: labels,
+      datasets: [{
+        fillColor: "#555555",
+        data: data,
+      }]
+    }, {
+      barValueSpacing : 0,
+      barDatasetSpacing : 0,
+      barShowStroke: false,
+      scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+      tooltipFontSize: 10,
+      tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
+    });
+    
+    // Assign random colors to make it easy to differentiate between bars
+    gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
+      bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+    });
+    gCurrentHistogramPlot.update();
   });
-  var data = hgram.map(function (count, start, end, index) { return count; });
-  
-  // Plot the data using Chartjs
-  var ctx = document.getElementById("histogram").getContext("2d");
-  Chart.defaults.global.responsive = true;
-  Chart.defaults.global.animation = false;
-  if (gCurrentHistogramPlot !== null) {
-    gCurrentHistogramPlot.destroy();
-  }
-  gCurrentHistogramPlot = new Chart(ctx).Bar({
-    labels: labels,
-    datasets: [{
-      fillColor: "#555555",
-      data: data,
-    }]
-  }, {
-    barValueSpacing : 0,
-    barDatasetSpacing : 0,
-    barShowStroke: false,
-    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
-    tooltipFontSize: 10,
-    tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
-  });
-  
-  // Assign random colors to make it easy to differentiate between bars
-  gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
-    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
-  });
-  gCurrentHistogramPlot.update();
 }
 
 var gCurrentHistogramEvolutionPlots = null;
@@ -798,10 +801,10 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     multiTooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     bezierCurve: false,
     pointDotStrokeWidth: 0,
@@ -866,6 +869,33 @@ function updateRendering(hgramEvo, lines, start, end) {
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
   gCurrentHistogram = hgram;
   
+  // Update summary for the first histogram evolution
+  var dates = hgramEvo.dates();
+  $('#prop-kind').text(hgram.kind());
+  $('#prop-dates').text(fmt(dates.length));
+  $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
+    "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  Telemetry.doAsync("Histogram_precompute", hgram, [], function(hgram) {
+    $('#prop-submissions').text(fmt(hgram.submissions()));
+    $('#prop-count').text(fmt(hgram.count()));
+    if (hgram.kind() == 'linear') {
+      $('#prop-mean').text(fmt(hgram.mean()));
+      $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+    }
+    else if (hgram.kind() == 'exponential') {
+      $('#prop-mean2').text(fmt(hgram.mean()));
+      $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
+      $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
+    }
+    if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
+      $('#prop-p5').text(fmt(hgram.percentile(5)));
+      $('#prop-p25').text(fmt(hgram.percentile(25)));
+      $('#prop-p50').text(fmt(hgram.percentile(50)));
+      $('#prop-p75').text(fmt(hgram.percentile(75)));
+      $('#prop-p95').text(fmt(hgram.percentile(95)));
+    }
+  });
+  
   // Schedule redraw of histogram for the first histogram evolution
   if (gDrawTimer) {
     clearTimeout(gDrawTimer);
@@ -879,31 +909,6 @@ function updateRendering(hgramEvo, lines, start, end) {
       renderHistogramGraph(hgram);
     }
   }, 100);
-  
-  // Update summary for the first histogram evolution
-  var dates = hgramEvo.dates();
-  $('#prop-kind').text(hgram.kind());
-  $('#prop-submissions').text(fmt(hgram.submissions()));
-  $('#prop-count').text(fmt(hgram.count()));
-  $('#prop-dates').text(fmt(dates.length));
-  $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
-    "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
-  if (hgram.kind() == 'linear') {
-    $('#prop-mean').text(fmt(hgram.mean()));
-    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
-  }
-  else if (hgram.kind() == 'exponential') {
-    $('#prop-mean2').text(fmt(hgram.mean()));
-    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
-    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
-  }
-  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-    $('#prop-p5').text(fmt(hgram.percentile(5)));
-    $('#prop-p25').text(fmt(hgram.percentile(25)));
-    $('#prop-p50').text(fmt(hgram.percentile(50)));
-    $('#prop-p75').text(fmt(hgram.percentile(75)));
-    $('#prop-p95').text(fmt(hgram.percentile(95)));
-  }
 }
 
 var gLastHistogramEvos = null;
