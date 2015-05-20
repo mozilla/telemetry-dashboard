@@ -446,10 +446,10 @@ Telemetry.init(function () {
   
   // Add series button
   $("#addVersionButton").click(function () {
-    var state = null;
+    var state = "nightly/40/SIMPLE_MEASURES_FIRSTPAINT/saved_session/Firefox";
     event('click', 'addVersion', 'addVersion');
     if (gHistogramFilterObjects.length != 0) {
-      state = gHistogramFilterObjects[0].histogramfilter('state');
+      state = gHistogramFilterObjects[gHistogramFilterObjects.length - 1].histogramfilter('state');
     }
     addHistogramFilter(false, state);
     gSingleSeriesMode = false;
