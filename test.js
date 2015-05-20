@@ -10,10 +10,6 @@ $(".container, .container-fluid").hide(); // Hide the content until the page is 
 Telemetry.init(function () {
   $(window).bind("hashchange", function () {
     $("#permalink-value").hide();
-    
-    var curPageState = getPageState();
-    var newPageState = urlHashToPageState(window.location.hash);
-    restoreFromPageState(newPageState, curPageState);
   });
   
   // Set up the build selectors
@@ -60,9 +56,10 @@ Telemetry.init(function () {
       newLine = new Line(gSelectedEvolutionLine.measure, gSelectedEvolutionLine.channelVersion, gSelectedEvolutionLine.aggregate,
                          gSelectedEvolutionLine.dateRange, gSelectedEvolutionLine.filters, gSelectedEvolutionLine.values);
     } else {
-      newLine = new Line("GC_MS", "nightly/40", "median", null, {OS: ["WINNT"]}, "red", []);
+      newLine = new Line("GC_MS", "nightly/40", "median", null, {OS: ["WINNT"], product: ["Firefox"]}, []);
     }
     addEvolutionLine(newLine);
+    saveStateToUrlAndCookie();
   });
   
   // Export as CSV button
@@ -112,6 +109,8 @@ Telemetry.init(function () {
   
   $("#spinner").hide();
   $(".container, .container-fluid").show();
+  
+  loadStateFromUrlAndCookie();
 });
 
 function displayHistogram(histogram) {
@@ -155,7 +154,6 @@ function displayHistogram(histogram) {
 }
 
 function displayHistogramEvolutions(lines) {
-  console.log(lines);
   //wip: get minDate and maxDate
   var minDate = 0, maxDate = Infinity;
   
@@ -192,21 +190,72 @@ function displayHistogramEvolutions(lines) {
 }
 
 var Line = (function(){
-function Line(measure, channelVersion, aggregate, dateRange, filters, color, values) {
+
+var lineColors = {};
+var goodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
+var goodColorIndex = 0;
+var filterSortOrder = ["product", "OS", "osVersion", "arch"];
+
+function Line(measure, channelVersion, aggregate, dateRange, filters, values) {
   this.measure = measure;
   this.channelVersion = channelVersion;
   this.aggregate = aggregate;
-  this.dateRange = dateRange;
-  this.filters = filters;
-  this.color = color;
-  this.values = values;
+  this.dateRange = dateRange || null;
+  this.filters = filters || {};
+  this.values = values || [];
+  
+  // Assign a color to the line
+  var stateString = this.getStateString();
+  if (!lineColors.hasOwnProperty(stateString)) {
+    goodColorIndex = (goodColorIndex + 1) % goodColors.length;
+    lineColors[stateString] = gGoodColors[goodColorIndex];
+  }
+  this.color = lineColors[stateString];
 }
 
-function updateHistogramEvolutions() {
-  var minChannelVersion = $("#min-channel-version").val();
-  var maxChannelVersion = $("#max-channel-version").val();
+Line.prototype.getTitleString = function Line_getTitleString() {
+  return this.measure + " - " + this.channelVersion.replace("/", " ") + " - " + this.aggregate;
+};
+Line.prototype.getFilterString = function Line_getFilterString() {
+  return ("OS" in this.filters ? this.filters["OS"].join(", ") : "Any OS")
+    + " " + ("osVersion" in this.filters ? this.filters["osVersion"].join(", ") + " " : "")
+    + " - " + ("product" in this.filters ? this.filters["product"].join(", ") : "Any Product")
+    + " - " + ("arch" in this.filters ? this.filters["arch"].join(", ") : "Any Build");
+};
+Line.prototype.getStateString = function Line_getStateString() {
+  var filters = this.filters;
+  var filterState = filterSortOrder.map(function(filterName) {
+    if (!(filterName in filters)) { return ""; }
   
-  //wip: get dates for these builds
+    // Sort the selected options of each filter
+    return filters[filterName].sort().join("|");
+  }).join("/");
+  return this.measure + "/" + this.channelVersion + "/" + this.aggregate + "/" + filterState;
+  //wip: store date range somehow
+};
+Line.prototype.setStateString = function Line_setStateString(stateString) {
+  var parts = stateString.split("/");
+  this.measure = parts.shift();
+  this.channelVersion = parts.shift() + "/" + parts.shift();
+  this.aggregate = parts.shift();
+  this.filters = {};
+  var filters = this.filters;
+  parts.forEach(function(filterOption, i) {
+    if (i < filterSortOrder.length) {
+      if (filterOption !== "") {
+        filters[filterSortOrder[i]] = filterOption.split("|");
+      }
+    } else {
+      throw new Error("Unknown filter option " + filter);
+    }
+  });
+  
+  if (!lineColors.hasOwnProperty(stateString)) {
+    goodColorIndex = (goodColorIndex + 1) % goodColors.length;
+    lineColors[stateString] = gGoodColors[goodColorIndex];
+  }
+  this.color = lineColors[stateString];
+  return this;
 }
 
 return Line;
@@ -214,14 +263,14 @@ return Line;
 function clearEvolutionLines() {
   gCurrentEvolutionLines = [];
   $("#evolution-line-list .evolution-line").remove();
-  displayHistogramEvolutions(gCurrentEvolutionLines, minDate, maxDate);
+  displayHistogramEvolutions(gCurrentEvolutionLines);
 }
 function addEvolutionLine(line) {
   gCurrentEvolutionLines.push(line);
   
   // Add the new line element
   var lineElement = $(
-    '<a class="evolution-line list-group-item" title="GC_MS - nightly 38 - mean">' +
+    '<a class="evolution-line list-group-item">' +
       '<span class="legend-color"></span>' +
       '&nbsp;' +
       '<div class="evolution-line-description">' +
@@ -238,6 +287,7 @@ function addEvolutionLine(line) {
     var $this = $(this);
     var lineElements = $this.parent().find(".evolution-line");
     removeEvolutionLine(lineElements.index($this));
+    saveStateToUrlAndCookie();
     event.stopPropagation();
   });
   $("#evolution-line-list").append(lineElement);
@@ -249,18 +299,16 @@ function refreshEvolutionLine(evolutionLineIndex) {
   var line = gCurrentEvolutionLines[evolutionLineIndex];
 
   // Set the line label
-  var label = line.measure + " - " + line.channelVersion.replace("/", " ") + " - " + line.aggregate;
+  var label = line.getTitleString();
   var lineElement = $($("#evolution-line-list .evolution-line").get(evolutionLineIndex));
   lineElement.attr("title", label);
-  lineElement.contents().filter(function() { return this.nodeType == 3; }).each(function() { this.textContent = label; });
+  lineElement.contents().filter(function() { return this.nodeType == 3; }).each(function() { this.textContent = line.getTitleString(); });
   
   // Set the line filters label
-  //wip: label the filters
-  var filterLabel = "Any OS - Firefox";
-  lineElement.find(".evolution-line-description span").text(filterLabel);
+  lineElement.find(".evolution-line-description span").text(line.getFilterString());
   
   // Set the line color
-  lineElement.find(".legend-color").css("background-color", line.color)
+  lineElement.find(".legend-color").css("background-color", line.color);
   
   Telemetry.loadEvolutionOverTime(line.channelVersion, line.measure, function(histogramEvolution) {
     line.histogramEvolution = histogramEvolution;
@@ -322,23 +370,37 @@ function event() {
   ga.apply(ga, args);
 }
 
-// Load the current state from the URL
+// Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
   var url = window.location.hash;
   if (url.length === 0) { return; }
   url = url[0] === "#" ? url.slice(1) : url;
+  
+  // Load from cookie if URL does not have state, and give up if still no state available
+  if (url.indexOf("&") < 0) {
+    var name = "stateFromUrl=";
+    document.cookie.split(';').forEach(function(entry) {
+      entry = entry.trim();
+      if (entry.indexOf(name) == 0) {
+        url = entry.substring(name.length, entry.length);
+      }
+    });
+  }
+  if (url.indexOf("&") < 0) { return; }
+  
+  // Load the options
   var pageState = {};
-  url.split("&").forEach(function(i, fragment) {
+  url.split("&").forEach(function(fragment, i) {
     var parts = fragment.split("=");
     pageState[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
   });
 
   // Load lines if specified
-  if (pageState.filter !== undefined) {
-    pageState.filter = pageState.filter.split("!");
+  if (pageState.lines !== undefined) {
+    pageState.lines = pageState.lines.split("!");
     clearEvolutionLines();
-    pageState.filter.forEach(function(i, stateString) {
-      //wip
+    pageState.lines.forEach(function(stateString, i) {
+      var line = (new Line()).setStateString(stateString);
       addEvolutionLine(line);
     });
     
@@ -347,11 +409,12 @@ function loadStateFromUrlAndCookie() {
       selectEvolutionLine(pageState.selectedLineIndex);
     }
   }
+  saveStateToUrlAndCookie();
 }
 // Save the current state to the URL and the page cookie
 function saveStateToUrlAndCookie() {
   var pageState = {
-    filter: gCurrentEvolutionLines.map(function(line) { return line.state; }),
+    lines: gCurrentEvolutionLines.map(function(line) { return line.getStateString(); }),
     selectedLineIndex: gCurrentEvolutionLines.indexOf(gSelectedEvolutionLine),
   };
   var fragments = [];
@@ -366,9 +429,7 @@ function saveStateToUrlAndCookie() {
   // Save to the URL hash if it changed
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
-  if (url !== stateString) {
-    window.location.hash = hash;
-  }
+  if (url !== stateString) { window.location.hash = "#" + stateString; }
   
   // Save the state in a cookie that expires in 3 days
   var expiry = new Date();
