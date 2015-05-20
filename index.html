@@ -4,13 +4,23 @@
     <meta charset="utf-8">
     <title>Telemetry Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap, Awesome Font, nvd3 and Bootstrap-Select -->
-    <link rel="stylesheet"
-          href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
-    <link rel="stylesheet"
-          href="//netdna.bootstrapcdn.com/font-awesome/4.0.2/css/font-awesome.min.css">
-    <link rel="stylesheet" href="lib/nv.d3.css">
-    <link rel="stylesheet" href="lib/bootstrap-select.min.css">
+    
+    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
+    
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.5/js/bootstrap-select.min.js"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.5/css/bootstrap-select.min.css">
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.2/css/font-awesome.min.css">
+    
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="lib/Chart.Scatter.js"></script>
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style/dashboard.css">
     <link rel="stylesheet" href="style/select2.css">
@@ -51,18 +61,35 @@
                 <div>
                     <h2 id="measure">Measure</h2>
                     <i id="description">Description</i>
-                    <figure style="margin: 15px;"><svg id="evolution"></svg></figure>
-                    <div class="alert alert-info">
-                      Adjust the start and end dates by dragging and dropping within the date range selector.
-                    </div>
+                    
+                    <!-- main evolution chart -->
+                    <figure style="margin: 15px;"><canvas id="evolution"></canvas></figure>
+                    <form class="form-horizontal">
+                        <fieldset>
+                            <div class="control-group">
+                                <div class="controls">
+                                    <label>Show data from:</label>
+                                    <div class="input-prepend input-group">
+                                        <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                                        <input type="text" style="width: 400px" name="dateRange" id="dateRange" class="form-control date-range"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                    <hr>
+                    
+                    <!-- single-plot histogram or table -->
+                    <h2>Distribution</h2>
                     <figure>
-                        <svg id="histogram" class="single-histogram-only"></svg>
+                        <canvas id="histogram"></canvas>
                         <table id="histogram-table" class="table table-condensed" class="single-histogram-only">
                             <thead>
                                 <tr>
                                     <th>Start</th>
                                     <th>End</th>
                                     <th>Count</th>
+                                    <th>Percentage</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -71,9 +98,6 @@
                 </div>
             </div>
             <aside class="col-md-4 page-end">
-                <h2>Legend</h2>
-                <span id="info" class="legend">please hover over the graph</span>
-                <div id="legend"></div>
                 <h2>Preferences</h2>
                 <form role="form">
                     <div class="form-group">
@@ -229,18 +253,6 @@
     <div id="spinner" class="col-md-12">
             <i class="fa fa-spinner fa-spin"></i>
     </div>
-    <!-- jQuery, Bootstrap and d3 -->
-    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
-    <script src="lib/bootstrap-select.min.js"></script>
-    <script src="lib/d3.js"></script>
-    <script src="lib/nv.d3.js"></script>
-    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
-    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
-
-    <!-- nvd3 chart hacks -->
-    <script src="src/evolutionchart.js"></script>
-    <script src="src/histogramchart.js"></script>
 
     <!--
         big.js and telemetry.js from telemetry.mozilla.org
@@ -264,7 +276,8 @@
     <script src="lib/select2.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
-        $('.select2').select2();
+        $(".select2").select2();
+        $(".date-range").daterangepicker();
       });
     </script>
 

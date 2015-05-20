@@ -5,6 +5,8 @@ var gSyncWithFirst = true;
 var gStatesOnPlot = [];
 var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
+var gCurrentHistogramPlot = null;
+var gCurrentHistogram = null;
 
 function event() {
   var args = Array.prototype.slice.call(arguments);
@@ -72,8 +74,6 @@ function prepareData(state, hgramEvo) {
   var data = [{
     key: "Submissions",
     bar: true,
-    // This is hacked :)
-    yAxis: 2,
     values: submissions,
   }];
 
@@ -101,21 +101,14 @@ function prepareData(state, hgramEvo) {
             y: mean
           });
         }[5, 25, 50, 75, 95].forEach(function (p) {
-          var v = hgram.percentile(p);
-          // Weird negative values can cause d3 etc. to freak out - see Bug 984928
-          if (v >= 0) {
-            ps[p].push({
-              x: date,
-              y: v
-            });
-          }
+          ps[p].push({
+            x: date,
+            y: hgram.percentile(p)
+          });
         });
       } else {
-        // Set everything to zero to keep the graphs looking nice.
-        means.push({
-          x: date,
-          y: 0
-        });
+        // Histogram doesn't have enough submissions, so set everything to zero to keep the graphs looking nice
+        means.push({x: date, y: 0});
         [5, 25, 50, 75, 95].forEach(function (p) {
           ps[p].push({
             x: date,
@@ -126,32 +119,38 @@ function prepareData(state, hgramEvo) {
     });
     data.push({
       key: "Mean",
-      yAxis: 1,
       values: means,
     }, {
       key: "5th percentile",
-      yAxis: 1,
       values: ps['5'],
     }, {
       key: "25th percentile",
-      yAxis: 1,
       values: ps['25'],
     }, {
       key: "median",
-      yAxis: 1,
       values: ps['50'],
     }, {
       key: "75th percentile",
-      yAxis: 1,
       values: ps['75'],
     }, {
       key: "95th percentile",
-      yAxis: 1,
       values: ps['95'],
     });
   }
   cachedData[dataKey] = data;
   return data;
+}
+
+// Format a state string like "release/28/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
+function formatState(stateString) {
+  var stateFilterNames = ["type", "version", "measure", "reason", "product", "OS", "osVersion", "arch"];
+  var parts = stateString.split("/");
+  var parts = parts.map(function(component, i) {
+    return gHistogramFilterObjects[0].histogramfilter("formatOption", stateFilterNames[i], component, parts[2] !== undefined ? parts[2] : null);
+  });
+  return parts[0] + " " + parts[1] +
+    ", " + parts[4] + (parts[7] ? " " + parts[7] : "") +
+    (parts[5] ? " (" + parts[5] + (parts[6] ? " " + parts[6] : "") + ")" : "");
 }
 
 function getPageState() {
@@ -251,17 +250,13 @@ function restoreFromPageState(newPageState, curPageState) {
   if (newPageState.locked !== undefined) {
     changeLockButton(toBoolean(newPageState.locked));
     if (newPageState.locked) {
-      var x = states[0].split('/');
+      // Set the measure to the state (excluding the version and version number)
+      var x = newPageState.filter[0].split('/');
       x.shift();
       x.shift();
       var y = x.join("/")
       $("#measure").text(y);
     }
-  }
-
-  if (newPageState.aggregates !== undefined) {
-    setAggregateSelectorOptions(newPageState.aggregates, function() {
-    }, false);
   }
   return true;
 }
@@ -300,7 +295,7 @@ function urlHashToPageState(url) {
   }
 
   if (pageState.aggregates !== undefined) {
-    pageState.aggregates = pageState.aggregates.split("!");
+    pageState.aggregates = pageState.aggregates.split("!").filter(function(e) { return e !== "";});
   }
   return pageState;
 }
@@ -348,13 +343,6 @@ function plot(firstChanged) {
     $("#content").fadeOut();
     $("#spinner").fadeIn();
     return;
-  }
-
-  if (gHistogramFilterObjects.length !== 0) {
-    // Send new state to google analytics
-    gHistogramFilterObjects.forEach(function(f) {
-      var state = f.histogramfilter('option', 'state');
-    });
   }
 
   $("#content").fadeIn();
@@ -415,69 +403,7 @@ function syncStateWithFirst() {
   $('#measure').show();
 }
 
-//construct selector and set selected aggregates
-function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
-  if (options.length === 0) {
-    return;
-  }
-
-  var prevOptions = [];
-  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
-  var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-  // Find the intersection of the previously selected and the valid options so
-  // we don't get an error trying to select non-existent options for a probe.
-  var optionsToSelect = prevSelected.filter(function(prevOption) {
-    return options.indexOf(prevOption) !== -1;
-  });
-  var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
-
-  if (!multisetEqual(prevOptions, options)) {
-    $('#multipercentile').empty().append(selector);
-    var n = options.length;
-    for (var i = 0; i < n; i++) {
-      var option = options[i];
-      var label = option;
-      // Add <option>
-      selector.append($("<option>", {
-        text: label,
-        value: option,
-      }));
-    }
-    var allOptions = options.join('/');
-    event('click', 'aggregates_options', allOptions);
-  }
-
-  selector.multiselect({
-    includeSelectAllOption: true,
-    onChange : function(option, checked) {
-      selector.multiselect("updateSelectAll");
-      if(option.is(':selected')) {
-        event('click', 'aggregates_options', allOptions);
-      }
-      changeCb();
-      updateUrlHashIfNeeded();
-    }
-  });
-
-  if (prevOptions.length === 0) {
-    // first time drawing the selector.
-    selector.multiselect("select", options);
-    if (defaultToAll) {
-      selector.multiselect("updateSelectAll");
-    }
-  } else {
-    // updating existing selector.
-    if (prevSelected.indexOf("multiselect-all") !== -1) {
-      selector.multiselect("select", options);
-      selector.multiselect("updateSelectAll");
-    } else {
-      selector.multiselect("select", optionsToSelect);
-    }
-  }
-  changeCb();
-  updateUrlHashIfNeeded();
-}
-
+// Entry point
 Telemetry.init(function () {
   var urlPageState = urlHashToPageState(window.location.hash);
 
@@ -490,15 +416,16 @@ Telemetry.init(function () {
       restoreFromPageState(pgState, {});
     } else {
       // Could not restore from either url or cookie => create a default hs filter.
-      addHistogramFilter(true, null); //  first filter
+      addHistogramFilter(true, "nightly/40/GC_MS/saved_session/Firefox"); //  first filter
       changeLockButton(true);  // default: locked
     }
 
     $('input[value="Graph"]').prop('checked',true);
 
   }
-
+  
   $(window).bind("hashchange", function () {
+    // Ignore hash changes caused programmatically
     if (gHashSetFromCode) {
       gHashSetFromCode = false;
       return;
@@ -527,7 +454,8 @@ Telemetry.init(function () {
     $('.single-histogram-only').hide();
     $('#description').hide();
   }
-
+  
+  // Add series button
   $("#addVersionButton").click(function () {
     var state = null;
     event('click', 'addVersion', 'addVersion');
@@ -548,6 +476,7 @@ Telemetry.init(function () {
     updateUrlHashIfNeeded();
   });
 
+  // Shortened permalink button
   $('#tinyUrl').click(function() {
     var tinyUrlArea = $("<input type=text>");
     event('click', 'tinyUrl', 'generatedTinyUrl');
@@ -584,6 +513,7 @@ Telemetry.init(function () {
     $.ajax(request);
   });
 
+  // Radio button for changing the plot type
   $('input[name=evo-type]:radio').change(function () {
     var evoType = $('input[name=evo-type]:radio:checked').val();
     // Inform google analytics of click
@@ -595,6 +525,7 @@ Telemetry.init(function () {
     event('click', 'evolution-type', evoType);
   });
 
+  // Toggle whether to throw out data points from sources that haven't submitted enough
   $('input[name=sanitize-pref]:checkbox').change(function () {
     plot(true);
     // Inform google analytics of click
@@ -607,13 +538,25 @@ Telemetry.init(function () {
   }
 });
 
-/** Format numbers */
+/** Format numbers to two deciaml places with unit suffixes */
 function fmt(number) {
   if (number == Infinity) return "Infinity";
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
-  var prefix = d3.formatPrefix(number, 's');
-  return Math.round(prefix.scale(number) * 100) / 100 + prefix.symbol;
+  var mag = Math.abs(number);
+  var exponent = Math.floor(Math.log10(mag));
+  var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
+  var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
+  if (interval in units) {
+    return Math.round(number * 100 / interval) / 100 + units[interval];
+  }
+  return Math.round(number * 100) / 100;
+}
+
+function unique(array) {
+  return $.grep(array, function (el, index) {
+    return index == $.inArray(el, array);
+  });
 }
 
 function createRemoveButton(parent) {
@@ -726,6 +669,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
+    defaultMeasure: "SIMPLE_MEASURES_FIRSTPAINT",
     selectorType: CustomSelector,
     locked: locked,
     state: state,
@@ -763,8 +707,13 @@ function renderHistogramTable(hgram) {
 
   var body = $('#histogram-table').find('tbody');
   body.empty();
+  var total = hgram.count();
   body.append.apply(body, hgram.map(function (count, start, end, index) {
-    return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
+    return $('<tr>')
+      .append($('<td>').text(fmt(start)))
+      .append($('<td>').text(fmt(end)))
+      .append($('<td>').text(fmt(count)))
+      .append($('<td>').text(Math.round(100 * count / total) + "%"));
   }));
 }
 
@@ -781,69 +730,188 @@ function renderHistogramGraph(hgram) {
     $("#measure").text(hgram.measure()).show();
     $("#description").text(hgram.description()).show();
     $('#histogram').show();
+  } else {
+    return;
   }
+  
+  // Compute chart data values
+  var total = hgram.count();
+  var tooltipLabels = {};
+  var labels = hgram.map(function (count, start, end, index) {
+    var label = fmt(start);
+    tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total) + "%) between " + start + " and " + end;
+    return label;
+  });
+  var data = hgram.map(function (count, start, end, index) { return count; });
+  
+  // Plot the data using Chartjs
+  var ctx = document.getElementById("histogram").getContext("2d");
+  Chart.defaults.global.responsive = true;
+  Chart.defaults.global.animation = false;
+  if (gCurrentHistogramPlot !== null) {
+    gCurrentHistogramPlot.destroy();
+  }
+  gCurrentHistogramPlot = new Chart(ctx).Bar({
+    labels: labels,
+    datasets: [{
+      fillColor: "#555555",
+      data: data,
+    }]
+  }, {
+    barValueSpacing : 0,
+    barDatasetSpacing : 0,
+    barShowStroke: false,
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    tooltipFontSize: 10,
+    tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
+  });
+  
+  // Assign random colors to make it easy to differentiate between bars
+  gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
+    bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
+  });
+  gCurrentHistogramPlot.update();
+}
 
-  nv.addGraph(function () {
-    var total = hgram.count();
-    var vals = hgram.map(function (count, start, end, index) {
-      return {
-        x: [start, end],
-        y: count,
-        percent: count / total
-      };
-    });
-
-    var data = [{
-      key: "Count",
-      values: vals,
-      color: "#0000ff"
-    }];
-    var chart = histogramchart().margin({
-      top: 20,
-      right: 80,
-      bottom: 40,
-      left: 80
-    });
-
-    chart.yAxis.tickFormat(fmt);
-    chart.xAxis.tickFormat(function (bucket) {
-      return fmt(bucket[0]);
-    });
-
-    d3.select("#histogram").datum(data).transition().duration(500).call(chart);
-    nv.utils.windowResize(
-      function() {
-        chart.update();
-      }
-    );
-    return chart;
+var gCurrentHistogramEvolutionPlots = null;
+function renderHistogramEvolution(lines, minDate, maxDate) {
+  var drawnLines = lines.filter(function(line) { return !line.disabled; });
+  
+  // Filter out the points that are outside of the time range
+  var filteredDatasets = drawnLines.map(function (line) {
+    return {
+      label: line.key,
+      strokeColor: line.color,
+      data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
+    };
+  })
+  
+  // Plot the data using Chartjs
+  if (gCurrentHistogramEvolutionPlots !== null) {
+    gCurrentHistogramEvolutionPlots.destroy();
+  }
+  var ctx = document.getElementById("evolution").getContext("2d");
+  Chart.defaults.global.responsive = true;
+  gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(filteredDatasets, {
+    animation: false,
+    scaleType: "date",
+    scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
+    tooltipFontSize: 10,
+    tooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+    },
+    multiTooltipTemplate: function(valuesObject) {
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+    },
+    bezierCurve: false,
+    pointDotStrokeWidth: 0,
+    pointDotRadius: 3,
   });
 }
 
-var renderHistogramTime = null;
-var lastHistogramEvos = null;
-var _exportHgram = null;
-var _lastBlobUrl = null;
+var gPreviousBlobUrl = null;
 // Generate download on mousedown
 $('#export-link').mousedown(function () {
-  if (_lastBlobUrl) {
-    URL.revokeObjectURL(_lastBlobUrl);
-    _lastBlobUrl = null;
+  if (gPreviousBlobUrl) {
+    URL.revokeObjectURL(gPreviousBlobUrl);
+    gPreviousBlobUrl = null;
   }
   var csv = "start,\tend,\tcount\n";
-  csv += _exportHgram.map(function (count, start, end, index) {
+  csv += gCurrentHistogram.map(function (count, start, end, index) {
     return [start, end, count].join(",\t");
   }).join("\n");
 
-  _lastBlobUrl = URL.createObjectURL(new Blob([csv]));
-  $('#export-link')[0].href = _lastBlobUrl;
-  $('#export-link')[0].download = _exportHgram.measure() + ".csv";
-  event('click','download csv', 'download csv');
+  gPreviousBlobUrl = URL.createObjectURL(new Blob([csv]));
+  $('#export-link')[0].href = gPreviousBlobUrl;
+  $('#export-link')[0].download = gCurrentHistogram.measure() + ".csv";
+  event('click', 'download csv', 'download csv');
 });
 
-var hasReportedDateRangeSelectorUsedInThisSession = false;
+var gHasReportedDateRangeSelectorUsedInThisSession = false;
+var gDrawTimer = null;
+var gUserSelectedRange = false;
+function updateRendering(hgramEvo, lines, start, end) {
+  // Update the start and end range and update the selection if necessary
+  var picker = $("#dateRange").data("daterangepicker");
+  var startMoment = moment(start), endMoment = moment(end);
+  picker.setOptions({
+    format: "MM/DD/YYYY",
+    minDate: startMoment,
+    maxDate: endMoment,
+    showDropdowns: true,
+    ranges: {
+       "All": [startMoment, endMoment],
+       "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
+       "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
+    },
+  }, function(chosenStart, chosenEnd, label) {
+    // Report it the first time the date-range selector is used in a session
+    if (!gHasReportedDateRangeSelectorUsedInThisSession) {
+     gHasReportedDateRangeSelectorUsedInThisSession = true;
+     event('report', 'date-range-selector', 'used-in-session', 1);
+    }
+    gUserSelectedRange = true;
+    updateRendering(hgramEvo, lines, startMoment, endMoment);
+  });
+  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment)) {
+    gUserSelectedRange = false;
+  }
+  if (!gUserSelectedRange) {
+    picker.setStartDate(startMoment);
+    picker.setEndDate(endMoment);
+  }
+  var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
+  
+  var hgram;
+  hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
+  gCurrentHistogram = hgram;
+  
+  // Schedule redraw of histogram for the first histogram evolution
+  if (gDrawTimer) {
+    clearTimeout(gDrawTimer);
+  }
+  gDrawTimer = setTimeout(function () {
+    renderHistogramEvolution(lines, minDate, maxDate);
+    var renderType = $('input[name=render-type]:radio:checked').val();
+    if (renderType == 'Table') {
+      renderHistogramTable(hgram);
+    } else {
+      renderHistogramGraph(hgram);
+    }
+  }, 100);
+  
+  // Update summary for the first histogram evolution
+  var dates = hgramEvo.dates();
+  $('#prop-kind').text(hgram.kind());
+  $('#prop-submissions').text(fmt(hgram.submissions()));
+  $('#prop-count').text(fmt(hgram.count()));
+  $('#prop-dates').text(fmt(dates.length));
+  $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
+    "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  if (hgram.kind() == 'linear') {
+    $('#prop-mean').text(fmt(hgram.mean()));
+    $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
+  }
+  else if (hgram.kind() == 'exponential') {
+    $('#prop-mean2').text(fmt(hgram.mean()));
+    $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
+    $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
+  }
+  if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
+    $('#prop-p5').text(fmt(hgram.percentile(5)));
+    $('#prop-p25').text(fmt(hgram.percentile(25)));
+    $('#prop-p50').text(fmt(hgram.percentile(50)));
+    $('#prop-p75').text(fmt(hgram.percentile(75)));
+    $('#prop-p95').text(fmt(hgram.percentile(95)));
+  }
+}
 
+var gLastHistogramEvos = null;
+var gLineColors = {};
+var gGoodColors = ["aqua", "orange", "purple", "red", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
+var gGoodColorIndex = 0;
 function update(hgramEvos) {
+  // Obtain a list of histogram evolutions (histogram series)
   var evosVals = [];
   $.each(hgramEvos, function (key, value) {
     evosVals.push(value);
@@ -853,45 +921,53 @@ function update(hgramEvos) {
     return;
   }
   if (!hgramEvos) {
-    hgramEvos = lastHistogramEvos;
+    hgramEvos = gLastHistogramEvos;
   }
-  lastHistogramEvos = hgramEvos;
+  gLastHistogramEvos = hgramEvos;
 
-  var datas = [];
+  // Compute list of each individual series and bucket labels
+  var lines = [];
   var labels = [];
-
+  var start = null, end = null;
   $.each(hgramEvos, function (state, evo) {
-    var series = prepareData(state,evo);
+    var series = prepareData(state, evo);
     for (var x in series) {
       labels.push(series[x].key);
     }
 
-    // shallow clone for each item: don't change the original series because it's cached by prepareData.
-    series = series.map(function(e) {
-      var d = {};
-      $.each(e, function (k, v) {
-        d[k] = v;
+    // Create new series with updated fields for each entry
+    series = $.map(series, function(entry, i) {
+      // Update the bounds properly
+      entry.values.forEach(function(point) {
+        if (start === null || point.x < start) {
+          start = point.x;
+        }
+        if (end === null || point.x > end) {
+          end = point.x;
+        }
       });
-      return d;
+      
+      // Add extra fields to the lines such as their cached color
+      if (gLineColors[state + "\n" + entry.key] === undefined) {
+        gGoodColorIndex = (gGoodColorIndex + 1) % gGoodColors.length;
+        gLineColors[state + "\n" + entry.key] = gGoodColors[gGoodColorIndex];
+      }
+      var key = formatState(state) + ": " +  entry.key;
+      return $.extend({}, entry, {
+        color: gLineColors[state + "\n" + entry.key],
+        fullState: state,
+        title: entry.key,
+        key: key,
+      });
     });
 
-    $.each(series, function(i, entry) {
-      entry.fullState = state;
-      entry.title = entry.key;
-      entry.key = state + ": " + entry.key;
-    });
-
-    datas.push(series);
+    $.merge(lines, series);
   });
+  labels = unique(labels);
+  start = new Date(start);
+  end = new Date(end);
 
-  // from list of lists to list
-  var cDatas = [].concat.apply([], datas);
-  function unique(array) {
-    return $.grep(array, function (el, index) {
-      return index == $.inArray(el, array);
-    });
-  }
-
+  // Select the required aggregates in the data
   function updateDisabledAggregates() {
     var toBeSelected = $("#aggregateSelector").multiselect("getSelected").val();
     if (toBeSelected === undefined) {
@@ -900,153 +976,52 @@ function update(hgramEvos) {
     if (toBeSelected === null) {
       toBeSelected = [];
     }
-    var count = 0;
-    for(var j = 0; j < cDatas.length; j++) {
-      if (toBeSelected.indexOf(cDatas[j].title) !== -1) {
-        count++;
+    var linesAreSelected = false;
+    lines.forEach(function(line) {
+      if (toBeSelected.indexOf(line.title) !== -1) {
+        linesAreSelected = true;
       }
-    }
-    if (count == 0) {
-      toBeSelected = [cDatas[0].title];
+    });
+    if (!linesAreSelected) {
+      toBeSelected = [lines[0].title];
       $("#aggregateSelector").children().removeAttr("selected");
       $("#aggregateSelector").multiselect("select", toBeSelected);
-
     }
-    for (var i = 0; i < cDatas.length; i++) {
-      if (toBeSelected.indexOf(cDatas[i].title) !== -1 && toBeSelected.length !== 0) {
-        cDatas[i].disabled = false;
-      } else {
-        cDatas[i].disabled = true;
-      }
-    }
+    lines.forEach(function(line) {
+      line.disabled = toBeSelected.indexOf(line.title) === -1 || toBeSelected.length === 0;
+    });
   }
-
-  updateDisabledAggregates();
 
   // Add a show-<kind> class to #content
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
+  
+  // Select just the median if available, otherwise select all the available options
+  var prevOptions = [];
+  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
+  var selector;
+  if (!multisetEqual(prevOptions, labels)) {
+    selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
+    $('#multipercentile').empty().append(selector);
+    labels.forEach(function(option) { selector.append($("<option>", {text: option, value: option})); });
+    event('click', 'aggregates_options', labels.join('/'));
+  } else { selector = $("#aggregateSelector"); }
 
-  function updateProps(extent) {
-    var hgram;
-    var dates = hgramEvo.dates();
-    if (extent) {
-      var start = new Date(extent[0]);
-      var end = new Date(extent[1]);
-      // Normalize dates
-      start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-      end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-      hgram = hgramEvo.range(start, end);
-      // Filter dates
-      dates = dates.filter(function (date) {
-        return start <= date && date <= end;
-      });
-      // Report it the first time the date-range selector is used in a session
-      if (!hasReportedDateRangeSelectorUsedInThisSession) {
-	     hasReportedDateRangeSelectorUsedInThisSession = true;
-       event('report', 'date-range-selector', 'used-in-session', 1);
-      }
-    } else {
-      hgram = hgramEvo.range();
-    }
-
-    _exportHgram = hgram;
-
-    dateFormat = d3.time.format('%Y/%m/%d');
-    var dateRange = "";
-    if (dates.length == 0) {
-      dateRange = "None";
-    } else if (dates.length == 1) {
-      dateRange = dateFormat(dates[0]);
-    } else {
-      var last = dates.length - 1;
-      dateRange = dateFormat(dates[0]) + " to " + dateFormat(dates[last]);
-    }
-
-    // Set common properties
-    $('#prop-kind').text(hgram.kind());
-    $('#prop-submissions').text(fmt(hgram.submissions()));
-    $('#prop-count').text(fmt(hgram.count()));
-    $('#prop-dates').text(d3.format('s')(dates.length));
-    $('#prop-date-range').text(dateRange);
-
-    // Set linear only properties
-    if (hgram.kind() == 'linear') {
-      $('#prop-mean').text(fmt(hgram.mean()));
-      $('#prop-standardDeviation').text(fmt(hgram.standardDeviation()));
-    }
-
-    // Set exponential only properties
-    if (hgram.kind() == 'exponential') {
-      $('#prop-mean2').text(fmt(hgram.mean()));
-      $('#prop-geometricMean').text(fmt(hgram.geometricMean()));
-      $('#prop-geometricStandardDeviation').text(fmt(hgram.geometricStandardDeviation()));
-    }
-
-    // Set percentiles if linear or exponential
-    if (hgram.kind() == 'linear' || hgram.kind() == 'exponential') {
-      $('#prop-p5').text(fmt(hgram.percentile(5)));
-      $('#prop-p25').text(fmt(hgram.percentile(25)));
-      $('#prop-p50').text(fmt(hgram.percentile(50)));
-      $('#prop-p75').text(fmt(hgram.percentile(75)));
-      $('#prop-p95').text(fmt(hgram.percentile(95)));
-    }
-
-    if (renderHistogramTime) {
-      clearTimeout(renderHistogramTime);
-    }
-    renderHistogramTime = setTimeout(function () {
-      var renderType = $('input[name=render-type]:radio:checked').val();
-      if (renderType == 'Table') {
-        renderHistogramTable(hgram);
-      } else {
-        renderHistogramGraph(hgram);
-      }
-    }, 100);
-  }
-
-  nv.addGraph(function () {
-    //top was 10
-    var focusChart = evolutionchart().margin({
-      top: 10,
-      right: 80,
-      bottom: 40,
-      left: 80
-    });
-
-    focusChart.xAxis.tickFormat(function (d) {
-      return d3.time.format('%Y/%m/%d')(new Date(d));
-    });
-    focusChart.x2Axis.tickFormat(function (d) {
-      return d3.time.format('%Y/%m/%d')(new Date(d));
-    });
-    focusChart.y1Axis.tickFormat(fmt);
-    focusChart.y2Axis.tickFormat(fmt);
-    focusChart.y3Axis.tickFormat(fmt);
-    focusChart.y4Axis.tickFormat(fmt);
-
-    // Fix nvd3 bug: addGraph called on a non-empty svg breaks tooltips.
-    // Clear the svg to avoid this.
-    $("#evolution").empty();
-    d3.select("#evolution").datum(cDatas).call(focusChart);
-    nv.utils.windowResize(function () { focusChart.update(); });
-    focusChart.setSelectionChangeCallback(updateProps);
-
-    labels = unique(labels);
-
-    setAggregateSelectorOptions(labels, function () {
+  selector.multiselect({
+    includeSelectAllOption: true,
+    onChange : function(option, checked) {
+      selector.multiselect("updateSelectAll");
+      if(option.is(':selected')) { event('click', 'aggregates_options', labels.join('/')); }
       updateDisabledAggregates();
-      focusChart.update();
-    }, true);
-
-    updateUrlHashIfNeeded();
+      updateRendering(hgramEvo, lines, start, end);
+      updateUrlHashIfNeeded();
+    }
   });
-
-  updateProps();
+  var selected = urlHashToPageState(window.location.hash).aggregates || ["median"];
+  selector.val(selected).multiselect("rebuild");
+  
+  updateDisabledAggregates();
+  updateRendering(hgramEvo, lines, start, end);
+  updateUrlHashIfNeeded();
 }
-
-
-  
-  
-  
