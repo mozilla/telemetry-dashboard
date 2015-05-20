@@ -299,10 +299,6 @@ function updateUrlHashIfNeeded() {
     return;
   }
 
-  if (anyHsLoading()) {
-    return;
-  }
-
   var pageState = getPageState();
   if (window.location.hash.split("#")[1] === pageStateToUrlHash(pageState)) {
     return;
