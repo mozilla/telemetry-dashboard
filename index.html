@@ -71,7 +71,7 @@
                                     <label>Show data from:</label>
                                     <div class="input-prepend input-group">
                                         <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
-                                        <input type="text" style="width: 400px" name="dateRange" id="dateRange" class="form-control"/>
+                                        <input type="text" style="width: 400px" name="dateRange" id="dateRange" class="form-control date-range"/>
                                     </div>
                                 </div>
                             </div>
@@ -89,6 +89,7 @@
                                     <th>Start</th>
                                     <th>End</th>
                                     <th>Count</th>
+                                    <th>Percentage</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -275,7 +276,8 @@
     <script src="lib/select2.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
-        $('.select2').select2();
+        $(".select2").select2();
+        $(".date-range").daterangepicker();
       });
     </script>
 

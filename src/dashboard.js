@@ -141,11 +141,12 @@ function prepareData(state, hgramEvo) {
   return data;
 }
 
-// Format a state string like "release/28/WINNT/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
+// Format a state string like "release/28/saved_session/Firefox/Linux" into a friendlier name like "release 28: Firefox (Linux)"
 function formatState(stateString) {
   var stateFilterNames = ["type", "version", "measure", "reason", "product", "OS", "osVersion", "arch"];
-  var parts = stateString.split("/").map(function(component, i) {
-    return gHistogramFilterObjects[0].histogramfilter("formatOption", stateFilterNames[i], component);
+  var parts = stateString.split("/");
+  var parts = parts.map(function(component, i) {
+    return gHistogramFilterObjects[0].histogramfilter("formatOption", stateFilterNames[i], component, parts[2] !== undefined ? parts[2] : null);
   });
   return parts[0] + " " + parts[1] +
     ", " + parts[4] + (parts[7] ? " " + parts[7] : "") +
@@ -256,11 +257,6 @@ function restoreFromPageState(newPageState, curPageState) {
       var y = x.join("/")
       $("#measure").text(y);
     }
-  }
-
-  if (newPageState.aggregates !== undefined) {
-    setAggregateSelectorOptions(newPageState.aggregates, function() {
-    }, false);
   }
   return true;
 }
@@ -407,65 +403,6 @@ function syncStateWithFirst() {
   $('#measure').show();
 }
 
-//construct selector and set selected aggregates
-function setAggregateSelectorOptions(options, changeCb, defaultToAll) {
-  if (options.length === 0) {
-    return;
-  }
-
-  var prevOptions = [];
-  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
-  var prevSelected = $("#aggregateSelector").multiselect("getSelected").val() || [];
-  // Find the intersection of the previously selected and the valid options so
-  // we don't get an error trying to select non-existent options for a probe.
-  var optionsToSelect = prevSelected.filter(function(prevOption) {
-    return options.indexOf(prevOption) !== -1;
-  });
-  var selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
-
-  if (!multisetEqual(prevOptions, options)) {
-    $('#multipercentile').empty().append(selector);
-    var n = options.length;
-    for (var i = 0; i < n; i++) {
-      var option = options[i];
-      // Add <option> to the aggregate selector
-      selector.append($("<option>", {text: option, value: option}));
-    }
-    var allOptions = options.join('/');
-    event('click', 'aggregates_options', allOptions);
-  }
-
-  selector.multiselect({
-    includeSelectAllOption: true,
-    onChange : function(option, checked) {
-      selector.multiselect("updateSelectAll");
-      if(option.is(':selected')) {
-        event('click', 'aggregates_options', allOptions);
-      }
-      changeCb();
-      updateUrlHashIfNeeded();
-    }
-  });
-
-  if (prevOptions.length === 0) {
-    // first time drawing the selector.
-    selector.multiselect("select", options);
-    if (defaultToAll) {
-      selector.multiselect("updateSelectAll");
-    }
-  } else {
-    // updating existing selector.
-    if (prevSelected.indexOf("multiselect-all") !== -1) {
-      selector.multiselect("select", options);
-      selector.multiselect("updateSelectAll");
-    } else {
-      selector.multiselect("select", optionsToSelect);
-    }
-  }
-  changeCb();
-  updateUrlHashIfNeeded();
-}
-
 // Entry point
 Telemetry.init(function () {
   var urlPageState = urlHashToPageState(window.location.hash);
@@ -479,7 +416,7 @@ Telemetry.init(function () {
       restoreFromPageState(pgState, {});
     } else {
       // Could not restore from either url or cookie => create a default hs filter.
-      addHistogramFilter(true, null); //  first filter
+      addHistogramFilter(true, "nightly/40/GC_MS/saved_session/Firefox"); //  first filter
       changeLockButton(true);  // default: locked
     }
 
@@ -517,8 +454,6 @@ Telemetry.init(function () {
     $('.single-histogram-only').hide();
     $('#description').hide();
   }
-  
-  $("#dateRange").daterangepicker();
   
   // Add series button
   $("#addVersionButton").click(function () {
@@ -734,6 +669,7 @@ function addHistogramFilter(firstHistogramFilter, state) {
       nightlies.sort();
       return nightlies.pop() || versions.sort().pop();
     },
+    defaultMeasure: "SIMPLE_MEASURES_FIRSTPAINT",
     selectorType: CustomSelector,
     locked: locked,
     state: state,
@@ -774,7 +710,11 @@ function renderHistogramTable(hgram) {
   body.empty();
   Telemetry.doAsync("Histogram_count", hgram, [], function(hgram, total) {
     body.append.apply(body, hgram.map(function (count, start, end, index) {
-      return $('<tr>').append($('<td>').text(fmt(start))).append($('<td>').text(fmt(end))).append($('<td>').text(fmt(count)));
+      return $('<tr>')
+        .append($('<td>').text(fmt(start)))
+        .append($('<td>').text(fmt(end)))
+        .append($('<td>').text(fmt(count)))
+        .append($('<td>').text(Math.round(100 * count / total) + "%"));
     }));
   });
 }
@@ -866,7 +806,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     multiTooltipTemplate: function(valuesObject) {
       return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
-    bezierCurveTension: 0.3,
+    bezierCurve: false,
     pointDotStrokeWidth: 0,
     pointDotRadius: 3,
   });
@@ -973,7 +913,7 @@ function updateRendering(hgramEvo, lines, start, end) {
 
 var gLastHistogramEvos = null;
 var gLineColors = {};
-var gGoodColors = ["aqua", "orange", "purple", "red", "yellow", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
+var gGoodColors = ["aqua", "orange", "purple", "red", "teal", "fuchsia", "gray", "green", "lime", "maroon", "navy", "olive", "silver", "black", "blue"];
 var gGoodColorIndex = 0;
 function update(hgramEvos) {
   // Obtain a list of histogram evolutions (histogram series)
@@ -1062,9 +1002,31 @@ function update(hgramEvos) {
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
   
-  setAggregateSelectorOptions(labels, function() {
-    updateDisabledAggregates();
-    updateRendering(hgramEvo, lines, start, end);
-  }, true);
+  // Select just the median if available, otherwise select all the available options
+  var prevOptions = [];
+  $("#aggregateSelector option").each(function() { prevOptions.push($(this).val()); });
+  var selector;
+  if (!multisetEqual(prevOptions, labels)) {
+    selector = $("<select multiple id=aggregateSelector class='selectorPadding'>");
+    $('#multipercentile').empty().append(selector);
+    labels.forEach(function(option) { selector.append($("<option>", {text: option, value: option})); });
+    event('click', 'aggregates_options', labels.join('/'));
+  } else { selector = $("#aggregateSelector"); }
+
+  selector.multiselect({
+    includeSelectAllOption: true,
+    onChange : function(option, checked) {
+      selector.multiselect("updateSelectAll");
+      if(option.is(':selected')) { event('click', 'aggregates_options', labels.join('/')); }
+      updateDisabledAggregates();
+      updateRendering(hgramEvo, lines, start, end);
+      updateUrlHashIfNeeded();
+    }
+  });
+  var selected = urlHashToPageState(window.location.hash).aggregates || ["median"];
+  selector.val(selected).multiselect("rebuild");
+  
+  updateDisabledAggregates();
+  updateRendering(hgramEvo, lines, start, end);
   updateUrlHashIfNeeded();
 }
