@@ -107,14 +107,7 @@ function prepareData(state, hgramEvo) {
           });
         });
       } else {
-        // Histogram doesn't have enough submissions, so set everything to zero to keep the graphs looking nice
-        means.push({x: date, y: 0});
-        [5, 25, 50, 75, 95].forEach(function (p) {
-          ps[p].push({
-            x: date,
-            y: 0
-          });
-        });
+        // Histogram doesn't have enough submissions, so ignore these points entirely
       }
     });
     data.push({
@@ -306,10 +299,6 @@ function updateUrlHashIfNeeded() {
     return;
   }
 
-  if (anyHsLoading()) {
-    return;
-  }
-
   var pageState = getPageState();
   if (window.location.hash.split("#")[1] === pageStateToUrlHash(pageState)) {
     return;
@@ -457,10 +446,10 @@ Telemetry.init(function () {
   
   // Add series button
   $("#addVersionButton").click(function () {
-    var state = null;
+    var state = "nightly/40/SIMPLE_MEASURES_FIRSTPAINT/saved_session/Firefox";
     event('click', 'addVersion', 'addVersion');
     if (gHistogramFilterObjects.length != 0) {
-      state = gHistogramFilterObjects[0].histogramfilter('state');
+      state = gHistogramFilterObjects[gHistogramFilterObjects.length - 1].histogramfilter('state');
     }
     addHistogramFilter(false, state);
     gSingleSeriesMode = false;
