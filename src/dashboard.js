@@ -935,17 +935,19 @@ function update(hgramEvos) {
     // Create new series with updated fields for each entry
     var futureCutoff = moment().add(1, "years").valueOf();
     series = $.map(series, function(entry, i) {
+      var key = formatState(state) + ": " +  entry.key;
+    
       // Update the bounds properly
-      if (point.x >= futureCutoff) {
-        console.log("Bad point; timestamp is far into the future: " + point.x);
-        continue;
-      }
       entry.values.forEach(function(point) {
-        if (start === null || point.x < start) {
-          start = point.x;
-        }
-        if (end === null || point.x > end) {
-          end = point.x;
+        if (point.x >= futureCutoff) {
+          console.log("Bad point; timestamp is far into the future: " + point.x + " (from series " + key + ")");
+        } else {
+          if (start === null || point.x < start) {
+            start = point.x;
+          }
+          if (end === null || point.x > end) {
+            end = point.x;
+          }
         }
       });
       
@@ -954,7 +956,6 @@ function update(hgramEvos) {
         gGoodColorIndex = (gGoodColorIndex + 1) % gGoodColors.length;
         gLineColors[state + "\n" + entry.key] = gGoodColors[gGoodColorIndex];
       }
-      var key = formatState(state) + ": " +  entry.key;
       return $.extend({}, entry, {
         color: gLineColors[state + "\n" + entry.key],
         fullState: state,
