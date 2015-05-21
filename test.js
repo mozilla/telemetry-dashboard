@@ -300,6 +300,7 @@ function clearEvolutionLines() {
 }
 function addEvolutionLine(line) {
   gCurrentEvolutionLines.push(line);
+  refreshEvolutionLines();
   
   // Add the new line element
   var lineElement = $(
@@ -317,8 +318,8 @@ function addEvolutionLine(line) {
     selectEvolutionLine(lineElements.index($this));
   });
   lineElement.find(".evolution-line-remove").click(function(event) {
-    var $this = $(this);
-    var lineElements = $this.parent().find(".evolution-line");
+    var $this = $(this).parents(".evolution-line").first();
+    var lineElements = $("#evolution-line-list .evolution-line");
     removeEvolutionLine(lineElements.index($this));
     saveStateToUrlAndCookie();
     event.stopPropagation();
@@ -328,9 +329,21 @@ function addEvolutionLine(line) {
   refreshEvolutionLine(index);
   if (index === 0) { selectEvolutionLine(0); }
 }
+function refreshEvolutionLines() {
+  var selectableLineTitles = {};
+  gCurrentEvolutionLines.forEach(function(line) {
+    var key = line.measure + " - " + line.channelVersion.replace("/", " ");
+    selectableLineTitles[key] = true;
+  });
+  var options = Object.keys(selectableLineTitles).sort();
+  $("#selected-line").empty().append(options.map(function(option, i) {
+      return '<option value="' + i + '">' + option + '</option>';
+  }).join()).trigger("change");
+}
 function refreshEvolutionLine(evolutionLineIndex) {
+  refreshEvolutionLines();
   var line = gCurrentEvolutionLines[evolutionLineIndex];
-
+  
   // Set the line label
   var label = line.getTitleString();
   var lineElement = $($("#evolution-line-list .evolution-line").get(evolutionLineIndex));
@@ -363,8 +376,13 @@ function refreshEvolutionLine(evolutionLineIndex) {
   });
 }
 function removeEvolutionLine(evolutionLineIndex) {
+  var line = gCurrentEvolutionLines[evolutionLineIndex];
   gCurrentEvolutionLines.splice(evolutionLineIndex, 1);
-  $($("#evolution-line-list .evolution-line").get(evolutionLineIndex)).remove();
+  refreshEvolutionLines();
+  if (compareEvolutionLines(line, gSelectedEvolutionLine)) {
+    selectEvolutionLine(gCurrentEvolutionLines.length - 1);
+  }
+  var lineElement = $($("#evolution-line-list .evolution-line").get(evolutionLineIndex)).remove();
   displayHistogramEvolutions(gCurrentEvolutionLines);
 }
 function selectEvolutionLine(evolutionLineIndex) {
