@@ -936,16 +936,16 @@ function update(hgramEvos) {
     var futureCutoff = moment().add(1, "years").valueOf();
     series = $.map(series, function(entry, i) {
       // Update the bounds properly
-      if (point.x >= futureCutoff) {
-        console.log("Bad point; timestamp is far into the future: " + point.x);
-        continue;
-      }
       entry.values.forEach(function(point) {
-        if (start === null || point.x < start) {
-          start = point.x;
-        }
-        if (end === null || point.x > end) {
-          end = point.x;
+        if (point.x >= futureCutoff) {
+          console.log("Bad point; timestamp is far into the future: " + point.x);
+        } else {
+          if (start === null || point.x < start) {
+            start = point.x;
+          }
+          if (end === null || point.x > end) {
+            end = point.x;
+          }
         }
       });
       
