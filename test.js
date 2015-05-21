@@ -65,7 +65,7 @@ Telemetry.init(function () {
   // Export as CSV button
   var previousCSVBlob = null;
   $('#export-csv').click(function () {
-    if (gCurrentHistogram === null) {
+    if (gSelectedEvolutionLine === null) {
       return;
     }
     if (previousCSVBlob !== null) {
@@ -73,22 +73,24 @@ Telemetry.init(function () {
       previousCSVBlob = null;
     }
     
+    var histogram = gSelectedEvolutionLine.histogramEvolution.range();
+    
     // Generate CSV output
     var csv = "start,\tend,\tcount\n";
-    csv += gCurrentHistogram.map(function (count, start, end, index) {
+    csv += histogram.map(function (count, start, end, index) {
       return [start, end, count].join(",\t");
     }).join("\n");
 
     previousCSVBlob = URL.createObjectURL(new Blob([csv]));
     $('#export-csv')[0].href = previousCSVBlob;
-    $('#export-csv')[0].download = gCurrentHistogram.measure() + ".csv";
+    $('#export-csv')[0].download = histogram.measure() + ".csv";
     event('click', 'download csv', 'download csv');
   });
   
   // Export as JSON button
   var previousJSONBlob = null
   $('#export-json').click(function () {
-    if (gCurrentHistogram === null) {
+    if (gSelectedEvolutionLine === null) {
       return;
     }
     if (previousJSONBlob !== null) {
@@ -96,14 +98,16 @@ Telemetry.init(function () {
       previousJSONBlob = null;
     }
     
+    var histogram = gSelectedEvolutionLine.histogramEvolution.range();
+    
     // Generate JSON output
-    var result = JSON.stringify(gCurrentHistogram.map(function (count, start, end, index) {
+    var result = JSON.stringify(histogram.map(function (count, start, end, index) {
       return {"start": start, "end": end, "count": count};
     }));
 
     previousJSONBlob = URL.createObjectURL(new Blob([result]));
     $('#export-json')[0].href = previousJSONBlob;
-    $('#export-json')[0].download = gCurrentHistogram.measure() + ".json";
+    $('#export-json')[0].download = histogram.measure() + ".json";
     event('click', 'download json', 'download json');
   });
   
@@ -113,16 +117,17 @@ Telemetry.init(function () {
   loadStateFromUrlAndCookie();
 });
 
-function displayHistogram(histogram) {
+function displayHistogramEvolutionLineHistogram(line) {
   // Compute chart data values
-  var total = hgram.count();
+  var histogram = line.histogramEvolution.range();
+  var total = histogram.count();
   var tooltipLabels = {};
-  var labels = hgram.map(function (count, start, end, index) {
+  var labels = histogram.map(function (count, start, end, index) {
     var label = formatNumber(start);
     tooltipLabels[label] = formatNumber(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
     return label;
   });
-  var data = hgram.map(function (count, start, end, index) { return count; });
+  var data = histogram.map(function (count, start, end, index) { return count; });
   
   // Plot the data using Chartjs
   var ctx = document.getElementById("histogram").getContext("2d");
@@ -151,6 +156,34 @@ function displayHistogram(histogram) {
     bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
   });
   gCurrentHistogramPlot.update();
+  
+  // Update summary for the first histogram evolution
+  var dates = line.histogramEvolution.dates();
+  $("#prop-kind").text(histogram.kind());
+  $("#prop-submissions").text(formatNumber(histogram.submissions()));
+  $("#prop-count").text(formatNumber(histogram.count()));
+  $("#prop-dates").text(formatNumber(dates.length));
+  $("#prop-date-range").text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
+    "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  if (histogram.kind() === "linear" || histogram.kind() === "exponential") {
+    if (histogram.kind() === "linear") {
+      $("#prop-mean").text(formatNumber(histogram.mean()));
+      $("#prop-standardDeviation").text(formatNumber(histogram.standardDeviation()));
+      $(".linear-only").show();
+    } else {
+      $("#prop-mean2").text(formatNumber(histogram.mean()));
+      $("#prop-geometricMean").text(formatNumber(histogram.geometricMean()));
+      $("#prop-geometricStandardDeviation").text(formatNumber(histogram.geometricStandardDeviation()));
+      $(".exponential-only").show();
+    }
+    $("#prop-p5").text(formatNumber(histogram.percentile(5)));
+    $("#prop-p25").text(formatNumber(histogram.percentile(25)));
+    $("#prop-p50").text(formatNumber(histogram.percentile(50)));
+    $("#prop-p75").text(formatNumber(histogram.percentile(75)));
+    $("#prop-p95").text(formatNumber(histogram.percentile(95)));
+  } else {
+    $(".linear-only, .exponential-only").hide();
+  }
 }
 
 function displayHistogramEvolutions(lines) {
@@ -160,7 +193,7 @@ function displayHistogramEvolutions(lines) {
   // Filter out the points that are outside of the time range
   var filteredDatasets = lines.map(function (line) {
     return {
-      label: line.key,
+      label: line.getTitleString() + " (" + line.getFilterString() + ")",
       strokeColor: line.color,
       data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
     };
@@ -178,10 +211,10 @@ function displayHistogramEvolutions(lines) {
     scaleLabel: function(valuesObject) { return formatNumber(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     multiTooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + valuesObject.argLabel;
+      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     bezierCurveTension: 0.3,
     pointDotStrokeWidth: 0,
@@ -324,6 +357,9 @@ function refreshEvolutionLine(evolutionLineIndex) {
       return {x: date, y: value};
     });
     displayHistogramEvolutions(gCurrentEvolutionLines);
+    
+    // Refresh the histogram display if the current line is the selected one
+    if (compareEvolutionLines(gSelectedEvolutionLine, line)) { displayHistogramEvolutionLineHistogram(line); }
   });
 }
 function removeEvolutionLine(evolutionLineIndex) {
@@ -360,7 +396,32 @@ function selectEvolutionLine(evolutionLineIndex) {
   $("#line-channel-version").val(line.channelVersion).trigger("change");
   $("#line-aggregate").val(line.aggregate).trigger("change");
 }
+function compareEvolutionLines(line1, line2) { // Returns true if two evolution lines have the same histogram
+  if (line1.measure !== line2.measure || line1.channelVersion !== line2.channelVersion) { return false; }
+  var keys1 = Object.keys(line1.filters).sort(), keys2 = Object.keys(line2.filters).sort();
+  if (keys1.length !== keys2.length) { return false; }
+  var equal = true;
+  keys1.forEach(function(key1, i) {
+    if (key1 !== keys2[i]) { equal = false; }
+    else {
+      var values1 = line1.filters[key1].sort();
+      var values2 = line2.filters[keys2[i]].sort();
+      if (values1.length !== values2.length) { equal = false; }
+      else {
+        values1.forEach(function(value1, i) {
+          if (value1 !== values2[i]) { equal = false; }
+        });
+      }
+    }
+  });
+  return equal;
+}
 
+function unique(array) {
+  var keySet = {};
+  array.forEach(function(value) { keySet[value] = true; });
+  return Object.keys(keySet).sort();
+}
 
 // Trigger a Google Analytics event
 function event() {
