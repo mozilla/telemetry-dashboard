@@ -773,13 +773,30 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   var drawnLines = lines.filter(function(line) { return !line.disabled; });
   
   // Filter out the points that are outside of the time range
+  var minX = maxDate, maxX = minDate, minY = Infinity, maxY = -Infinity;
   var filteredDatasets = drawnLines.map(function (line) {
     return {
       label: line.key,
       strokeColor: line.color,
-      data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
+      data: line.values.filter(function(point) {
+        return point.x >= minDate && point.x <= maxDate;
+      }).map(function(point) {
+        if (point.x < minX) { minX = point.x; }
+        if (point.x > maxX) { maxX = point.x; }
+        if (point.y < minY) { minY = point.y; }
+        if (point.y > maxY) { maxY = point.y; }
+        return point;
+      }),
     };
-  })
+  });
+  
+  // Add a fake series to expand the bounds a bit, which makes the chart look nicer when the timescale is small (within a day or so)
+  filteredDatasets.push({
+      data: [{x: minX - 1000, y: minY}, {x: maxX + 1000, y: maxY}],
+      strokeColor: "rgba(0, 0, 0, 0)",
+      pointColor: "rgba(0, 0, 0, 0)",
+      pointStrokeColor: "rgba(0, 0, 0, 0)",
+  });
   
   // Plot the data using Chartjs
   if (gCurrentHistogramEvolutionPlots !== null) {
@@ -793,9 +810,11 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
+      if (valuesObject.datasetLabel === null) { return "Endpoint: " + moment(valuesObject.arg).format("MMM D, YYYY"); }
       return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     multiTooltipTemplate: function(valuesObject) {
+      if (valuesObject.datasetLabel === null) { return "Endpoint: " + moment(valuesObject.arg).format("MMM D, YYYY"); }
       return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
     },
     bezierCurve: false,
