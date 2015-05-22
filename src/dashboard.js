@@ -773,7 +773,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   var drawnLines = lines.filter(function(line) { return !line.disabled; });
   
   // Filter out the points that are outside of the time range
-  var minX = maxDate, maxX = minDate;
+  var minX = maxDate, maxX = minDate, minY = Infinity, maxY = -Infinity;
   var filteredDatasets = drawnLines.map(function (line) {
     return {
       label: line.key,
@@ -783,6 +783,8 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
       }).map(function(point) {
         if (point.x < minX) { minX = point.x; }
         if (point.x > maxX) { maxX = point.x; }
+        if (point.y < minY) { minY = point.y; }
+        if (point.y > maxY) { maxY = point.y; }
         return point;
       }),
     };
@@ -790,7 +792,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   
   // Add a fake series to expand the bounds a bit, which makes the chart look nicer when the timescale is small (within a day or so)
   filteredDatasets.push({
-      data: [{x: minX - 1000, y: 2798}, {x: maxX + 1000, y: 2798}],
+      data: [{x: minX - 1000, y: minY}, {x: maxX + 1000, y: maxY}],
       strokeColor: "rgba(0, 0, 0, 0)",
       pointColor: "rgba(0, 0, 0, 0)",
       pointStrokeColor: "rgba(0, 0, 0, 0)",
