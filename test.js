@@ -111,6 +111,29 @@ Telemetry.init(function () {
     event('click', 'download json', 'download json');
   });
   
+  // Callbacks for selection changed
+  var filterMapping = {
+    "#line-filter-OS": "OS",
+    "#line-filter-osVersion" : "osVersion",
+    "#line-filter-product": "product",
+    "#line-filter-arch": "arch",
+  };
+  for (var filterSelector in filterMapping) {
+    var $this = $(filterSelector), filterName = filterMapping[filterSelector];
+    $(filterSelector).change((function($this, filterName) {
+      return function() {
+        var selection = ($this.val() || []).filter(function(selection) { return selection != "multiselect-all" });
+        var optionCount = $this.find("option").length - 1; // Number of options, not including the "Select All" option
+        if (selection.length == optionCount) { // All options selected, clear filter
+          delete gSelectedEvolutionLine.filters[filterName];
+        } else {
+          gSelectedEvolutionLine.filters[filterName] = selection;
+        }
+        refreshEvolutionLine(gCurrentEvolutionLines.indexOf(gSelectedEvolutionLine));
+      };
+    })($this, filterName));
+  }
+  
   $("#spinner").hide();
   $(".container, .container-fluid").show();
   
@@ -420,13 +443,15 @@ function selectEvolutionLine(evolutionLineIndex) {
     "osVersion": $("#line-filter-osVersion"),
     "product": $("#line-filter-product"),
     "arch": $("#line-filter-arch"),
-  }
+  };
   for (var filterName in filterMapping) {
     var element = filterMapping[filterName];
     if (filterName in line.filters) {
       element.multiselect("select", line.filters[filterName]);
-    } else { // Select all options
-      element.multiselect("select", element.find("option").map(function(i, option) { return $(option).val(); }));
+    } else { // Select all options (using "selectAll" is broken in the library)
+      element.multiselect("select", element.find("option")
+             .map(function(i, option) { return $(option).val(); })
+             .filter(function(i, option) { return option != "multiselect-all"; }).toArray());
     }
   }
 }
