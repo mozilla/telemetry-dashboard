@@ -337,13 +337,15 @@ $.widget("telemetry.histogramfilter", {
     "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   },
+  _ignoredOSNames: {"Windows_95": true, "Windows_98": true, "Windows_NT": true},
   _archNames: {"x86": "32-bit", "x86-64": "64-bit"},
   _getHumanReadableOptions: function histogramfilter__getHumanReadableOptions(filterName, options, os) {
     if (filterName === "OS") {
       // Replace OS names with pretty OS names where possible
       var systemNames = this._systemNames;
+      var ignoredNames = this._ignoredOSNames;
       return options.filter(function(option) {
-        return option !== "Windows_95" && option !== "Windows_NT"; // Ignore the OSs for old, non-unified pings
+        return !ignoredNames.hasOwnProperty(option); // Ignore the OSs for old, non-unified pings
       }).map(function(option) {
         return systemNames.hasOwnProperty(option) ? systemNames[option] : option;
       });
