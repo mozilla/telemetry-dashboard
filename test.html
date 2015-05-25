@@ -84,21 +84,21 @@
                         <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
                         <input type="text" id="dateRange" class="form-control daterange"/>
                     </div>
-                    <select id="line-filter-OS" class="multiselect" multiple title="OS">
+                    <select id="line-filter-OS" class="multiselect" multiple title="OS" data-all-selected="Any OS">
                         <option value="WINNT">Windows</option>
                         <option value="Linux">Linux</option>
                         <option value="Darwin">OS X</option>
                     </select>
-                    <select id="line-filter-osVersion" class="multiselect" multiple title="OS Version">
+                    <select id="line-filter-osVersion" class="multiselect" multiple title="OS Version" data-all-selected="Any Version">
                         <option value="10.0">10</option>
                         <option value="6.2">8.1</option>
                         <option value="6.1">8</option>
                     </select>
-                    <select id="line-filter-product" class="multiselect" multiple title="Product">
+                    <select id="line-filter-product" class="multiselect" multiple title="Product" data-all-selected="Any Product">
                         <option value="Firefox">Firefox</option>
                         <option value="Fennec">Fennec</option>
                     </select>
-                    <select id="line-filter-arch" class="multiselect" multiple title="Product Type">
+                    <select id="line-filter-arch" class="multiselect" multiple title="Product Type" data-all-selected="Any Build">
                         <option value="x86">32-bit</option>
                         <option value="x86-64">64-bit</option>
                     </select>
@@ -246,6 +246,7 @@
                 enableFiltering: true,
                 enableCaseInsensitiveFiltering: true,
                 includeSelectAllOption: true,
+                allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
             };
             if ($this.attr("title") !== undefined) {
                 options.nonSelectedText = $this.attr("title");

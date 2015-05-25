@@ -413,6 +413,22 @@ function selectEvolutionLine(evolutionLineIndex) {
   });
   $("#line-channel-version").val(line.channelVersion).trigger("change");
   $("#line-aggregate").val(line.aggregate).trigger("change");
+  
+  // Load filters
+  var filterMapping = {
+    "OS": $("#line-filter-OS"),
+    "osVersion": $("#line-filter-osVersion"),
+    "product": $("#line-filter-product"),
+    "arch": $("#line-filter-arch"),
+  }
+  for (var filterName in filterMapping) {
+    var element = filterMapping[filterName];
+    if (filterName in line.filters) {
+      element.multiselect("select", line.filters[filterName]);
+    } else { // Select all options
+      element.multiselect("select", element.find("option").map(function(i, option) { return $(option).val(); }));
+    }
+  }
 }
 function compareEvolutionLines(line1, line2) { // Returns true if two evolution lines have the same histogram
   if (line1.measure !== line2.measure || line1.channelVersion !== line2.channelVersion) { return false; }
