@@ -405,7 +405,11 @@ Telemetry.init(function () {
       restoreFromPageState(pgState, {});
     } else {
       // Could not restore from either url or cookie => create a default hs filter.
-      addHistogramFilter(true, "nightly/40/GC_MS/saved_session/Firefox"); //  first filter
+      var nightlies = Telemetry.versions().sort().filter(function(version) {
+        return version.startsWith("nightly/")
+      });
+      var latest_nightly = nightlies[nightlies.length - 1];
+      addHistogramFilter(true, latest_nightly + "/GC_MS/saved_session/Firefox"); //  first filter
       changeLockButton(true);  // default: locked
     }
 
