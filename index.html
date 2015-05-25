@@ -43,16 +43,16 @@
         </h1>
     </header>
     <nav class="navbar navbar-default"  role="navigation">
-        <div class=" navbar-left">
-            <form id="histogram-filters" class=" navbar-form  form-inline " style= "margin: 3px;"></form>
+        <div class="navbar-left">
+            <form id="histogram-filters" class="navbar-form form-inline"></form>
+            <form class="navbar-form form-inline">
+              <button id="addVersionButton" type="button" class="btn btn-default" style="margin: 0 10px;">
+                <span class="glyphicon glyphicon-plus"></span> Add series
+              </button>
+            </form>
         </div>
-        <div class="navbar-form navbar-right">
-           <div id="addVersionButton">
-              <button type="button" class="btn btn-default" style="padding: 2px 7px;"><span class="glyphicon glyphicon-plus"></span>Add series</button>
-           </div>           
-           <div id ="multipercentile"></div>
-        </div>
-        <form id="histogram-filter" class=" navbar-form navbar-left form-inline">
+        <form class="navbar-right form-inline" style= "margin: 3px;">
+           <span id ="multipercentile"></span>
         </form>
     </nav>
     <section style="margin: 0px auto; width: 100%;" class="container">
