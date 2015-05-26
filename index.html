@@ -21,6 +21,9 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
     <script src="lib/Chart.Scatter.js"></script>
     
+    <script src="lib/elessar.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style/elessar.css" />
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style/dashboard.css">
     <link rel="stylesheet" href="style/select2.css">
@@ -65,15 +68,16 @@
                     
                     <!-- main evolution chart -->
                     <figure style="margin: 15px;"><canvas id="evolution"></canvas></figure>
-                    <form class="form-horizontal">
-                        <fieldset>
+                    <form class="form-inline">
                             <div class="control-group">
                                 <div class="controls">
-                                    <label>Show data from:</label>
-                                    <div class="input-prepend input-group">
-                                        <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
-                                        <input type="text" style="width: 400px" name="dateRange" id="dateRange" class="form-control date-range"/>
-                                    </div>
+                                    <span style="display: inline-block">
+                                      <span class="input-prepend input-group">
+                                          <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                                          <input type="text" style="width: 200px" name="dateRange" id="dateRange" class="form-control date-range"/>
+                                      </span>
+                                    </span>
+                                    <span id="range-bar" style="width: 450px; display: inline-block; margin: 2px"></span>
                                 </div>
                             </div>
                         </fieldset>

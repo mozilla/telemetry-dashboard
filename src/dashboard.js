@@ -7,6 +7,7 @@ var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
 var gCurrentHistogramPlot = null;
 var gCurrentHistogram = null;
+var gRangeBarControl = null;
 
 function event() {
   var args = Array.prototype.slice.call(arguments);
@@ -414,7 +415,6 @@ Telemetry.init(function () {
     }
 
     $('input[value="Graph"]').prop('checked',true);
-
   }
   
   $(window).bind("hashchange", function () {
@@ -870,6 +870,7 @@ function updateRendering(hgramEvo, lines, start, end) {
     }
     gUserSelectedRange = true;
     updateRendering(hgramEvo, lines, startMoment, endMoment);
+    gUserSelectedRange = false;
   });
   if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment)) {
     gUserSelectedRange = false;
@@ -879,6 +880,24 @@ function updateRendering(hgramEvo, lines, start, end) {
     picker.setEndDate(endMoment);
   }
   var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
+  
+  gRangeBarControl = RangeBar({
+    min: startMoment, max: endMoment.clone(),
+    maxRanges: 1,
+    valueFormat: function(ts) { return ts; },
+    valueParse: function(date) { return moment(date).valueOf(); },
+    label: function(a) { return moment(a[1]).from(a[0], true); },
+    snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
+  }).on("change", function(ev, ranges, changed) {
+    var range = gRangeBarControl.val()[0];
+    picker.setStartDate(moment(range[0]));
+    picker.setEndDate(moment(range[1]).subtract(1, "days"));
+    gUserSelectedRange = true;
+    updateRendering(hgramEvo, lines, start, end);
+    gUserSelectedRange = false;
+  });
+  $("#range-bar").empty().append(gRangeBarControl.$el);
+  gRangeBarControl.val([[moment(minDate), moment(maxDate)]]);
   
   var hgram;
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
