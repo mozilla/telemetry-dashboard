@@ -848,10 +848,16 @@ $('#export-link').mousedown(function () {
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gDrawTimer = null;
 var gUserSelectedRange = false;
+var gUserMovingRange = false;
+var gLastTimeoutID = null;
 function updateRendering(hgramEvo, lines, start, end) {
+  // Normalize the start and end intervals into unix millisecond timestamps
+  var startMoment = moment(start), endMoment = moment(end);
+  start = startMoment.toDate().getTime();
+  end = endMoment.toDate().getTime();
+
   // Update the start and end range and update the selection if necessary
   var picker = $("#dateRange").data("daterangepicker");
-  var startMoment = moment(start), endMoment = moment(end);
   picker.setOptions({
     format: "MM/DD/YYYY",
     minDate: startMoment,
@@ -881,23 +887,31 @@ function updateRendering(hgramEvo, lines, start, end) {
   }
   var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
   
-  gRangeBarControl = RangeBar({
-    min: startMoment, max: endMoment.clone(),
-    maxRanges: 1,
-    valueFormat: function(ts) { return ts; },
-    valueParse: function(date) { return moment(date).valueOf(); },
-    label: function(a) { return moment(a[1]).from(a[0], true); },
-    snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
-  }).on("change", function(ev, ranges, changed) {
-    var range = gRangeBarControl.val()[0];
-    picker.setStartDate(moment(range[0]));
-    picker.setEndDate(moment(range[1]).subtract(1, "days"));
-    gUserSelectedRange = true;
-    updateRendering(hgramEvo, lines, start, end);
-    gUserSelectedRange = false;
-  });
-  $("#range-bar").empty().append(gRangeBarControl.$el);
-  gRangeBarControl.val([[moment(minDate), moment(maxDate)]]);
+  // Rebuild rangebar if it was changed by something other than the user
+  if (!gUserMovingRange) {
+    gRangeBarControl = RangeBar({
+      min: startMoment, max: endMoment.clone(),
+      maxRanges: 1,
+      valueFormat: function(ts) { return ts; },
+      valueParse: function(date) { return moment(date).valueOf(); },
+      label: function(a) { return moment(a[1]).from(a[0], true); },
+      snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
+    }).on("changing", function(ev, ranges, changed) {
+      if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
+      gLastTimeoutID = setTimeout(function() {
+        var range = gRangeBarControl.val()[0];
+        picker.setStartDate(moment(range[0]));
+        picker.setEndDate(moment(range[1]).subtract(1, "days"));
+        gUserSelectedRange = true;
+        gUserMovingRange = true;
+        updateRendering(hgramEvo, lines, start, end);
+        gUserMovingRange = false;
+        gUserSelectedRange = false;
+      }, 200);
+    });
+    $("#range-bar").empty().append(gRangeBarControl.$el);
+    gRangeBarControl.val([[moment(minDate), moment(maxDate)]]);
+  }
   
   var hgram;
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
