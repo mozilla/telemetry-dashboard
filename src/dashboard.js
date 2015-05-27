@@ -898,8 +898,8 @@ function updateRendering(hgramEvo, lines, start, end) {
       snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
     }).on("changing", function(ev, ranges, changed) {
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
+      var range = ranges[0];
       gLastTimeoutID = setTimeout(function() {
-        var range = gRangeBarControl.val()[0];
         picker.setStartDate(moment(range[0]));
         picker.setEndDate(moment(range[1]).subtract(1, "days"));
         gUserSelectedRange = true;
