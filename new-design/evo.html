@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Evolution Dashboard</title>
+    
+    <!-- Bootstrap and supporting libraries -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
+    
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <h1>Evolution Dashboard</h1>
+        </header>
+        <div class="row">
+            <div class="col-md-10">
+                <h2 style="font-size: 14px">
+                    <select id="aggregates" class="multiselect" title="Aggregate type" multiple>
+                        <option value="median">Median</option>
+                        <option value="mean">Mean</option>
+                        <option value="5th-percentile">5th percentile</option>
+                        <option value="25th-percentile">25th percentile</option>
+                        <option value="75th-percentile">75th percentile</option>
+                        <option value="95th-percentile">95th percentile</option>
+                    </select>
+                    <select id="measure" class="select2" title="Value being measured">
+                        <option data-subtext="Time spent running JS GC (ms)">GC_MS</option>
+                        <option data-subtext="Time spent running JS GC mark phase (ms)">GC_MARK_MS</option>
+                    </select>
+                    from
+                    <select id="min-channel-version" class="select2" title="Minimum build version" style="width: 120px">
+                        <option value="nightly/38">nightly 38</option>
+                        <option value="nightly/39">nightly 39</option>
+                        <option value="nightly/40">nightly 40</option>
+                    </select>
+                    to
+                    <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px">
+                        <option value="nightly/38">nightly 38</option>
+                        <option value="nightly/39">nightly 39</option>
+                        <option value="nightly/40">nightly 40</option>
+                    </select>
+                    for
+                    <select id="filter-product" class="multiselect" title="Product name" multiple>
+                        <option value="Firefox">Firefox</option>
+                        <option value="Fennec">Fennec</option>
+                    </select>
+                    <select id="filter-arch" class="multiselect" title="Product architecture" multiple>
+                        <option value="x86">32-bit</option>
+                        <option value="x86-64">64-bit</option>
+                    </select>
+                    on
+                    <select id="filter-os" class="multiselect" title="Target OS" multiple>
+                        <option value="WINNT">Windows</option>
+                        <option value="Linux">Linux</option>
+                        <option value="Darwin">OS X</option>
+                    </select>
+                    <select id="filter-os-version" class="multiselect" title="Target OS version" multiple>
+                        <option value="10.0">10</option>
+                        <option value="6.3">8.1</option>
+                        <option value="6.2">8</option>
+                        <option value="6.1">7</option>
+                    </select>
+                </h2>
+                <figure class="col-md-12">
+                    <canvas id="evolutions"></canvas>
+                    <canvas id="submissions"></canvas>
+                </figure>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap and supporting libraries -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    
+    <!-- Chartjs -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="lib/Chart.Scatter.js"></script>
+    
+    <!--
+        big.js and telemetry.js from telemetry.mozilla.org
+        if you're not deploying to telemetry.mozilla.org you must include these
+        from:
+            - telemetry.mozilla.org/v1/big.js
+            - telemetry.mozilla.org/v1/telemetry.js
+        (we'll try to keep it backwards compatible)
+    -->
+    <script src="v1/big.js"></script>
+    <script src="v1/telemetry.js"></script>
+    
+    <!-- Initialize controls -->
+    <script type="text/javascript">
+    $(document).ready(function() {
+        // Select boxes
+        $(".select2").select2();
+        
+        // Multiselect boxes
+        $('.multiselect').each(function(i, select) {
+            var $this = $(this);
+            var options = {
+                enableFiltering: true,
+                enableCaseInsensitiveFiltering: true,
+                includeSelectAllOption: true,
+                allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
+            };
+            if ($this.attr("title") !== undefined) {
+                options.nonSelectedText = $this.attr("title");
+            }
+            $this.multiselect(options);
+        });
+        // Date range pickers
+        $(".daterange").daterangepicker();
+    });
+    </script>
+    <script src="evo.js"></script>
+</body>
+</html>

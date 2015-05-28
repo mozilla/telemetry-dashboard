@@ -8,7 +8,7 @@ $(".container, .container-fluid").hide(); // Hide the content until the page is 
 
 // Entry point
 Telemetry.init(function () {
-  $(window).bind("hashchange", function () {
+  $(window).bind("hashchange", function() {
     $("#permalink-value").hide();
   });
   
@@ -264,7 +264,7 @@ function Line(measure, channelVersion, aggregate, dateRange, filters, values) {
   var stateString = this.getStateString();
   if (!lineColors.hasOwnProperty(stateString)) {
     goodColorIndex = (goodColorIndex + 1) % goodColors.length;
-    lineColors[stateString] = gGoodColors[goodColorIndex];
+    lineColors[stateString] = goodColors[goodColorIndex];
   }
   this.color = lineColors[stateString];
 }
@@ -308,7 +308,7 @@ Line.prototype.setStateString = function Line_setStateString(stateString) {
   
   if (!lineColors.hasOwnProperty(stateString)) {
     goodColorIndex = (goodColorIndex + 1) % goodColors.length;
-    lineColors[stateString] = gGoodColors[goodColorIndex];
+    lineColors[stateString] = goodColors[goodColorIndex];
   }
   this.color = lineColors[stateString];
   return this;
