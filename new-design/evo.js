@@ -6,8 +6,8 @@ Telemetry.init(function() {
   gFilterMapping = {
     "product":   $("#filter-product"),
     "arch":      $("#filter-arch"),
-    "OS":        $("#filter-os"),
-    "osVersion": $("#filter-os-version"),
+    "os":        $("#filter-os"),
+    "os_version": $("#filter-os-version"),
   };
 
   loadStateFromUrlAndCookie();
@@ -18,7 +18,10 @@ Telemetry.init(function() {
     calculateHistogramEvolutions();
   });
   $("#measure, #min-channel-version, #max-channel-version").change(calculateHistogramEvolutions);
-  for (var filterName in gFilterMapping) { gFilterMapping[filterName].change(calculateHistogramEvolutions); }
+  for (var filterName in gFilterMapping) {
+    gFilterMapping[filterName].change(calculateHistogramEvolutions);
+    //wip: rebuild all selects down the filter tree
+  }
   calculateHistogramEvolutions();
 });
 
@@ -52,18 +55,61 @@ function calculateHistogramEvolutions() {
   versions.forEach(function(version) {
     Telemetry.loadEvolutionOverBuilds(version, measure, function(histogramEvolution) {
       var filteredHistogramEvolution = histogramEvolution; //wip: filter using `filters`
-      aggregates.forEach(function(aggregate) {
-        var valueFunction = gAggregateValue[aggregate];
-        var values = filteredHistogramEvolution.map(function(date, hgram) {
-          return {x: date, y: valueFunction(hgram)};
+      
+      var evolutions = [histogramEvolution];
+      filterList = [
+        ["saved_session"],
+        ("product" in filters) ? filters["product"] : null,
+        ("os" in filters) ? filters["os"] : null,
+        ("os_version" in filters) ? filters["os_version"] : null,
+        ("arch" in filters) ? filters["arch"] : null,
+      ];
+      filterList.forEach(function(options, i) {
+        // stop filtering here if the remaining filters are all null
+        if (filterList.slice(i).filter(function(options) { return options !== null }).length == 0) {
+          return;
+        }
+        
+        if (evolutions.length == 0) { return; }
+        evolutions = Array.concat.apply([], evolutions.map(function(evolution) {
+          var actualOptions = options, fullOptions = evolution.filterOptions();
+          if (actualOptions === null) { actualOptions = fullOptions; }
+          actualOptions = actualOptions.filter(function(option) { return fullOptions.indexOf(option) >= 0 });
+          return actualOptions.map(function(option) { return evolution.filter(option); });
+        }));
+      })
+      gEvolutions = evolutions; // wip: debug
+      
+      // Sum up all the separate 
+      var dateDatasets = {};
+      var lastHistogram = null;
+      evolutions.forEach(function(evolution) {
+        evolution.each(function(date, hgram) {
+          var timestamp = date.getTime();
+          if (!(timestamp in dateDatasets)) { dateDatasets[timestamp] = []; }
+          dateDatasets[timestamp] = dateDatasets[timestamp].concat(hgram._dataset);
+          lastHistogram = hgram;
         });
-        var newLine = new Line(measure, version, aggregate, null, filters, values);
-        newLine.histogramEvolution = histogramEvolution
+      });
+      console.log(dateDatasets)
+      var aggregatePoints = {}
+      Object.keys(dateDatasets).sort().forEach(function(timestamp) {
+        var dataset = dateDatasets[timestamp];
+        var histogram = new Telemetry.Histogram(measure, lastHistogram._filter_path, lastHistogram._buckets, dataset, lastHistogram._filter_tree, lastHistogram._spec);
+        aggregates.forEach(function(aggregate) {
+          if (!(aggregate in aggregatePoints)) { aggregatePoints[aggregate] = [] }
+          aggregatePoints[aggregate].push({x: timestamp, y: gAggregateValue[aggregate](histogram)});
+        })
+      });
+      
+      for (aggregate in aggregatePoints) {
+        var newLine = new Line(measure, version, aggregate, null, filters, aggregatePoints[aggregate]);
+        newLine.histogramEvolution = histogramEvolution;
         lines.push(newLine);
         if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
           displayHistogramEvolutions(lines);
         }
-      });
+      }
     });
   })
 }
