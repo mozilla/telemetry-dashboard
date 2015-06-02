@@ -31,43 +31,17 @@
                         <option value="75th-percentile">75th percentile</option>
                         <option value="95th-percentile">95th percentile</option>
                     </select>
-                    <select id="measure" class="select2" title="Value being measured">
-                        <option data-subtext="Time spent running JS GC (ms)">GC_MS</option>
-                        <option data-subtext="Time spent running JS GC mark phase (ms)">GC_MARK_MS</option>
-                    </select>
+                    <select id="measure" class="select2" title="Value being measured" style="width: 15em"></select>
                     from
-                    <select id="min-channel-version" class="select2" title="Minimum build version" style="width: 120px">
-                        <option value="nightly/38">nightly 38</option>
-                        <option value="nightly/39">nightly 39</option>
-                        <option value="nightly/40">nightly 40</option>
-                    </select>
+                    <select id="min-channel-version" class="select2" title="Minimum build version" style="width: 120px"></select>
                     to
-                    <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px">
-                        <option value="nightly/38">nightly 38</option>
-                        <option value="nightly/39">nightly 39</option>
-                        <option value="nightly/40">nightly 40</option>
-                    </select>
+                    <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
                     for
-                    <select id="filter-product" class="multiselect" title="Product name" multiple>
-                        <option value="Firefox">Firefox</option>
-                        <option value="Fennec">Fennec</option>
-                    </select>
-                    <select id="filter-arch" class="multiselect" title="Product architecture" multiple>
-                        <option value="x86">32-bit</option>
-                        <option value="x86-64">64-bit</option>
-                    </select>
+                    <select id="filter-product" class="multiselect" title="Product name" multiple></select>
+                    <select id="filter-arch" class="multiselect" title="Product architecture" multiple></select>
                     on
-                    <select id="filter-os" class="multiselect" title="Target OS" multiple>
-                        <option value="WINNT">Windows</option>
-                        <option value="Linux">Linux</option>
-                        <option value="Darwin">OS X</option>
-                    </select>
-                    <select id="filter-os-version" class="multiselect" title="Target OS version" multiple>
-                        <option value="10.0">10</option>
-                        <option value="6.3">8.1</option>
-                        <option value="6.2">8</option>
-                        <option value="6.1">7</option>
-                    </select>
+                    <select id="filter-os" class="multiselect" title="Target OS" multiple></select>
+                    <select id="filter-os-version" class="multiselect" title="Target OS version" multiple></select>
                 </h2>
                 <figure class="col-md-12">
                     <canvas id="evolutions"></canvas>

@@ -3,24 +3,6 @@ var gVersions = null;
 var gMeasureMap = null;
 var gInitialPageState = null;
 
-function multiselectSelectAll(element) {
-  var options = element.find("option").map(function(i, option) { return $(option).val(); })
-    .filter(function(i, option) { return option != "multiselect-all"; }).toArray();
-  element.multiselect("select", options).multiselect("rebuild");
-}
-
-function multiselectSetOptions(element, options, defaultSelected = null) {
-  var selected = element.val() || defaultSelected;
-  element.empty().append(options.map(function(option) {
-    return '<option value="' + option + '">' + option + '</option>';
-  }).join());
-  if (selected !== null) { element.val(selected); }
-}
-
-function multiselectGetOptions(element) {
-  return (element.val() || []).filter(function (option) { return option !== "multiselect-all"; });
-}
-
 Telemetry.init(function() {
   gVersions = Telemetry.versions();
   gFilterMapping = {
@@ -33,26 +15,24 @@ Telemetry.init(function() {
   loadStateFromUrlAndCookie();
   
   // Set up the build selectors
-  multiselectSetOptions($("#min-channel-version, #max-channel-version"), gVersions)
+  selectSetOptions($("#min-channel-version, #max-channel-version"), gVersions.map(function(version) { return [version, version.replace("/", " ")] }));
   if (gInitialPageState.min_channel_version) { $("#min-channel-version").val(gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { $("#max-channel-version").val(gInitialPageState.max_channel_version); }
-  $("#min-channel-version, #max-channel-version").trigger("change")
-  
-  $("#min-channel-version, #max-channel-version").change(function() {
+  $("#min-channel-version, #max-channel-version").trigger("change").change(function() {
     var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
     var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
     gMeasureMap = {}, versionCount = 0;
-    versions.forEach(function(channelVersion) {
+    versions.forEach(function(channelVersion) { // Load combined measures for all the versions
       Telemetry.measures(channelVersion, function(measures) {
         versionCount ++;
         Object.keys(measures).forEach(function(measure) { gMeasureMap[measure] = measures[measure]; });
-        if (versionCount == versions.length) {
-          var measureList = Object.keys(gMeasureMap).sort();
-          multiselectSetOptions($("#measure"), measureList, gInitialPageState.measure);
-          $("#measure").trigger("change");
+        if (versionCount == versions.length) { // All versions are loaded
+          var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
+          selectSetOptions($("#measure"), measureList);
+          $("#measure").val(gInitialPageState.measure).trigger("change");
         }
       });
-    })
+    });
   });
   $("#measure").change(function() {
     // Figure out which aggregates actually apply to this measure
@@ -65,37 +45,15 @@ Telemetry.init(function() {
     }
     
     // Set the new aggregate options that apply to the current measure
-    var selected = $("#aggregates").val() || gInitialPageState.aggregates;
-    $("#aggregates").empty().append(options.map(function(pair) {
-      return '<option value="' + pair[0] + '">' + pair[1] + '</option>';
-    }).join());
-    var aggregates = {}; options.forEach(function(option) { aggregates[option[0]] = true; });
-    selected = selected.filter(function(aggregate) { return aggregate in aggregates; })
-    console.log(selected, options, aggregates);
-    if (selected.length == 0) {
-      selected = [options[0][0]];
-    }
+    multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates)
+    var selected = $("#aggregates").val() || [];
+    if (selected.length == 0) { selected = [options[0][0]]; }
     $("#aggregates").multiselect("rebuild").multiselect("select", selected).trigger("change");
   });
-  $("#aggregates").change(function() {
-    calculateHistogramEvolutions();
-    return; //wip: debug
-  
-    //wip: fix up the filter tree here
-    filterTree = filterTree["saved_session"]
-    var options = Object.keys(filterTree).sort();
-  });
+  $("#aggregates").change(calculateHistogramEvolutions);
   $("#filter-product").change(calculateHistogramEvolutions);
   $("#filter-arch").change(calculateHistogramEvolutions);
-  $("#filter-os").change(function() {
-    var versionSelector = $("#filter-os-version");
-    osVersions = ["10.0", "8.1", "8"]; // wip
-    multiselectSetOptions(versionSelector, osVersions);
-    multiselectSelectAll(versionSelector);
-    versionSelector.trigger("change");
-    
-    calculateHistogramEvolutions();
-  });
+  $("#filter-os").change(calculateHistogramEvolutions);
   $("#filter-os-version").change(calculateHistogramEvolutions);
   
   $("#min-channel-version").trigger("change");
@@ -104,28 +62,86 @@ Telemetry.init(function() {
 function getOptions(filterList, histogramEvolution) {
   function getCombinedFilterTree(histogramEvolution) {
     var fullOptions = histogramEvolution.filterOptions(), filterTree = {};
+    if (histogramEvolution.filterName() == "os") {
+      return filterTree
+    }
     fullOptions.forEach(function(option) {
       var filteredEvolution = histogramEvolution.filter(option);
       filterTree[option] = getCombinedFilterTree(filteredEvolution);
     });
+    filterTree._name = histogramEvolution.filterName();
     return filterTree
   }
-  function getOptionsList(filterTree, optionsList, depth) {
+  function getOptionsList(filterTree, optionsList, currentPath, depth = 0, includeSelf = true) {
     var options = Object.keys(filterTree).sort();
-    if (Object.keys(filterTree).length == 0) { return optionsList; }
-    if (optionsList.length <= depth) { optionsList[depth] = {}; }
+    var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
+    if (filterOptions.length == 0) { return optionsList; }
+    
+    // Add the current options into the option map
+    if (optionsList[depth] === undefined) { optionsList[depth] = []; }
+    if (includeSelf) {
+      var os = null;
+      if (filterTree._name === "osVersion") { os = currentPath[currentPath.length - 1]; }
+      var currentOptions = getHumanReadableOptions(filterTree._name, filterOptions, os);
+      optionsList[depth] = optionsList[depth].concat(currentOptions);
+    }
+    
+    var selectedValues = (!filterList[depth] || filterList[depth].length === 0) ?
+                         filterOptions : filterList[depth];
     for (option in filterTree) {
-      optionsList[depth][option] = true;
-      getOptionsList(filterTree[option], optionsList, depth + 1);
+      if (option === "_name") { continue; }
+      
+      // Don't include direct children if we are not in the right OS
+      var includeChildren = true;
+      if (filterTree._name === "osVersion") { includeChildren = selectedValues.indexOf(option) >= 0; }
+      
+      getOptionsList(filterTree[option], optionsList, currentPath.concat([option]), depth + 1, includeChildren);
     }
     return optionsList;
   }
 
   var filterTree = getCombinedFilterTree(histogramEvolution);
-  var optionMapList = getOptionsList(filterTree, [], 0);
-  return optionMapList.map(function(optionMap) {
-    return Object.keys(optionMap).sort();
+  var optionsList = getOptionsList(filterTree, [], []);
+  
+  // Remove duplicate options
+  optionsList = optionsList.map(function(options) {
+    var result = [], seen = {};
+    options.forEach(function(option) {
+      if (!(option[0] in seen)) {
+        result.push(option);
+        seen[option[0]] = true;
+      }
+    })
+    return result;
+  })
+  return optionsList;
+}
+
+function refreshFilters(filterList, filterOptionsList) {
+  // Remove duplicate filters
+  var optionsList = filterOptionsList.map(function(options) {
+    var seen = {};
+    return options.filter(function(option) {
+      if (option in seen) { return false; }
+      seen[option] = true;
+      return true;
+    });
   });
+  
+  var element = $("#filter-product");
+  var selected = element.val();
+  console.log(selected);
+  element.empty().append(optionsList[1].map(function(option) {
+    return '<option value="' + option[0] + '">' + option[1] + '</option>';
+  }).join()).multiselect("rebuild");
+  if (selected !== null) {
+    element.multiselect("select", selected.filter(function(option) { return options.indexOf(options) >= 0; }));
+  }
+  
+  //multiselectSetOptions($("#filter-product"), optionsList[1]);
+  multiselectSetOptions($("#filter-os"), optionsList[2]);
+  multiselectSetOptions($("#filter-os-version"), optionsList[3]);
+  multiselectSetOptions($("#filter-arch"), optionsList[4]);
 }
 
 var gAggregateValue = {
@@ -143,13 +159,13 @@ function calculateHistogramEvolutions() {
   // Get selected version, measure, and aggregate options
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var measure = $("#measure").val();
-  var aggregates = multiselectGetOptions($("#aggregates"));
+  var aggregates = multiselectGetSelected($("#aggregates"));
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
   for (var filterName in gFilterMapping) {
     var filterSelector = $(gFilterMapping[filterName]);
-    var selection = multiselectGetOptions(filterSelector);
+    var selection = multiselectGetSelected(filterSelector);
     var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
     if (selection.length != optionCount) { // Not all options are selected
       filters[filterName] = selection;
@@ -179,8 +195,8 @@ function calculateHistogramEvolutions() {
       var versionOptionsList = getOptions(filterList, histogramEvolution);
       while (filterOptionsList.length < versionOptionsList.length) { filterOptionsList.push([]); }
       filterOptionsList = filterOptionsList.map(function(options, i) {
-        return options.concat(versionOptionsList[i] || []);
-      })
+        return options.concat(versionOptionsList[i]);
+      });
       
       // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
       filterList.forEach(function(options, i) {
@@ -215,6 +231,7 @@ function calculateHistogramEvolutions() {
       
       // Generate histograms for each date and generate points for the desired aggregates for each one
       var aggregatePoints = {}
+      aggregates.forEach(function(aggregate) { aggregatePoints[aggregate] = []; });
       Object.keys(dateDatasets).sort().forEach(function(timestamp) {
         // Create a histogram that has no filters and contains the combined dataset
         var dataset = dateDatasets[timestamp];
@@ -222,9 +239,8 @@ function calculateHistogramEvolutions() {
         
         // Obtain the aggregate values from the histogram
         aggregates.forEach(function(aggregate) {
-          if (!(aggregate in aggregatePoints)) { aggregatePoints[aggregate] = [] }
           aggregatePoints[aggregate].push({x: timestamp, y: gAggregateValue[aggregate](histogram)});
-        })
+        });
       });
       
       // Generate lines from the points for each aggregate
@@ -233,8 +249,8 @@ function calculateHistogramEvolutions() {
         newLine.histogramEvolution = histogramEvolution;
         lines.push(newLine);
         if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
+          refreshFilters(filterList, filterOptionsList);
           displayHistogramEvolutions(lines);
-          console.log(filterOptionsList)
         }
       }
     });
@@ -273,6 +289,56 @@ function displayHistogramEvolutions(lines, minDate = -Infinity, maxDate = Infini
     pointDotStrokeWidth: 0,
     pointDotRadius: 3,
   });
+}
+
+function getHumanReadableOptions(filterName, options, os = null) {
+  var systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
+  var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
+  var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
+  var darwinVersionPrefixes = {
+    "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
+    "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
+    "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
+  };
+  var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
+  if (filterName === "OS") {
+    // Replace OS names with pretty OS names where possible
+    return options.map(function(option) {
+      return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option];
+    });
+  } else if (filterName === "osVersion") {
+    var osPrefix = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os) + " ";
+    if (os === "WINNT") {
+      return options.sort(function(a, b) {
+        // Sort by explicit version order if available
+        if (windowsVersionOrder.hasOwnProperty(a) && windowsVersionOrder.hasOwnProperty(b)) {
+          return windowsVersionOrder[a] < windowsVersionOrder[b] ? -1 : (windowsVersionOrder[a] > windowsVersionOrder[b] ? 1 : 0);
+        } else if (windowsVersionOrder.hasOwnProperty(a)) {
+          return -1;
+        } else if (windowsVersionOrder.hasOwnProperty(b)) {
+          return 1;
+        }
+        return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+      }).map(function(option) {
+        return [option, osPrefix + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option)];
+      });
+    } else if (os === "Darwin") {
+      return options.map(function(option) {
+        for (var prefix in darwinVersionPrefixes) {
+          if (option.startsWith(prefix)) {
+            return [option, osPrefix + option + " (" + darwinVersionPrefixes[prefix] + ")"];
+          }
+        }
+        return [option, osPrefix + option];
+      });
+    }
+    return options.map(function(option) { return [option, osPrefix + option]; });
+  } else if (filterName === "arch") {
+    return options.map(function(option) {
+      return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
+    });
+  }
+  return options.map(function(option) { return [option, option] });
 }
 
 var Line = (function(){
@@ -402,14 +468,14 @@ function loadStateFromUrlAndCookie() {
 // Save the current state to the URL and the page cookie
 function saveStateToUrlAndCookie() {
   var gInitialPageState = {
-    aggregates: $("#aggregates").val() || [],
+    aggregates: multiselectGetSelected($("#aggregates")),
     measure: $("#measure").val(),
     min_channel_version: $("#min-channel-version").val(),
     max_channel_version: $("#max-channel-version").val(),
-    product: $("#filter-product").val() || [],
-    arch: $("#filter-arch").val() || [],
-    os: $("#filter-os").val() || [],
-    os_version: $("#filter-os-version").val() || [],
+    product: multiselectGetSelected($("#filter-product")),
+    arch: multiselectGetSelected($("#filter-arch")),
+    os: multiselectGetSelected($("#filter-os")),
+    os_version: multiselectGetSelected($("#filter-os-version")),
   };
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {
@@ -443,4 +509,33 @@ function formatNumber(number) {
     return Math.round(number * 100 / interval) / 100 + units[interval];
   }
   return Math.round(number * 100) / 100;
+}
+
+function multiselectSelectAll(element) {
+  var options = element.find("option").map(function(i, option) { return $(option).val(); })
+    .filter(function(i, option) { return option != "multiselect-all"; }).toArray();
+  element.multiselect("select", options).multiselect("rebuild");
+}
+
+function selectSetOptions(element, options, defaultSelected = null) {
+  var selected = element.val() || defaultSelected;
+  element.empty().append(options.map(function(option) {
+    return '<option value="' + option[0] + '">' + option[1] + '</option>';
+  }).join());
+  if (selected !== null) { element.val(selected); }
+}
+
+// Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
+function multiselectSetOptions(element, options, defaultSelected = null) {
+  var selected = element.val() || defaultSelected;
+  element.empty().append(options.map(function(option) {
+    return '<option value="' + option[0] + '">' + option[1] + '</option>';
+  }).join()).multiselect("rebuild");
+  if (selected !== null) {
+    element.multiselect("select", selected.filter(function(option) { return options.indexOf(options) >= 0; }));
+  }
+}
+
+function multiselectGetSelected(element) {
+  return (element.val() || []).filter(function (option) { return option !== "multiselect-all"; });
 }
