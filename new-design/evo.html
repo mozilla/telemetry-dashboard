@@ -23,7 +23,7 @@
         <div class="row">
             <div class="col-md-10">
                 <h2 style="font-size: 14px">
-                    <select id="aggregates" class="multiselect" title="Aggregate type" multiple>
+                    <select id="aggregates" class="multiselect" title="Aggregate type" data-all-selected="All aggregates of" multiple>
                         <option value="median">Median</option>
                         <option value="mean">Mean</option>
                         <option value="5th-percentile">5th percentile</option>
@@ -37,11 +37,11 @@
                     to
                     <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
                     for
-                    <select id="filter-product" class="multiselect" title="Product name" multiple></select>
-                    <select id="filter-arch" class="multiselect" title="Product architecture" multiple></select>
+                    <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
+                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="on any architecture" multiple></select>
                     on
-                    <select id="filter-os" class="multiselect" title="Target OS" multiple></select>
-                    <select id="filter-os-version" class="multiselect" title="Target OS version" multiple></select>
+                    <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
+                    <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any version" multiple></select>
                 </h2>
                 <figure class="col-md-12">
                     <canvas id="evolutions"></canvas>

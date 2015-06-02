@@ -45,10 +45,8 @@ Telemetry.init(function() {
     }
     
     // Set the new aggregate options that apply to the current measure
-    multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates)
-    var selected = $("#aggregates").val() || [];
-    if (selected.length == 0) { selected = [options[0][0]]; }
-    $("#aggregates").multiselect("rebuild").multiselect("select", selected).trigger("change");
+    multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
+    $("#aggregates").trigger("change");
   });
   $("#aggregates").change(calculateHistogramEvolutions);
   $("#filter-product").change(calculateHistogramEvolutions);
@@ -118,41 +116,25 @@ function getOptions(filterList, histogramEvolution) {
 }
 
 function refreshFilters(filterList, filterOptionsList) {
-  // Remove duplicate filters
+  // Remove duplicate filter values
   var optionsList = filterOptionsList.map(function(options) {
     var seen = {};
     return options.filter(function(option) {
-      if (option in seen) { return false; }
-      seen[option] = true;
+      if (seen.hasOwnProperty(option[0])) { return false; }
+      seen[option[0]] = true;
       return true;
     });
   });
   
-  var element = $("#filter-product");
-  var selected = element.val();
-  console.log(selected);
-  element.empty().append(optionsList[1].map(function(option) {
-    return '<option value="' + option[0] + '">' + option[1] + '</option>';
-  }).join()).multiselect("rebuild");
-  if (selected !== null) {
-    element.multiselect("select", selected.filter(function(option) { return options.indexOf(options) >= 0; }));
-  }
-  
-  //multiselectSetOptions($("#filter-product"), optionsList[1]);
-  multiselectSetOptions($("#filter-os"), optionsList[2]);
-  multiselectSetOptions($("#filter-os-version"), optionsList[3]);
-  multiselectSetOptions($("#filter-arch"), optionsList[4]);
+  var toBeSelected = optionsList.map(function(options) {
+    return options.map(function(option) { return option[0]; });
+  });
+  multiselectSetOptions($("#filter-product"), optionsList[1], toBeSelected[1]);
+  multiselectSetOptions($("#filter-os"), optionsList[2], toBeSelected[2]);
+  multiselectSetOptions($("#filter-os-version"), optionsList[3], toBeSelected[3]);
+  multiselectSetOptions($("#filter-arch"), optionsList[4], toBeSelected[4]);
 }
 
-var gAggregateValue = {
-  "mean":            function(histogram) { return histogram.mean(); },
-  "5th-percentile":  function(histogram) { return histogram.percentile(5); },
-  "25th-percentile": function(histogram) { return histogram.percentile(25); },
-  "median":          function(histogram) { return histogram.median(); },
-  "75th-percentile": function(histogram) { return histogram.percentile(75); },
-  "95th-percentile": function(histogram) { return histogram.percentile(95); },
-  "submissions":     function(histogram) { return histogram.submissions(); },
-};
 function calculateHistogramEvolutions() {
   saveStateToUrlAndCookie();
   
@@ -189,7 +171,6 @@ function calculateHistogramEvolutions() {
   var filterOptionsList = []; // Each entry is an array of options for a particular filter
   versions.forEach(function(version) {
     Telemetry.loadEvolutionOverBuilds(version, measure, function(histogramEvolution) {
-      var evolutions = [histogramEvolution];
       
       // Update filter options
       var versionOptionsList = getOptions(filterList, histogramEvolution);
@@ -198,63 +179,79 @@ function calculateHistogramEvolutions() {
         return options.concat(versionOptionsList[i]);
       });
       
-      // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
-      filterList.forEach(function(options, i) {
-        if (evolutions.length == 0) { return; } // No more evolutions, probably because a filter had no options selected
-        evolutions = Array.concat.apply([], evolutions.map(function(evolution) {
-          var actualOptions = options, fullOptions = evolution.filterOptions();
-          if (actualOptions === null) { actualOptions = fullOptions; }
-          actualOptions = actualOptions.filter(function(option) { return fullOptions.indexOf(option) >= 0 });
-          return actualOptions.map(function(option) { return evolution.filter(option); });
-        }));
-      });
-      
-      // Filter each histogram's dataset and combine them into a single dataset
-      var dateDatasets = {};
-      var firstHistogram = null, firstFilterId = null;
-      evolutions.forEach(function(evolution) {
-        evolution.each(function(date, hgram) {
-          // We just need a valid filter ID in order to have it pass filtering when constructing histograms later
-          if (firstHistogram === null) {
-            firstHistogram = hgram;
-            firstFilterId = firstHistogram._dataset[0][firstHistogram._dataset[0].length + Telemetry.DataOffsets.FILTER_ID];
-          }
-          
-          // precomputeAggregateQuantity will perform the actual filtering for us, and then we set the filter ID manually
-          var timestamp = date.getTime();
-          if (!(timestamp in dateDatasets)) { dateDatasets[timestamp] = []; }
-          var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
-          filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
-          dateDatasets[timestamp].push(filteredDataset);
-        });
-      });
-      
-      // Generate histograms for each date and generate points for the desired aggregates for each one
-      var aggregatePoints = {}
-      aggregates.forEach(function(aggregate) { aggregatePoints[aggregate] = []; });
-      Object.keys(dateDatasets).sort().forEach(function(timestamp) {
-        // Create a histogram that has no filters and contains the combined dataset
-        var dataset = dateDatasets[timestamp];
-        var histogram = new Telemetry.Histogram(measure, histogramEvolution._filter_path, firstHistogram._buckets, dataset, histogramEvolution._filter_tree, firstHistogram._spec);
-        
-        // Obtain the aggregate values from the histogram
-        aggregates.forEach(function(aggregate) {
-          aggregatePoints[aggregate].push({x: timestamp, y: gAggregateValue[aggregate](histogram)});
-        });
-      });
-      
-      // Generate lines from the points for each aggregate
-      for (aggregate in aggregatePoints) {
-        var newLine = new Line(measure, version, aggregate, null, filters, aggregatePoints[aggregate]);
-        newLine.histogramEvolution = histogramEvolution;
-        lines.push(newLine);
-        if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
-          refreshFilters(filterList, filterOptionsList);
-          displayHistogramEvolutions(lines);
-        }
+      lines = lines.concat(getHistogramEvolutionLines(version, histogramEvolution, aggregates, filters, filterList));
+      if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
+        refreshFilters(filterList, filterOptionsList);
+        displayHistogramEvolutions(lines);
       }
     });
-  })
+  });
+}
+
+function getHistogramEvolutionLines(version, histogramEvolution, aggregates, filters, filterList) {
+  // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
+  var evolutions = [histogramEvolution];
+  filterList.forEach(function(options, i) {
+    if (evolutions.length == 0) { return; } // No more evolutions, probably because a filter had no options selected
+    evolutions = Array.concat.apply([], evolutions.map(function(evolution) {
+      var actualOptions = options, fullOptions = evolution.filterOptions();
+      if (actualOptions === null) { actualOptions = fullOptions; }
+      actualOptions = actualOptions.filter(function(option) { return fullOptions.indexOf(option) >= 0 });
+      return actualOptions.map(function(option) { return evolution.filter(option); });
+    }));
+  });
+  
+  // Filter each histogram's dataset and combine them into a single dataset
+  var dateDatasets = {};
+  var firstHistogram = null, firstFilterId = null;
+  evolutions.forEach(function(evolution) {
+    evolution.each(function(date, hgram) {
+      // We just need a valid filter ID in order to have it pass filtering when constructing histograms later
+      if (firstHistogram === null) {
+        firstHistogram = hgram;
+        firstFilterId = firstHistogram._dataset[0][firstHistogram._dataset[0].length + Telemetry.DataOffsets.FILTER_ID];
+      }
+      
+      // precomputeAggregateQuantity will perform the actual filtering for us, and then we set the filter ID manually
+      var timestamp = date.getTime();
+      if (!(timestamp in dateDatasets)) { dateDatasets[timestamp] = []; }
+      var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
+      filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
+      dateDatasets[timestamp].push(filteredDataset);
+    });
+  });
+  
+  // Generate histograms for each date and generate points for the desired aggregates for each one
+  var aggregateValue = {
+    "mean":            function(histogram) { return histogram.mean(); },
+    "5th-percentile":  function(histogram) { return histogram.percentile(5); },
+    "25th-percentile": function(histogram) { return histogram.percentile(25); },
+    "median":          function(histogram) { return histogram.median(); },
+    "75th-percentile": function(histogram) { return histogram.percentile(75); },
+    "95th-percentile": function(histogram) { return histogram.percentile(95); },
+    "submissions":     function(histogram) { return histogram.submissions(); },
+  };
+  var aggregatePoints = {}
+  aggregates.forEach(function(aggregate) { aggregatePoints[aggregate] = []; });
+  Object.keys(dateDatasets).sort().forEach(function(timestamp) {
+    // Create a histogram that has no filters and contains the combined dataset
+    var dataset = dateDatasets[timestamp];
+    var histogram = new Telemetry.Histogram(measure, histogramEvolution._filter_path, firstHistogram._buckets, dataset, histogramEvolution._filter_tree, firstHistogram._spec);
+    
+    // Obtain the aggregate values from the histogram
+    aggregates.forEach(function(aggregate) {
+      aggregatePoints[aggregate].push({x: timestamp, y: aggregateValue[aggregate](histogram)});
+    });
+  });
+  
+  // Generate lines from the points for each aggregate
+  var lines = [];
+  for (aggregate in aggregatePoints) {
+    var newLine = new Line(measure, version, aggregate, null, filters, aggregatePoints[aggregate]);
+    newLine.histogramEvolution = histogramEvolution;
+    lines.push(newLine);
+  }
+  return lines;
 }
 
 var gCurrentHistogramEvolutionsPlot = null;
@@ -511,13 +508,15 @@ function formatNumber(number) {
   return Math.round(number * 100) / 100;
 }
 
-function multiselectSelectAll(element) {
-  var options = element.find("option").map(function(i, option) { return $(option).val(); })
-    .filter(function(i, option) { return option != "multiselect-all"; }).toArray();
-  element.multiselect("select", options).multiselect("rebuild");
-}
-
 function selectSetOptions(element, options, defaultSelected = null) {
+  if (defaultSelected !== null && typeof defaultSelected !== "string") {
+    throw "Bad defaultSelected value: must be array of strings.";
+  }
+  options.forEach(function(option) {
+    if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
+      throw "Bad options value: must be array of arrays, each with two strings.";
+    }
+  });
   var selected = element.val() || defaultSelected;
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
@@ -527,15 +526,33 @@ function selectSetOptions(element, options, defaultSelected = null) {
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
 function multiselectSetOptions(element, options, defaultSelected = null) {
+  // Check inputs
+  if (defaultSelected !== null) {
+    defaultSelected.forEach(function(option) {
+      if (typeof option !== "string") { throw "Bad defaultSelected value: must be array of strings."; }
+    });
+  }
+  options.forEach(function(option) {
+    if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
+      throw "Bad options value: must be array of arrays, each with two strings.";
+    }
+  });
+  
   var selected = element.val() || defaultSelected;
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
   }).join()).multiselect("rebuild");
   if (selected !== null) {
-    element.multiselect("select", selected.filter(function(option) { return options.indexOf(options) >= 0; }));
+    // Filter out the options that were selected but no longer exist
+    var availableOptionMap = {};
+    options.forEach(function(option) { availableOptionMap[option[0]] = true; });
+    selected = selected.filter(function(selectedOption) {
+      return availableOptionMap.hasOwnProperty(selectedOption);
+    });
+    element.multiselect("select", selected); // Select the original options where applicable
   }
 }
 
 function multiselectGetSelected(element) {
-  return (element.val() || []).filter(function (option) { return option !== "multiselect-all"; });
+  return element.val() || [];
 }
