@@ -201,7 +201,7 @@ function getOptions(filterList, histogramEvolution) {
   return optionsList;
 }
 
-function getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList) {
+function getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList, sanitize = true) {
   // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
   var evolutions = [histogramEvolution];
   filterList.forEach(function(options, i) {
@@ -247,18 +247,37 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   var aggregatePoints = {}
   aggregates.forEach(function(aggregate) { aggregatePoints[aggregate] = []; });
   var timeCutoff = moment().add(1, "years").toDate().getTime(); // Cut off all dates past one year in the future
+  var maxSubmissions = 0, submissionCounts = [];
   Object.keys(dateDatasets).sort().forEach(function(timestamp) {
+    timestamp = parseInt(timestamp);
+    
     if (timestamp > timeCutoff) { return; } // point past the cutoff date
     
     // Create a histogram that has no filters and contains the combined dataset
     var dataset = dateDatasets[timestamp];
     var histogram = new Telemetry.Histogram(measure, histogramEvolution._filter_path, firstHistogram._buckets, dataset, histogramEvolution._filter_tree, firstHistogram._spec);
     
+    if (sanitize) {
+      var submissions = histogram.submissions();
+      if (submissions > maxSubmissions) { maxSubmissions = submissions; }
+      submissionCounts.push(submissions);
+    }
+    
     // Obtain the aggregate values from the histogram
     aggregates.forEach(function(aggregate) {
       aggregatePoints[aggregate].push({x: timestamp, y: aggregateValue[aggregate](histogram)});
     });
   });
+  
+  // Filter out those points corresponding to histograms where the number of submissions is too low
+  if (sanitize) {
+    var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
+    for (aggregate in aggregatePoints) {
+      aggregatePoints[aggregate] = aggregatePoints[aggregate].filter(function(point, i) {
+        return submissionCounts[i] >= submissionsCutoff;
+      });
+    }
+  }
   
   // Generate lines from the points for each aggregate
   var lines = [];
