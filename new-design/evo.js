@@ -216,7 +216,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
       return actualOptions.map(function(option) { return evolution.filter(option); });
     }));
   });
-  
+
   // Filter each histogram's dataset and combine them into a single dataset
   var dateDatasets = {};
   var firstHistogram = null, firstFilterId = null;
@@ -328,8 +328,8 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
     mouseover: function(d, i) {
       // Create legend
       var date = d.key;
-      var lineList = d.values.map(function(entry) { return lines[entry.line_id - 1]; });
-      var values = d.values.map(function(entry) { return entry.value; });
+      var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id]];
+      var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
       var legend = d3.select("#evolutions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
@@ -342,7 +342,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
   });
   MG.data_graphic({
     data: submissionLineData,
-    chart_type: submissionLineData.length == 0 ? "missing-data" : "line",
+    chart_type: submissionLineData.length === 0 || submissionLineData[0].length === 0 ? "missing-data" : "line",
     full_width: true, height: 200,
     target: "#submissions",
     x_extended_ticks: true,
@@ -354,9 +354,9 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
     mouseover: function(d, i) {
       // Create legend
       var date = d.key;
-      var lineList = d.values.map(function(entry) { return lines[entry.line_id - 1]; });
-      var submissionLineList = d.values.map(function(entry) { return submissionLines[entry.line_id - 1]; });
-      var values = d.values.map(function(entry) { return entry.value; });
+      var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
+      var submissionLineList = d.values ? d.values.map(function(entry) { return submissionLines[entry.line_id - 1]; }) : [submissionLines[d.line_id - 1]];
+      var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
       var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
       var lineHeight = 1.1;
       submissionLineList.forEach(function(line, i) {
