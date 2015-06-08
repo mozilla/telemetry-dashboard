@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     
+    <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+    
 </head>
 <body>
     <div class="container-fluid">
@@ -44,8 +46,8 @@
                     <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any version" multiple></select>
                 </h2>
                 <figure class="col-md-12">
-                    <canvas id="evolutions"></canvas>
-                    <canvas id="submissions"></canvas>
+                    <div class="col-md-12" id="evolutions"></div>
+                    <div class="col-md-12" id="submissions"></div>
                 </figure>
             </div>
         </div>
@@ -60,8 +62,11 @@
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
     
     <!-- Chartjs -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
-    <script src="lib/Chart.Scatter.js"></script>
+    <!--<script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="lib/Chart.Scatter.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <!--<script src="lib/metricsgraphics.min.js"></script>-->
+    <script src="lib/metricsgraphics.js"></script>
     
     <!--
         big.js and telemetry.js from telemetry.mozilla.org

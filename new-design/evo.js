@@ -21,7 +21,7 @@ Telemetry.init(function() {
   if (gInitialPageState.max_channel_version) { $("#max-channel-version").val(gInitialPageState.max_channel_version); }
   $("#min-channel-version, #max-channel-version").trigger("change");
   updateMeasuresList(function() {
-    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines) {
+    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
       refreshFilters(filterList, filterOptionsList);
       
       $("#filter-product").multiselect("select", gInitialPageState.product);
@@ -48,9 +48,9 @@ Telemetry.init(function() {
         $("#aggregates").trigger("change");
       });
       $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
-        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines) {
+        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
           refreshFilters(filterList, filterOptionsList);
-          displayHistogramEvolutions(lines);
+          displayHistogramEvolutions(lines, submissionLines);
           saveStateToUrlAndCookie();
         });
       });
@@ -123,8 +123,10 @@ function calculateHistogramEvolutions(callback) {
     filterList.pop();
   }
 
-  var lines = [];
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
+  if (versions.length > 10) { versions = versions.slice(0, 10); }
+  var lines = [];
+  var submissionLines = [];
   var expectedCount = versions.length * aggregates.length;
   var filterOptionsList = []; // Each entry is an array of options for a particular filter
   versions.forEach(function(version) {
@@ -137,9 +139,10 @@ function calculateHistogramEvolutions(callback) {
       });
       
       var newLines = getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList);
-      lines = lines.concat(newLines);
+      lines = lines.concat(newLines.lines);
+      submissionLines.push(newLines.submissionLine);
       if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
-        callback(filterList, filterOptionsList, lines);
+        callback(filterList, filterOptionsList, lines, submissionLines);
       }
     });
   });
@@ -244,7 +247,8 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
     "95th-percentile": function(histogram) { return histogram.percentile(95); },
     "submissions":     function(histogram) { return histogram.submissions(); },
   };
-  var aggregatePoints = {}
+  var aggregatePoints = {};
+  var submissionPoints = [];
   aggregates.forEach(function(aggregate) { aggregatePoints[aggregate] = []; });
   var timeCutoff = moment().add(1, "years").toDate().getTime(); // Cut off all dates past one year in the future
   var maxSubmissions = 0, submissionCounts = [];
@@ -257,26 +261,31 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
     var dataset = dateDatasets[timestamp];
     var histogram = new Telemetry.Histogram(measure, histogramEvolution._filter_path, firstHistogram._buckets, dataset, histogramEvolution._filter_tree, firstHistogram._spec);
     
-    if (sanitize) {
-      var submissions = histogram.submissions();
-      if (submissions > maxSubmissions) { maxSubmissions = submissions; }
-      submissionCounts.push(submissions);
-    }
-    
     // Obtain the aggregate values from the histogram
     aggregates.forEach(function(aggregate) {
       aggregatePoints[aggregate].push({x: timestamp, y: aggregateValue[aggregate](histogram)});
     });
+    
+    // Process submission points
+    var submissions = histogram.submissions();
+    submissionPoints.push({x: timestamp, y: submissions});
+    if (sanitize) {
+      if (submissions > maxSubmissions) { maxSubmissions = submissions; }
+      submissionCounts.push(submissions);
+    }
   });
   
   // Filter out those points corresponding to histograms where the number of submissions is too low
   if (sanitize) {
-    var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
+    var submissionsCutoff = Math.max(maxSubmissions / 100, 100);
     for (aggregate in aggregatePoints) {
       aggregatePoints[aggregate] = aggregatePoints[aggregate].filter(function(point, i) {
         return submissionCounts[i] >= submissionsCutoff;
       });
     }
+    submissionPoints = submissionPoints.filter(function(point, i) {
+      return submissionCounts[i] >= submissionsCutoff;
+    });
   }
   
   // Generate lines from the points for each aggregate
@@ -286,41 +295,82 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
     newLine.histogramEvolution = histogramEvolution;
     lines.push(newLine);
   }
-  return lines;
+  
+  var submissionLine = new Line(measure, version, "submissions", filters, submissionPoints);
+  submissionLine.histogramEvolution = histogramEvolution;
+  
+  return {lines: lines, submissionLine: submissionLine};
 }
 
-var gCurrentHistogramEvolutionsPlot = null;
-function displayHistogramEvolutions(lines, minDate = -Infinity, maxDate = Infinity) {
-  // Filter out the points that are outside of the time range
-  var filteredDatasets = lines.map(function (line) {
-    return {
-      label: line.getTitleString(),
-      strokeColor: line.color,
-      pointStrokeColor: line.color,
-      data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
-    };
+function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxDate = null) {
+  // Transform the data into a form that is suitable for plotting
+  var lineData = lines.map(function (line) {
+    return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+  });
+  var submissionLineData = submissionLines.map(function (line) {
+    return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
   });
   
-  // Plot the data using Chartjs
-  var ctx = document.getElementById("evolutions").getContext("2d");
-  if (gCurrentHistogramEvolutionsPlot !== null) {
-    gCurrentHistogramEvolutionsPlot.destroy();
-  }
-  Chart.defaults.global.responsive = true;
-  gCurrentHistogramEvolutionsPlot = new Chart(ctx).Scatter(filteredDatasets, {
-    animation: false,
-    scaleType: "date",
-    scaleLabel: function(valuesObject) { return formatNumber(valuesObject.value); },
-    tooltipFontSize: 12,
-    tooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
+  var labels = lines.map(function(line) { return line.getTitleString(); })
+  
+  // Plot the data using MetricsGraphics
+  MG.data_graphic({
+    data: lineData,
+    full_width: true, height: 600,
+    target: "#evolutions",
+    x_extended_ticks: true,
+    x_label: "Time", y_label: "Aggregate",
+    legend: labels,
+    aggregate_rollover: true,
+    min_x: minDate === null ? null : new Date(minDate),
+    max_x: maxDate === null ? null : new Date(maxDate),
+    mouseover: function(d, i) {
+      // Create legend
+      var date = d.key;
+      var lineList = d.values.map(function(entry) { return lines[entry.line_id - 1]; });
+      var values = d.values.map(function(entry) { return entry.value; });
+      var legend = d3.select("#evolutions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
+      var lineHeight = 1.1;
+      lineList.forEach(function(line, i) {
+        var lineIndex = i + 1;
+        var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]));
+        legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"})
+          .text("\u2014 ").style({"font-weight": "bold", "stroke": line.color});
+      });
     },
-    multiTooltipTemplate: function(valuesObject) {
-      return valuesObject.datasetLabel + " - " + valuesObject.valueLabel + " on " + moment(valuesObject.arg).format("MMM D, YYYY");
+  });
+  MG.data_graphic({
+    data: submissionLineData,
+    full_width: true, height: 200,
+    target: "#submissions",
+    x_extended_ticks: true,
+    x_label: "Time", y_label: "Submissions",
+    legend: labels,
+    aggregate_rollover: true,
+    min_x: minDate === null ? null : new Date(minDate),
+    max_x: maxDate === null ? null : new Date(maxDate),
+    mouseover: function(d, i) {
+      // Create legend
+      var date = d.key;
+      var lineList = d.values.map(function(entry) { return lines[entry.line_id - 1]; });
+      var submissionLineList = d.values.map(function(entry) { return submissionLines[entry.line_id - 1]; });
+      var values = d.values.map(function(entry) { return entry.value; });
+      var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
+      var lineHeight = 1.1;
+      submissionLineList.forEach(function(line, i) {
+        var lineIndex = i + 1;
+        var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]));
+        legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"}).text("\u2014 ").style({"font-weight": "bold", "stroke": lineList[i].color});
+      });
     },
-    bezierCurveTension: 0.3,
-    pointDotStrokeWidth: 0,
-    pointDotRadius: 3,
+  });
+  
+  // Set the line colors
+  lines.forEach(function(line, i) {
+    var lineIndex = i + 1;
+    $(".mg-main-line.mg-line" + lineIndex + "-color").css("stroke", line.color);
+    $(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", line.color).css("stroke", line.color);
+    $(".mg-line" + lineIndex + "-legend-color").css("fill", line.color);
   });
 }
 
@@ -402,7 +452,11 @@ var Line = (function(){
   }
 
   Line.prototype.getTitleString = function Line_getTitleString() {
-    return this.measure + " - " + this.channelVersion.replace("/", " ") + " - " + this.aggregate;
+    return this.channelVersion.replace("/", " ") + " - " + this.aggregate;
+  };
+  Line.prototype.getDescriptionString = function Line_getTitleString() {
+    if (this.aggregate === "submissions") { return this.measure + " submissions for " + this.channelVersion.replace("/", " "); }
+    return this.aggregate + " " + this.measure + " for " + this.channelVersion.replace("/", " ");
   };
   Line.prototype.getFilterString = function Line_getFilterString() {
     return ("OS" in this.filters ? this.filters["OS"].join(", ") : "Any OS")
