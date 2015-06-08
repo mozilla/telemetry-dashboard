@@ -124,7 +124,7 @@ function calculateHistogramEvolutions(callback) {
   }
 
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  if (versions.length > 10) { versions = versions.slice(0, 10); }
+  if (versions.length > 10) { versions = versions.slice(0, 10); } // Only show up to 10 versions for performance reasons
   var lines = [];
   var submissionLines = [];
   var expectedCount = versions.length * aggregates.length;
@@ -321,6 +321,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
     target: "#evolutions",
     x_extended_ticks: true,
     x_label: "Time", y_label: "Aggregate",
+    transition_on_update: false,
     legend: labels,
     aggregate_rollover: true,
     min_x: minDate === null ? null : new Date(minDate),
@@ -347,6 +348,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
     target: "#submissions",
     x_extended_ticks: true,
     x_label: "Time", y_label: "Submissions",
+    transition_on_update: false,
     legend: labels,
     aggregate_rollover: true,
     min_x: minDate === null ? null : new Date(minDate),
