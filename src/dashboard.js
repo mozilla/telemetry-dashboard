@@ -448,6 +448,12 @@ Telemetry.init(function () {
     $('#description').hide();
   }
   
+  // Automatically resize range bar
+  $(window).resize(function() {
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+  });
+  
   // Add series button
   $("#addVersionButton").click(function () {
     var state = "nightly/40/SIMPLE_MEASURES_FIRSTPAINT/saved_session/Firefox";
@@ -797,7 +803,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   
   // Add a fake series to expand the bounds a bit, which makes the chart look nicer when the timescale is small (within a day or so)
   filteredDatasets.push({
-      data: [{x: minX - 1000, y: minY}, {x: maxX + 1000, y: maxY}],
+      data: [{x: minX - 1000 * 60 * 60 * 24, y: minY}, {x: maxX + 1000 * 60 * 60 * 24, y: maxY}],
       strokeColor: "rgba(0, 0, 0, 0)",
       pointColor: "rgba(0, 0, 0, 0)",
       pointStrokeColor: "rgba(0, 0, 0, 0)",
@@ -809,9 +815,12 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   }
   var ctx = document.getElementById("evolution").getContext("2d");
   Chart.defaults.global.responsive = true;
+  Chart.defaults.global.animation = false;
+  Chart.defaults.global.maintainAspectRatio = false;
   gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(filteredDatasets, {
     animation: false,
     scaleType: "date",
+    useUtc: false, // All our dates are in the local timezone
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
@@ -891,11 +900,14 @@ function updateRendering(hgramEvo, lines, start, end) {
   // Rebuild rangebar if it was changed by something other than the user
   if (!gUserMovingRange) {
     gRangeBarControl = RangeBar({
-      min: startMoment, max: endMoment.clone(),
+      min: startMoment, max: endMoment.clone().add(1, "days"),
       maxRanges: 1,
       valueFormat: function(ts) { return ts; },
       valueParse: function(date) { return moment(date).valueOf(); },
-      label: function(a) { return moment(a[1]).from(a[0], true); },
+      label: function(a) {
+        var days = (a[1] - a[0]) / 86400000;
+        return days < 5 ? days : moment(a[1]).from(a[0], true);
+      },
       snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
     }).on("changing", function(ev, ranges, changed) {
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
@@ -911,6 +923,8 @@ function updateRendering(hgramEvo, lines, start, end) {
       }, 200);
     });
     $("#range-bar").empty().append(gRangeBarControl.$el);
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
     gRangeBarControl.val([[moment(minDate), moment(maxDate)]]);
   }
   

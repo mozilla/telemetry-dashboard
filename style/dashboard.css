@@ -132,3 +132,16 @@ header h1 {
     color:black;
     font-weight:bold
 }
+
+.elessar-rangebar {
+  border-radius: 4px;
+  background: #CCC;
+  box-shadow: inset 0 0 3px 0px rgba(0,0,0,0.5);
+}
+
+.elessar-range {
+  background: #A53E35;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+}
