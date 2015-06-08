@@ -743,6 +743,7 @@ function renderHistogramGraph(hgram) {
     var ctx = document.getElementById("histogram").getContext("2d");
     Chart.defaults.global.responsive = true;
     Chart.defaults.global.animation = false;
+    Chart.defaults.global.maintainAspectRatio = false;
     if (gCurrentHistogramPlot !== null) {
       gCurrentHistogramPlot.destroy();
     }
