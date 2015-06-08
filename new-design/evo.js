@@ -316,6 +316,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
   // Plot the data using MetricsGraphics
   MG.data_graphic({
     data: lineData,
+    chart_type: lineData.length == 0 ? "missing-data" : "line",
     full_width: true, height: 600,
     target: "#evolutions",
     x_extended_ticks: true,
@@ -341,6 +342,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
   });
   MG.data_graphic({
     data: submissionLineData,
+    chart_type: submissionLineData.length == 0 ? "missing-data" : "line",
     full_width: true, height: 200,
     target: "#submissions",
     x_extended_ticks: true,
@@ -360,7 +362,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
       submissionLineList.forEach(function(line, i) {
         var lineIndex = i + 1;
         var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]));
-        legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"}).text("\u2014 ").style({"font-weight": "bold", "stroke": lineList[i].color});
+        legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"}).text("\u2014 ").style({"font-weight": "bold", "stroke": (lineList[i] || line).color});
       });
     },
   });
