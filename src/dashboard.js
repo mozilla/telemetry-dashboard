@@ -549,6 +549,9 @@ function fmt(number) {
   if (interval in units) {
     return Math.round(number * 100 / interval) / 100 + units[interval];
   }
+  if (interval > 1000000000000) { // Very large value that we don't have a unit for
+    return Math.round(number * 100 / interval) / 100 + "e" + Math.log10(interval);
+  }
   return Math.round(number * 100) / 100;
 }
 
