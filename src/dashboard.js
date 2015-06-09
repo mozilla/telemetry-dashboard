@@ -746,7 +746,11 @@ function renderHistogramGraph(hgram) {
       tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
       return label;
     });
-    var data = hgram.map(function (count, start, end, index) { return count; });
+    var maxCount = 0;
+    var data = hgram.map(function (count, start, end, index) {
+      if (count > maxCount) { maxCount = count; }
+      return count;
+    });
     
     // Plot the data using Chartjs
     var ctx = document.getElementById("histogram").getContext("2d");
@@ -769,6 +773,10 @@ function renderHistogramGraph(hgram) {
       scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
       tooltipFontSize: 10,
       tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
+      scaleOverride: true,
+      scaleSteps : 10,
+      scaleStepWidth : maxCount / 10,
+      scaleStartValue : 0,
     });
     
     // Assign fixed pseudorandom colors to make it easy to differentiate between bars
@@ -872,7 +880,7 @@ function updateRendering(hgramEvo, lines, start, end) {
   // Update the start and end range and update the selection if necessary
   var picker = $("#dateRange").data("daterangepicker");
   picker.setOptions({
-    format: "MM/DD/YYYY",
+    format: "YYYY/MM/DD",
     minDate: startMoment,
     maxDate: endMoment,
     showDropdowns: true,
@@ -936,7 +944,7 @@ function updateRendering(hgramEvo, lines, start, end) {
   gCurrentHistogram = hgram;
   
   // Update summary for the first histogram evolution
-  var dates = hgramEvo.dates();
+  var dates = hgramEvo.dates().filter(function(date) { return minDate <= date.getTime() && date.getTime() <= maxDate; });
   $('#prop-kind').text(hgram.kind());
   $('#prop-dates').text(fmt(dates.length));
   $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
