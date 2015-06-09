@@ -324,6 +324,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
     transition_on_update: false,
     legend: labels,
     aggregate_rollover: true,
+    linked: true,
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
@@ -351,6 +352,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
     transition_on_update: false,
     legend: labels,
     aggregate_rollover: true,
+    linked: true,
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
