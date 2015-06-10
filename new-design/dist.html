@@ -18,7 +18,11 @@
     
     <style>
     /* dropdown style overrides */
-    .btn-group > .multiselect { border: transparent !important; padding: 6px 3px !important; }
+    .btn-group > .multiselect {
+        border: transparent !important;
+        padding: 6px 3px !important;
+        font-size: inherit !important;
+    }
     .select2-container { width: auto !important; }
     .select2-selection { border: transparent !important; }
     </style>
@@ -26,11 +30,14 @@
 <body>
     <div class="container-fluid">
         <header>
-            <h1>Distribution Dashboard</h1>
+            <h1>
+                Distribution Dashboard
+                <button type="button" id="get-permalink" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button>
+            </h1>
         </header>
         <div class="row">
             <div class="col-md-12">
-                <h2 style="font-size: 14px">
+                <h2 style="font-size: 18px">
                     <select id="measure" class="select2" title="Value being measured"></select>
                     distribution for
                     <select id="channel-version" class="select2" title="Build version"></select>
@@ -40,6 +47,7 @@
                     on
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
                     <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any version" multiple></select>
+                    <button class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</button>
                 </h2>
                 <figure class="col-md-12">
                     <div class="col-md-8" id="distribution"></div>
@@ -88,11 +96,8 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
     
-    <!-- Chartjs -->
-    <!--<script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
-    <script src="lib/Chart.Scatter.js"></script>-->
+    <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
-    <!--<script src="lib/metricsgraphics.min.js"></script>-->
     <script src="lib/metricsgraphics.js"></script>
     
     <!--
@@ -111,7 +116,7 @@
     $(document).ready(function() {
         // Select boxes
         $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
-            $(this).next().css("margin-top", "-0.4em"); // Align the control so that the baseline matches surrounding text
+            $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
         });
         
         // Multiselect boxes

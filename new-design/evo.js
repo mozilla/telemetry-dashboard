@@ -6,9 +6,9 @@ var gInitialPageState = null;
 Telemetry.init(function() {
   gVersions = Telemetry.versions();
   gFilterMapping = {
-    "product":   $("#filter-product"),
-    "arch":      $("#filter-arch"),
-    "os":        $("#filter-os"),
+    "product":    $("#filter-product"),
+    "arch":       $("#filter-arch"),
+    "os":         $("#filter-os"),
     "os_version": $("#filter-os-version"),
   };
 
@@ -21,7 +21,7 @@ Telemetry.init(function() {
   if (gInitialPageState.max_channel_version) { $("#max-channel-version").val(gInitialPageState.max_channel_version); }
   $("#min-channel-version, #max-channel-version").trigger("change");
   updateMeasuresList(function() {
-    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
+    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines, submissionsCutoff) {
       refreshFilters(filterList, filterOptionsList);
       
       $("#filter-product").multiselect("select", gInitialPageState.product);
@@ -48,9 +48,9 @@ Telemetry.init(function() {
         $("#aggregates").trigger("change");
       });
       $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
-        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
+        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines, submissionsCutoff) {
           refreshFilters(filterList, filterOptionsList);
-          displayHistogramEvolutions(lines, submissionLines);
+          displayHistogramEvolutions(lines, submissionLines, submissionsCutoff);
           saveStateToUrlAndCookie();
         });
       });
@@ -58,6 +58,12 @@ Telemetry.init(function() {
       $("#aggregates").trigger("change");
     });
   });
+  
+  // Switch to the evolution dashboard with the same settings
+  $("#switch-views").click(function() {
+    var evolutionURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
+    window.location.href = evolutionURL;
+  })
 });
 
 function updateMeasuresList(callback) {
@@ -142,7 +148,7 @@ function calculateHistogramEvolutions(callback) {
       lines = lines.concat(newLines.lines);
       submissionLines.push(newLines.submissionLine);
       if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
-        callback(filterList, filterOptionsList, lines, submissionLines);
+        callback(filterList, filterOptionsList, lines, submissionLines, newLines.submissionsCutoff);
       }
     });
   });
@@ -205,7 +211,7 @@ function getOptions(filterList, histogramEvolution) {
 }
 
 function getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList, sanitize) {
-  sanitize = sanitize || false;
+  sanitize = sanitize || true;
 
   // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
   var evolutions = [histogramEvolution];
@@ -278,8 +284,9 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   });
   
   // Filter out those points corresponding to histograms where the number of submissions is too low
+  var submissionsCutoff = 0;
   if (sanitize) {
-    var submissionsCutoff = Math.max(maxSubmissions / 100, 100);
+    submissionsCutoff = Math.max(maxSubmissions / 100, 100);
     for (aggregate in aggregatePoints) {
       aggregatePoints[aggregate] = aggregatePoints[aggregate].filter(function(point, i) {
         return submissionCounts[i] >= submissionsCutoff;
@@ -301,10 +308,10 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   var submissionLine = new Line(measure, version, "submissions", filters, submissionPoints);
   submissionLine.histogramEvolution = histogramEvolution;
   
-  return {lines: lines, submissionLine: submissionLine};
+  return {lines: lines, submissionLine: submissionLine, submissionsCutoff: submissionsCutoff};
 }
 
-function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
+function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, minDate, maxDate) {
   minDate = minDate || null; maxDate = maxDate || null;
 
   // Transform the data into a form that is suitable for plotting
@@ -322,10 +329,12 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     data: lineData,
     chart_type: lineData.length == 0 || lineData[0].length === 0 ? "missing-data" : "line",
     full_width: true, height: 600,
+    right: 100, // Extra space on the right for labels
     target: "#evolutions",
     x_extended_ticks: true,
     x_label: "Time", y_label: "Aggregate",
     transition_on_update: false,
+    interpolate: "linear",
     legend: labels,
     aggregate_rollover: true,
     linked: true,
@@ -348,12 +357,15 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   });
   MG.data_graphic({
     data: submissionLineData,
+    baselines: [{value: submissionsCutoff, label: "submissions cutoff: " + formatNumber(submissionsCutoff)}],
     chart_type: submissionLineData.length === 0 || submissionLineData[0].length === 0 ? "missing-data" : "line",
     full_width: true, height: 200,
+    right: 100, // Extra space on the right for labels
     target: "#submissions",
     x_extended_ticks: true,
     x_label: "Time", y_label: "Submissions",
     transition_on_update: false,
+    interpolate: "linear",
     legend: labels,
     aggregate_rollover: true,
     linked: true,
@@ -382,12 +394,18 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     $(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", line.color).css("stroke", line.color);
     $(".mg-line" + lineIndex + "-legend-color").css("fill", line.color);
   });
+  
+  // Reposition and resize text
+  $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
+  $(".mg-x-axis .label").attr("dy", "1.2em");
+  $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
 }
 
 function getHumanReadableOptions(filterName, options, os) {
   os = os || null;
 
-  var systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
+  var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
+  var ignoredOSs = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
   var darwinVersionPrefixes = {
@@ -398,7 +416,7 @@ function getHumanReadableOptions(filterName, options, os) {
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
   if (filterName === "OS") {
     // Replace OS names with pretty OS names where possible
-    return options.map(function(option) {
+    return options.filter(function(option) { return !ignoredOSs[option]; }).map(function(option) {
       return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option];
     });
   } else if (filterName === "osVersion") {
@@ -438,7 +456,7 @@ function getHumanReadableOptions(filterName, options, os) {
 
 var Line = (function(){
   var lineColors = {};
-  var goodColors = ["#FFD2B5", "#FCC376", "#EE816A", "#5C8E6F", "#030303", "#93AE9F", "#E7DB8F", "#9E956A", "#FFB284", "#4BB4A3", "#32506C", "#77300F", "#C8B173"];
+  var goodColors = ["#FCC376", "#EE816A", "#5C8E6F", "#030303", "#93AE9F", "#E7DB8F", "#9E956A", "#FFB284", "#4BB4A3", "#32506C", "#77300F", "#C8B173"];
   var goodColorIndex = 0;
   var filterSortOrder = ["product", "OS", "osVersion", "arch"];
 
