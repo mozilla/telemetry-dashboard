@@ -7,6 +7,7 @@ var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
 var gCurrentHistogramPlot = null;
 var gCurrentHistogram = null;
+var gRangeBarControl = null;
 
 function event() {
   var args = Array.prototype.slice.call(arguments);
@@ -414,7 +415,6 @@ Telemetry.init(function () {
     }
 
     $('input[value="Graph"]').prop('checked',true);
-
   }
   
   $(window).bind("hashchange", function () {
@@ -447,6 +447,12 @@ Telemetry.init(function () {
     $('.single-histogram-only').hide();
     $('#description').hide();
   }
+  
+  // Automatically resize range bar
+  $(window).resize(function() {
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+  });
   
   // Add series button
   $("#addVersionButton").click(function () {
@@ -542,6 +548,9 @@ function fmt(number) {
   var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
   if (interval in units) {
     return Math.round(number * 100 / interval) / 100 + units[interval];
+  }
+  if (interval > 1000000000000) { // Very large value that we don't have a unit for
+    return Math.round(number * 100 / interval) / 100 + "e" + Math.log10(interval);
   }
   return Math.round(number * 100) / 100;
 }
@@ -737,12 +746,17 @@ function renderHistogramGraph(hgram) {
       tooltipLabels[label] = fmt(count) + " hits (" + Math.round(100 * count / total, 2) + "%) between " + start + " and " + end;
       return label;
     });
-    var data = hgram.map(function (count, start, end, index) { return count; });
+    var maxCount = 0;
+    var data = hgram.map(function (count, start, end, index) {
+      if (count > maxCount) { maxCount = count; }
+      return count;
+    });
     
     // Plot the data using Chartjs
     var ctx = document.getElementById("histogram").getContext("2d");
     Chart.defaults.global.responsive = true;
     Chart.defaults.global.animation = false;
+    Chart.defaults.global.maintainAspectRatio = false;
     if (gCurrentHistogramPlot !== null) {
       gCurrentHistogramPlot.destroy();
     }
@@ -759,6 +773,10 @@ function renderHistogramGraph(hgram) {
       scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
       tooltipFontSize: 10,
       tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
+      scaleOverride: true,
+      scaleSteps : 10,
+      scaleStepWidth : maxCount / 10,
+      scaleStartValue : 0,
     });
     
     // Assign fixed pseudorandom colors to make it easy to differentiate between bars
@@ -796,7 +814,7 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   
   // Add a fake series to expand the bounds a bit, which makes the chart look nicer when the timescale is small (within a day or so)
   filteredDatasets.push({
-      data: [{x: minX - 1000, y: minY}, {x: maxX + 1000, y: maxY}],
+      data: [{x: minX - 1000 * 60 * 60 * 24, y: minY}, {x: maxX + 1000 * 60 * 60 * 24, y: maxY}],
       strokeColor: "rgba(0, 0, 0, 0)",
       pointColor: "rgba(0, 0, 0, 0)",
       pointStrokeColor: "rgba(0, 0, 0, 0)",
@@ -808,9 +826,12 @@ function renderHistogramEvolution(lines, minDate, maxDate) {
   }
   var ctx = document.getElementById("evolution").getContext("2d");
   Chart.defaults.global.responsive = true;
+  Chart.defaults.global.animation = false;
+  Chart.defaults.global.maintainAspectRatio = false;
   gCurrentHistogramEvolutionPlots = new Chart(ctx).Scatter(filteredDatasets, {
     animation: false,
     scaleType: "date",
+    useUtc: false, // All our dates are in the local timezone
     scaleLabel: function(valuesObject) { return fmt(valuesObject.value); },
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) {
@@ -848,12 +869,18 @@ $('#export-link').mousedown(function () {
 var gHasReportedDateRangeSelectorUsedInThisSession = false;
 var gDrawTimer = null;
 var gUserSelectedRange = false;
+var gUserMovingRange = false;
+var gLastTimeoutID = null;
 function updateRendering(hgramEvo, lines, start, end) {
+  // Normalize the start and end intervals into unix millisecond timestamps
+  var startMoment = moment(start), endMoment = moment(end);
+  start = startMoment.toDate().getTime();
+  end = endMoment.toDate().getTime();
+
   // Update the start and end range and update the selection if necessary
   var picker = $("#dateRange").data("daterangepicker");
-  var startMoment = moment(start), endMoment = moment(end);
   picker.setOptions({
-    format: "MM/DD/YYYY",
+    format: "YYYY/MM/DD",
     minDate: startMoment,
     maxDate: endMoment,
     showDropdowns: true,
@@ -870,6 +897,7 @@ function updateRendering(hgramEvo, lines, start, end) {
     }
     gUserSelectedRange = true;
     updateRendering(hgramEvo, lines, startMoment, endMoment);
+    gUserSelectedRange = false;
   });
   if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment)) {
     gUserSelectedRange = false;
@@ -880,12 +908,43 @@ function updateRendering(hgramEvo, lines, start, end) {
   }
   var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
   
+  // Rebuild rangebar if it was changed by something other than the user
+  if (!gUserMovingRange) {
+    gRangeBarControl = RangeBar({
+      min: startMoment, max: endMoment.clone().add(1, "days"),
+      maxRanges: 1,
+      valueFormat: function(ts) { return ts; },
+      valueParse: function(date) { return moment(date).valueOf(); },
+      label: function(a) {
+        var days = (a[1] - a[0]) / 86400000;
+        return days < 5 ? days : moment(a[1]).from(a[0], true);
+      },
+      snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
+    }).on("changing", function(ev, ranges, changed) {
+      if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
+      var range = ranges[0];
+      gLastTimeoutID = setTimeout(function() {
+        picker.setStartDate(moment(range[0]));
+        picker.setEndDate(moment(range[1]).subtract(1, "days"));
+        gUserSelectedRange = true;
+        gUserMovingRange = true;
+        updateRendering(hgramEvo, lines, start, end);
+        gUserMovingRange = false;
+        gUserSelectedRange = false;
+      }, 200);
+    });
+    $("#range-bar").empty().append(gRangeBarControl.$el);
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+    gRangeBarControl.val([[moment(minDate), moment(maxDate)]]);
+  }
+  
   var hgram;
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
   gCurrentHistogram = hgram;
   
   // Update summary for the first histogram evolution
-  var dates = hgramEvo.dates();
+  var dates = hgramEvo.dates().filter(function(date) { return minDate <= date.getTime() && date.getTime() <= maxDate; });
   $('#prop-kind').text(hgram.kind());
   $('#prop-dates').text(fmt(dates.length));
   $('#prop-date-range').text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ?
