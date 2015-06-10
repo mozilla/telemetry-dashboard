@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Distribution Dashboard</title>
+    
+    <!-- Bootstrap and supporting libraries -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
+    
+    <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+    
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <h1>Distribution Dashboard</h1>
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <h2 style="font-size: 14px">
+                    <select id="measure" class="select2" title="Value being measured" style="width: 15em"></select>
+                    distribution for
+                    <select id="channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
+                    for
+                    <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
+                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="on any architecture" multiple></select>
+                    on
+                    <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
+                    <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any version" multiple></select>
+                </h2>
+                <figure class="col-md-12">
+                    <div class="col-md-8" id="distribution"></div>
+                    <div class="col-md-4" id="summary">
+                        <dl class="dl-horizontal">
+                            <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Kind</dt><dd id="prop-kind"></dd>
+                            <dt title="Total number of Telemetry pings shown">Submissions</dt><dd id="prop-submissions"></dd>
+                            <dt title="Total number of measurements in the histogram">Count</dt><dd id="prop-count"></dd>
+                            <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
+                            <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
+                            <span class="linear-only">
+                                <hr>
+                                <dt title="Simple average of all values">Mean</dt><dd id="prop-mean"></dd>
+                                <dt title="Standard deviation of all values">Std. dev.</dt><dd id="prop-stddev"></dd>
+                            </span>
+                            <span class="exponential-only">
+                                <hr>
+                                <dt title="Simple average of all values">Mean</dt><dd id="prop-mean2"></dd>
+                                <dt title="Log-scale average of all values">Geo. mean</dt><dd id="prop-geometric-mean"></dd>
+                                <dt title="Log-scale standard deviation of all values">Geo. std. dev.</dt><dd id="prop-geometric-stddev"></dd>
+                            </span>
+                            <span class="linear-only exponential-only">
+                                <hr>
+                                <dt>5th Percentile</dt><dd id="prop-p5"></dd>
+                                <dt>25th Percentile</dt><dd id="prop-p25"></dd>
+                                <dt>Median</dt><dd id="prop-p50"></dd>
+                                <dt>75th Percentile</dt><dd id="prop-p75"></dd>
+                                <dt>95th Percentile</dt><dd id="prop-p95"></dd>
+                                <br>
+                                <div class="alert alert-warning">
+                                    <strong >Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
+                                </div>
+                            </span>
+                        </dl>
+                    </div>
+                </figure>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap and supporting libraries -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    
+    <!-- Chartjs -->
+    <!--<script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+    <script src="lib/Chart.Scatter.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <!--<script src="lib/metricsgraphics.min.js"></script>-->
+    <script src="lib/metricsgraphics.js"></script>
+    
+    <!--
+        big.js and telemetry.js from telemetry.mozilla.org
+        if you're not deploying to telemetry.mozilla.org you must include these
+        from:
+            - telemetry.mozilla.org/v1/big.js
+            - telemetry.mozilla.org/v1/telemetry.js
+        (we'll try to keep it backwards compatible)
+    -->
+    <script src="v1/big.js"></script>
+    <script src="v1/telemetry.js"></script>
+    
+    <!-- Initialize controls -->
+    <script type="text/javascript">
+    $(document).ready(function() {
+        // Select boxes
+        $(".select2").select2();
+        
+        // Multiselect boxes
+        $('.multiselect').each(function(i, select) {
+            var $this = $(this);
+            var options = {
+                enableFiltering: true,
+                enableCaseInsensitiveFiltering: true,
+                includeSelectAllOption: true,
+                allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
+                maxHeight: 500,
+            };
+            if ($this.attr("title") !== undefined) {
+                options.nonSelectedText = $this.attr("title");
+            }
+            $this.multiselect(options);
+        });
+        // Date range pickers
+        $(".daterange").daterangepicker();
+    });
+    </script>
+    <script src="dist.js"></script>
+</body>
+</html>
