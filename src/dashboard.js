@@ -543,7 +543,7 @@ function fmt(number) {
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
   var mag = Math.abs(number);
-  var exponent = Math.floor(Math.log10(mag));
+  var exponent = Math.floor(Math.log10 !== undefined ? Math.log10(mag) : Math.log(mag) / Math.log(10));
   var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
   var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
   if (interval in units) {
