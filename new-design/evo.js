@@ -60,7 +60,7 @@ Telemetry.init(function() {
   });
 });
 
-function updateMeasuresList(callback = null) {
+function updateMeasuresList(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
   gMeasureMap = {}, versionCount = 0;
@@ -72,7 +72,7 @@ function updateMeasuresList(callback = null) {
         var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
         selectSetOptions($("#measure"), measureList);
         $("#measure").val(gInitialPageState.measure).trigger("change");
-        if (callback !== null) { callback(); }
+        if (callback !== undefined) { callback(); }
       }
     });
   });
@@ -161,7 +161,7 @@ function getOptions(filterList, histogramEvolution) {
     filterTree._name = histogramEvolution.filterName();
     return filterTree
   }
-  function getOptionsList(filterTree, optionsList, currentPath, depth = 0, includeSelf = true) {
+  function getOptionsList(filterTree, optionsList, currentPath, depth, includeSelf) {
     var options = Object.keys(filterTree).sort();
     var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
     if (filterOptions.length === 0) { return optionsList; }
@@ -188,7 +188,7 @@ function getOptions(filterList, histogramEvolution) {
   }
 
   var filterTree = getCombinedFilterTree(histogramEvolution);
-  var optionsList = getOptionsList(filterTree, [], []);
+  var optionsList = getOptionsList(filterTree, [], [], 0, true);
   
   // Remove duplicate options
   optionsList = optionsList.map(function(options) {
@@ -204,12 +204,14 @@ function getOptions(filterList, histogramEvolution) {
   return optionsList;
 }
 
-function getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList, sanitize = true) {
+function getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList, sanitize) {
+  sanitize = sanitize || false;
+
   // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
   var evolutions = [histogramEvolution];
   filterList.forEach(function(options, i) {
     if (evolutions.length === 0) { return; } // No more evolutions, probably because a filter had no options selected
-    evolutions = Array.concat.apply([], evolutions.map(function(evolution) {
+    evolutions = [].concat.apply([], evolutions.map(function(evolution) {
       var actualOptions = options, fullOptions = evolution.filterOptions();
       if (actualOptions === null) { actualOptions = fullOptions; }
       actualOptions = actualOptions.filter(function(option) { return fullOptions.indexOf(option) >= 0 });
@@ -302,7 +304,9 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   return {lines: lines, submissionLine: submissionLine};
 }
 
-function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxDate = null) {
+function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
+  minDate = minDate || null; maxDate = maxDate || null;
+
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
     return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
@@ -316,7 +320,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
   // Plot the data using MetricsGraphics
   MG.data_graphic({
     data: lineData,
-    chart_type: lineData.length == 0 ? "missing-data" : "line",
+    chart_type: lineData.length == 0 || lineData[0].length === 0 ? "missing-data" : "line",
     full_width: true, height: 600,
     target: "#evolutions",
     x_extended_ticks: true,
@@ -380,7 +384,9 @@ function displayHistogramEvolutions(lines, submissionLines, minDate = null, maxD
   });
 }
 
-function getHumanReadableOptions(filterName, options, os = null) {
+function getHumanReadableOptions(filterName, options, os) {
+  os = os || null;
+
   var systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
@@ -604,9 +610,9 @@ function formatNumber(number) {
   return Math.round(number * 100) / 100;
 }
 
-function selectSetOptions(element, options, defaultSelected = null) {
-  if (defaultSelected !== null && typeof defaultSelected !== "string") {
-    throw "Bad defaultSelected value: must be array of strings.";
+function selectSetOptions(element, options, defaultSelected) {
+  if (defaultSelected !== undefined && typeof defaultSelected !== "string") {
+    throw "Bad defaultSelected value: must be a string.";
   }
   options.forEach(function(option) {
     if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
@@ -617,11 +623,13 @@ function selectSetOptions(element, options, defaultSelected = null) {
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
   }).join());
-  if (selected !== null) { element.val(selected); }
+  if (typeof selected === "string") { element.val(selected); }
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
-function multiselectSetOptions(element, options, defaultSelected = null) {
+function multiselectSetOptions(element, options, defaultSelected) {
+  defaultSelected = defaultSelected || null;
+
   // Check inputs
   if (defaultSelected !== null) {
     defaultSelected.forEach(function(option) {

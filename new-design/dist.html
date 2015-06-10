@@ -16,6 +16,12 @@
     
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
     
+    <style>
+    /* dropdown style overrides */
+    .btn-group > .multiselect { border: transparent !important; padding: 6px 3px !important; }
+    .select2-container { width: auto !important; }
+    .select2-selection { border: transparent !important; }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -25,9 +31,9 @@
         <div class="row">
             <div class="col-md-12">
                 <h2 style="font-size: 14px">
-                    <select id="measure" class="select2" title="Value being measured" style="width: 15em"></select>
+                    <select id="measure" class="select2" title="Value being measured"></select>
                     distribution for
-                    <select id="channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
+                    <select id="channel-version" class="select2" title="Build version"></select>
                     for
                     <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="on any architecture" multiple></select>
@@ -104,7 +110,9 @@
     <script type="text/javascript">
     $(document).ready(function() {
         // Select boxes
-        $(".select2").select2();
+        $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
+            $(this).next().css("margin-top", "-0.4em"); // Align the control so that the baseline matches surrounding text
+        });
         
         // Multiselect boxes
         $('.multiselect').each(function(i, select) {
@@ -120,6 +128,7 @@
                 options.nonSelectedText = $this.attr("title");
             }
             $this.multiselect(options);
+            $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
         });
         // Date range pickers
         $(".daterange").daterangepicker();

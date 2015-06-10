@@ -16,7 +16,7 @@ Telemetry.init(function() {
   
   // Set up aggregate, build, and measure selectors
   selectSetOptions($("#channel-version"), gVersions.map(function(version) { return [version, version.replace("/", " ")] }));
-  if (gInitialPageState.channel_version) { $("#channel-version").val(gInitialPageState.channel_version); }
+  if (gInitialPageState.max_channel_version) { $("#channel-version").val(gInitialPageState.max_channel_version); }
   $("#channel-version").trigger("change");
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
@@ -51,17 +51,19 @@ Telemetry.init(function() {
   });
 });
 
-function updateMeasuresList(callback = null) {
+function updateMeasuresList(callback) {
   var channelVersion = $("#channel-version").val();
   Telemetry.measures(channelVersion, function(measures) {
     var measuresList = Object.keys(measures).sort().map(function(measure) { return [measure, measure]; });
     selectSetOptions($("#measure"), measuresList);
     $("#measure").val(gInitialPageState.measure).trigger("change");
-    if (callback !== null) { callback(); }
+    if (callback !== undefined) { callback(); }
   });
 }
 
-function calculateHistogram(callback, minDate = -Infinity, maxDate = Infinity) {
+function calculateHistogram(callback, minDate, maxDate) {
+  minDate = minDate || -Infinity; maxDate = maxDate || Infinity;
+
   // Get selected version, measure, and aggregate options
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
@@ -114,7 +116,7 @@ function getOptions(filterList, histogramEvolution) {
     filterTree._name = histogramEvolution.filterName();
     return filterTree
   }
-  function getOptionsList(filterTree, optionsList, currentPath, depth = 0, includeSelf = true) {
+  function getOptionsList(filterTree, optionsList, currentPath, depth, includeSelf) {
     var options = Object.keys(filterTree).sort();
     var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
     if (filterOptions.length === 0) { return optionsList; }
@@ -141,7 +143,7 @@ function getOptions(filterList, histogramEvolution) {
   }
 
   var filterTree = getCombinedFilterTree(histogramEvolution);
-  var optionsList = getOptionsList(filterTree, [], []);
+  var optionsList = getOptionsList(filterTree, [], [], 0, true);
   
   // Remove duplicate options
   optionsList = optionsList.map(function(options) {
@@ -162,7 +164,7 @@ function getHistogram(version, measure, histogram, filters, filterList) {
   var histograms = [histogram];
   filterList.forEach(function(options, i) {
     if (histograms.length === 0) { return; } // No more evolutions, probably because a filter had no options selected
-    histograms = Array.concat.apply([], histograms.map(function(histogram) {
+    histograms = [].concat.apply([], histograms.map(function(histogram) {
       var actualOptions = options, fullOptions = histogram.filterOptions();
       if (actualOptions === null) { actualOptions = fullOptions; }
       actualOptions = actualOptions.filter(function(option) { return fullOptions.indexOf(option) >= 0 });
@@ -240,7 +242,9 @@ function displayHistogram(histogram, dates) {
   });
 }
 
-function getHumanReadableOptions(filterName, options, os = null) {
+function getHumanReadableOptions(filterName, options, os) {
+  os = os || null;
+  
   var systemNames = {"WINNT": "Windows", "Windows_95": "Windows 95", "Darwin": "OS X"};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
@@ -318,8 +322,8 @@ function loadStateFromUrlAndCookie() {
   // Process the saved state value
   gInitialPageState.measure = gInitialPageState.measure !== undefined ?
     gInitialPageState.measure : "GC_MS";
-  gInitialPageState.channel_version = gInitialPageState.channel_version !== undefined ?
-    gInitialPageState.channel_version : "nightly/41";
+  gInitialPageState.max_channel_version = gInitialPageState.max_channel_version !== undefined ?
+    gInitialPageState.max_channel_version : "nightly/41";
   gInitialPageState.product = gInitialPageState.product !== undefined ?
     gInitialPageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
   gInitialPageState.arch = gInitialPageState.arch !== undefined ?
@@ -334,7 +338,7 @@ function loadStateFromUrlAndCookie() {
 function saveStateToUrlAndCookie() {
   var gInitialPageState = {
     measure: $("#measure").val(),
-    channel_version: $("#channel-version").val(),
+    max_channel_version: $("#channel-version").val(),
     product: $("#filter-product").val() || [],
   };
   
@@ -380,9 +384,9 @@ function formatNumber(number) {
   return Math.round(number * 100) / 100;
 }
 
-function selectSetOptions(element, options, defaultSelected = null) {
-  if (defaultSelected !== null && typeof defaultSelected !== "string") {
-    throw "Bad defaultSelected value: must be array of strings.";
+function selectSetOptions(element, options, defaultSelected) {
+  if (defaultSelected !== undefined && typeof defaultSelected !== "string") {
+    throw "Bad defaultSelected value: must be a string.";
   }
   options.forEach(function(option) {
     if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
@@ -393,11 +397,13 @@ function selectSetOptions(element, options, defaultSelected = null) {
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
   }).join());
-  if (selected !== null) { element.val(selected); }
+  if (typeof selected === "string") { element.val(selected); }
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
-function multiselectSetOptions(element, options, defaultSelected = null) {
+function multiselectSetOptions(element, options, defaultSelected) {
+  defaultSelected = defaultSelected || null;
+
   // Check inputs
   if (defaultSelected !== null) {
     defaultSelected.forEach(function(option) {

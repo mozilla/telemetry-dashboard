@@ -16,6 +16,12 @@
     
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
     
+    <style>
+    /* dropdown style overrides */
+    .btn-group > .multiselect { border: transparent !important; padding: 6px 3px !important; }
+    .select2-container { width: auto !important; }
+    .select2-selection { border: transparent !important; }
+    </style>
 </head>
 <body>
     <div class="container-fluid">
@@ -83,7 +89,9 @@
     <script type="text/javascript">
     $(document).ready(function() {
         // Select boxes
-        $(".select2").select2();
+        $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
+            $(this).next().css("margin-top", "-0.4em"); // Align the control so that the baseline matches surrounding text
+        });
         
         // Multiselect boxes
         $('.multiselect').each(function(i, select) {
@@ -99,6 +107,7 @@
                 options.nonSelectedText = $this.attr("title");
             }
             $this.multiselect(options);
+            $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
         });
         // Date range pickers
         $(".daterange").daterangepicker();
