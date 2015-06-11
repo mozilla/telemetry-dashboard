@@ -63,7 +63,25 @@ Telemetry.init(function() {
   $("#switch-views").click(function() {
     var evolutionURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
     window.location.href = evolutionURL;
-  })
+  });
+  
+  // Obtain a short permalink to the current page
+  $("#permalink-value").hide().focus(function() {
+    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+    var $this = $(this);
+    $this.select().mouseup(function() { $this.unbind("mouseup"); return false; });
+  });
+  $("#get-permalink").click(function() {
+    $.ajax({
+      url: "https://api-ssl.bitly.com/shorten", dataType: "jsonp",
+      data: {longUrl: window.location.href, access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584", format: "json"},
+      success: function(response) {
+        var longUrl = Object.keys(response.results)[0];
+        var shortUrl = response.results[longUrl].shortUrl;
+        $("#permalink-value").show().val(shortUrl).focus();
+      }
+    });
+  });
 });
 
 function updateMeasuresList(callback) {

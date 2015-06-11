@@ -30,10 +30,15 @@
 <body>
     <div class="container-fluid">
         <header>
-            <h1>
-                Distribution Dashboard
-                <button type="button" id="get-permalink" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button>
-            </h1>
+            <form id="histogram-filters" class="navbar-form" style="float: right; margin: 0">
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button type="button" id="get-permalink" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button>
+                    </span>
+                    <input type="text" id="permalink-value" class="form-control">
+                </div>
+            </form>
+            <h1>Distribution Dashboard</h1>
         </header>
         <div class="row">
             <div class="col-md-12">
