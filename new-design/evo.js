@@ -34,8 +34,12 @@ Telemetry.init(function() {
       
       $("#min-channel-version, #max-channel-version").change(function() { updateMeasuresList(); });
       $("#measure").change(function() {
+        // Update the measure description
+        var measure = $(this).val();
+        var measureEntry = gMeasureMap[measure];
+        $("#measure-description").text(measureEntry.description + " (" + measure + ")");
+        
         // Figure out which aggregates actually apply to this measure
-        var measureEntry = gMeasureMap[$(this).val()];
         var options;
         if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
           options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]]
@@ -47,15 +51,19 @@ Telemetry.init(function() {
         multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
         $("#aggregates").trigger("change");
       });
-      $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+      $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
         calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines, submissionsCutoff) {
           refreshFilters(filterList, filterOptionsList);
+          
+          // If the OS was changed, select all the OS versions
+          if (e.target.id == "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
+          
           displayHistogramEvolutions(lines, submissionLines, submissionsCutoff);
           saveStateToUrlAndCookie();
         });
       });
       
-      $("#aggregates").trigger("change");
+      $("#measure").trigger("change");
     });
   });
   
@@ -87,7 +95,8 @@ Telemetry.init(function() {
 function updateMeasuresList(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  gMeasureMap = {}, versionCount = 0;
+  var versionCount = 0;
+  gMeasureMap = {};
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     Telemetry.measures(channelVersion, function(measures) {
       versionCount ++;

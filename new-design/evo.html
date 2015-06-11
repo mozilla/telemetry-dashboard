@@ -42,7 +42,7 @@
         </header>
         <div class="row">
             <div class="col-md-12">
-                <h2 style="font-size: 18px">
+                <h2 style="font-size: 18px; margin-bottom: 0">
                     <select id="aggregates" class="multiselect" title="Aggregate type" data-all-selected="All aggregates of" multiple>
                         <option value="median">Median</option>
                         <option value="mean">Mean</option>
@@ -65,6 +65,7 @@
                     
                     <button class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</button>
                 </h2>
+                <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
                 <figure class="col-md-12">
                     <div class="col-md-12" id="evolutions"></div>
                     <div class="col-md-12" id="submissions"></div>

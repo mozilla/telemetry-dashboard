@@ -34,6 +34,11 @@ Telemetry.init(function() {
       
       $("#channel-version").change(function() { updateMeasuresList(); });
       $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+        // Update the measure description
+        var measure = $("#measure").val();
+        var measureEntry = gMeasureMap[measure];
+        $("#measure-description").text(measureEntry.description + " (" + measure + ")");
+      
         calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
           multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
           multiselectSetOptions($("#filter-os"), filterOptionsList[2]);
@@ -76,8 +81,12 @@ Telemetry.init(function() {
 
 function updateMeasuresList(callback) {
   var channelVersion = $("#channel-version").val();
+  gMeasureMap = {};
   Telemetry.measures(channelVersion, function(measures) {
-    var measuresList = Object.keys(measures).sort().map(function(measure) { return [measure, measure]; });
+    var measuresList = Object.keys(measures).sort().map(function(measure) {
+      gMeasureMap[measure] = measures[measure];
+      return [measure, measure];
+    });
     selectSetOptions($("#measure"), measuresList);
     $("#measure").val(gInitialPageState.measure).trigger("change");
     if (callback !== undefined) { callback(); }
