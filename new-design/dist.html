@@ -13,6 +13,7 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
+    <link rel="stylesheet" type="text/css" href="style/elessar.css" />
     
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
     
@@ -25,6 +26,19 @@
     }
     .select2-container { width: auto !important; }
     .select2-selection { border: transparent !important; }
+    
+    /* Rangebar style overrides */
+    .elessar-rangebar {
+        border-radius: 4px;
+        background: #CCC;
+        box-shadow: inset 0 0 3px 0px rgba(0,0,0,0.5);
+    }
+    .elessar-range {
+        background: #A53E35;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+    }
     </style>
 </head>
 <body>
@@ -92,6 +106,17 @@
                 </figure>
             </div>
         </div>
+        <div class="row">
+            <form class="form-horizontal" style="margin: 10px 50px">
+                <span id="date-range-controls" class="form-group" style="width: 230px; display: inline-block; margin: 0">
+                    <span class="input-prepend input-group">
+                        <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                        <input type="text" name="date-range" style="width: 100%" id="date-range" class="form-control date-range"/>
+                    </span>
+                </span>
+                <span id="range-bar" class="pull-right"></span>
+            </form>
+        </div>
     </div>
     
     <!-- Bootstrap and supporting libraries -->
@@ -101,6 +126,7 @@
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <script src="lib/elessar.min.js"></script>
     
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
@@ -141,8 +167,9 @@
             $this.multiselect(options);
             $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
         });
+        
         // Date range pickers
-        $(".daterange").daterangepicker();
+        $(".date-range").daterangepicker();
     });
     </script>
     <script src="dist.js"></script>

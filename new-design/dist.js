@@ -1,15 +1,8 @@
-var gFilterMapping = null;
 var gVersions = null;
 var gInitialPageState = null;
 
 Telemetry.init(function() {
   gVersions = Telemetry.versions();
-  gFilterMapping = {
-    "product":    $("#filter-product"),
-    "arch":       $("#filter-arch"),
-    "os":         $("#filter-os"),
-    "os_version": $("#filter-os-version"),
-  };
 
   loadStateFromUrlAndCookie();
   
@@ -45,6 +38,7 @@ Telemetry.init(function() {
           multiselectSetOptions($("#filter-os-version"), filterOptionsList[3]);
           multiselectSetOptions($("#filter-arch"), filterOptionsList[4]);
           
+
           displayHistogram(histogram, dates);
           saveStateToUrlAndCookie();
         });
@@ -93,17 +87,21 @@ function updateMeasuresList(callback) {
   });
 }
 
-function calculateHistogram(callback, minDate, maxDate) {
-  minDate = minDate || -Infinity; maxDate = maxDate || Infinity;
-
+function calculateHistogram(callback) {
   // Get selected version, measure, and aggregate options
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
-  for (var filterName in gFilterMapping) {
-    var filterSelector = $(gFilterMapping[filterName]);
+  var filterMapping = {
+    "product":    $("#filter-product"),
+    "arch":       $("#filter-arch"),
+    "os":         $("#filter-os"),
+    "os_version": $("#filter-os-version"),
+  };
+  for (var filterName in filterMapping) {
+    var filterSelector = $(filterMapping[filterName]);
     var selection = filterSelector.val() || [];
     var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
     if (selection.length != optionCount) { // Not all options are selected
@@ -122,17 +120,83 @@ function calculateHistogram(callback, minDate, maxDate) {
     filterList.pop();
   }
 
-  var filterOptionsList = []; // Each entry is an array of options for a particular filter
   Telemetry.loadEvolutionOverBuilds(channelVersion, measure, function(histogramEvolution) {
-    var histogram = histogramEvolution.range();
-    var dates = histogramEvolution.dates().filter(function(date) { return minDate <= date && date <= maxDate; });
-  
-    // Update filter options
-    var filterOptionsList = getOptions(filterList, histogram);
-    
-    var histogram = getHistogram(channelVersion, measure, histogram, filters, filterList);
-    callback(filterList, filterOptionsList, histogram, dates);
+    updateDateRange(function(dates) {
+      var filterOptionsList = getOptions(filterList, histogramEvolution); // Update filter options
+      var fullHistogram = histogramEvolution.range(dates[0], dates[dates.length - 1]);
+      var filteredHistogram = getFilteredHistogram(channelVersion, measure, fullHistogram, filters, filterList);
+      callback(filterList, filterOptionsList, filteredHistogram, dates);
+    }, histogramEvolution, false);
   });
+}
+
+var gLastTimeoutID = null;
+var gCurrentDateRangeUpdateCallback = null;
+function updateDateRange(callback, histogramEvolution, updatedByUser, shouldUpdateRangebar) {
+  shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true : shouldUpdateRangebar;
+
+  gCurrentDateRangeUpdateCallback = callback || function() {};
+
+  var dates = histogramEvolution.dates();
+  if (dates.length == 0) { $("#date-range").attr("disabled", ""); }
+  $("#date-range").removeAttr("disabled");
+  
+  var startMoment = moment(dates[0]), endMoment = moment(dates[dates.length - 1]);
+
+  // Update the start and end range and update the selection if necessary
+  var picker = $("#date-range").data("daterangepicker");
+  picker.setOptions({
+    format: "YYYY/MM/DD",
+    minDate: startMoment,
+    maxDate: endMoment,
+    showDropdowns: true,
+    drops: "up",
+    ranges: {
+       "All": [startMoment, endMoment],
+       "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
+       "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
+    },
+  }, function(chosenStartMoment, chosenEndMoment, label) {
+    updateDateRange(gCurrentDateRangeUpdateCallback, histogramEvolution, true);
+  });
+  
+  // If the selected date range is now out of bounds, or the bounds were updated programmatically, select the entire range
+  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment) || !updatedByUser) {
+    picker.setStartDate(startMoment);
+    picker.setEndDate(endMoment);
+  }
+  
+  // Rebuild rangebar if it was changed by something other than the user
+  if (shouldUpdateRangebar) {
+    var rangeBarControl = RangeBar({
+      min: startMoment, max: endMoment.clone().add(1, "days"),
+      maxRanges: 1,
+      valueFormat: function(ts) { return ts; },
+      valueParse: function(date) { return moment(date).valueOf(); },
+      label: function(a) {
+        var days = (a[1] - a[0]) / 86400000;
+        return days < 5 ? days : moment(a[1]).from(a[0], true);
+      },
+      snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
+    }).on("changing", function(e, ranges, changed) {
+      var range = ranges[0];
+      if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
+      gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
+        picker.setStartDate(moment(range[0]));
+        picker.setEndDate(moment(range[1]).subtract(1, "days"));
+        updateDateRange(gCurrentDateRangeUpdateCallback, histogramEvolution, true, false);
+      }, 100);
+    });
+    $("#range-bar").empty().append(rangeBarControl.$el);
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+    rangeBarControl.val([[picker.startDate, picker.endDate]]);
+  }
+  
+  var min = picker.startDate.toDate(), max = picker.endDate.toDate();
+  dates = dates.filter(function(date) { return min <= date && date <= max; });
+  
+  return gCurrentDateRangeUpdateCallback(dates);
 }
 
 function getOptions(filterList, histogramEvolution) {
@@ -191,7 +255,7 @@ function getOptions(filterList, histogramEvolution) {
   return optionsList;
 }
 
-function getHistogram(version, measure, histogram, filters, filterList) {
+function getFilteredHistogram(version, measure, histogram, filters, filterList) {
   // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
   var histograms = [histogram];
   filterList.forEach(function(options, i) {

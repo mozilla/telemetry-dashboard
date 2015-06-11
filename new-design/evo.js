@@ -1,16 +1,9 @@
-var gFilterMapping = null;
 var gVersions = null;
 var gMeasureMap = null;
 var gInitialPageState = null;
 
 Telemetry.init(function() {
   gVersions = Telemetry.versions();
-  gFilterMapping = {
-    "product":    $("#filter-product"),
-    "arch":       $("#filter-arch"),
-    "os":         $("#filter-os"),
-    "os_version": $("#filter-os-version"),
-  };
 
   loadStateFromUrlAndCookie();
   
@@ -136,8 +129,14 @@ function calculateHistogramEvolutions(callback) {
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
-  for (var filterName in gFilterMapping) {
-    var filterSelector = $(gFilterMapping[filterName]);
+  var filterMapping = {
+    "product":    $("#filter-product"),
+    "arch":       $("#filter-arch"),
+    "os":         $("#filter-os"),
+    "os_version": $("#filter-os-version"),
+  };
+  for (var filterName in filterMapping) {
+    var filterSelector = $(filterMapping[filterName]);
     var selection = filterSelector.val() || [];
     var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
     if (selection.length != optionCount) { // Not all options are selected
