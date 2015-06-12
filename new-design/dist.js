@@ -71,6 +71,12 @@ Telemetry.init(function() {
       }
     });
   });
+  
+  // Automatically resize range bar
+  $(window).resize(function() {
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+  });
 });
 
 function updateMeasuresList(callback) {
