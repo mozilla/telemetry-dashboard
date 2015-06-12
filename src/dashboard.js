@@ -7,7 +7,6 @@ var cachedData = {};//if data was prepared once never do it again
 var gHashSetFromCode = false;
 var gCurrentHistogramPlot = null;
 var gCurrentHistogram = null;
-var gRangeBarControl = null;
 
 function event() {
   var args = Array.prototype.slice.call(arguments);
@@ -878,7 +877,7 @@ function updateRendering(hgramEvo, lines, start, end) {
   end = endMoment.toDate().getTime();
 
   // Update the start and end range and update the selection if necessary
-  var picker = $("#dateRange").data("daterangepicker");
+  var picker = $("#date-range").data("daterangepicker");
   picker.setOptions({
     format: "YYYY/MM/DD",
     minDate: startMoment,
@@ -910,7 +909,7 @@ function updateRendering(hgramEvo, lines, start, end) {
   
   // Rebuild rangebar if it was changed by something other than the user
   if (!gUserMovingRange) {
-    gRangeBarControl = RangeBar({
+    var rangeBarControl = RangeBar({
       min: startMoment, max: endMoment.clone().add(1, "days"),
       maxRanges: 1,
       valueFormat: function(ts) { return ts; },
@@ -933,10 +932,10 @@ function updateRendering(hgramEvo, lines, start, end) {
         gUserSelectedRange = false;
       }, 200);
     });
-    $("#range-bar").empty().append(gRangeBarControl.$el);
+    $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
-    gRangeBarControl.val([[moment(minDate), moment(maxDate)]]);
+    rangeBarControl.val([[moment(minDate), moment(maxDate)]]);
   }
   
   var hgram;
