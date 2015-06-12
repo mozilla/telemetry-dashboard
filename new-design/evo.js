@@ -10,9 +10,8 @@ Telemetry.init(function() {
   // Set up aggregate, build, and measure selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   selectSetOptions($("#min-channel-version, #max-channel-version"), gVersions.map(function(version) { return [version, version.replace("/", " ")] }));
-  if (gInitialPageState.min_channel_version) { $("#min-channel-version").val(gInitialPageState.min_channel_version); }
-  if (gInitialPageState.max_channel_version) { $("#max-channel-version").val(gInitialPageState.max_channel_version); }
-  $("#min-channel-version, #max-channel-version").trigger("change");
+  if (gInitialPageState.min_channel_version) { $("#min-channel-version").select2("val", gInitialPageState.min_channel_version); }
+  if (gInitialPageState.max_channel_version) { $("#max-channel-version").select2("val", gInitialPageState.max_channel_version); }
   updateMeasuresList(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines, submissionsCutoff) {
       refreshFilters(filterList, filterOptionsList);
@@ -25,7 +24,15 @@ Telemetry.init(function() {
       if (gInitialPageState.os_version !== null) { $("#filter-os-version").multiselect("select", gInitialPageState.os_version); }
       else { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
       
-      $("#min-channel-version, #max-channel-version").change(function() { updateMeasuresList(); });
+      $("#min-channel-version, #max-channel-version").change(function(e) {
+        var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
+        var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
+        if (versions.length === 0) {
+          if (e.target.id === "min-channel-version") { $("#max-channel-version").select2("val", fromVersion); }
+          else { $("#min-channel-version").select2("val", toVersion); }
+        }
+        updateMeasuresList(function() { $("#measure").trigger("change"); });
+      });
       $("#measure").change(function() {
         // Update the measure description
         var measure = $(this).val();
@@ -56,6 +63,7 @@ Telemetry.init(function() {
         });
       });
       
+      // Perform a full display refresh
       $("#measure").trigger("change");
     });
   });
@@ -90,14 +98,19 @@ function updateMeasuresList(callback) {
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
   var versionCount = 0;
   gMeasureMap = {};
+  if (versions.length == 0) { // All versions are loaded
+    selectSetOptions($("#measure"), []);
+    if (callback !== undefined) { callback(); }
+    return
+  }
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     Telemetry.measures(channelVersion, function(measures) {
       versionCount ++;
       Object.keys(measures).forEach(function(measure) { gMeasureMap[measure] = measures[measure]; });
-      if (versionCount == versions.length) { // All versions are loaded
+      if (versions.length === versionCount) { // All versions are loaded
         var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
         selectSetOptions($("#measure"), measureList);
-        $("#measure").val(gInitialPageState.measure).trigger("change");
+        $("#measure").select2("val", gInitialPageState.measure);
         if (callback !== undefined) { callback(); }
       }
     });
@@ -369,7 +382,7 @@ function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, m
     mouseover: function(d, i) {
       // Create legend
       var date = d.key;
-      var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id]];
+      var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
       var legend = d3.select("#evolutions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
       var lineHeight = 1.1;
@@ -667,7 +680,7 @@ function selectSetOptions(element, options, defaultSelected) {
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
   }).join());
-  if (typeof selected === "string") { element.val(selected); }
+  if (typeof selected === "string") { element.select2("val", selected); }
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text

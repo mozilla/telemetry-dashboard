@@ -8,8 +8,7 @@ Telemetry.init(function() {
   
   // Set up aggregate, build, and measure selectors
   selectSetOptions($("#channel-version"), gVersions.map(function(version) { return [version, version.replace("/", " ")] }));
-  if (gInitialPageState.max_channel_version) { $("#channel-version").val(gInitialPageState.max_channel_version); }
-  $("#channel-version").trigger("change");
+  if (gInitialPageState.max_channel_version) { $("#channel-version").select2("val", gInitialPageState.max_channel_version); }
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
       multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
@@ -24,8 +23,10 @@ Telemetry.init(function() {
       else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
       if (gInitialPageState.os_version !== null) { $("#filter-os-version").multiselect("select", gInitialPageState.os_version); }
       else { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      
-      $("#channel-version").change(function() { updateMeasuresList(); });
+
+      $("#channel-version").change(function() {
+        updateMeasuresList(function() { $("#measure").trigger("change"); });
+      });
       $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
         // Update the measure description
         var measure = $("#measure").val();
@@ -43,7 +44,8 @@ Telemetry.init(function() {
           saveStateToUrlAndCookie();
         });
       });
-      
+
+      // Perform a full display refresh
       $("#measure").trigger("change");
     });
   });
@@ -88,7 +90,7 @@ function updateMeasuresList(callback) {
       return [measure, measure];
     });
     selectSetOptions($("#measure"), measuresList);
-    $("#measure").val(gInitialPageState.measure).trigger("change");
+    $("#measure").select2("val", gInitialPageState.measure);
     if (callback !== undefined) { callback(); }
   });
 }
@@ -146,6 +148,10 @@ function updateDateRange(callback, histogramEvolution, updatedByUser, shouldUpda
   var dates = histogramEvolution.dates();
   if (dates.length == 0) { $("#date-range").attr("disabled", ""); }
   $("#date-range").removeAttr("disabled");
+  
+  // Cut off all dates past one year in the future
+  var timeCutoff = moment().add(1, "years").toDate().getTime();
+  dates = dates.filter(function(date) { return date <= timeCutoff; });
   
   var startMoment = moment(dates[0]), endMoment = moment(dates[dates.length - 1]);
 

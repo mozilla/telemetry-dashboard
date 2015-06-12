@@ -3020,10 +3020,10 @@ MG.button_layout = function(target) {
                 if (args.linked && !MG.globals.link) {
                     MG.globals.link = true;
 
-                    if (!args.aggregate_rollover || d.values.length > 0) {
-                        var datum = args.aggregate_rollover ? d.values[0] : d;
-                        var v = datum[args.x_accessor];
+                    if (!args.aggregate_rollover || d.value || d.values.length > 0) {
+                        var datum = d.values ? d.values[0] : d;
                         var formatter = d3.time.format(args.linked_format);
+                        var v = datum[args.x_accessor];
                         var id = (typeof v === 'number') ? i : formatter(v);
 
                         //trigger mouseover on matching line in .linked charts
@@ -3146,11 +3146,11 @@ MG.button_layout = function(target) {
                     MG.globals.link = false;
 
                     var formatter = d3.time.format(args.linked_format);
-                    var datums = args.aggregate_rollover ? d.values : [d];
+                    var datums = d.values ? d.values : [d];
                     datums.forEach(function(datum) {
                         var v = datum[args.x_accessor];
                         var id = (typeof v === 'number') ? i : formatter(v);
-                        
+
                         //trigger mouseout on matching line in .linked charts
                         d3.selectAll('.roll_' + id)
                             .each(function(d, i) {
