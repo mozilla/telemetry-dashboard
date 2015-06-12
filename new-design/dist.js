@@ -85,7 +85,9 @@ function updateMeasuresList(callback) {
   var channelVersion = $("#channel-version").val();
   gMeasureMap = {};
   Telemetry.measures(channelVersion, function(measures) {
-    var measuresList = Object.keys(measures).sort().map(function(measure) {
+    var measuresList = Object.keys(measures).sort().filter(function(measure) {
+      return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
+    }).map(function(measure) {
       gMeasureMap[measure] = measures[measure];
       return [measure, measure];
     });
@@ -299,25 +301,17 @@ function displayHistogram(histogram, dates) {
   $("#prop-date-range").text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ? "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
   $("#prop-submissions").text(formatNumber(histogram.submissions()));
   $("#prop-count").text(formatNumber(histogram.count()));
-  if (histogram.kind() == "linear") {
-    $("#prop-mean").text(formatNumber(histogram.mean()));
-    $("#prop-stddev").text(formatNumber(histogram.standardDeviation()));
-    $(".linear-only").show(); $(".exponential-only").hide();
-  }
-  else if (histogram.kind() == "exponential") {
-    $("#prop-mean2").text(formatNumber(histogram.mean()));
-    $("#prop-geometric-mean").text(formatNumber(histogram.geometricMean()));
-    $("#prop-geometric-stddev").text(formatNumber(histogram.geometricStandardDeviation()));
-    $(".linear-only").hide(); $(".exponential-only").show();
-  } else {
-    $(".linear-only, .exponential-only").hide();
-  }
   if (histogram.kind() == "linear" || histogram.kind() == "exponential") {
+    $("#prop-mean").text(formatNumber(histogram.mean()));
+    $("#prop-stddev").text(histogram.kind() == "exponential" ? "N/A" : formatNumber(histogram.standardDeviation()));
     $("#prop-p5").text(formatNumber(histogram.percentile(5)));
     $("#prop-p25").text(formatNumber(histogram.percentile(25)));
     $("#prop-p50").text(formatNumber(histogram.percentile(50)));
     $("#prop-p75").text(formatNumber(histogram.percentile(75)));
     $("#prop-p95").text(formatNumber(histogram.percentile(95)));
+    $(".scalar-only").show();
+  } else {
+    $(".scalar-only").hide();
   }
   
   var totalHits = 0;
@@ -347,6 +341,20 @@ function displayHistogram(histogram, dates) {
         formatNumber(d.y) + " hits (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x])
       );
     }
+  });
+  
+  var counts = histogram.map(function(count, start, end, i) { return count; });
+  $("#distribution .mg-bar").each(function(i, group) {
+    var barWidth = $(group).find("rect").attr("width");
+    var fontSize = Math.min(Math.max(barWidth * 0.8, 5), 16);
+    var textElement = document.createElementNS('http://www.w3.org/2000/svg', "text");
+    textElement.setAttribute("fill", "#888");
+    textElement.setAttribute("transform", "rotate(-90)");
+    textElement.setAttribute("font-size", fontSize);
+    textElement.setAttribute("dx", "5");
+    textElement.setAttribute("dy", barWidth * 0.9);
+    textElement.textContent = formatNumber(counts[i]);
+    group.appendChild(textElement);
   });
   
     // Reposition and resize text

@@ -26,6 +26,7 @@
     }
     .select2-container { width: auto !important; }
     .select2-selection { border: transparent !important; }
+    .select2-selection__rendered { padding-left: 0 !important; }
     
     /* Rangebar style overrides */
     .elessar-rangebar {
@@ -47,6 +48,7 @@
     <div class="container-fluid">
         <header>
             <form id="histogram-filters" class="navbar-form" style="float: right; margin: 0">
+                <button class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</button>
                 <div class="input-group">
                     <span class="input-group-btn">
                         <button type="button" id="get-permalink" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button>
@@ -61,14 +63,13 @@
                 <h2 style="font-size: 18px; margin-bottom: 0">
                     <select id="measure" class="select2" title="Value being measured"></select>
                     distribution for
-                    <select id="channel-version" class="select2" title="Build version"></select>
-                    for
                     <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
-                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="on any architecture" multiple></select>
+                    <select id="channel-version" class="select2" title="Build version"></select>,
                     on
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
-                    <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any version" multiple></select>
-                    <button class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</button>
+                    <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any OS version" multiple></select>
+                    on
+                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" multiple></select>
                 </h2>
                 <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
                 <figure class="col-md-12">
@@ -80,18 +81,10 @@
                             <dt title="Total number of measurements in the histogram">Count</dt><dd id="prop-count"></dd>
                             <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
                             <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
-                            <span class="linear-only">
+                            <span class="scalar-only">
                                 <hr>
                                 <dt title="Simple average of all values">Mean</dt><dd id="prop-mean"></dd>
                                 <dt title="Standard deviation of all values">Std. dev.</dt><dd id="prop-stddev"></dd>
-                            </span>
-                            <span class="exponential-only">
-                                <hr>
-                                <dt title="Simple average of all values">Mean</dt><dd id="prop-mean2"></dd>
-                                <dt title="Log-scale average of all values">Geo. mean</dt><dd id="prop-geometric-mean"></dd>
-                                <dt title="Log-scale standard deviation of all values">Geo. std. dev.</dt><dd id="prop-geometric-stddev"></dd>
-                            </span>
-                            <span class="linear-only exponential-only">
                                 <hr>
                                 <dt>5th Percentile</dt><dd id="prop-p5"></dd>
                                 <dt>25th Percentile</dt><dd id="prop-p25"></dd>

@@ -106,7 +106,9 @@ function updateMeasuresList(callback) {
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     Telemetry.measures(channelVersion, function(measures) {
       versionCount ++;
-      Object.keys(measures).forEach(function(measure) { gMeasureMap[measure] = measures[measure]; });
+      Object.keys(measures).filter(function(measure) {
+        return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
+      }).forEach(function(measure) { gMeasureMap[measure] = measures[measure]; });
       if (versions.length === versionCount) { // All versions are loaded
         var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
         selectSetOptions($("#measure"), measureList);
