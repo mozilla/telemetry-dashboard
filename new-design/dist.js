@@ -323,6 +323,7 @@ function displayHistogram(histogram, dates) {
   var ends = histogram.map(function(count, start, end, i) { return end; });
   
   // Plot the data using MetricsGraphics
+  var bars = null, datapointBackground = null;
   MG.data_graphic({
     data: distributionData,
     binned: true,
@@ -337,25 +338,23 @@ function displayHistogram(histogram, dates) {
     xax_format: function(index) { return formatNumber(starts[index]); },
     mouseover: function(d, i) {
       var percentage = Math.round((d.y / totalHits) * 10000) / 100 + "%";
-      d3.select("#distribution svg .mg-active-datapoint").text(
-        formatNumber(d.y) + " hits (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x])
-      );
+      var label = formatNumber(d.y) + " hits (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      var offset = bars[i].getAttribute("transform");
+      var labelElement = d3.select("#distribution svg .mg-active-datapoint").text(label).attr("transform", offset)
+        .attr("x", "0").attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+      
+      var bbox = labelElement[0][0].getBBox();
+      var padding = 5;
+      datapointBackground.attr("x", bbox.x - padding).attr("y", bbox.y - padding).attr("transform", offset)
+        .attr("width", bbox.width + padding * 2).attr("height", bbox.height + padding * 2).attr("rx", "3").attr("ry", "3")
+        .style("fill", "#333").attr("visibility", "visible");
+    },
+    mouseout: function(d, i) {
+      datapointBackground.attr("visibility", "hidden");
     }
   });
-  
-  var counts = histogram.map(function(count, start, end, i) { return count; });
-  $("#distribution .mg-bar").each(function(i, group) {
-    var barWidth = $(group).find("rect").attr("width");
-    var fontSize = Math.min(Math.max(barWidth * 0.8, 5), 16);
-    var textElement = document.createElementNS('http://www.w3.org/2000/svg', "text");
-    textElement.setAttribute("fill", "#888");
-    textElement.setAttribute("transform", "rotate(-90)");
-    textElement.setAttribute("font-size", fontSize);
-    textElement.setAttribute("dx", "5");
-    textElement.setAttribute("dy", barWidth * 0.9);
-    textElement.textContent = formatNumber(counts[i]);
-    group.appendChild(textElement);
-  });
+  bars = $("#distribution .mg-bar");
+  datapointBackground = d3.select("#distribution svg").insert("rect", ".mg-active-datapoint");
   
     // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
@@ -415,7 +414,6 @@ function getHumanReadableOptions(filterName, options, os) {
   }
   return options.map(function(option) { return [option, option] });
 }
-
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
