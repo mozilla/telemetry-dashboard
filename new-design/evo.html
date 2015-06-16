@@ -13,20 +13,9 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
-    
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
     
-    <style>
-    /* dropdown style overrides */
-    .btn-group > .multiselect {
-        border: transparent !important;
-        padding: 6px 3px !important;
-        font-size: inherit !important;
-    }
-    .select2-container { width: auto !important; }
-    .select2-selection { border: transparent !important; }
-    .select2-selection__rendered { padding-left: 0 !important; }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
 </head>
 <body>
     <div class="container-fluid">
@@ -45,19 +34,21 @@
         <div class="row">
             <div class="col-md-12">
                 <h2 style="font-size: 18px; margin-bottom: 0">
-                    <select id="aggregates" class="multiselect" title="Aggregate type" data-all-selected="All aggregates of" multiple>
-                        <option value="median">Median</option>
-                        <option value="mean">Mean</option>
-                        <option value="5th-percentile">5th percentile</option>
-                        <option value="25th-percentile">25th percentile</option>
-                        <option value="75th-percentile">75th percentile</option>
-                        <option value="95th-percentile">95th percentile</option>
-                    </select>
-                    <select id="measure" class="select2" title="Value being measured" style="width: 15em"></select>
-                    from
-                    <select id="min-channel-version" class="select2" title="Minimum build version" style="width: 120px"></select>
-                    to
-                    <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
+                    <span style="font-weight: bold">
+                        <select id="aggregates" class="multiselect" title="Aggregate type" data-all-selected="All aggregates of" multiple>
+                            <option value="median">Median</option>
+                            <option value="mean">Mean</option>
+                            <option value="5th-percentile">5th percentile</option>
+                            <option value="25th-percentile">25th percentile</option>
+                            <option value="75th-percentile">75th percentile</option>
+                            <option value="95th-percentile">95th percentile</option>
+                        </select>
+                        <select id="measure" class="select2" title="Value being measured" style="width: 15em"></select>
+                        from
+                        <select id="min-channel-version" class="select2" title="Minimum build version" style="width: 120px"></select>
+                        to
+                        <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
+                    </span>
                     for
                     <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="on any architecture" multiple></select>
@@ -68,6 +59,9 @@
                 <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
                 <figure class="col-md-12">
                     <div class="col-md-12" id="evolutions"></div>
+                </figure>
+                <h2 id="submissions-title" style="font-size: 18px; margin-bottom: 0"></h2>
+                <figure class="col-md-12">
                     <div class="col-md-12" id="submissions"></div>
                 </figure>
             </div>
@@ -98,33 +92,7 @@
     <script src="v1/telemetry.js"></script>
     
     <!-- Initialize controls -->
-    <script type="text/javascript">
-    $(document).ready(function() {
-        // Select boxes
-        $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
-            $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-        });
-        
-        // Multiselect boxes
-        $('.multiselect').each(function(i, select) {
-            var $this = $(this);
-            var options = {
-                enableFiltering: true,
-                enableCaseInsensitiveFiltering: true,
-                includeSelectAllOption: true,
-                allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
-                maxHeight: 500,
-            };
-            if ($this.attr("title") !== undefined) {
-                options.nonSelectedText = $this.attr("title");
-            }
-            $this.multiselect(options);
-            $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-        });
-        // Date range pickers
-        $(".daterange").daterangepicker();
-    });
-    </script>
+    <script src="dashboards.js"></script>
     <script src="evo.js"></script>
 </body>
 </html>

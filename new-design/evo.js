@@ -13,7 +13,7 @@ Telemetry.init(function() {
   if (gInitialPageState.min_channel_version) { $("#min-channel-version").select2("val", gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { $("#max-channel-version").select2("val", gInitialPageState.max_channel_version); }
   updateMeasuresList(function() {
-    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines, submissionsCutoff) {
+    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
       refreshFilters(filterList, filterOptionsList);
       
       $("#filter-product").multiselect("select", gInitialPageState.product);
@@ -38,6 +38,7 @@ Telemetry.init(function() {
         var measure = $(this).val();
         var measureEntry = gMeasureMap[measure];
         $("#measure-description").text(measureEntry.description + " (" + measure + ")");
+        $("#submissions-title").text(measure + " submissions");
         
         // Figure out which aggregates actually apply to this measure
         var options;
@@ -52,13 +53,13 @@ Telemetry.init(function() {
         $("#aggregates").trigger("change");
       });
       $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
-        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines, submissionsCutoff) {
+        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
           refreshFilters(filterList, filterOptionsList);
           
           // If the OS was changed, select all the OS versions
           if (e.target.id == "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
           
-          displayHistogramEvolutions(lines, submissionLines, submissionsCutoff);
+          displayHistogramEvolutions(lines, submissionLines);
           saveStateToUrlAndCookie();
         });
       });
@@ -189,7 +190,7 @@ function calculateHistogramEvolutions(callback) {
       lines = lines.concat(newLines.lines);
       submissionLines.push(newLines.submissionLine);
       if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
-        callback(filterList, filterOptionsList, lines, submissionLines, newLines.submissionsCutoff);
+        callback(filterList, filterOptionsList, lines, submissionLines);
       }
     });
   });
@@ -349,10 +350,10 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   var submissionLine = new Line(measure, version, "submissions", filters, submissionPoints);
   submissionLine.histogramEvolution = histogramEvolution;
   
-  return {lines: lines, submissionLine: submissionLine, submissionsCutoff: submissionsCutoff};
+  return {lines: lines, submissionLine: submissionLine};
 }
 
-function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, minDate, maxDate) {
+function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   minDate = minDate || null; maxDate = maxDate || null;
 
   // Transform the data into a form that is suitable for plotting
@@ -363,20 +364,32 @@ function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, m
     return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
   });
   
-  var labels = lines.map(function(line) { return line.getTitleString(); })
+  var aggregateLabels = lines.map(function(line) { return line.aggregate; })
   
+  var aggregateMap = {};
+  lines.forEach(function(line) { aggregateMap[line.aggregate] = true; });
+  var valueLabel = Object.keys(aggregateMap).sort().join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
+  
+  var markers = [], usedDates = {};
+  lines.forEach(function(line) {
+    if (line.values.length > 0 && !(line.values[0].x in usedDates)) {
+      markers.push({date: new Date(line.values[0].x), label: line.getVersionString()});
+      usedDates[line.values[0].x] = true;
+    }
+  });
+
   // Plot the data using MetricsGraphics
   MG.data_graphic({
     data: lineData,
     chart_type: lineData.length == 0 || lineData[0].length === 0 ? "missing-data" : "line",
     full_width: true, height: 600,
-    right: 100, // Extra space on the right for labels
+    right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#evolutions",
     x_extended_ticks: true,
-    x_label: "Time", y_label: "Aggregate",
+    x_label: "Build ID", y_label: valueLabel,
     transition_on_update: false,
     interpolate: "linear",
-    legend: labels,
+    markers: markers, legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
     min_x: minDate === null ? null : new Date(minDate),
@@ -386,7 +399,7 @@ function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, m
       var date = d.key;
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
-      var legend = d3.select("#evolutions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
@@ -394,20 +407,36 @@ function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, m
         legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"})
           .text("\u2014 ").style({"font-weight": "bold", "stroke": line.color});
       });
+      
+      // Reposition element
+      var rolloverRect = $("#evolutions .mg-rollover-rect rect:nth-child(" + (i + 1) + ")").get(0);
+      var x = parseInt(rolloverRect.getAttribute("x")) + 30, y = parseInt(rolloverRect.getAttribute("y")) + 10;
+      var bbox = legend[0][0].getBBox();
+      if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 35;
+      d3.select("#evolutions .mg-active-datapoint-container").attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
+      
+      // Add background
+      var padding = 10;
+      d3.select("#evolutions svg").insert("rect", ".mg-active-datapoint-container").classed("active-datapoint-background", true)
+        .attr("x", x - padding).attr("y", y)
+        .attr("width", bbox.width + padding * 2).attr("height", bbox.height + 8)
+        .attr("rx", "3").attr("ry", "3").style("fill", "#333");
+    },
+    mouseout: function(d, i) {
+      d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
     },
   });
   MG.data_graphic({
     data: submissionLineData,
-    baselines: [{value: submissionsCutoff, label: "submissions cutoff: " + formatNumber(submissionsCutoff)}],
     chart_type: submissionLineData.length === 0 || submissionLineData[0].length === 0 ? "missing-data" : "line",
-    full_width: true, height: 200,
-    right: 100, // Extra space on the right for labels
+    full_width: true, height: 300,
+    right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
     x_extended_ticks: true,
-    x_label: "Time", y_label: "Submissions",
+    x_label: "Build ID", y_label: "Daily Ping Count",
     transition_on_update: false,
     interpolate: "linear",
-    legend: labels,
+    markers: markers,
     aggregate_rollover: true,
     linked: true,
     min_x: minDate === null ? null : new Date(minDate),
@@ -418,13 +447,30 @@ function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, m
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var submissionLineList = d.values ? d.values.map(function(entry) { return submissionLines[entry.line_id - 1]; }) : [submissionLines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
-      var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       submissionLineList.forEach(function(line, i) {
         var lineIndex = i + 1;
         var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]));
         legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"}).text("\u2014 ").style({"font-weight": "bold", "stroke": (lineList[i] || line).color});
       });
+      
+      // Reposition element
+      var rolloverRect = $("#submissions .mg-rollover-rect rect:nth-child(" + (i + 1) + ")").get(0);
+      var x = parseInt(rolloverRect.getAttribute("x")) + 30, y = parseInt(rolloverRect.getAttribute("y")) + 10;
+      var bbox = legend[0][0].getBBox();
+      if (x + bbox.width + 50 > $("#submissions svg").width()) x -= bbox.width + 35;
+      d3.select("#submissions .mg-active-datapoint-container").attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
+      
+      // Add background
+      var padding = 10;
+      d3.select("#submissions svg").insert("rect", ".mg-active-datapoint-container").classed("active-datapoint-background", true)
+        .attr("x", x - padding).attr("y", y)
+        .attr("width", bbox.width + padding * 2).attr("height", bbox.height + 8)
+        .attr("rx", "3").attr("ry", "3").style("fill", "#333");
+    },
+    mouseout: function(d, i) {
+      d3.select("#submissions .active-datapoint-background").remove(); // Remove old background
     },
   });
   
@@ -438,8 +484,11 @@ function displayHistogramEvolutions(lines, submissionLines, submissionsCutoff, m
   
   // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
-  $(".mg-x-axis .label").attr("dy", "1.2em");
+  $(".mg-x-axis .mg-year-marker text").attr("dy", "5");
+  $(".mg-x-axis .label").attr("dy", "20");
   $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
+  $(".mg-line-legend text").css("font-size", "12px")
+  $(".mg-marker-text").css("font-size", "12px").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
 }
 
 function getHumanReadableOptions(filterName, options, os) {
@@ -522,6 +571,9 @@ var Line = (function(){
     this.color = lineColors[stateString];
   }
 
+  Line.prototype.getVersionString = function Line_getVersionString() {
+    return this.channelVersion.replace("/", " ");
+  };
   Line.prototype.getTitleString = function Line_getTitleString() {
     return this.channelVersion.replace("/", " ") + " - " + this.aggregate;
   };
@@ -660,7 +712,7 @@ function formatNumber(number) {
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
   var mag = Math.abs(number);
-  var exponent = Math.floor(Math.log10(mag));
+  var exponent = Math.log10 !== undefined ? Math.floor(Math.log10(mag)) : Math.floor(Math.log(mag) / Math.log(10));
   var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
   var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
   if (interval in units) {

@@ -27,20 +27,15 @@ Telemetry.init(function() {
       $("#channel-version").change(function() {
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
-      $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
-        // Update the measure description
-        var measure = $("#measure").val();
-        var measureEntry = gMeasureMap[measure];
-        $("#measure-description").text(measureEntry.description + " (" + measure + ")");
-      
-        calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
+      $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
           multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
           multiselectSetOptions($("#filter-os"), filterOptionsList[2]);
           multiselectSetOptions($("#filter-os-version"), filterOptionsList[3]);
           multiselectSetOptions($("#filter-arch"), filterOptionsList[4]);
           
-
-          displayHistogram(histogram, dates);
+          // Update the measure description
+          var measureDescription = gMeasureMap[$("#measure").val()].description;
+          displayHistogram(histogram, dates, measureDescription);
           saveStateToUrlAndCookie();
         });
       });
@@ -294,7 +289,7 @@ function getFilteredHistogram(version, measure, histogram, filters, filterList) 
   return new Telemetry.Histogram(measure, histogram._filter_path, histogram._buckets, dataset, histogram._filter_tree, histogram._spec);
 }
 
-function displayHistogram(histogram, dates) {
+function displayHistogram(histogram, dates, measureDescription) {
   // Update the summary
   $("#prop-kind").text(histogram.kind());
   $("#prop-dates").text(formatNumber(dates.length));
@@ -314,52 +309,52 @@ function displayHistogram(histogram, dates) {
     $(".scalar-only").hide();
   }
   
-  var totalHits = 0;
-  var distributionData = histogram.map(function(count, start, end, i) {
-    totalHits += count;
-    return {value: i, count: count};
-  });
+  var totalSamples = histogram.count();
+  var distributionData = histogram.map(function(count, start, end, i) { return {value: i, count: count}; });
   var starts = histogram.map(function(count, start, end, i) { return start; });
   var ends = histogram.map(function(count, start, end, i) { return end; });
   
   // Plot the data using MetricsGraphics
-  var bars = null, datapointBackground = null;
+  $("#distribution").css("margin", "0 -100px 0 -50px");
   MG.data_graphic({
     data: distributionData,
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
+    left: 100, right: 150,
     transition_on_update: false,
     target: "#distribution",
-    x_label: "Value Buckets", y_label: "Number of Samples",
+    x_label: measureDescription, y_label: "Number of Samples",
     xax_ticks: 20,
     y_extended_ticks: true,
     x_accessor: "value", y_accessor: "count",
     xax_format: function(index) { return formatNumber(starts[index]); },
     mouseover: function(d, i) {
-      var percentage = Math.round((d.y / totalHits) * 10000) / 100 + "%";
-      var label = formatNumber(d.y) + " hits (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
-      var offset = bars[i].getAttribute("transform");
-      var labelElement = d3.select("#distribution svg .mg-active-datapoint").text(label).attr("transform", offset)
-        .attr("x", "0").attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+      var percentage = Math.round((d.y / totalSamples) * 10000) / 100 + "%";
+      var label = formatNumber(d.y) + " samples (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       
-      var bbox = labelElement[0][0].getBBox();
+      // Reposition element
+      var legend = d3.select("#distribution .mg-active-datapoint").text(label).attr("transform", offset)
+        .attr("x", "0").attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+      var bbox = legend[0][0].getBBox();
       var padding = 5;
-      datapointBackground.attr("x", bbox.x - padding).attr("y", bbox.y - padding).attr("transform", offset)
-        .attr("width", bbox.width + padding * 2).attr("height", bbox.height + padding * 2).attr("rx", "3").attr("ry", "3")
-        .style("fill", "#333").attr("visibility", "visible");
+      
+      // Add background
+      d3.select("#distribution svg").insert("rect", ".mg-active-datapoint").classed("active-datapoint-background", true)
+        .attr("x", bbox.x - padding).attr("y", bbox.y - padding).attr("transform", offset)
+        .attr("width", bbox.width + padding * 2).attr("height", bbox.height + padding * 2)
+        .attr("rx", "3").attr("ry", "3").style("fill", "#333");
     },
     mouseout: function(d, i) {
-      datapointBackground.attr("visibility", "hidden");
-    }
+      d3.select("#distribution .active-datapoint-background").remove(); // Remove old background
+    },
   });
-  bars = $("#distribution .mg-bar");
-  datapointBackground = d3.select("#distribution svg").insert("rect", ".mg-active-datapoint");
   
     // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .label").attr("dy", "1.2em");
-  $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
+  $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
 }
 
 function getHumanReadableOptions(filterName, options, os) {
@@ -497,7 +492,7 @@ function formatNumber(number) {
   if (number == -Infinity) return "-Infinity";
   if (isNaN(number)) return "NaN";
   var mag = Math.abs(number);
-  var exponent = Math.floor(Math.log10(mag));
+  var exponent = Math.log10 !== undefined ? Math.floor(Math.log10(mag)) : Math.floor(Math.log(mag) / Math.log(10));
   var interval = Math.pow(10, Math.floor(exponent / 3) * 3);
   var units = {1000: "k", 1000000: "M", 1000000000: "B", 1000000000000: "T"};
   if (interval in units) {

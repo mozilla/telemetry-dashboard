@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <title>Distribution Dashboard</title>
+    <title>Histogram Dashboard</title>
     
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -14,35 +14,9 @@
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/elessar.css" />
-    
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
     
-    <style>
-    /* dropdown style overrides */
-    .btn-group > .multiselect {
-        border: transparent !important;
-        padding: 6px 3px !important;
-        font-size: inherit !important;
-    }
-    .select2-container { width: auto !important; }
-    .select2-selection { border: transparent !important; }
-    .select2-selection__rendered { padding-left: 0 !important; }
-    
-    /* Rangebar style overrides */
-    .elessar-rangebar {
-        border-radius: 4px;
-        background: #CCC;
-        box-shadow: inset 0 0 3px 0px rgba(0,0,0,0.5);
-        height: 34px;
-    }
-    .elessar-range {
-        background: #A53E35;
-        border-radius: 4px;
-        color: white;
-        font-weight: bold;
-        height: 100%;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
 </head>
 <body>
     <div class="container-fluid">
@@ -56,47 +30,48 @@
                     <input type="text" id="permalink-value" class="form-control">
                 </div>
             </form>
-            <h1>Distribution Dashboard</h1>
+            <h1>Histogram Dashboard</h1>
         </header>
         <div class="row">
             <div class="col-md-12">
                 <h2 style="font-size: 18px; margin-bottom: 0">
-                    <select id="measure" class="select2" title="Value being measured"></select>
-                    distribution for
-                    <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
-                    <select id="channel-version" class="select2" title="Build version"></select>,
+                    <span style="font-weight: bold">
+                        <select id="measure" class="select2" title="Value being measured"></select>
+                        distribution for
+                        <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
+                        <select id="channel-version" class="select2" title="Build version"></select>,
+                    </span>
                     on
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
                     <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any OS version" multiple></select>
                     on
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" multiple></select>
                 </h2>
-                <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
                 <figure class="col-md-12">
-                    <div class="col-md-8" id="distribution"></div>
-                    <div class="col-md-4" id="summary">
-                        <dl class="dl-horizontal">
-                            <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Kind</dt><dd id="prop-kind"></dd>
-                            <dt title="Total number of Telemetry pings shown">Submissions</dt><dd id="prop-submissions"></dd>
-                            <dt title="Total number of measurements in the histogram">Count</dt><dd id="prop-count"></dd>
+                    <div class="col-md-9" id="distribution"></div>
+                    <div class="col-md-3" id="summary">
+                        <dl class="dl-horizontal" style="margin-top: 5em">
+                            <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
+                            <dt title="Total number of Telemetry pings shown">Ping Count</dt><dd id="prop-submissions"></dd>
+                            <dt title="Total number of measurements shown">Sample Count</dt><dd id="prop-count"></dd>
                             <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
                             <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
-                            <span class="scalar-only">
-                                <hr>
+                        </dl>
+                        <div class="scalar-only" style="margin-top: 100px">
+                            <dl class="dl-horizontal">
                                 <dt title="Simple average of all values">Mean</dt><dd id="prop-mean"></dd>
-                                <dt title="Standard deviation of all values">Std. dev.</dt><dd id="prop-stddev"></dd>
-                                <hr>
+                                <dt title="Standard deviation of all values">Standard Deviation</dt><dd id="prop-stddev"></dd>
                                 <dt>5th Percentile</dt><dd id="prop-p5"></dd>
                                 <dt>25th Percentile</dt><dd id="prop-p25"></dd>
                                 <dt>Median</dt><dd id="prop-p50"></dd>
                                 <dt>75th Percentile</dt><dd id="prop-p75"></dd>
                                 <dt>95th Percentile</dt><dd id="prop-p95"></dd>
                                 <br>
-                                <div class="alert alert-warning">
-                                    <strong >Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
+                                <div style="font-size: 80%; margin-right: 50%">
+                                    <strong>Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
                                 </div>
-                            </span>
-                        </dl>
+                            </dl>
+                        </div>
                     </div>
                 </figure>
             </div>
@@ -139,34 +114,7 @@
     <script src="v1/telemetry.js"></script>
     
     <!-- Initialize controls -->
-    <script type="text/javascript">
-    $(document).ready(function() {
-        // Select boxes
-        $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
-            $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-        });
-        
-        // Multiselect boxes
-        $('.multiselect').each(function(i, select) {
-            var $this = $(this);
-            var options = {
-                enableFiltering: true,
-                enableCaseInsensitiveFiltering: true,
-                includeSelectAllOption: true,
-                allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
-                maxHeight: 500,
-            };
-            if ($this.attr("title") !== undefined) {
-                options.nonSelectedText = $this.attr("title");
-            }
-            $this.multiselect(options);
-            $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-        });
-        
-        // Date range pickers
-        $(".date-range").daterangepicker();
-    });
-    </script>
+    <script src="dashboards.js"></script>
     <script src="dist.js"></script>
 </body>
 </html>
