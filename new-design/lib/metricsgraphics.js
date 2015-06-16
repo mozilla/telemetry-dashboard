@@ -3028,7 +3028,7 @@ MG.button_layout = function(target) {
 
                         //trigger mouseover on matching line in .linked charts
                         d3.selectAll('.mg-line' + datum.line_id + '-color.roll_' + id)
-                            .each(function(d, i) {
+                            .each(function(d) {
                                 d3.select(this).on('mouseover')(d,i);
                             });
                     }
