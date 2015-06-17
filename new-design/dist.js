@@ -1,5 +1,8 @@
 var gVersions = null;
 var gInitialPageState = null;
+var gCurrentDates = null;
+var gCurrentMeasureDescription = null;
+var gCurrentHistogram = null;
 
 Telemetry.init(function() {
   gVersions = Telemetry.versions();
@@ -26,7 +29,8 @@ Telemetry.init(function() {
       $("#channel-version").change(function() {
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
-      $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
+      $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+        calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
           multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
           multiselectSetOptions($("#filter-os"), filterOptionsList[2]);
           multiselectSetOptions($("#filter-os-version"), filterOptionsList[3]);
@@ -34,7 +38,8 @@ Telemetry.init(function() {
           
           // Update the measure description
           var measureDescription = gMeasureMap[$("#measure").val()].description;
-          displayHistogram(histogram, dates, measureDescription);
+          gCurrentDates = dates; gCurrentMeasureDescription = measureDescription; gCurrentHistogram = histogram;
+          displayHistogram(histogram, dates, measureDescription, $("#cumulative-toggle").prop("checked"));
           saveStateToUrlAndCookie();
         });
       });
@@ -43,6 +48,10 @@ Telemetry.init(function() {
       $("#measure").trigger("change");
     });
   });
+
+  $("#cumulative-toggle").change(function() {
+    displayHistogram(gCurrentHistogram, gCurrentDates, gCurrentMeasureDescription, $("#cumulative-toggle").prop("checked"));
+  })
   
   // Switch to the evolution dashboard with the same settings
   $("#switch-views").click(function() {
@@ -232,7 +241,10 @@ function getFilteredHistogram(version, measure, histogram, filters, filterList) 
   return new Telemetry.Histogram(measure, histogram._filter_path, histogram._buckets, dataset, histogram._filter_tree, histogram._spec);
 }
 
-function displayHistogram(histogram, dates, measureDescription) {
+function displayHistogram(histogram, dates, measureDescription, cumulative) {
+  cumulative = cumulative || false;
+  console.log(cumulative)
+
   // Update the summary
   $("#prop-kind").text(histogram.kind());
   $("#prop-dates").text(formatNumber(dates.length));
@@ -253,12 +265,22 @@ function displayHistogram(histogram, dates, measureDescription) {
   }
   
   var totalSamples = histogram.count();
-  var distributionData = histogram.map(function(count, start, end, i) { return {value: i, count: count}; });
-  var starts = histogram.map(function(count, start, end, i) { return start; });
   var ends = histogram.map(function(count, start, end, i) { return end; });
+  var distributionData, starts;
+  if (cumulative) {
+    var total = 0;
+    starts = histogram.map(function(count, start, end, i) { return 0; });
+    distributionData = histogram.map(function(count, start, end, i) {
+      total += count;
+      return {value: i, count: total};
+    });
+  } else {
+    starts = histogram.map(function(count, start, end, i) { return start; });
+    distributionData = histogram.map(function(count, start, end, i) { return {value: i, count: count}; });
+  }
   
   // Plot the data using MetricsGraphics
-  $("#distribution").css("margin", "0 -100px 0 -50px");
+  $("#distribution").css("margin", "0 -50px 0 -50px");
   MG.data_graphic({
     data: distributionData,
     binned: true,
