@@ -1,3 +1,134 @@
+/*
+var Telemetry = (function() {
+"use strict";
+
+function assert(condition, message) {
+  if (!condition) { throw message || "Assertion failed"; }
+  return condition;
+}
+
+var Telemetry = {
+  BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
+  CHANNEL_VERSION_DATES: null,
+};
+
+Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the response to do cross-origin requests - currently have cross-origin security disabled
+  assert(typeof url === "string", "`url` must be a string");
+  assert(typeof callback === "function", "`callback` must be a function");
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function() { callback(JSON.parse(this.responseText)); };
+  xhr.onerror = function() { callback(null, this.status); };
+  xhr.open("get", url, true);
+  xhr.send();
+}
+
+Telemetry.init = function Telemetry_init(callback) {
+  assert(typeof callback === "function", "`callback` must be a function");
+  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/", function(channels) {
+    var loadedChannels = 0;
+    Telemetry.CHANNEL_VERSION_DATES = {};
+    channels.forEach(function(channel, i) {
+      var versionDates = Telemetry.CHANNEL_VERSION_DATES[channel] = {};
+      Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel + "/dates/", function(dateEntries) {
+        dateEntries.forEach(function(entry) {
+          if (!versionDates.hasOwnProperty(entry.version)) { versionDates[entry.version] = []; }
+          versionDates[entry.version].push(entry.date);
+        })
+        loadedChannels ++; // Loaded another channel's dates
+        if (loadedChannels == channels.length) { // This is the last channel that needs to be loaded
+          callback();
+        }
+      });
+    });
+  });
+},
+
+Telemetry.loadHistogramsOverBuildDates = function(channel, version, metric, filters, callback) {
+  assert(typeof Telemetry.CHANNEL_VERSION_DATES !== null, "Telemetry.js must be initialized before use");
+  assert(typeof channel === "string", "`channel` must be a string");
+  assert(typeof version === "string", "`version` must be a string");
+  assert(typeof metric === "string", "`metric` must be a string");
+  assert(typeof filters === "object", "`filters` must be an object");
+  assert(typeof callback === "function", "`callback` must be a function");
+  var buildDates = Telemetry.CHANNEL_VERSION_DATES[channel][version].join(",");
+  var filterString = "";
+  for (var filterName in filters) {
+    filterString += "&" + encodeURIComponent(filterName) + "=" + encodeURIComponent(filters[filterName]);
+  }
+  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
+    "/?version=" + encodeURIComponent(version) + "&dates=" + encodeURIComponent(buildDates) +
+    "&metric=" + encodeURIComponent(metric) + filterString, function(histograms) {
+    callback(histograms);
+  });
+}
+
+Telemetry.getHistogramLastBucketUpper = function(buckets, type) {
+  assert(type === "linear" || type === "exponential", "Histogram buckets must be linear or exponential");
+  assert(buckets.length > 0, "Histogram buckets cannot be empty");
+  if (buckets.length == 1) return buckets[0] + 1;
+  if (type === "linear") {
+    return buckets[buckets.length - 1] + buckets[buckets.length - 1] - buckets[buckets.length - 2];
+  } else { // exponential
+    return buckets[buckets.length - 1] * buckets[buckets.length - 1] / buckets[buckets.length - 2];
+  }
+}
+
+Telemetry.getHistogramMeans = function(histograms) {
+  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
+  var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, "exponential")]); //wip: properly get the type of histogram here
+  histograms.data.map(function(entry) {
+    var totalHits = entry.histogram.reduce(function(previous, count) { return previous + count; }, 0);
+    return entry.histogram.reduce(function(previous, count, i) {
+      return previous + (count / totalHits) * buckets[i]
+    }, 0);
+  });
+}
+
+Telemetry.getHistogramPercentiles = function(histograms, percentile) {
+  var type = "exponential"; //wip: properly get the type of histogram here
+  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
+  assert(type === "linear" || type === "exponential", "Histogram buckets must be linear or exponential");
+  assert(typeof percentile === "number", "`percentile` must be a number");
+  assert(0 <= percentile && percentile <= 100, "`percentile` must be between 0 and 100 inclusive");
+  var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, type)]);
+  return histograms.data.map(function(entry) {
+    var hitsAtPercentile = entry.histogram.reduce(function(previous, count) { return previous + count; }, 0) * (percentile / 100);
+    var i = 0;
+    while (hitsAtPercentile >= 0) { hitsAtPercentile -= entry.histogram[i]; i ++; }
+    i --; hitsAtPercentile += entry.histogram[i]; // `i` is now the index of the bucket that contains the percentile hit, and `hitsAtPercentile` is the number of hits within that bucket
+    var ratio = hitsAtPercentile / entry.histogram[i];
+    var lowerBound = buckets[i], upperBound = buckets[i + 1];
+    if (type == "linear") {
+      return lowerBound + (upperBound - lowerBound) * ratio;
+    } else { // exponential
+      var bucketFactor = buckets[buckets.length - 1] / buckets[buckets.length - 2];
+      return lowerBound * Math.pow(bucketFactor, ratio);
+    }
+  });
+}
+
+Telemetry.getHistogramValues = function(histograms) {
+  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
+  var values = histograms.buckets.map(function(lowerBound) { return 0; })
+  return {
+    buckets: histograms.buckets,
+    values: values.reduce
+  }
+}
+
+Telemetry.getHistogramValues = function(histograms) {
+  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
+  var values = []; for (var i = 0; i < histograms.buckets.length; i ++) { values.push(0); }
+  
+  return {
+    buckets: histograms.buckets,
+    values: 
+  }
+}
+
+return Telemetry;
+})();
+*/
 var gVersions = null;
 var gInitialPageState = null;
 var gMeasureMap = null;
@@ -553,3 +684,4 @@ function saveStateToUrlAndCookie() {
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
 }
+*/
