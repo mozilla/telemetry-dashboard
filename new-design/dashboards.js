@@ -55,7 +55,7 @@ function loadStateFromUrlAndCookie() {
   pageState.measure = pageState.measure !== undefined ?
     pageState.measure : "GC_MS";
   pageState.min_channel_version = pageState.min_channel_version !== undefined ?
-    pageState.min_channel_version : "nightly/38";
+    pageState.min_channel_version : "nightly/39";
   pageState.max_channel_version = pageState.max_channel_version !== undefined ?
     pageState.max_channel_version : "nightly/41";
   pageState.product = pageState.product !== undefined ?
@@ -87,7 +87,7 @@ function getHumanReadableOptions(filterName, options, os) {
     return options.filter(function(option) { return !ignoredOSs[option]; }).map(function(option) {
       return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option];
     });
-  } else if (filterName === "osVersion") {
+  } else if (filterName === "os_version") {
     var osPrefix = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os) + " ";
     if (os === "WINNT") {
       return options.sort(function(a, b) {
@@ -195,8 +195,8 @@ function formatNumber(number) {
 function deduplicate(values) {
   var seen = {};
   return values.filter(function(option) {
-    if (seen.hasOwnProperty(option[0])) { return false; }
-    seen[option[0]] = true;
+    if (seen.hasOwnProperty(option)) { return false; }
+    seen[option] = true;
     return true;
   });
 }
@@ -214,7 +214,17 @@ function selectSetOptions(element, options, defaultSelected) {
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
   }).join());
-  if (typeof selected === "string") { element.select2("val", selected); }
+  if (typeof selected === "string") { element.each(function() { $(this).select2("val", selected); }); }
+  else { element.each(function() { $(this).select2("val", options[0][0]); }); }
+}
+
+function selectSetSelected(element, option) {
+  var options = element.find("option").map(function() { return $(this).val(); }).toArray();
+  if (options.indexOf(option) >= 0) {
+    element.select2("val", option);
+  } else {
+    console.log("BAD OPTION: " + option)
+  }
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text

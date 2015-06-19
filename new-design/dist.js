@@ -10,6 +10,7 @@ Telemetry.init(function() {
   
   // Set up aggregate, build, and measure selectors
   selectSetOptions($("#channel-version"), gVersions.map(function(version) { return [version, version.replace("/", " ")] }));
+  return;
   if (gInitialPageState.max_channel_version) { $("#channel-version").select2("val", gInitialPageState.max_channel_version); }
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {

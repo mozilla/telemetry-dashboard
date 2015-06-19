@@ -9,19 +9,31 @@ function assert(condition, message) {
 var Telemetry = {
   BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
   CHANNEL_VERSION_DATES: null,
-  CACHE: {}, CACHE_TIMEOUT: 4 * 60 * 60 * 1000,
+  CACHE: {}, CACHE_LAST_UPDATED: {}, CACHE_TIMEOUT: 4 * 60 * 60 * 1000,
 };
+
+var urlCallbacks = {}
 
 Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the response to do cross-origin requests - currently have cross-origin security disabled
   assert(typeof url === "string", "`url` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
   if (Telemetry.CACHE[url] !== undefined) {
-    if ((new Date).getTime() - Telemetry.CACHE_LAST_UPDATED[url] < Telemetry.CACHE_TIMEOUT) {
-      setTimeout(function() { callback(Telemetry.CACHE[url]); });
+    if (Telemetry.CACHE[url]._loading) { // Requested but not yet loaded
+      var xhr = Telemetry.CACHE[url];
+      var originalCallback = xhr.onload;
+      xhr.onload = function() {
+        callback(JSON.parse(this.responseText), null);
+        originalCallback.call(xhr);
+      };
+    } else if ((new Date).getTime() - Telemetry.CACHE_LAST_UPDATED[url] < Telemetry.CACHE_TIMEOUT) { // In cache and hasn't expired
+      setTimeout(function() { callback(Telemetry.CACHE[url]); }, 1);
     }
+    return;
   }
   
   var xhr = new XMLHttpRequest();
+  xhr._loading = true;
+  Telemetry.CACHE[url] = xhr; // Mark the URL as being requested but not yet loaded
   xhr.onload = function() {
     var result = JSON.parse(this.responseText);
     Telemetry.CACHE[url] = result;
@@ -54,7 +66,7 @@ Telemetry.init = function Telemetry_init(callback) {
   });
 },
 
-Telemetry.getHistogramsOverBuilds = function(channel, version, metric, filters, callback) {
+Telemetry.getHistogramsOverBuilds = function Telemetry_getHistogramsOverBuilds(channel, version, metric, filters, callback) {
   assert(typeof Telemetry.CHANNEL_VERSION_DATES !== null, "Telemetry.js must be initialized before use");
   assert(typeof channel === "string", "`channel` must be a string");
   assert(typeof version === "string", "`version` must be a string");
@@ -73,7 +85,30 @@ Telemetry.getHistogramsOverBuilds = function(channel, version, metric, filters, 
   });
 }
 
-Telemetry.getHistogramLastBucketUpper = function(buckets, type) {
+Telemetry.getFilterOptions = function Telemetry_getOptions(channel, version, callback) {
+  assert(typeof channel === "string", "`channel` must be a string");
+  assert(typeof version === "string", "`version` must be a string");
+  assert(typeof callback === "function", "`callback` must be a function");
+  var filterOptions = {
+    metric: [],
+    application: [],
+    architecture: [],
+    os: [],
+  };
+  var expectedFilters = Object.keys(filterOptions).length;
+  var filterCount = 0;
+  Object.keys(filterOptions).forEach(function(filterName) {
+    Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
+      "/filters/" + encodeURIComponent(filterName), function(options) {
+      filterOptions[filterName] = options;
+      filterCount ++;
+      if (filterCount === expectedFilters) { callback(filterOptions); }
+    });
+  });
+  if (expectedFilters === 0) { callback(filterOptions); }
+}
+
+Telemetry.getHistogramLastBucketUpper = function Telemetry_getHistogramLastBucketUpper(buckets, type) {
   assert(type === "linear" || type === "exponential", "Histogram buckets must be linear or exponential");
   assert(buckets.length > 0, "Histogram buckets cannot be empty");
   if (buckets.length == 1) return buckets[0] + 1;
@@ -84,17 +119,17 @@ Telemetry.getHistogramLastBucketUpper = function(buckets, type) {
   }
 }
 
-Telemetry.getHistogramDates = function(histograms) {
+Telemetry.getHistogramDates = function Telemetry_getHistogramDates(histograms) {
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   return histograms.data.map(function(entry) { return entry.date; });
 }
 
-Telemetry.getHistogramSubmissions = function(histograms) {
+Telemetry.getHistogramSubmissions = function Telemetry_getHistogramSubmissions(histograms) {
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   return histograms.data.map(function(entry) { return entry.count; });
 }
 
-Telemetry.getHistogramMeans = function(histograms) {
+Telemetry.getHistogramMeans = function Telemetry_getHistogramMeans(histograms) {
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   assert(histograms.kind === "linear" || histograms.kind === "exponential", "Histogram buckets must be linear or exponential");
   var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, histograms.kind)]);
@@ -111,7 +146,7 @@ Telemetry.getHistogramMeans = function(histograms) {
   });
 }
 
-Telemetry.getHistogramPercentiles = function(histograms, percentile) { // see http://math.stackexchange.com/a/894986 for algorithm
+Telemetry.getHistogramPercentiles = function Telemetry_getHistogramPercentiles(histograms, percentile) { // see http://math.stackexchange.com/a/894986 for algorithm
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   assert(histograms.kind === "linear" || histograms.kind === "exponential", "Histogram buckets must be linear or exponential");
   assert(typeof percentile === "number", "`percentile` must be a number");
@@ -133,7 +168,7 @@ Telemetry.getHistogramPercentiles = function(histograms, percentile) { // see ht
   });
 }
 
-Telemetry.getHistogram = function(histograms, cumulative) { //wip: add date range
+Telemetry.getHistogram = function Telemetry_getHistogram(histograms, cumulative) { //wip: add date range
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   cumulative = cumulative || false;
   var values = histograms.buckets.map(function(lowerBound) { return 0; });
@@ -156,25 +191,24 @@ Telemetry.getHistogram = function(histograms, cumulative) { //wip: add date rang
   };
 }
 
-Telemetry.getCombinedHistograms(histograms1, histograms2) {
+Telemetry.getCombinedHistograms = function Telemetry_getCombinedHistograms(histograms1, histograms2) {
   assert(histograms1.buckets.length > 0, "`histograms1` must be a histograms collection");
   assert(histograms2.buckets.length > 0, "`histograms2` must be a histograms collection");
   assert(histograms1.kind === histograms2.kind, "`histogram1` and `histogram2` must be of the same kind");
   assert(histograms1.buckets.length === histograms2.buckets.length, "`histogram1` and `histogram2` must have the same buckets");
-  {"date":"20150615","count":97254,"histogram":[9729,9480,5510],"label":""}
   var dateMap = {};
   histograms1.data.forEach(function(histogramEntry) {
     if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
     dateMap[histogramEntry.date].push(histogramEntry);
   });
-  var result = [];
+  var dataset = [];
   Object.keys(dateMap).sort().forEach(function(date) {
     var entries = dateMap[date];
     var histogram = entries[0].histogram.map(function(count) { return 0; });
     entries.forEach(function(entry) { // go through each histogram entry and combine histograms
       entry.histogram.forEach(function(count, i) { histogram[i] += count });
     });
-    result.push({
+    dataset.push({
       date: entries[0].date,
       count: entries[0].count,
       label: entries[0].label,
@@ -184,27 +218,29 @@ Telemetry.getCombinedHistograms(histograms1, histograms2) {
   return {
     buckets: histograms1.buckets,
     kind: histograms1.kind,
-    data: 
-  }
+    data: dataset,
+  };
 }
 
-Telemetry.getVersions = function() { // shim function
+Telemetry.getVersions = function Telemetry_getVersions() { // shim function
   assert(typeof Telemetry.CHANNEL_VERSION_DATES !== null, "Telemetry.js must be initialized before use");
   var versions = [];
   for (var channel in Telemetry.CHANNEL_VERSION_DATES) {
     Object.keys(Telemetry.CHANNEL_VERSION_DATES[channel]).forEach(function(version) {
-      versions.push(channel + " " + version);
+      versions.push(channel + "/" + version);
     });
   }
   return versions.sort();
 }
 
-Telemetry.getMeasures = function(channel, version, callback) {
+Telemetry.getMeasures = function Telemetry_getMeasures(channel, version, callback) {
+  assert(typeof channel === "string", "`channel` must be a string");
+  assert(typeof version === "string", "`version` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
-  //wip: there is currently no way to get the measures using the current API, so we're just faking it
-  setTimeout(function() {
-    callback({"DECODER_INSTANTIATED_MACARABIC": {"expires_in_version": "never", "kind": "flag", "description": "Whether the decoder for MACARABIC has been instantiated in this session."}, "GC_MS": {"high": "10000", "expires_in_version": "never", "kind": "exponential", "description": "Time spent running JS GC (ms)", "n_buckets": 50}, "WEBRTC_CALL_DURATION": {"high": "10000", "expires_in_version": "never", "kind": "exponential", "description": "The length of time (in seconds) that a call lasted.", "n_buckets": "1000"}, "PLACES_FAVICON_ICO_SIZES": {"high": 524288, "expires_in_version": "never", "kind": "exponential", "description": "PLACES: Size of the ICO favicon files loaded from the web (Bytes)", "n_buckets": 100}, "SSL_TIME_UNTIL_READY": {"kind": "exponential", "description": "ms of SSL wait time including TCP and proxy tunneling", "high": "60000", "expires_in_version": "never", "extended_statistics_ok": true, "n_buckets": 200}, "HTTP_PAGE_COMPLETE_LOAD_V2": {"kind": "exponential", "description": "HTTP page: Overall load time - all (ms) [cache2]", "high": "30000", "expires_in_version": "never", "extended_statistics_ok": true, "n_buckets": 50}});
-  }, 500);
+  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
+    "/filters/metric", function(metrics) {
+    callback(metrics);
+  });
 }
 
 exports.Telemetry = Telemetry;
