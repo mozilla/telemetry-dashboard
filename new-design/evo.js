@@ -123,21 +123,11 @@ function updateFilterOptions(callback) {
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
   
   Telemetry.getFilterOptions(version, channel, metric, function() {
-  
+    multiselectSetOptions($("#filter-product"), deduplicate(optionsMap.product));
+    multiselectSetOptions($("#filter-os"), deduplicate(optionsMap.os));
+    multiselectSetOptions($("#filter-os-version"), deduplicate(optionsMap.os_version));
+    multiselectSetOptions($("#filter-arch"), deduplicate(optionsMap.arch));
   });
-
-  function deduplicate(values) {
-    var seen = {};
-    return values.filter(function(option) {
-      if (seen.hasOwnProperty(option[0])) { return false; }
-      seen[option[0]] = true;
-      return true;
-    });
-  }
-  multiselectSetOptions($("#filter-product"), deduplicate(optionsMap.product));
-  multiselectSetOptions($("#filter-os"), deduplicate(optionsMap.os));
-  multiselectSetOptions($("#filter-os-version"), deduplicate(optionsMap.os_version));
-  multiselectSetOptions($("#filter-arch"), deduplicate(optionsMap.arch));
 }
 
 function calculateHistogramEvolutions(callback) {
@@ -159,40 +149,74 @@ function calculateHistogramEvolutions(callback) {
     ["os",         $("#filter-os")],
     ["os_version", $("#filter-os-version")],
   ];
-  var filterSets = [{}];
-  filterMapping.forEach(function(entry, i) {
-    var filterName = entry[0], filterSelector = entry[1];
-    var selection = filterSelector.val() || [];
-    var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
-    if (selection.length !== optionCount) { // Not all options are selected, so we need to have combinations where all the options are represented
-      var result = [];
-      selection.forEach(function(filterOption) {
-        var optionFilterSets = filterSets.map(function(filterSet) {
-          var newFilterSet = copy(filterSet);
-          newfilterSet[filterName] = filterOption;
-          return newFilterSet;
-        });
-        result.push(optionFilterSets);
-      });
-      console.log(result, selection)
-      filterSets = result;
-    }
-  });
 
-  var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  var lines = [];
-  var submissionLines = [];
-  var expectedCount = versions.length * aggregates.length;
-  versions.forEach(function(version) {
-    Telemetry.getHistogramsOverBuilds(version, measure, function(histograms) {
-      // Update filter options
-      while (filterOptionsList.length < versionOptionsList.length) { filterOptionsList.push([]); }
-      
-      var newLines = getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList);
-      lines = lines.concat(newLines.lines);
-      submissionLines.push(newLines.submissionLine);
-      if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
+  var channelVersions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
+  var lines = [], submissionLines = [];
+  var versionCount = 0;
+  channelVersions.forEach(function(channelVersion) {
+    var parts = channelVersions.split();
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterMapping, true, function(newLines, newSubmissionLine) {
+      lines = lines.concat(newLines);
+      submissionLines.push(newSubmissionLine);
+      versionCount ++;
+      if (versionCount === channelVersions.length) { // Check if lines were loaded for all the versions
         callback(lines, submissionLines);
+      }
+    });
+  });
+}
+
+function getHistogramEvolutionLines(channel, version, measure, aggregates, filterMapping, sanitize, callback) {
+  var filterSets = [{}];
+  //wip: generate filter sets
+
+  var aggregateSelector = {
+    "mean":            Telemetry.getHistogramMeans,
+    "5th-percentile":  function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 5); },
+    "25th-percentile": function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 25); },
+    "median":          function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 50); },
+    "75th-percentile": function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 75); },
+    "95th-percentile": function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 95); },
+    "submissions":     Telemetry.getHistogramSubmissions,
+  };
+
+  var filtersCount = 0;
+  var lines = [];
+  filterSets.forEach(function(filterSet) {
+    var finalHistograms = null;
+    Telemetry.getHistogramsOverBuilds(channel, version, measure, filterSet, function(histograms) {
+      if (finalHistograms === null) {
+        finalHistograms = histograms;
+      } else {
+        finalHistograms = Telemetry.getCombinedHistograms(finalHistograms, histograms);
+      }
+      filtersCount ++;
+      if (filtersCount.length === filterSets.length) { // Check if we have loaded all the needed filters
+        // Obtain the X and Y values of points
+        var aggregateValues = aggregates.map(function(aggregate) {
+          return Telemetry.getHistogramSubmissions(finalHistograms);
+        });
+        var submissionValues = Telemetry.getHistogramSubmissions(finalHistograms);
+        var dates = Telemetry.getHistogramDates(finalHistograms).map(function(date) { return moment(date, "YYYYMMDD").getTime(); });
+        
+        // Filter out those points corresponding to histograms where the number of submissions is too low
+        var submissionsCutoff = sanitize ? Math.max(Math.max.apply(Math, submissionValues) / 100, 100) : 0;
+        var timeCutoff = moment().add(1, "years").toDate().getTime(); // Cut off all dates past one year in the future
+        var finalAggregateValues = aggregateValues.map(function(values) { return []; }), finalSubmissionValues = [];
+        dates.forEach(function(date, i) {
+          if (submissionValues[i] < submissionsCutoff) { return; }
+          if (date > timeCutoff) { return; }
+          finalAggregateValues.forEach(function(values, j) { values.push({x: date, y: aggregateValues[j][i]}); });
+          finalSubmissionValues.push({x: date, y: submissionValues[i]});
+        });
+        
+        // Create line objects
+        var aggregateLines = finalAggregateValues.map(function(values, i) {
+          return new Line(measure, channel + "/" + version, aggregates[i], filterMapping, values);
+        });
+        var submissionLine = new Line(measure, channel + "/" + version, "submissions", filters, submissionValues);
+        
+        callback(aggregateLines, submissionLine);
       }
     });
   });
@@ -201,48 +225,8 @@ function calculateHistogramEvolutions(callback) {
 function getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList, sanitize) {
   sanitize = sanitize || true;
 
-  // Repeatedly apply filters to each evolution to get a new list of filtered evolutions
-  var evolutions = [histogramEvolution];
-  filterList.forEach(function(options, i) {
-    if (evolutions.length === 0) { return; } // No more evolutions, probably because a filter had no options selected
-    evolutions = [].concat.apply([], evolutions.map(function(evolution) {
-      var actualOptions = options, fullOptions = evolution.filterOptions();
-      if (actualOptions === null) { actualOptions = fullOptions; }
-      actualOptions = actualOptions.filter(function(option) { return fullOptions.indexOf(option) >= 0 });
-      return actualOptions.map(function(option) { return evolution.filter(option); });
-    }));
-  });
-
-  // Filter each histogram's dataset and combine them into a single dataset
-  var dateDatasets = {};
-  var firstHistogram = null, firstFilterId = null;
-  evolutions.forEach(function(evolution) {
-    evolution.each(function(date, hgram) {
-      // We just need a valid filter ID in order to have it pass filtering when constructing histograms later
-      if (firstHistogram === null) {
-        firstHistogram = hgram;
-        firstFilterId = firstHistogram._dataset[0][firstHistogram._dataset[0].length + Telemetry.DataOffsets.FILTER_ID];
-      }
-      
-      // precomputeAggregateQuantity will perform the actual filtering for us, and then we set the filter ID manually
-      var timestamp = date.getTime();
-      if (!(timestamp in dateDatasets)) { dateDatasets[timestamp] = []; }
-      var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
-      filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
-      dateDatasets[timestamp].push(filteredDataset);
-    });
-  });
-  
   // Generate histograms for each date and generate points for the desired aggregates for each one
-  var aggregateValue = {
-    "mean":            function(histogram) { return histogram.mean(); },
-    "5th-percentile":  function(histogram) { return histogram.percentile(5); },
-    "25th-percentile": function(histogram) { return histogram.percentile(25); },
-    "median":          function(histogram) { return histogram.median(); },
-    "75th-percentile": function(histogram) { return histogram.percentile(75); },
-    "95th-percentile": function(histogram) { return histogram.percentile(95); },
-    "submissions":     function(histogram) { return histogram.submissions(); },
-  };
+  
   var aggregatePoints = {};
   var submissionPoints = [];
   aggregates.forEach(function(aggregate) { aggregatePoints[aggregate] = []; });

@@ -192,6 +192,15 @@ function formatNumber(number) {
   return Math.round(number * 100) / 100;
 }
 
+function deduplicate(values) {
+  var seen = {};
+  return values.filter(function(option) {
+    if (seen.hasOwnProperty(option[0])) { return false; }
+    seen[option[0]] = true;
+    return true;
+  });
+}
+
 function selectSetOptions(element, options, defaultSelected) {
   if (defaultSelected !== undefined && typeof defaultSelected !== "string") {
     throw "Bad defaultSelected value: must be a string.";
