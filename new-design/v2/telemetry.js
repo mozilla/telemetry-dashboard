@@ -1,4 +1,4 @@
-var Telemetry = (function() {
+(function(exports) {
 "use strict";
 
 function assert(condition, message) {
@@ -9,13 +9,25 @@ function assert(condition, message) {
 var Telemetry = {
   BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
   CHANNEL_VERSION_DATES: null,
+  CACHE: {}, CACHE_TIMEOUT: 4 * 60 * 60 * 1000,
 };
 
 Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the response to do cross-origin requests - currently have cross-origin security disabled
   assert(typeof url === "string", "`url` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
+  if (Telemetry.CACHE[url] !== undefined) {
+    if ((new Date).getTime() - Telemetry.CACHE_LAST_UPDATED[url] < Telemetry.CACHE_TIMEOUT) {
+      setTimeout(function() { callback(Telemetry.CACHE[url]); });
+    }
+  }
+  
   var xhr = new XMLHttpRequest();
-  xhr.onload = function() { callback(JSON.parse(this.responseText)); };
+  xhr.onload = function() {
+    var result = JSON.parse(this.responseText);
+    Telemetry.CACHE[url] = result;
+    Telemetry.CACHE_LAST_UPDATED[url] = (new Date).getTime();
+    callback(result, null);
+  };
   xhr.onerror = function() { callback(null, this.status); };
   xhr.open("get", url, true);
   xhr.send();
@@ -51,9 +63,9 @@ Telemetry.getHistogramsOverBuilds = function(channel, version, metric, filters, 
   assert(typeof callback === "function", "`callback` must be a function");
   var buildDates = Telemetry.CHANNEL_VERSION_DATES[channel][version].join(",");
   var filterString = "";
-  for (var filterName in filters) {
+  Object.keys(filters).sort().forEach(function(filterName) { // we need to sort the keys in order to make sure the same filters result in the same URL each time, for caching
     filterString += "&" + encodeURIComponent(filterName) + "=" + encodeURIComponent(filters[filterName]);
-  }
+  });
   Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
     "/?version=" + encodeURIComponent(version) + "&dates=" + encodeURIComponent(buildDates) +
     "&metric=" + encodeURIComponent(metric) + filterString, function(histograms) {
@@ -70,6 +82,16 @@ Telemetry.getHistogramLastBucketUpper = function(buckets, type) {
   } else { // exponential
     return buckets[buckets.length - 1] * buckets[buckets.length - 1] / buckets[buckets.length - 2];
   }
+}
+
+Telemetry.getHistogramDates = function(histograms) {
+  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
+  return histograms.data.map(function(entry) { return entry.date; });
+}
+
+Telemetry.getHistogramSubmissions = function(histograms) {
+  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
+  return histograms.data.map(function(entry) { return entry.count; });
 }
 
 Telemetry.getHistogramMeans = function(histograms) {
@@ -111,7 +133,7 @@ Telemetry.getHistogramPercentiles = function(histograms, percentile) { // see ht
   });
 }
 
-Telemetry.getOverallHistogram = function(histograms, cumulative) { //wip: add date range
+Telemetry.getHistogram = function(histograms, cumulative) { //wip: add date range
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   cumulative = cumulative || false;
   var values = histograms.buckets.map(function(lowerBound) { return 0; });
@@ -134,6 +156,38 @@ Telemetry.getOverallHistogram = function(histograms, cumulative) { //wip: add da
   };
 }
 
+Telemetry.getCombinedHistograms(histograms1, histograms2) {
+  assert(histograms1.buckets.length > 0, "`histograms1` must be a histograms collection");
+  assert(histograms2.buckets.length > 0, "`histograms2` must be a histograms collection");
+  assert(histograms1.kind === histograms2.kind, "`histogram1` and `histogram2` must be of the same kind");
+  assert(histograms1.buckets.length === histograms2.buckets.length, "`histogram1` and `histogram2` must have the same buckets");
+  {"date":"20150615","count":97254,"histogram":[9729,9480,5510],"label":""}
+  var dateMap = {};
+  histograms1.data.forEach(function(histogramEntry) {
+    if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
+    dateMap[histogramEntry.date].push(histogramEntry);
+  });
+  var result = [];
+  Object.keys(dateMap).sort().forEach(function(date) {
+    var entries = dateMap[date];
+    var histogram = entries[0].histogram.map(function(count) { return 0; });
+    entries.forEach(function(entry) { // go through each histogram entry and combine histograms
+      entry.histogram.forEach(function(count, i) { histogram[i] += count });
+    });
+    result.push({
+      date: entries[0].date,
+      count: entries[0].count,
+      label: entries[0].label,
+      histogram: histogram,
+    });
+  });
+  return {
+    buckets: histograms1.buckets,
+    kind: histograms1.kind,
+    data: 
+  }
+}
+
 Telemetry.getVersions = function() { // shim function
   assert(typeof Telemetry.CHANNEL_VERSION_DATES !== null, "Telemetry.js must be initialized before use");
   var versions = [];
@@ -142,7 +196,7 @@ Telemetry.getVersions = function() { // shim function
       versions.push(channel + " " + version);
     });
   }
-  return versions;
+  return versions.sort();
 }
 
 Telemetry.getMeasures = function(channel, version, callback) {
@@ -153,5 +207,6 @@ Telemetry.getMeasures = function(channel, version, callback) {
   }, 500);
 }
 
+exports.Telemetry = Telemetry;
 return Telemetry;
-})();
+})(this);
