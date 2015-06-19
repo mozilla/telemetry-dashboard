@@ -1,140 +1,9 @@
-/*
-var Telemetry = (function() {
-"use strict";
-
-function assert(condition, message) {
-  if (!condition) { throw message || "Assertion failed"; }
-  return condition;
-}
-
-var Telemetry = {
-  BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
-  CHANNEL_VERSION_DATES: null,
-};
-
-Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the response to do cross-origin requests - currently have cross-origin security disabled
-  assert(typeof url === "string", "`url` must be a string");
-  assert(typeof callback === "function", "`callback` must be a function");
-  var xhr = new XMLHttpRequest();
-  xhr.onload = function() { callback(JSON.parse(this.responseText)); };
-  xhr.onerror = function() { callback(null, this.status); };
-  xhr.open("get", url, true);
-  xhr.send();
-}
-
-Telemetry.init = function Telemetry_init(callback) {
-  assert(typeof callback === "function", "`callback` must be a function");
-  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/", function(channels) {
-    var loadedChannels = 0;
-    Telemetry.CHANNEL_VERSION_DATES = {};
-    channels.forEach(function(channel, i) {
-      var versionDates = Telemetry.CHANNEL_VERSION_DATES[channel] = {};
-      Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel + "/dates/", function(dateEntries) {
-        dateEntries.forEach(function(entry) {
-          if (!versionDates.hasOwnProperty(entry.version)) { versionDates[entry.version] = []; }
-          versionDates[entry.version].push(entry.date);
-        })
-        loadedChannels ++; // Loaded another channel's dates
-        if (loadedChannels == channels.length) { // This is the last channel that needs to be loaded
-          callback();
-        }
-      });
-    });
-  });
-},
-
-Telemetry.loadHistogramsOverBuildDates = function(channel, version, metric, filters, callback) {
-  assert(typeof Telemetry.CHANNEL_VERSION_DATES !== null, "Telemetry.js must be initialized before use");
-  assert(typeof channel === "string", "`channel` must be a string");
-  assert(typeof version === "string", "`version` must be a string");
-  assert(typeof metric === "string", "`metric` must be a string");
-  assert(typeof filters === "object", "`filters` must be an object");
-  assert(typeof callback === "function", "`callback` must be a function");
-  var buildDates = Telemetry.CHANNEL_VERSION_DATES[channel][version].join(",");
-  var filterString = "";
-  for (var filterName in filters) {
-    filterString += "&" + encodeURIComponent(filterName) + "=" + encodeURIComponent(filters[filterName]);
-  }
-  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
-    "/?version=" + encodeURIComponent(version) + "&dates=" + encodeURIComponent(buildDates) +
-    "&metric=" + encodeURIComponent(metric) + filterString, function(histograms) {
-    callback(histograms);
-  });
-}
-
-Telemetry.getHistogramLastBucketUpper = function(buckets, type) {
-  assert(type === "linear" || type === "exponential", "Histogram buckets must be linear or exponential");
-  assert(buckets.length > 0, "Histogram buckets cannot be empty");
-  if (buckets.length == 1) return buckets[0] + 1;
-  if (type === "linear") {
-    return buckets[buckets.length - 1] + buckets[buckets.length - 1] - buckets[buckets.length - 2];
-  } else { // exponential
-    return buckets[buckets.length - 1] * buckets[buckets.length - 1] / buckets[buckets.length - 2];
-  }
-}
-
-Telemetry.getHistogramMeans = function(histograms) {
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, "exponential")]); //wip: properly get the type of histogram here
-  histograms.data.map(function(entry) {
-    var totalHits = entry.histogram.reduce(function(previous, count) { return previous + count; }, 0);
-    return entry.histogram.reduce(function(previous, count, i) {
-      return previous + (count / totalHits) * buckets[i]
-    }, 0);
-  });
-}
-
-Telemetry.getHistogramPercentiles = function(histograms, percentile) {
-  var type = "exponential"; //wip: properly get the type of histogram here
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  assert(type === "linear" || type === "exponential", "Histogram buckets must be linear or exponential");
-  assert(typeof percentile === "number", "`percentile` must be a number");
-  assert(0 <= percentile && percentile <= 100, "`percentile` must be between 0 and 100 inclusive");
-  var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, type)]);
-  return histograms.data.map(function(entry) {
-    var hitsAtPercentile = entry.histogram.reduce(function(previous, count) { return previous + count; }, 0) * (percentile / 100);
-    var i = 0;
-    while (hitsAtPercentile >= 0) { hitsAtPercentile -= entry.histogram[i]; i ++; }
-    i --; hitsAtPercentile += entry.histogram[i]; // `i` is now the index of the bucket that contains the percentile hit, and `hitsAtPercentile` is the number of hits within that bucket
-    var ratio = hitsAtPercentile / entry.histogram[i];
-    var lowerBound = buckets[i], upperBound = buckets[i + 1];
-    if (type == "linear") {
-      return lowerBound + (upperBound - lowerBound) * ratio;
-    } else { // exponential
-      var bucketFactor = buckets[buckets.length - 1] / buckets[buckets.length - 2];
-      return lowerBound * Math.pow(bucketFactor, ratio);
-    }
-  });
-}
-
-Telemetry.getHistogramValues = function(histograms) {
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  var values = histograms.buckets.map(function(lowerBound) { return 0; })
-  return {
-    buckets: histograms.buckets,
-    values: values.reduce
-  }
-}
-
-Telemetry.getHistogramValues = function(histograms) {
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  var values = []; for (var i = 0; i < histograms.buckets.length; i ++) { values.push(0); }
-  
-  return {
-    buckets: histograms.buckets,
-    values: 
-  }
-}
-
-return Telemetry;
-})();
-*/
 var gVersions = null;
 var gInitialPageState = null;
 var gMeasureMap = null;
 
 Telemetry.init(function() {
-  gVersions = Telemetry.versions();
+  gVersions = Telemetry.getVersions();
   gInitialPageState = loadStateFromUrlAndCookie();
   
   // Set up aggregate, build, and measure selectors
@@ -143,9 +12,7 @@ Telemetry.init(function() {
   if (gInitialPageState.min_channel_version) { $("#min-channel-version").select2("val", gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { $("#max-channel-version").select2("val", gInitialPageState.max_channel_version); }
   updateMeasuresList(function() {
-    calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
-      refreshFilters(filterList, filterOptionsList);
-      
+    updateFilterOptions(function(filterOptions) {
       $("#filter-product").multiselect("select", gInitialPageState.product);
       if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
@@ -179,13 +46,12 @@ Telemetry.init(function() {
         }
         
         // Set the new aggregate options that apply to the current measure
-        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
-        $("#aggregates").trigger("change");
+        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]]);
+        
+        updateFilterOptions(function(filterOptions) { $("#aggregates").trigger("change"); });
       });
       $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
-        calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
-          refreshFilters(filterList, filterOptionsList);
-          
+        calculateHistogramEvolutions(function(lines, submissionLines) {
           // If the OS was changed, select all the OS versions
           if (e.target.id == "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
           
@@ -235,7 +101,8 @@ function updateMeasuresList(callback) {
     return
   }
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
-    Telemetry.measures(channelVersion, function(measures) {
+    var parts = channelVersion.split(" "); //wip: clean this up
+    Telemetry.getMeasures(parts[0], parts[1], function(measures) {
       versionCount ++;
       Object.keys(measures).filter(function(measure) {
         return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
@@ -250,21 +117,27 @@ function updateMeasuresList(callback) {
   });
 }
 
-function refreshFilters(filterList, filterOptionsList) {
-  // Remove duplicate filter values
-  var optionsList = filterOptionsList.map(function(options) {
+function updateFilterOptions(callback) {
+  var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
+  var measure = $("#measure").val();
+  var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
+  
+  Telemetry.getFilterOptions(version, channel, metric, function() {
+  
+  });
+
+  function deduplicate(values) {
     var seen = {};
-    return options.filter(function(option) {
+    return values.filter(function(option) {
       if (seen.hasOwnProperty(option[0])) { return false; }
       seen[option[0]] = true;
       return true;
     });
-  });
-
-  multiselectSetOptions($("#filter-product"), optionsList[1]);
-  multiselectSetOptions($("#filter-os"), optionsList[2]);
-  multiselectSetOptions($("#filter-os-version"), optionsList[3]);
-  multiselectSetOptions($("#filter-arch"), optionsList[4]);
+  }
+  multiselectSetOptions($("#filter-product"), deduplicate(optionsMap.product));
+  multiselectSetOptions($("#filter-os"), deduplicate(optionsMap.os));
+  multiselectSetOptions($("#filter-os-version"), deduplicate(optionsMap.os_version));
+  multiselectSetOptions($("#filter-arch"), deduplicate(optionsMap.arch));
 }
 
 function calculateHistogramEvolutions(callback) {
@@ -273,54 +146,53 @@ function calculateHistogramEvolutions(callback) {
   var measure = $("#measure").val();
   var aggregates = $("#aggregates").val() || [];
   
+  function copy(object) {
+    var result = {}
+    for (key in object) { result[key] = object[object]; }
+    return result;
+  }
+  
   // Obtain a mapping from filter names to filter options
-  var filters = {};
-  var filterMapping = {
-    "product":    $("#filter-product"),
-    "arch":       $("#filter-arch"),
-    "os":         $("#filter-os"),
-    "os_version": $("#filter-os-version"),
-  };
-  for (var filterName in filterMapping) {
-    var filterSelector = $(filterMapping[filterName]);
+  var filterMapping = [
+    ["product",    $("#filter-product")],
+    ["arch",       $("#filter-arch")],
+    ["os",         $("#filter-os")],
+    ["os_version", $("#filter-os-version")],
+  ];
+  var filterSets = [{}];
+  filterMapping.forEach(function(entry, i) {
+    var filterName = entry[0], filterSelector = entry[1];
     var selection = filterSelector.val() || [];
     var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
-    if (selection.length != optionCount) { // Not all options are selected
-      filters[filterName] = selection;
+    if (selection.length !== optionCount) { // Not all options are selected, so we need to have combinations where all the options are represented
+      var result = [];
+      selection.forEach(function(filterOption) {
+        var optionFilterSets = filterSets.map(function(filterSet) {
+          var newFilterSet = copy(filterSet);
+          newfilterSet[filterName] = filterOption;
+          return newFilterSet;
+        });
+        result.push(optionFilterSets);
+      });
+      console.log(result, selection)
+      filterSets = result;
     }
-  }
-  filterList = [
-    ["saved_session"],                                        // "reason" filter
-    ("product" in filters) ? filters["product"] : null,       // "product" filter
-    ("os" in filters) ? filters["os"] : null,                 // "os" filter
-    ("os_version" in filters) ? filters["os_version"] : null, // "os_version" filter
-    ("arch" in filters) ? filters["arch"] : null,             // "arch" filter
-  ];
-  for (var i = filterList.length - 1; i >= 0; i --) { // Remove unnecessary filters - trailing null entries in the filter list
-    if (filterList[i] !== null) { break; }
-    filterList.pop();
-  }
+  });
 
   var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  if (versions.length > 10) { versions = versions.slice(0, 10); } // Only show up to 10 versions for performance reasons
   var lines = [];
   var submissionLines = [];
   var expectedCount = versions.length * aggregates.length;
-  var filterOptionsList = []; // Each entry is an array of options for a particular filter
   versions.forEach(function(version) {
-    Telemetry.loadEvolutionOverBuilds(version, measure, function(histogramEvolution) {
+    Telemetry.getHistogramsOverBuilds(version, measure, function(histograms) {
       // Update filter options
-      var versionOptionsList = getOptions(filterList, histogramEvolution);
       while (filterOptionsList.length < versionOptionsList.length) { filterOptionsList.push([]); }
-      filterOptionsList = filterOptionsList.map(function(options, i) {
-        return options.concat(versionOptionsList[i]);
-      });
       
       var newLines = getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filters, filterList);
       lines = lines.concat(newLines.lines);
       submissionLines.push(newLines.submissionLine);
       if (lines.length === expectedCount) { // Check if we have loaded all the needed versions
-        callback(filterList, filterOptionsList, lines, submissionLines);
+        callback(lines, submissionLines);
       }
     });
   });
@@ -684,4 +556,3 @@ function saveStateToUrlAndCookie() {
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
 }
-*/
