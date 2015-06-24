@@ -29,7 +29,7 @@ Telemetry.init(function() {
       $("#channel-version").change(function() {
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
-      $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+      $("#build-time-toggle, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
         calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
           multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
           multiselectSetOptions($("#filter-os"), filterOptionsList[2]);
@@ -109,6 +109,7 @@ function calculateHistogram(callback) {
   // Get selected version, measure, and aggregate options
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
+  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
@@ -138,7 +139,7 @@ function calculateHistogram(callback) {
     filterList.pop();
   }
 
-  Telemetry.loadEvolutionOverBuilds(channelVersion, measure, function(histogramEvolution) {
+  evolutionLoader(channelVersion, measure, function(histogramEvolution) {
     updateDateRange(function(dates) {
       var filterOptionsList = getOptions(filterList, histogramEvolution); // Update filter options
       var fullHistogram = histogramEvolution.range(dates[0], dates[dates.length - 1]);

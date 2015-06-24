@@ -87,6 +87,14 @@
                 <div id="advanced-settings" class="panel-collapse collapse">
                     <div class="panel-body">
                         <form class="form-horizontal">
+                            <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
+                                Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
+                                <input id="build-time-toggle" style="float: right" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
+                            </label>
+                            <label style="font-size: 1.5em; font-weight: normal; display: block; margin-top: 20px">
+                                Cumulative mode: show each bucket as the sum of itself and all buckets on its left:&nbsp;&nbsp;
+                                <input id="cumulative-toggle" name="cumulative-toggle" data-width="150" data-toggle="toggle" data-on="Cumulative" data-off="Individual" type="checkbox">
+                            </label>
                             <span id="date-range-controls" class="form-group" style="width: 230px; display: inline-block; margin: 0">
                                 <span class="input-prepend input-group">
                                     <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
@@ -94,10 +102,6 @@
                                 </span>
                             </span>
                             <span id="range-bar" class="pull-right"></span>
-                            <label style="font-size: 1.5em; font-weight: normal; margin-top: 20px">
-                                Cumulative mode: show each bucket as the sum of itself and all buckets on the left:&nbsp;&nbsp;
-                                <input id="cumulative-toggle" name="cumulative-toggle" data-width="100" data-toggle="toggle" data-on="Time" data-off="" type="checkbox">
-                            </label>
                         </form>
                     </div>
                 </div>
