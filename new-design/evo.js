@@ -3,6 +3,7 @@ var gInitialPageState = null;
 
 $(function() { Telemetry.init(function() {
   gVersions = Telemetry.getVersions();
+  console.log(gVersions)
   gInitialPageState = loadStateFromUrlAndCookie();
 
   // Set up aggregate, build, and measure selectors
@@ -50,7 +51,7 @@ $(function() { Telemetry.init(function() {
       
       $("#aggregates").trigger("change");
     });
-    $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+    $("#build-time-toggle, #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
       calculateHistogramEvolutions(function(lines, submissionLines) {
         displayHistogramEvolutions(lines, submissionLines);
         saveStateToUrlAndCookie();
@@ -65,6 +66,7 @@ $(function() { Telemetry.init(function() {
   $("#switch-views").click(function() {
     var evolutionURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
     window.location.href = evolutionURL;
+    return false;
   });
   
   // Obtain a short permalink to the current page
@@ -129,6 +131,7 @@ function calculateHistogramEvolutions(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var measure = $("#measure").val();
   var aggregates = $("#aggregates").val() || [];
+  var histogramsLoader = $("#build-time-toggle").prop("checked") ? Telemetry.getHistogramsOverTime : Telemetry.getHistogramsOverBuilds;
   
   function copy(object) {
     var result = {}
@@ -149,7 +152,7 @@ function calculateHistogramEvolutions(callback) {
   var versionCount = 0;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterMapping, true, function(newLines, newSubmissionLine) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterMapping, true, histogramsLoader, function(newLines, newSubmissionLine) {
       lines = lines.concat(newLines);
       submissionLines.push(newSubmissionLine);
       versionCount ++;
@@ -161,7 +164,7 @@ function calculateHistogramEvolutions(callback) {
   });
 }
 
-function getHistogramEvolutionLines(channel, version, measure, aggregates, filterMapping, sanitize, callback) {
+function getHistogramEvolutionLines(channel, version, measure, aggregates, filterMapping, sanitize, histogramsLoader, callback) {
   var filterSets = [{}];
   //wip: generate filter sets
 
@@ -179,7 +182,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
   var lines = [];
   filterSets.forEach(function(filterSet) {
     var finalHistograms = null;
-    Telemetry.getHistogramsOverBuilds(channel, version, measure, filterSet, function(histograms) {
+    histogramsLoader(channel, version, measure, filterSet, function(histograms) {
       if (finalHistograms === null) {
         finalHistograms = histograms;
       } else {
@@ -222,6 +225,10 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
 function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   minDate = minDate || null; maxDate = maxDate || null;
 
+  // filter out empty lines, and add a workaround for a bug in MetricsGraphics where the input datasets must be in ascending order by first element
+  lines = lines.filter(function(line) { return line.values.length > 0; });
+  submissionLines = submissionLines.filter(function(line) { return line.values.length > 0; });
+  
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
     return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });

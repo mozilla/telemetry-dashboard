@@ -30,7 +30,7 @@ Telemetry.init(function() {
       $("#channel-version").change(function() {
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
-      $("#measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+      $("#build-time-toggle, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
         calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
           multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
           multiselectSetOptions($("#filter-os"), filterOptionsList[2]);
@@ -52,12 +52,13 @@ Telemetry.init(function() {
 
   $("#cumulative-toggle").change(function() {
     displayHistogram(gCurrentHistogram, gCurrentDates, gCurrentMeasureDescription, $("#cumulative-toggle").prop("checked"));
-  })
+  });
   
   // Switch to the evolution dashboard with the same settings
   $("#switch-views").click(function() {
     var evolutionURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
     window.location.href = evolutionURL;
+    return false;
   });
   
   // Obtain a short permalink to the current page
@@ -83,6 +84,10 @@ Telemetry.init(function() {
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
   });
+  $("#advanced-settings").on("shown.bs.collapse", function () {
+    var dateControls = $("#date-range-controls");
+    $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
+  });
 });
 
 function updateMeasuresList(callback) {
@@ -105,6 +110,7 @@ function calculateHistogram(callback) {
   // Get selected version, measure, and aggregate options
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
+  var histogramsLoader = $("#build-time-toggle").prop("checked") ? Telemetry.getHistogramsOverTime : Telemetry.getHistogramsOverBuilds;
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
@@ -134,7 +140,7 @@ function calculateHistogram(callback) {
     filterList.pop();
   }
 
-  Telemetry.loadEvolutionOverBuilds(channelVersion, measure, function(histogramEvolution) {
+  histogramsLoader(channelVersion, measure, function(histogramEvolution) {
     updateDateRange(function(dates) {
       var filterOptionsList = getOptions(filterList, histogramEvolution); // Update filter options
       var fullHistogram = histogramEvolution.range(dates[0], dates[dates.length - 1]);
@@ -207,7 +213,7 @@ function updateDateRange(callback, histogramEvolution, updatedByUser, shouldUpda
     });
     $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
-    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+    $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
     rangeBarControl.val([[picker.startDate, picker.endDate]]);
   }
   
@@ -244,7 +250,6 @@ function getFilteredHistogram(version, measure, histogram, filters, filterList) 
 
 function displayHistogram(histogram, dates, measureDescription, cumulative) {
   cumulative = cumulative || false;
-  console.log(cumulative)
 
   // Update the summary
   $("#prop-kind").text(histogram.kind());
@@ -265,39 +270,39 @@ function displayHistogram(histogram, dates, measureDescription, cumulative) {
     $(".scalar-only").hide();
   }
   
-  var totalSamples = histogram.count();
-  var ends = histogram.map(function(count, start, end, i) { return end; });
-  var distributionData, starts;
+  var counts, starts;
   if (cumulative) {
-    var total = 0;
     starts = histogram.map(function(count, start, end, i) { return 0; });
-    distributionData = histogram.map(function(count, start, end, i) {
-      total += count;
-      return {value: i, count: total};
-    });
+    var total = 0;
+    counts = histogram.map(function(count, start, end, i) { return total += count; });
   } else {
     starts = histogram.map(function(count, start, end, i) { return start; });
-    distributionData = histogram.map(function(count, start, end, i) { return {value: i, count: count}; });
+    counts = histogram.map(function(count, start, end, i) { return count; });
   }
+  var ends = histogram.map(function(count, start, end, i) { return end; });
+  
+  var totalSamples = histogram.count();
+  var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalSamples) * 100}; });
   
   // Plot the data using MetricsGraphics
   $("#distribution").css("margin", "0 -50px 0 -50px");
   MG.data_graphic({
-    data: distributionData,
+    data: distributionSamples,
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
     left: 100, right: 150,
     transition_on_update: false,
     target: "#distribution",
-    x_label: measureDescription, y_label: "Number of Samples",
+    x_label: measureDescription, y_label: "Percentage of Samples",
     xax_ticks: 20,
     y_extended_ticks: true,
     x_accessor: "value", y_accessor: "count",
     xax_format: function(index) { return formatNumber(starts[index]); },
+    yax_format: function(value) { return value + "%"; },
     mouseover: function(d, i) {
-      var percentage = Math.round((d.y / totalSamples) * 10000) / 100 + "%";
-      var label = formatNumber(d.y) + " samples (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
+      var label = count + " samples (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       
       // Reposition element

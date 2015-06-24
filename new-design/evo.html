@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.0/css/bootstrap-toggle.min.css" rel="stylesheet">
     
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
 </head>
@@ -66,6 +67,25 @@
                 </figure>
             </div>
         </div>
+        <div class="row">
+            <div class="panel panel-default" style="margin: 10px 50px">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                        <a role="button" id="advanced-settings-toggle" data-toggle="collapse" href="#advanced-settings">Advanced Settings</a>
+                    </h4>
+                </div>
+                <div id="advanced-settings" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <form class="form-horizontal">
+                            <label style="font-size: 1.5em; font-weight: normal; margin-top: 20px">
+                                Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
+                                <input id="build-time-toggle" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
+                            </label>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Bootstrap and supporting libraries -->
@@ -75,6 +95,7 @@
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
     
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
