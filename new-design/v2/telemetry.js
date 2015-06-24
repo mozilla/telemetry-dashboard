@@ -48,7 +48,8 @@ Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the r
 
 Telemetry.init = function Telemetry_init(callback) {
   assert(typeof callback === "function", "`callback` must be a function");
-  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/", function(channels) {
+  //Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/", function(channels) {
+    var channels = ["nightly", "aurora", "beta"]; //wip: hardcode the channels as they don't really change
     var loadedChannels = 0;
     Telemetry.CHANNEL_VERSION_DATES = {};
     channels.forEach(function(channel, i) {
@@ -64,7 +65,7 @@ Telemetry.init = function Telemetry_init(callback) {
         }
       });
     });
-  });
+  //});
 },
 
 Telemetry.getHistogramsOverBuilds = function Telemetry_getHistogramsOverBuilds(channel, version, metric, filters, callback) {
@@ -120,7 +121,7 @@ Telemetry.getHistogramMeans = function Telemetry_getHistogramMeans(histograms) {
   assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
   assert(histograms.kind === "linear" || histograms.kind === "exponential", "Histogram buckets must be linear or exponential");
   var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, histograms.kind)]);
-  histograms.data.map(function(entry) {
+  return histograms.data.map(function(entry) {
     var totalHits = 0, bucketHits = 0;
     var linearTerm = (buckets[buckets.length - 1] - buckets[buckets.length - 2]) / 2;
     var exponentialFactor = Math.sqrt(buckets[buckets.length - 1] / buckets[buckets.length - 2]);

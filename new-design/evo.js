@@ -38,17 +38,6 @@ $(function() { Telemetry.init(function() {
       $("#measure-description").text(measureEntry.description + " (" + measure + ")");
       $("#submissions-title").text(measure + " submissions");
       
-      // Figure out which aggregates actually apply to this measure
-      var options;
-      if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
-        options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]]
-      } else {
-        options = [["submissions", "Submissions"]];
-      }
-      
-      // Set the new aggregate options that apply to the current measure
-      multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]]);
-      
       $("#aggregates").trigger("change");
     });
     $("#build-time-toggle, #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
@@ -156,7 +145,6 @@ function calculateHistogramEvolutions(callback) {
       lines = lines.concat(newLines);
       submissionLines.push(newSubmissionLine);
       versionCount ++;
-      console.log(versionCount, channelVersions.length)
       if (versionCount === channelVersions.length) { // Check if lines were loaded for all the versions
         callback(lines, submissionLines);
       }
@@ -189,15 +177,13 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         finalHistograms = Telemetry.getCombinedHistograms(finalHistograms, histograms);
       }
       filtersCount ++;
-      console.log(filtersCount, filterSets.length, filtersCount.length === filterSets.length)
-      if (filtersCount.length === filterSets.length) { // Check if we have loaded all the needed filters
-        console.log("aaaaaa")
+      if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         // Obtain the X and Y values of points
         var aggregateValues = aggregates.map(function(aggregate) {
-          return Telemetry.getHistogramSubmissions(finalHistograms);
+          return aggregateSelector[aggregate](finalHistograms);
         });
         var submissionValues = Telemetry.getHistogramSubmissions(finalHistograms);
-        var dates = Telemetry.getHistogramDates(finalHistograms).map(function(date) { return moment(date, "YYYYMMDD").getTime(); });
+        var dates = Telemetry.getHistogramDates(finalHistograms).map(function(date) { return moment(date, "YYYYMMDD").toDate().getTime(); });
         
         // Filter out those points corresponding to histograms where the number of submissions is too low
         var submissionsCutoff = sanitize ? Math.max(Math.max.apply(Math, submissionValues) / 100, 100) : 0;
@@ -214,7 +200,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         var aggregateLines = finalAggregateValues.map(function(values, i) {
           return new Line(measure, channel + "/" + version, aggregates[i], filterMapping, values);
         });
-        var submissionLine = new Line(measure, channel + "/" + version, "submissions", filters, submissionValues);
+        var submissionLine = new Line(measure, channel + "/" + version, "submissions", filterMapping, finalSubmissionValues);
         
         callback(aggregateLines, submissionLine);
       }
@@ -268,11 +254,9 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
-      // Create legend
-      var date = d.key;
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
-      var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
+      var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(d.date).format("MMM D, YYYY") + " (build " + moment(d.date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
@@ -282,10 +266,10 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       });
       
       // Reposition element
-      var rolloverRect = $("#evolutions .mg-rollover-rect rect:nth-child(" + (i + 1) + ")").get(0);
-      var x = parseInt(rolloverRect.getAttribute("x")) + 30, y = parseInt(rolloverRect.getAttribute("y")) + 10;
+      var rolloverCircle = $("#evolutions .mg-line-rollover-circle").get(0);
+      var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
-      if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 35;
+      if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
       d3.select("#evolutions .mg-active-datapoint-container").attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
       
       // Add background
@@ -316,11 +300,10 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
       // Create legend
-      var date = d.key;
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var submissionLineList = d.values ? d.values.map(function(entry) { return submissionLines[entry.line_id - 1]; }) : [submissionLines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
-      var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
+      var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(d.date).format("MMM D, YYYY") + " (build " + moment(d.date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       submissionLineList.forEach(function(line, i) {
         var lineIndex = i + 1;
@@ -329,10 +312,10 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       });
       
       // Reposition element
-      var rolloverRect = $("#submissions .mg-rollover-rect rect:nth-child(" + (i + 1) + ")").get(0);
-      var x = parseInt(rolloverRect.getAttribute("x")) + 30, y = parseInt(rolloverRect.getAttribute("y")) + 10;
+      var rolloverCircle = $("#submissions .mg-line-rollover-circle").get(0);
+      var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
-      if (x + bbox.width + 50 > $("#submissions svg").width()) x -= bbox.width + 35;
+      if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
       d3.select("#submissions .mg-active-datapoint-container").attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
       
       // Add background
