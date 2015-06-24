@@ -51,7 +51,7 @@ Telemetry.init(function() {
         multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
         $("#aggregates").trigger("change");
       });
-      $("#aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+      $("#build-time-toggle, #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
         calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
           refreshFilters(filterList, filterOptionsList);
           
@@ -72,6 +72,7 @@ Telemetry.init(function() {
   $("#switch-views").click(function() {
     var evolutionURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
     window.location.href = evolutionURL;
+    return false;
   });
   
   // Obtain a short permalink to the current page
@@ -141,6 +142,7 @@ function calculateHistogramEvolutions(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var measure = $("#measure").val();
   var aggregates = $("#aggregates").val() || [];
+  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
@@ -177,7 +179,7 @@ function calculateHistogramEvolutions(callback) {
   var expectedCount = versions.length * aggregates.length;
   var filterOptionsList = []; // Each entry is an array of options for a particular filter
   versions.forEach(function(version) {
-    Telemetry.loadEvolutionOverBuilds(version, measure, function(histogramEvolution) {
+    evolutionLoader(version, measure, function(histogramEvolution) {
       // Update filter options
       var versionOptionsList = getOptions(filterList, histogramEvolution);
       while (filterOptionsList.length < versionOptionsList.length) { filterOptionsList.push([]); }
@@ -299,6 +301,10 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
 function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   minDate = minDate || null; maxDate = maxDate || null;
 
+  // filter out empty lines, and add a workaround for a bug in MetricsGraphics where the input datasets must be in ascending order by first element
+  lines = lines.filter(function(line) { return line.values.length > 0; });
+  submissionLines = submissionLines.filter(function(line) { return line.values.length > 0; });
+  
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
     return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
