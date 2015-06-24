@@ -321,9 +321,10 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   
   var markers = [], usedDates = {};
   lines.forEach(function(line) {
-    if (line.values.length > 0 && !(line.values[0].x in usedDates)) {
-      markers.push({date: new Date(line.values[0].x), label: line.getVersionString()});
-      usedDates[line.values[0].x] = true;
+    var minDate = Math.min.apply(Math, line.values.map(function(point) { return point.x; }));
+    if (!(minDate in usedDates)) {
+      markers.push({date: new Date(minDate), label: line.getVersionString()});
+      usedDates[minDate] = true;
     }
   });
 
