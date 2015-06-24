@@ -7,7 +7,8 @@ function assert(condition, message) {
 }
 
 var Telemetry = {
-  BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
+  //BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
+  BASE_URL: 'http://ec2-52-12-57-130.us-west-2.compute.amazonaws.com:5000/',
   CHANNEL_VERSION_DATES: null,
   CACHE: {}, CACHE_LAST_UPDATED: {}, CACHE_TIMEOUT: 4 * 60 * 60 * 1000,
 };
@@ -89,23 +90,9 @@ Telemetry.getFilterOptions = function Telemetry_getOptions(channel, version, cal
   assert(typeof channel === "string", "`channel` must be a string");
   assert(typeof version === "string", "`version` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
-  var filterOptions = {
-    metric: [],
-    application: [],
-    architecture: [],
-    os: [],
-  };
-  var expectedFilters = Object.keys(filterOptions).length;
-  var filterCount = 0;
-  Object.keys(filterOptions).forEach(function(filterName) {
-    Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
-      "/filters/" + encodeURIComponent(filterName), function(options) {
-      filterOptions[filterName] = options;
-      filterCount ++;
-      if (filterCount === expectedFilters) { callback(filterOptions); }
-    });
+  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel + "/filters", function(filterOptions) {
+    callback(filterOptions);
   });
-  if (expectedFilters === 0) { callback(filterOptions); }
 }
 
 Telemetry.getHistogramLastBucketUpper = function Telemetry_getHistogramLastBucketUpper(buckets, type) {
