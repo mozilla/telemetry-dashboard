@@ -12,15 +12,17 @@ $(function() { Telemetry.init(function() {
   
   updateOptions(function() {      
     $("#filter-product").multiselect("select", gInitialPageState.product);
-    if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
-    else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
     if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
     else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
+    else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    if (gInitialPageState.e10s !== null) { $("#filter-e10s").multiselect("select", gInitialPageState.e10s); }
+    else { $("#filter-e10s").multiselect("selectAll", false).multiselect("updateButtonText"); }
 
       $("#channel-version").change(function() {
         updateOptions(function() { $("#measure").trigger("change"); });
       });
-      $("#build-time-toggle, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+      $("#build-time-toggle, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s").change(function() {
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
           calculateHistogram(function(histogram, histograms) {
@@ -89,6 +91,7 @@ function updateOptions(callback) {
     multiselectSetOptions($("#filter-os"), getHumanReadableOptions("os", deduplicate(optionsMap.os)));
     //wip: other filters like e10sEnabled and such
     multiselectSetOptions($("#filter-arch"), getHumanReadableOptions("arch", deduplicate(optionsMap.architecture)));
+    multiselectSetOptions($("#filter-e10s"), getHumanReadableOptions("e10s", deduplicate(optionsMap.e10sEnabled)));
     if (callback !== undefined) { callback(); }
   });
 }
@@ -101,8 +104,9 @@ function calculateHistogram(callback) {
   
   var filters = {
     "application":  $("#filter-product"),
-    "architecture": $("#filter-arch"),
     "os":           $("#filter-os"),
+    "architecture": $("#filter-arch"),
+    "e10sEnabled": $("#filter-e10s"),
     //wip: add all the new filters
   };
   var filterSets = getFilterSets(filters);
@@ -307,10 +311,12 @@ function saveStateToUrlAndCookie() {
   };
   
   // Only store these in the state if they are not all selected
-  var selected = $("#filter-arch").val() || [];
-  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = selected; }
+  var selected = $("#filter-arch").val() || [];
+  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
+  var selected = $("#filter-e10s").val() || [];
+  if (selected.length !== $("#filter-e10s option").size()) { gInitialPageState.e10s = selected; }
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {

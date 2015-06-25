@@ -63,10 +63,12 @@ function loadStateFromUrlAndCookie() {
     pageState.max_channel_version : "nightly/41";
   pageState.product = pageState.product !== undefined ?
     pageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
-  pageState.arch = pageState.arch !== undefined ?
-    pageState.arch.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.os = pageState.os !== undefined ?
     pageState.os.split("!").filter(function(v) { return v !== ""; }) : null;
+  pageState.arch = pageState.arch !== undefined ?
+    pageState.arch.split("!").filter(function(v) { return v !== ""; }) : null;
+  pageState.e10s = pageState.e10s !== undefined ?
+    pageState.e10s.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.os_version = pageState.os_version !== undefined ?
     pageState.os_version.split("!").filter(function(v) { return v !== ""; }) : null;
   return pageState;
