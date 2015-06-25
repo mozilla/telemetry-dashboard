@@ -15,6 +15,177 @@ var Telemetry = {
 
 var urlCallbacks = {}
 
+Telemetry.Histogram = (function() {
+  function Histogram(buckets, values, kind, submissions, description) {
+    assert(typeof buckets[0] === "number", "`buckets` must be an array");
+    assert(typeof values[0] === "number", "`values` must be an array");
+    assert(typeof kind === "string", "`kind` must be a string");
+    assert(typeof submissions === "number", "`submissions` must be a number");
+    assert(typeof description === "string", "`description` must be a string");
+    this.buckets = buckets;
+    this.values = values;
+    
+    this.count = this.values.reduce(function(previous, count) { return previous + count; }, 0);
+    this.kind = kind;
+    this.submissions = submissions;
+    this.description = description;
+  }
+  
+  Histogram.prototype.lastBucketUpper = function() {
+    assert(this.kind === "linear" || this.kind === "exponential", "Histogram buckets must be linear or exponential");
+    assert(this.buckets.length > 0, "Histogram buckets cannot be empty");
+    if (this.buckets.length == 1) return this.buckets[0] + 1;
+    if (this.kind === "linear") {
+      return this.buckets[this.buckets.length - 1] + this.buckets[this.buckets.length - 1] - this.buckets[this.buckets.length - 2];
+    } else { // exponential
+      return this.buckets[this.buckets.length - 1] * this.buckets[this.buckets.length - 1] / this.buckets[this.buckets.length - 2];
+    }
+  };
+  
+  Histogram.prototype.mean = function() {
+    assert(this.kind === "linear" || this.kind === "exponential", "Histogram buckets must be linear or exponential");
+    var buckets = this.buckets.concat([this.lastBucketUpper(this.buckets, this.kind)]);
+    var totalHits = 0, bucketHits = 0;
+    var linearTerm = (buckets[buckets.length - 1] - buckets[buckets.length - 2]) / 2;
+    var exponentialFactor = Math.sqrt(buckets[buckets.length - 1] / buckets[buckets.length - 2]);
+    var linearBuckets = this.kind === "linear";
+    this.values.forEach(function(count, i) {
+      totalHits += count;
+      var centralX = linearBuckets ? buckets[i] + linearTerm : buckets[i] * exponentialFactor; // find the center of the current bucket
+      bucketHits += count * centralX;
+    });
+    return bucketHits / totalHits;
+  }
+  
+  Histogram.prototype.percentile = function(percentile) {
+    assert(this.kind === "linear" || this.kind === "exponential", "histogram buckets must be linear or exponential");
+    assert(typeof percentile === "number", "`percentile` must be a number");
+    assert(0 <= percentile && percentile <= 100, "`percentile` must be between 0 and 100 inclusive");
+    var buckets = this.buckets.concat([this.lastBucketUpper()]);
+    var linearTerm = buckets[buckets.length - 1] - buckets[buckets.length - 2];
+    var exponentialFactor = buckets[buckets.length - 1] / buckets[buckets.length - 2];
+    
+    var hitsAtPercentileInBar = this.values.reduce(function(previous, count) { return previous + count; }, 0) * (percentile / 100);
+    var percentileBucketIndex = 0;
+    while (hitsAtPercentileInBar >= 0) { hitsAtPercentileInBar -= this.values[percentileBucketIndex]; percentileBucketIndex ++; }
+    percentileBucketIndex --; hitsAtPercentileInBar += this.values[percentileBucketIndex]; // decrement to get to the bar containing the percentile
+    var ratioInBar = hitsAtPercentileInBar / this.values[percentileBucketIndex]; // the ratio of the hits in the percentile to the hits in the bar containing it - how far we are inside the bar
+    if (this.kind === "linear") {
+      return buckets[percentileBucketIndex] + linearTerm * ratioInBar; // linear interpolation within bar
+    } else { // exponential
+      return buckets[percentileBucketIndex] * Math.pow(exponentialFactor, ratioInBar); // geometric interpolation within bar
+    }
+  };
+  
+  Histogram.prototype.map = function(callback) {
+    var buckets = this.buckets.concat([this.lastBucketUpper()]);
+    var histogram = this;
+    return this.values.map(function(count, i) {
+      return callback.call(histogram, count, buckets[i], buckets[i + 1], i);
+    });
+  }
+  
+  return Histogram;
+})();
+
+Telemetry.Evolution = (function() {
+  function Evolution(buckets, data, kind, description) {
+    assert(typeof buckets[0] === "number", "`buckets` must be an array");
+    assert(typeof data[0].histogram[0] === "number", "`data` must be an array");
+    assert(typeof kind === "string", "`kind` must be a string");
+    assert(typeof description === "string", "`description` must be a string");
+    this.buckets = buckets;
+    this.data = data;
+    this.kind = kind;
+    this.description = description;
+  }
+  
+  Evolution.prototype.dates = function() {
+    return this.data.map(function(entry) {
+      assert(entry.date.length === 8, "Invalid date string");
+      var YYYY = entry.date.substring(0, 4), MM = entry.date.substring(4, 6), DD = entry.date.substring(6, 8);
+      return new Date(YYYY + "-" + MM + "-" + DD);
+    }).sort(function(a, b) { return a - b; });
+  };
+
+  Evolution.prototype.combine = function(otherEvolution) {
+    assert(otherEvolution.buckets.length > 0, "`otherEvolution` must be a histograms collection");
+    assert(this.kind === otherEvolution.kind, "`this` and `otherEvolution` must be of the same kind");
+    assert(this.buckets.length === otherEvolution.buckets.length, "`this` and `otherEvolution` must have the same buckets");
+    var dateMap = {};
+    this.data.forEach(function(histogramEntry) {
+      if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
+      dateMap[histogramEntry.date].push(histogramEntry);
+    });
+    otherEvolution.data.forEach(function(histogramEntry) {
+      if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
+      dateMap[histogramEntry.date].push(histogramEntry);
+    });
+    var dataset = [];
+    Object.keys(dateMap).sort().forEach(function(date) {
+      var entries = dateMap[date];
+      var histogram = entries[0].histogram.map(function(count) { return 0; });
+      entries.forEach(function(entry) { // go through each histogram entry and combine histograms
+        entry.histogram.forEach(function(count, i) { histogram[i] += count; });
+      });
+      dataset.push({
+        date: date,
+        count: entries.reduce(function(previous, entry) { return previous + entry.count }, 0),
+        label: entries[0].label,
+        histogram: histogram,
+      });
+    });
+    return new Telemetry.Evolution(this.buckets, dataset, this.kind, this.description);
+  };
+  
+  Evolution.prototype.histogram = function(startDate, endDate, cumulative) {
+    assert(startDate.getTime, "`startDate` must be a date");
+    assert(endDate.getTime, "`endDate` must be a date");
+    cumulative = cumulative || false;
+
+    var submissions = 0;
+    var values = this.data.reduce(function(values, entry) {
+      assert(entry.date.length === 8, "Invalid date string");
+      var YYYY = entry.date.substring(0, 4), MM = entry.date.substring(4, 6), DD = entry.date.substring(6, 8);
+      var date = new Date(YYYY + "-" + MM + "-" + DD);
+      if (startDate <= date && date <= endDate) {
+        submissions += entry.count;
+        entry.histogram.forEach(function(count, i) { values[i] += count; });
+      }
+      return values;
+    }, this.buckets.map(function(lowerBound) { return 0; }));
+    
+    if (cumulative) {
+      var total = 0;
+      values = values.forEach(function(count) { return total += count; });
+    }
+    return new Telemetry.Histogram(this.buckets, values, this.kind, submissions, this.description);
+  };
+  
+  Evolution.prototype.map = function(callback) {
+    var evolution = this;
+    return this.data.sort(function(a, b) { return parseInt(a.date) - parseInt(b.date); })
+      .map(function(entry, i) {
+      var histogram = new Telemetry.Histogram(evolution.buckets, entry.histogram, evolution.kind, entry.count, evolution.description);
+      return callback.call(evolution, histogram, i);
+    });
+  };
+  
+  Evolution.prototype.means = function() {
+    return this.map(function(histogram, i) { return histogram.mean(); });
+  };
+  
+  Evolution.prototype.percentiles = function(percentile) {
+    return this.map(function(histogram, i) { return histogram.percentile(percentile); });
+  };
+  
+  Evolution.prototype.submissions = function() {
+    return this.map(function(histogram, i) { return histogram.submissions; });
+  };
+  
+  return Evolution;
+})();
+
 Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the response to do cross-origin requests - currently have cross-origin security disabled
   assert(typeof url === "string", "`url` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
@@ -83,7 +254,8 @@ Telemetry.getHistogramsOverBuilds = function Telemetry_getHistogramsOverBuilds(c
   Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
     "/?version=" + encodeURIComponent(version) + "&dates=" + encodeURIComponent(buildDates) +
     "&metric=" + encodeURIComponent(metric) + filterString, function(histograms) {
-    callback(histograms);
+    var evolution = new Telemetry.Evolution(histograms.buckets, histograms.data, histograms.kind, histograms.description);
+    callback(evolution);
   });
 }
 
@@ -94,120 +266,6 @@ Telemetry.getFilterOptions = function Telemetry_getOptions(channel, version, cal
   Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel + "/filters", function(filterOptions) {
     callback(filterOptions);
   });
-}
-
-Telemetry.getHistogramLastBucketUpper = function Telemetry_getHistogramLastBucketUpper(buckets, type) {
-  assert(type === "linear" || type === "exponential", "Histogram buckets must be linear or exponential");
-  assert(buckets.length > 0, "Histogram buckets cannot be empty");
-  if (buckets.length == 1) return buckets[0] + 1;
-  if (type === "linear") {
-    return buckets[buckets.length - 1] + buckets[buckets.length - 1] - buckets[buckets.length - 2];
-  } else { // exponential
-    return buckets[buckets.length - 1] * buckets[buckets.length - 1] / buckets[buckets.length - 2];
-  }
-}
-
-Telemetry.getHistogramDates = function Telemetry_getHistogramDates(histograms) {
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  return histograms.data.map(function(entry) { return entry.date; });
-}
-
-Telemetry.getHistogramSubmissions = function Telemetry_getHistogramSubmissions(histograms) {
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  return histograms.data.map(function(entry) { return entry.count; });
-}
-
-Telemetry.getHistogramMeans = function Telemetry_getHistogramMeans(histograms) {
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  assert(histograms.kind === "linear" || histograms.kind === "exponential", "Histogram buckets must be linear or exponential");
-  var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, histograms.kind)]);
-  return histograms.data.map(function(entry) {
-    var totalHits = 0, bucketHits = 0;
-    var linearTerm = (buckets[buckets.length - 1] - buckets[buckets.length - 2]) / 2;
-    var exponentialFactor = Math.sqrt(buckets[buckets.length - 1] / buckets[buckets.length - 2]);
-    entry.histogram.forEach(function(count, i) {
-      totalHits += count;
-      var centralX = (histograms.kind === "linear") ? buckets[i] + linearTerm : buckets[i] * exponentialFactor; // find the center of the current bucket
-      bucketHits += count * centralX;
-    });
-    return bucketHits / totalHits;
-  });
-}
-
-Telemetry.getHistogramPercentiles = function Telemetry_getHistogramPercentiles(histograms, percentile) { // see http://math.stackexchange.com/a/894986 for algorithm
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  assert(histograms.kind === "linear" || histograms.kind === "exponential", "Histogram buckets must be linear or exponential");
-  assert(typeof percentile === "number", "`percentile` must be a number");
-  assert(0 <= percentile && percentile <= 100, "`percentile` must be between 0 and 100 inclusive");
-  var buckets = histograms.buckets.concat([Telemetry.getHistogramLastBucketUpper(histograms.buckets, histograms.kind)]);
-  var linearTerm = buckets[buckets.length - 1] - buckets[buckets.length - 2];
-  var exponentialFactor = buckets[buckets.length - 1] / buckets[buckets.length - 2];
-  return histograms.data.map(function(entry) {
-    var hitsAtPercentileInBar = entry.histogram.reduce(function(previous, count) { return previous + count; }, 0) * (percentile / 100);
-    var percentileBucketIndex = 0;
-    while (hitsAtPercentileInBar >= 0) { hitsAtPercentileInBar -= entry.histogram[percentileBucketIndex]; percentileBucketIndex ++; }
-    percentileBucketIndex --; hitsAtPercentileInBar += entry.histogram[percentileBucketIndex]; // decrement to get to the bar containing the percentile
-    var ratioInBar = hitsAtPercentileInBar / entry.histogram[percentileBucketIndex]; // the ratio of the hits in the percentile to the hits in the bar containing it - how far we are inside the bar
-    if (histograms.kind === "linear") {
-      return buckets[percentileBucketIndex] + linearTerm * ratioInBar; // linear interpolation within bar
-    } else { // exponential
-      return buckets[percentileBucketIndex] * Math.pow(exponentialFactor, ratioInBar); // geometric interpolation within bar
-    }
-  });
-}
-
-Telemetry.getHistogram = function Telemetry_getHistogram(histograms, cumulative) { //wip: add date range
-  assert(histograms.buckets.length > 0, "`histograms` must be a histograms collection");
-  cumulative = cumulative || false;
-  var values = histograms.buckets.map(function(lowerBound) { return 0; });
-  if (cumulative) {
-    return {
-      buckets: histograms.buckets,
-      values: histograms.data.reduce(function(values, histogramEntry) {
-        var accumulator = 0;
-        histogramEntry.histogram.forEach(function(count, i) { accumulator += count; values[i] += accumulator; });
-        return values;
-      }, values),
-    };
-  }
-  return {
-    buckets: histograms.buckets,
-    values: histograms.data.reduce(function(values, histogramEntry) {
-      histogramEntry.histogram.forEach(function(count, i) { values[i] += count; });
-      return values;
-    }, values),
-  };
-}
-
-Telemetry.getCombinedHistograms = function Telemetry_getCombinedHistograms(histograms1, histograms2) {
-  assert(histograms1.buckets.length > 0, "`histograms1` must be a histograms collection");
-  assert(histograms2.buckets.length > 0, "`histograms2` must be a histograms collection");
-  assert(histograms1.kind === histograms2.kind, "`histogram1` and `histogram2` must be of the same kind");
-  assert(histograms1.buckets.length === histograms2.buckets.length, "`histogram1` and `histogram2` must have the same buckets");
-  var dateMap = {};
-  histograms1.data.forEach(function(histogramEntry) {
-    if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
-    dateMap[histogramEntry.date].push(histogramEntry);
-  });
-  var dataset = [];
-  Object.keys(dateMap).sort().forEach(function(date) {
-    var entries = dateMap[date];
-    var histogram = entries[0].histogram.map(function(count) { return 0; });
-    entries.forEach(function(entry) { // go through each histogram entry and combine histograms
-      entry.histogram.forEach(function(count, i) { histogram[i] += count });
-    });
-    dataset.push({
-      date: entries[0].date,
-      count: entries[0].count,
-      label: entries[0].label,
-      histogram: histogram,
-    });
-  });
-  return {
-    buckets: histograms1.buckets,
-    kind: histograms1.kind,
-    data: dataset,
-  };
 }
 
 Telemetry.getVersions = function Telemetry_getVersions() { // shim function

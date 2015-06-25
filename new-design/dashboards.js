@@ -1,29 +1,32 @@
 $(document).ready(function() {
-    // Select boxes
-    $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
-        $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-    });
-    
-    // Multiselect boxes
-    $('.multiselect').each(function(i, select) {
-        var $this = $(this);
-        var options = {
-            enableFiltering: true,
-            enableCaseInsensitiveFiltering: true,
-            includeSelectAllOption: true,
-            allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
-            maxHeight: 500,
-        };
-        if ($this.attr("title") !== undefined) {
-            options.nonSelectedText = $this.attr("title");
-        }
-        $this.multiselect(options);
-        $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-    });
-    
-    // Date range pickers
-    $(".date-range").daterangepicker();
+  // Select boxes
+  $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
+    $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
+  });
+  
+  // Multiselect boxes
+  $('.multiselect').each(function(i, select) {
+    var $this = $(this);
+    var options = {
+      enableFiltering: true,
+      enableCaseInsensitiveFiltering: true,
+      includeSelectAllOption: true,
+      allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
+      enableClickableOptGroups: true,
+      maxHeight: 500,
+    };
+    if ($this.attr("title") !== undefined) {
+      options.nonSelectedText = $this.attr("title");
+    }
+    $this.multiselect(options);
+    $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
+  });
+  
+  // Date range pickers
+  $(".date-range").daterangepicker();
 });
+
+
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
@@ -69,11 +72,44 @@ function loadStateFromUrlAndCookie() {
   return pageState;
 }
 
-function getHumanReadableOptions(filterName, options, os) {
-  os = os || null;
+// Generate array of individual filter sets that, when the resulting histograms are added together, results in the same histogram as if all the filter options were selected
+function getFilterSets(filters) {
+  // Obtain a mapping from filter names to filter options
+  var filterMapping = {};
+  for (var filterName in filters) {
+    var selector = filters[filterName];
+    var selected = selector.val() || [];
+    if (selected.length !== selector.find("option").length) { // Some options are not selected, so we need to filter
+      if (filterName === "os") {
+        //console.log(selector.find('option[value="' +  + '"]'))
+      }
+      filterMapping[filterName] = selected;
+    }
+  }
+  
+  // Compute filter sets
+  function copy(obj) {
+    var result = {};
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) { result[key] = obj[key]; }
+    }
+    return result;
+  }
+  var filterSets = [{}];
+  for (var filterName in filterMapping) {
+    filterSets = [].concat.apply([], filterMapping[filterName].map(function(filterValue) {
+      return filterSets.map(function(filterSet) {
+        var newFilterSet = copy(filterSet);
+        newFilterSet[filterName] = filterValue;
+        return newFilterSet;
+      });
+    }));
+  }
+  return filterSets;
+}
 
-  var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
-  var ignoredOSs = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
+function getHumanReadableOptions(filterName, options) {
+  var systemNames = {"Windows_NT": "Windows", "Darwin": "OS X"};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
   var darwinVersionPrefixes = {
@@ -82,15 +118,20 @@ function getHumanReadableOptions(filterName, options, os) {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   };
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
-  if (filterName === "OS") {
-    // Replace OS names with pretty OS names where possible
-    return options.filter(function(option) { return !ignoredOSs[option]; }).map(function(option) {
-      return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option];
+  if (filterName === "os") {
+    var entries = options.map(function(option) {
+      var parts = option.split(",");
+      return {os: parts[0], osName: systemNames.hasOwnProperty(parts[0]) ? systemNames[parts[0]] : parts[0], version: parts[1], value: option};
     });
-  } else if (filterName === "os_version") {
-    var osPrefix = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os) + " ";
-    if (os === "WINNT") {
-      return options.sort(function(a, b) {
+    
+    var osEntryMapping = {}; entries.forEach(function(entry) {
+      if (!osEntryMapping.hasOwnProperty(entry.os)) { osEntryMapping[entry.os] = []; }
+      osEntryMapping[entry.os].push(entry);
+    });
+    
+    // Apply custom sort order for Windows
+    if (osEntryMapping.hasOwnProperty("Windows_NT")) {
+      osEntryMapping["Windows_NT"].sort(function(a, b) {
         // Sort by explicit version order if available
         if (windowsVersionOrder.hasOwnProperty(a) && windowsVersionOrder.hasOwnProperty(b)) {
           return windowsVersionOrder[a] < windowsVersionOrder[b] ? -1 : (windowsVersionOrder[a] > windowsVersionOrder[b] ? 1 : 0);
@@ -100,20 +141,27 @@ function getHumanReadableOptions(filterName, options, os) {
           return 1;
         }
         return ((a < b) ? -1 : ((a > b) ? 1 : 0));
-      }).map(function(option) {
-        return [option, osPrefix + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option)];
-      });
-    } else if (os === "Darwin") {
-      return options.map(function(option) {
-        for (var prefix in darwinVersionPrefixes) {
-          if (option.startsWith(prefix)) {
-            return [option, osPrefix + option + " (" + darwinVersionPrefixes[prefix] + ")"];
-          }
-        }
-        return [option, osPrefix + option];
       });
     }
-    return options.map(function(option) { return [option, osPrefix + option]; });
+    
+    // Apply custom version names for OS versions, grouped by OS alphabetically
+    var result = [];
+    return [].concat.apply([], Object.keys(osEntryMapping).sort().map(function(os) {
+      var entries = osEntryMapping[os];
+      return entries.map(function(entry) {
+        var versionName = entry.version;
+        if (entry.os === "Windows_NT") {
+          versionName = windowsVersionNames.hasOwnProperty(entry.version) ? windowsVersionNames[entry.version] : entry.version;
+        } else if (entry.os === "Darwin") {
+          for (var prefix in darwinVersionPrefixes) {
+            if (entry.version.startsWith(prefix)) {
+              versionName = entry.version + " (" + darwinVersionPrefixes[prefix] + ")";
+            }
+          }
+        }
+        return [entry.value, entry.osName + " " + versionName, entry.osName];
+      });
+    }));
   } else if (filterName === "arch") {
     return options.map(function(option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
@@ -230,23 +278,48 @@ function selectSetSelected(element, option) {
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
 function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
-
+  
+  if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
+  var selected = element.val() || defaultSelected;
+  
   // Check inputs
   if (defaultSelected !== null) {
     defaultSelected.forEach(function(option) {
       if (typeof option !== "string") { throw "Bad defaultSelected value: must be array of strings."; }
     });
   }
-  options.forEach(function(option) {
-    if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
-      throw "Bad options value: must be array of arrays, each with two strings.";
-    }
-  });
   
-  var selected = element.val() || defaultSelected;
-  element.empty().append(options.map(function(option) {
-    return '<option value="' + option[0] + '">' + option[1] + '</option>';
-  }).join()).multiselect("rebuild");
+  var useGroups = options[0].length === 3;
+  if (useGroups) {
+    options.forEach(function(option) {
+      if (!$.isArray(option) || option.length !== 3 || typeof option[0] !== "string" || typeof option[1] !== "string" || typeof option[2] !== "string") {
+        throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
+      }
+    });
+
+    var groups = deduplicate(options.map(function(triple) { return triple[2]; }));
+    var groupOptions = {}; options.forEach(function(triple) {
+      if (!groupOptions.hasOwnProperty(triple[2])) { groupOptions[triple[2]] = []; }
+      groupOptions[triple[2]].push(triple);
+    });
+    element.empty().append(groups.map(function(group) {
+      var optionsString = groupOptions[group].map(function(triple) {
+        return '<option value="' + triple[0] + '">' + triple[1] + '</option>';
+      }).join();
+      return '<optgroup label="' + group + '">' + optionsString + '</optgroup>'
+    }).join()).multiselect("rebuild");
+  } else {
+    options.forEach(function(option) {
+      if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
+        throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
+      }
+    });
+    
+    element.empty().append(options.map(function(option) {
+      return '<option value="' + option[0] + '">' + option[1] + '</option>';
+    }).join()).multiselect("rebuild");
+  }
+  
   if (selected !== null) {
     // Filter out the options that were selected but no longer exist
     var availableOptionMap = {};

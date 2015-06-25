@@ -3,7 +3,6 @@ var gInitialPageState = null;
 
 $(function() { Telemetry.init(function() {
   gVersions = Telemetry.getVersions();
-  console.log(gVersions)
   gInitialPageState = loadStateFromUrlAndCookie();
 
   // Set up aggregate, build, and measure selectors
@@ -25,7 +24,7 @@ $(function() { Telemetry.init(function() {
     $("#min-channel-version, #max-channel-version").change(function(e) {
       var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
       var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
-      if (versions.length === 0) {
+      if (versions.length === 0) { // Invalid range selected, move other version selector
         if (e.target.id === "min-channel-version") { selectSetSelected($("#max-channel-version"), fromVersion); }
         else { selectSetSelected($("#min-channel-version"), toVersion); }
       }
@@ -120,28 +119,22 @@ function calculateHistogramEvolutions(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var measure = $("#measure").val();
   var aggregates = $("#aggregates").val() || [];
-  var histogramsLoader = $("#build-time-toggle").prop("checked") ? Telemetry.getHistogramsOverTime : Telemetry.getHistogramsOverBuilds;
-  
-  function copy(object) {
-    var result = {}
-    for (key in object) { result[key] = object[object]; }
-    return result;
-  }
-  
+  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.getHistogramsOverTime : Telemetry.getHistogramsOverBuilds;
+
   // Obtain a mapping from filter names to filter options
-  var filterMapping = [
-    ["product",    $("#filter-product")],
-    ["arch",       $("#filter-arch")],
-    ["os",         $("#filter-os")],
-    ["os_version", $("#filter-os-version")],
-  ];
+  var filters = {
+    "application":  $("#filter-product"),
+    "architecture": $("#filter-arch"),
+    "os":           $("#filter-os"),
+    //wip: add all the new filters
+  };
 
   var channelVersions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
   var lines = [], submissionLines = [];
   var versionCount = 0;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterMapping, true, histogramsLoader, function(newLines, newSubmissionLine) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filters, true, evolutionLoader, function(newLines, newSubmissionLine) {
       lines = lines.concat(newLines);
       submissionLines.push(newSubmissionLine);
       versionCount ++;
@@ -152,55 +145,62 @@ function calculateHistogramEvolutions(callback) {
   });
 }
 
-function getHistogramEvolutionLines(channel, version, measure, aggregates, filterMapping, sanitize, histogramsLoader, callback) {
-  var filterSets = [{}];
-  //wip: generate filter sets
+function getHistogramEvolutionLines(channel, version, measure, aggregates, filters, sanitize, evolutionLoader, callback) {
+  // Generate sets of individual filters that, when the resulting histograms are added together, results in the desired filter mapping
+  function copy(obj) {
+    var result = {};
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) { result[key] = obj[key]; }
+    }
+    return result;
+  }
+  var filterSets = getFilterSets(filters);
 
   var aggregateSelector = {
-    "mean":            Telemetry.getHistogramMeans,
-    "5th-percentile":  function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 5); },
-    "25th-percentile": function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 25); },
-    "median":          function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 50); },
-    "75th-percentile": function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 75); },
-    "95th-percentile": function(histograms) { return Telemetry.getHistogramPercentiles(histograms, 95); },
-    "submissions":     Telemetry.getHistogramSubmissions,
+    "mean":            function(evolution) { return evolution.means(); },
+    "5th-percentile":  function(evolution) { return evolution.percentiles(5); },
+    "25th-percentile": function(evolution) { return evolution.percentiles(25); },
+    "median":          function(evolution) { return evolution.percentiles(50); },
+    "75th-percentile": function(evolution) { return evolution.percentiles(75); },
+    "95th-percentile": function(evolution) { return evolution.percentiles(95); },
+    "submissions":     function(evolution) { return evolution.submissions(); },
   };
 
   var filtersCount = 0;
   var lines = [];
   filterSets.forEach(function(filterSet) {
-    var finalHistograms = null;
-    histogramsLoader(channel, version, measure, filterSet, function(histograms) {
-      if (finalHistograms === null) {
-        finalHistograms = histograms;
+    var finalEvolution = null;
+    evolutionLoader(channel, version, measure, filterSet, function(evolution) {
+      if (finalEvolution === null) {
+        finalEvolution = evolution;
       } else {
-        finalHistograms = Telemetry.getCombinedHistograms(finalHistograms, histograms);
+        finalEvolution = finalEvolution.combine(evolution);
       }
       filtersCount ++;
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         // Obtain the X and Y values of points
         var aggregateValues = aggregates.map(function(aggregate) {
-          return aggregateSelector[aggregate](finalHistograms);
+          return aggregateSelector[aggregate](finalEvolution);
         });
-        var submissionValues = Telemetry.getHistogramSubmissions(finalHistograms);
-        var dates = Telemetry.getHistogramDates(finalHistograms).map(function(date) { return moment(date, "YYYYMMDD").toDate().getTime(); });
+        var submissionValues = finalEvolution.submissions();
+        var dates = finalEvolution.dates();
         
         // Filter out those points corresponding to histograms where the number of submissions is too low
         var submissionsCutoff = sanitize ? Math.max(Math.max.apply(Math, submissionValues) / 100, 100) : 0;
-        var timeCutoff = moment().add(1, "years").toDate().getTime(); // Cut off all dates past one year in the future
+        var timeCutoff = moment().add(1, "years").toDate(); // Cut off all dates past one year in the future
         var finalAggregateValues = aggregateValues.map(function(values) { return []; }), finalSubmissionValues = [];
         dates.forEach(function(date, i) {
           if (submissionValues[i] < submissionsCutoff) { return; }
           if (date > timeCutoff) { return; }
-          finalAggregateValues.forEach(function(values, j) { values.push({x: date, y: aggregateValues[j][i]}); });
-          finalSubmissionValues.push({x: date, y: submissionValues[i]});
+          finalAggregateValues.forEach(function(values, j) { values.push({x: date.getTime(), y: aggregateValues[j][i]}); });
+          finalSubmissionValues.push({x: date.getTime(), y: submissionValues[i]});
         });
         
         // Create line objects
         var aggregateLines = finalAggregateValues.map(function(values, i) {
-          return new Line(measure, channel + "/" + version, aggregates[i], filterMapping, values);
+          return new Line(measure, channel + "/" + version, aggregates[i], values);
         });
-        var submissionLine = new Line(measure, channel + "/" + version, "submissions", filterMapping, finalSubmissionValues);
+        var submissionLine = new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues);
         
         callback(aggregateLines, submissionLine);
       }
@@ -231,13 +231,15 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   
   var markers = [], usedDates = {};
   lines.forEach(function(line) {
-    if (line.values.length > 0 && !(line.values[0].x in usedDates)) {
-      markers.push({date: new Date(line.values[0].x), label: line.getVersionString()});
-      usedDates[line.values[0].x] = true;
+    var minDate = Math.min.apply(Math, line.values.map(function(point) { return point.x; }));
+    if (!(minDate in usedDates)) {
+      markers.push({date: new Date(minDate + 1), label: line.getVersionString()}); // Need to add 1ms because the leftmost marker won't show up otherwise
+      usedDates[minDate] = true;
     }
   });
 
   // Plot the data using MetricsGraphics
+  d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
   MG.data_graphic({
     data: lineData,
     chart_type: lineData.length == 0 || lineData[0].length === 0 ? "missing-data" : "line",
@@ -254,9 +256,10 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
+      var date = d.values ? d.values[0].date : d.date
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
-      var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(d.date).format("MMM D, YYYY") + " (build " + moment(d.date).format("YYYYMMDD") + "):").style("fill", "white");
+      var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
@@ -274,6 +277,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       
       // Add background
       var padding = 10;
+      d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
       d3.select("#evolutions svg").insert("rect", ".mg-active-datapoint-container").classed("active-datapoint-background", true)
         .attr("x", x - padding).attr("y", y)
         .attr("width", bbox.width + padding * 2).attr("height", bbox.height + 8)
@@ -283,6 +287,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
     },
   });
+  d3.select("#submissions .active-datapoint-background").remove(); // Remove old background
   MG.data_graphic({
     data: submissionLineData,
     chart_type: submissionLineData.length === 0 || submissionLineData[0].length === 0 ? "missing-data" : "line",
@@ -299,16 +304,16 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
-      // Create legend
+      var date = d.values ? d.values[0].date : d.date
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
-      var submissionLineList = d.values ? d.values.map(function(entry) { return submissionLines[entry.line_id - 1]; }) : [submissionLines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
-      var legend = d3.select("#submissions svg .mg-active-datapoint").text(moment(d.date).format("MMM D, YYYY") + " (build " + moment(d.date).format("YYYYMMDD") + "):").style("fill", "white");
+      var legend = d3.select("#submissions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
-      submissionLineList.forEach(function(line, i) {
+      lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
         var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]));
-        legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"}).text("\u2014 ").style({"font-weight": "bold", "stroke": (lineList[i] || line).color});
+        legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"})
+          .text("\u2014 ").style({"font-weight": "bold", "stroke": line.color});
       });
       
       // Reposition element
@@ -320,6 +325,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       
       // Add background
       var padding = 10;
+      d3.select("#submissions .active-datapoint-background").remove(); // Remove old background
       d3.select("#submissions svg").insert("rect", ".mg-active-datapoint-container").classed("active-datapoint-background", true)
         .attr("x", x - padding).attr("y", y)
         .attr("width", bbox.width + padding * 2).attr("height", bbox.height + 8)
@@ -353,7 +359,7 @@ var Line = (function(){
   var goodColorIndex = 0;
   var filterSortOrder = ["product", "OS", "osVersion", "arch"];
 
-  function Line(measure, channelVersion, aggregate, filters, values) {
+  function Line(measure, channelVersion, aggregate, values) {
     if (typeof measure !== "string") { throw "Bad measure value: must be string"; }
     if (typeof channelVersion !== "string") { throw "Bad channelVersion value: must be string"; }
     if (typeof aggregate !== "string") { throw "Bad aggregate value: must be string"; }
@@ -362,7 +368,6 @@ var Line = (function(){
     this.measure = measure;
     this.channelVersion = channelVersion;
     this.aggregate = aggregate;
-    this.filters = filters || {};
     this.values = values || [];
     
     // Assign a color to the line
@@ -384,48 +389,7 @@ var Line = (function(){
     if (this.aggregate === "submissions") { return this.measure + " submissions for " + this.channelVersion.replace("/", " "); }
     return this.aggregate + " " + this.measure + " for " + this.channelVersion.replace("/", " ");
   };
-  Line.prototype.getFilterString = function Line_getFilterString() {
-    return ("OS" in this.filters ? this.filters["OS"].join(", ") : "Any OS")
-      + " " + ("osVersion" in this.filters ? this.filters["osVersion"].join(", ") + " " : "")
-      + " - " + ("product" in this.filters ? this.filters["product"].join(", ") : "Any Product")
-      + " - " + ("arch" in this.filters ? this.filters["arch"].join(", ") : "Any Build");
-  };
-  Line.prototype.getStateString = function Line_getStateString() {
-    var filters = this.filters;
-    var filterState = filterSortOrder.map(function(filterName) {
-      if (!(filterName in filters)) { return ""; }
-    
-      // Sort the selected options of each filter
-      return filters[filterName].sort().join("|");
-    }).join("/");
-    return this.measure + "/" + this.channelVersion + "/" + this.aggregate + "/" + filterState;
-    //wip: store date range somehow
-  };
-  Line.prototype.setStateString = function Line_setStateString(stateString) {
-    var parts = stateString.split("/");
-    this.measure = parts.shift();
-    this.channelVersion = parts.shift() + "/" + parts.shift();
-    this.aggregate = parts.shift();
-    this.filters = {};
-    var filters = this.filters;
-    parts.forEach(function(filterOption, i) {
-      if (i < filterSortOrder.length) {
-        if (filterOption !== "") {
-          filters[filterSortOrder[i]] = filterOption.split("|");
-        }
-      } else {
-        throw new Error("Unknown filter option " + filter);
-      }
-    });
-    
-    if (!lineColors.hasOwnProperty(stateString)) {
-      goodColorIndex = (goodColorIndex + 1) % goodColors.length;
-      lineColors[stateString] = goodColors[goodColorIndex];
-    }
-    this.color = lineColors[stateString];
-    return this;
-  }
-
+  
   return Line;
 })();
 
