@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Evolution Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+
+</head>
+<body onload="main()">
+    <div id="evolutions"></div>
+    <div id="submissions"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <script src="lib/metricsgraphics.js"></script>
+    <script>
+gx=[
+  [{"date":"2015-05-13T07:00:00.000Z","value":1},{"date":"2015-05-16T07:00:00.000Z","value":1}],
+  [{"date":"2015-05-14T07:00:00.000Z","value":2},{"date":"2015-05-15T07:00:00.000Z","value":2}]
+];
+
+function plot(data) {
+  var filteredData = data.map(function(dataset) {
+    return dataset.map(function(point) { return {date: new Date(point.date), value: point.value}; })
+  });
+  MG.data_graphic({
+    data: filteredData,
+    width: 1600,
+    height: 600,
+    aggregate_rollover: true,
+    target: "#evolutions"
+  });
+}
+
+function main() { plot(gx); }
+    </script>
+</body>
+</html>

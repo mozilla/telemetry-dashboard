@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Evolution Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+    
+</head>
+<body onload="main()">
+    <div id="a"></div>
+    <div id="b"></div>
+    <div id="c"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <!--<script src="https://raw.githubusercontent.com/mozilla/metrics-graphics/master/dist/metricsgraphics.js"></script>-->
+    <script src="lib/metricsgraphics.js"></script>
+    <script>
+function main() {
+  var datasets = [
+    [
+      {"date":new Date("2014-10-13T04:00:00.000Z"),"value":197},
+      {"date":new Date("2014-10-14T04:00:00.000Z"),"value":200},
+      {"date":new Date("2014-10-15T04:00:00.000Z"),"value":199},
+      {"date":new Date("2014-10-16T04:00:00.000Z"),"value":203},
+      {"date":new Date("2014-10-17T04:00:00.000Z"),"value":198}
+    ],
+    [
+      {"date":new Date("2014-10-13T04:00:00.000Z"),"value":5},
+      {"date":new Date("2014-10-14T04:00:00.000Z"),"value":6},
+      {"date":new Date("2014-10-15T04:00:00.000Z"),"value":28},
+      {"date":new Date("2014-10-16T04:00:00.000Z"),"value":43},
+      {"date":new Date("2014-10-17T04:00:00.000Z"),"value":2}
+    ],
+  ];
+  
+  MG.data_graphic({
+    data: datasets,
+    width: 800,
+    height: 300,
+    linked: true,
+    aggregate_rollover: true,
+    target: "#a"
+  });
+  MG.data_graphic({
+    data: datasets,
+    width: 800,
+    height: 300,
+    linked: true,
+    target: "#b"
+  });
+  MG.data_graphic({
+    data: datasets,
+    width: 800,
+    height: 300,
+    linked: true,
+    aggregate_rollover: true,
+    target: "#c"
+  });
+}
+    </script>
+</body>
+</html>
