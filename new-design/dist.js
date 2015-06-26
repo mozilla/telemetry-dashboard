@@ -20,6 +20,8 @@ $(function() { Telemetry.init(function() {
     if (gInitialPageState.processType !== null) { $("#filter-process-type").multiselect("select", gInitialPageState.processType); }
     else { $("#filter-process-type").multiselect("selectAll", false).multiselect("updateButtonText"); }
     
+    var allSelectedFilters = {}
+    
     $("#channel-version").change(function() {
       updateOptions(function() { $("#measure").trigger("change"); });
     });
@@ -27,7 +29,7 @@ $(function() { Telemetry.init(function() {
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
         calculateHistogram(function(histogram, evolution) {
-          $("#measure-description").text(evolution.description);
+          $("#measure-description").text(evolution === null ? "" : evolution.description);
           gCurrentHistogram = histogram; gCurrentEvolution = evolution;
           displayHistogram(histogram, evolution, $("#cumulative-toggle").prop("checked"));
           saveStateToUrlAndCookie();
@@ -105,9 +107,13 @@ function calculateHistogram(callback) {
       filtersCount ++;
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         updateDateRange(function(dates) {
-          var filteredEvolution = fullEvolution.dateRange(dates[0], dates[dates.length - 1])
-          var fullHistogram = filteredEvolution.histogram();
-          callback(fullHistogram, filteredEvolution);
+          if (fullEvolution === null) {
+            callback(null, null);
+          } else {
+            var filteredEvolution = fullEvolution.dateRange(dates[0], dates[dates.length - 1])
+            var fullHistogram = filteredEvolution.histogram();
+            callback(fullHistogram, filteredEvolution);
+          }
         }, fullEvolution, false);
       }
     });
@@ -124,6 +130,13 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
 
   gCurrentDateRangeUpdateCallback = callback || function() {};
 
+  if (evolution === null) {
+    $("#date-range").prop("disabled", true);
+    callback(null);
+    return;
+  }
+  $("#date-range").prop("enabled", true);
+  
   var dates = evolution.dates();
   if (dates.length == 0) { $("#date-range").attr("disabled", ""); }
   else { $("#date-range").removeAttr("disabled"); }
