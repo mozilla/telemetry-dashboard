@@ -138,27 +138,26 @@ Telemetry.Evolution = (function() {
     return new Telemetry.Evolution(this.buckets, dataset, this.kind, this.description);
   };
   
-  Evolution.prototype.histogram = function(startDate, endDate, cumulative) {
+  Evolution.prototype.dateRange = function(startDate, endDate) {
     assert(startDate.getTime, "`startDate` must be a date");
     assert(endDate.getTime, "`endDate` must be a date");
-    cumulative = cumulative || false;
-
-    var submissions = 0;
-    var values = this.data.reduce(function(values, entry) {
+    var data = this.data.filter(function(entry) {
       assert(entry.date.length === 8, "Invalid date string");
       var YYYY = entry.date.substring(0, 4), MM = entry.date.substring(4, 6), DD = entry.date.substring(6, 8);
       var date = new Date(YYYY + "-" + MM + "-" + DD);
-      if (startDate <= date && date <= endDate) {
-        submissions += entry.count;
-        entry.histogram.forEach(function(count, i) { values[i] += count; });
-      }
+      return startDate <= date && date <= endDate;
+    });
+    
+    return new Telemetry.Evolution(this.buckets, data, this.kind, this.description);
+  };
+  
+  Evolution.prototype.histogram = function() {
+    var submissions = this.data.reduce(function(submissions, entry) { return submissions + entry.count; }, 0);
+    var values = this.data.reduce(function(values, entry) {
+      entry.histogram.forEach(function(count, i) { values[i] += count; });
       return values;
     }, this.buckets.map(function(lowerBound) { return 0; }));
     
-    if (cumulative) {
-      var total = 0;
-      values = values.forEach(function(count) { return total += count; });
-    }
     return new Telemetry.Histogram(this.buckets, values, this.kind, submissions, this.description);
   };
   
@@ -192,10 +191,14 @@ Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the r
   if (Telemetry.CACHE[url] !== undefined) {
     if (Telemetry.CACHE[url]._loading) { // Requested but not yet loaded
       var xhr = Telemetry.CACHE[url];
-      var originalCallback = xhr.onload;
+      var originalLoadCallback = xhr.onload, originalErrorCallback = xhr.onerror;
       xhr.onload = function() {
         callback(JSON.parse(this.responseText), null);
-        originalCallback.call(xhr);
+        originalLoadCallback.call(xhr);
+      };
+      xhr.onerror = function() {
+        callback(null, this.status);
+        originalErrorCallback.call(xhr);
       };
     } else if ((new Date).getTime() - Telemetry.CACHE_LAST_UPDATED[url] < Telemetry.CACHE_TIMEOUT) { // In cache and hasn't expired
       setTimeout(function() { callback(Telemetry.CACHE[url]); }, 1);
@@ -239,7 +242,7 @@ Telemetry.init = function Telemetry_init(callback) {
   //});
 },
 
-Telemetry.getHistogramsOverBuilds = function Telemetry_getHistogramsOverBuilds(channel, version, metric, filters, callback) {
+Telemetry.getEvolution = function Telemetry_getEvolution(channel, version, metric, filters, useSubmissionDate, callback) {
   assert(typeof Telemetry.CHANNEL_VERSION_DATES !== null, "Telemetry.js must be initialized before use");
   assert(typeof channel === "string", "`channel` must be a string");
   assert(typeof version === "string", "`version` must be a string");
@@ -251,11 +254,16 @@ Telemetry.getHistogramsOverBuilds = function Telemetry_getHistogramsOverBuilds(c
   Object.keys(filters).sort().forEach(function(filterName) { // we need to sort the keys in order to make sure the same filters result in the same URL each time, for caching
     filterString += "&" + encodeURIComponent(filterName) + "=" + encodeURIComponent(filters[filterName]);
   });
-  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel +
+  var variable = useSubmissionDate ? "submission_date" : "build_id";
+  Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/" + variable + "/channels/" + channel +
     "/?version=" + encodeURIComponent(version) + "&dates=" + encodeURIComponent(buildDates) +
     "&metric=" + encodeURIComponent(metric) + filterString, function(histograms) {
-    var evolution = new Telemetry.Evolution(histograms.buckets, histograms.data, histograms.kind, histograms.description);
-    callback(evolution);
+    if (histograms === null) {
+      callback(null);
+    } else {
+      var evolution = new Telemetry.Evolution(histograms.buckets, histograms.data, histograms.kind, histograms.description);
+      callback(evolution);
+    }
   });
 }
 
@@ -264,6 +272,9 @@ Telemetry.getFilterOptions = function Telemetry_getOptions(channel, version, cal
   assert(typeof version === "string", "`version` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
   Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/build_id/channels/" + channel + "/filters", function(filterOptions) {
+    filterOptions["metric"] = filterOptions["metric"].filter(function(measure) {
+      return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
+    });
     callback(filterOptions);
   });
 }

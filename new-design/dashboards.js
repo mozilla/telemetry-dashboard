@@ -69,6 +69,8 @@ function loadStateFromUrlAndCookie() {
     pageState.arch.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.e10s = pageState.e10s !== undefined ?
     pageState.e10s.split("!").filter(function(v) { return v !== ""; }) : null;
+  pageState.processType = pageState.processType !== undefined ?
+    pageState.processType.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.os_version = pageState.os_version !== undefined ?
     pageState.os_version.split("!").filter(function(v) { return v !== ""; }) : null;
   return pageState;
@@ -82,10 +84,30 @@ function getFilterSets(filters) {
     var selector = filters[filterName];
     var selected = selector.val() || [];
     if (selected.length !== selector.find("option").length) { // Some options are not selected, so we need to filter
-      if (filterName === "os") {
-        //console.log(selector.find('option[value="' +  + '"]'))
+      if (filterName === "os") { // special case filtering for OSs, since there are two separate versions
+        var osCounts = {}; // get a mapping of OSs to the number of OS versions it has
+        selector.find("option").each(function(i, option) {
+          var os = option.getAttribute("value").split(",")[0];
+          osCounts[os] = (osCounts[os] || 0) + 1;
+        });
+        var selectedOptions = {}; // get a mapping of the selected OSs to the number of OS versions selected
+        selected.forEach(function(filterOption) {
+          var os = filterOption.split(",")[0];
+          if (!selectedOptions.hasOwnProperty(os)) { selectedOptions[os] = []; }
+          selectedOptions[os].push(filterOption)
+        });
+        var selectedOSs = [];
+        for (var os in selectedOptions) {
+          if (selectedOptions[os].length === osCounts[os]) { // all versions of a specific OS are selected
+            selectedOSs.push(os);
+          } else { // not all versions are selected, add all versions
+            selectedOSs = selectedOSs.concat(selectedOptions[os]);
+          }
+        };
+        filterMapping["os"] = selectedOSs;
+      } else {
+        filterMapping[filterName] = selected;
       }
-      filterMapping[filterName] = selected;
     }
   }
   
@@ -102,7 +124,16 @@ function getFilterSets(filters) {
     filterSets = [].concat.apply([], filterMapping[filterName].map(function(filterValue) {
       return filterSets.map(function(filterSet) {
         var newFilterSet = copy(filterSet);
-        newFilterSet[filterName] = filterValue;
+        if (filterName === "os") {
+          if (filterValue.indexOf(",") >= 0) { // we have an OS value like "Windows_NT,6.1", and we want to set the os filter to Windows_NT and the osVersion filter to 6.1
+            var parts = filterValue.split(",");
+            newFilterSet["os"] = parts[0]; newFilterSet["osVersion"] = parts[1];
+          } else { // we have an OS value like "Windows_NT" (all versions of Windows), just set the os filter, not the osVersion filter
+            newFilterSet["os"] = filterValue;
+          }
+        } else {
+          newFilterSet[filterName] = filterValue;
+        }
         return newFilterSet;
       });
     }));
@@ -120,6 +151,8 @@ function getHumanReadableOptions(filterName, options) {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   };
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
+  var e10sNames = {"false": "no e10s", "true": "e10s"};
+  var processTypeNames = {"false": "main process", "true": "child process"};
   if (filterName === "os") {
     var entries = options.map(function(option) {
       var parts = option.split(",");
@@ -167,6 +200,14 @@ function getHumanReadableOptions(filterName, options) {
   } else if (filterName === "arch") {
     return options.map(function(option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
+    });
+  } else if (filterName === "e10s") {
+    return options.map(function(option) {
+      return [option, e10sNames.hasOwnProperty(option) ? e10sNames[option] : option];
+    });
+  } else if (filterName === "processType") {
+    return options.map(function(option) {
+      return [option, processTypeNames.hasOwnProperty(option) ? processTypeNames[option] : option];
     });
   }
   return options.map(function(option) { return [option, option] });
