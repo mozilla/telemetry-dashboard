@@ -24,6 +24,31 @@ $(document).ready(function() {
   
   // Date range pickers
   $(".date-range").daterangepicker();
+  
+  // Permalink control
+  $(".permalink-control").append(
+    '<div class="input-group">' +
+    '    <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button></span>' +
+    '    <input type="text" class="form-control">' +
+    '</div>'
+  );
+  $(".permalink-control input").hide().focus(function() {
+    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+    var $this = $(this);
+    $this.select().mouseup(function() { $this.unbind("mouseup"); return false; });
+  });
+  $(".permalink-control button").click(function() {
+    var $this = $(this);
+    $.ajax({
+      url: "https://api-ssl.bitly.com/shorten", dataType: "jsonp",
+      data: {longUrl: window.location.href, access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584", format: "json"},
+      success: function(response) {
+        var longUrl = Object.keys(response.results)[0];
+        var shortUrl = response.results[longUrl].shortUrl;
+        $this.parent(".permalink-control").find("input").show().val(shortUrl).focus();
+      }
+    });
+  });
 });
 
 

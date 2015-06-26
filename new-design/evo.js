@@ -1,47 +1,43 @@
-var gVersions = null;
 var gInitialPageState = null;
+var gFilterChangeTimeout = null;
 
 $(function() { Telemetry.init(function() {
-  gVersions = Telemetry.getVersions();
   gInitialPageState = loadStateFromUrlAndCookie();
 
   // Set up aggregate, build, and measure selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
 
-  selectSetOptions($("#min-channel-version, #max-channel-version"), gVersions.map(function(version) { return [version, version] }));
+  selectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.getVersions().map(function(version) { return [version, version] }));
   if (gInitialPageState.min_channel_version) { selectSetSelected($("#min-channel-version"), gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
 
   updateOptions(function(filterOptions) {
     $("#filter-product").multiselect("select", gInitialPageState.product);
-    if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
-    else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
     if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
     else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
-    if (gInitialPageState.os_version !== null) { $("#filter-os-version").multiselect("select", gInitialPageState.os_version); }
-    else { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
+    else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    if (gInitialPageState.e10s !== null) { $("#filter-e10s").multiselect("select", gInitialPageState.e10s); }
+    else { $("#filter-e10s").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    if (gInitialPageState.processType !== null) { $("#filter-process-type").multiselect("select", gInitialPageState.processType); }
+    else { $("#filter-process-type").multiselect("selectAll", false).multiselect("updateButtonText"); }
     
     $("#min-channel-version, #max-channel-version").change(function(e) {
       var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
-      var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
+      var versions = Telemetry.getVersions(fromVersion, toVersion);
       if (versions.length === 0) { // Invalid range selected, move other version selector
         if (e.target.id === "min-channel-version") { selectSetSelected($("#max-channel-version"), fromVersion); }
         else { selectSetSelected($("#min-channel-version"), toVersion); }
       }
       updateOptions(function() { $("#measure").trigger("change"); });
     });
-    $("#measure").change(function() {
-      // Update the measure description
-      var measure = $(this).val();
-      var measureEntry = {}//wip: update things here
-      $("#measure-description").text(measureEntry.description + " (" + measure + ")");
-      $("#submissions-title").text(measure + " submissions");
-      
-      $("#aggregates").trigger("change");
-    });
-    $("#build-time-toggle, #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
-      calculateHistogramEvolutions(function(lines, submissionLines) {
-        displayHistogramEvolutions(lines, submissionLines);
+    $("#build-time-toggle, #aggregates, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+      calculateEvolutions(function(lines, submissionLines, evolutionDescription) {
+        var measure = $("measure").val();
+        $("#submissions-title").text(measure + " submissions");
+        $("#measure-description").text(evolutionDescription);
+
+        displayEvolutions(lines, submissionLines);
         saveStateToUrlAndCookie();
       });
     });
@@ -56,29 +52,11 @@ $(function() { Telemetry.init(function() {
     window.location.href = evolutionURL;
     return false;
   });
-  
-  // Obtain a short permalink to the current page
-  $("#permalink-value").hide().focus(function() {
-    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
-    var $this = $(this);
-    $this.select().mouseup(function() { $this.unbind("mouseup"); return false; });
-  });
-  $("#get-permalink").click(function() {
-    $.ajax({
-      url: "https://api-ssl.bitly.com/shorten", dataType: "jsonp",
-      data: {longUrl: window.location.href, access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584", format: "json"},
-      success: function(response) {
-        var longUrl = Object.keys(response.results)[0];
-        var shortUrl = response.results[longUrl].shortUrl;
-        $("#permalink-value").show().val(shortUrl).focus();
-      }
-    });
-  });
 }); });
 
 function updateOptions(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
-  var versions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
+  var versions = Telemetry.getVersions(fromVersion, toVersion);
   var versionCount = 0;
   var optionsMap = {};
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
@@ -92,17 +70,14 @@ function updateOptions(callback) {
       
       versionCount ++;
       if (versionCount === versions.length) { // All versions are loaded
-        var measures = deduplicate(optionsMap.metric).filter(function(measure) {
-          return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
-        }).sort();
-        selectSetOptions($("#measure"), measures.map(function(measure) { return [measure, measure]; }));
+        selectSetOptions($("#measure"), getHumanReadableOptions("measure", deduplicate(optionsMap.metric)));
         selectSetSelected($("#measure"), gInitialPageState.measure);
 
         multiselectSetOptions($("#filter-product"), getHumanReadableOptions("product", deduplicate(optionsMap.application)));
         multiselectSetOptions($("#filter-os"), getHumanReadableOptions("os", deduplicate(optionsMap.os)));
-        //wip: other filters like e10sEnabled and such
-        //multiselectSetOptions($("#filter-os-version"), getHumanReadableOptions("osVersion", deduplicate(optionsMap.osVersion)));
         multiselectSetOptions($("#filter-arch"), getHumanReadableOptions("arch", deduplicate(optionsMap.architecture)));
+        multiselectSetOptions($("#filter-e10s"), getHumanReadableOptions("e10s", deduplicate(optionsMap.e10sEnabled)));
+        multiselectSetOptions($("#filter-process-type"), getHumanReadableOptions("processType", deduplicate(optionsMap.child)));
         if (callback !== undefined) { callback(); }
       }
     });
@@ -114,48 +89,38 @@ function updateOptions(callback) {
   }
 }
 
-function calculateHistogramEvolutions(callback) {
+function calculateEvolutions(callback) {
   // Get selected version, measure, and aggregate options
-  var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
+  var channelVersions = Telemetry.getVersions($("#min-channel-version").val(), $("#max-channel-version").val());
   var measure = $("#measure").val();
   var aggregates = $("#aggregates").val() || [];
-  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.getHistogramsOverTime : Telemetry.getHistogramsOverBuilds;
 
   // Obtain a mapping from filter names to filter options
   var filters = {
     "application":  $("#filter-product"),
-    "architecture": $("#filter-arch"),
     "os":           $("#filter-os"),
-    //wip: add all the new filters
+    "architecture": $("#filter-arch"),
+    "e10sEnabled":  $("#filter-e10s"),
+    "processType":  $("#filter-process-type"),
   };
+  var filterSets = getFilterSets(filters);
 
-  var channelVersions = gVersions.filter(function(v) { return fromVersion <= v && v <= toVersion; });
   var lines = [], submissionLines = [];
   var versionCount = 0;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filters, true, evolutionLoader, function(newLines, newSubmissionLine) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, true, $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLine, evolutionDescription) {
       lines = lines.concat(newLines);
-      submissionLines.push(newSubmissionLine);
+      if (newSubmissionLine !== null) { submissionLines.push(newSubmissionLine); }
       versionCount ++;
       if (versionCount === channelVersions.length) { // Check if lines were loaded for all the versions
-        callback(lines, submissionLines);
+        callback(lines, submissionLines, evolutionDescription);
       }
     });
   });
 }
 
-function getHistogramEvolutionLines(channel, version, measure, aggregates, filters, sanitize, evolutionLoader, callback) {
-  // Generate sets of individual filters that, when the resulting histograms are added together, results in the desired filter mapping
-  function copy(obj) {
-    var result = {};
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) { result[key] = obj[key]; }
-    }
-    return result;
-  }
-  var filterSets = getFilterSets(filters);
-
+function getHistogramEvolutionLines(channel, version, measure, aggregates, filterSets, sanitize, useSubmissionDate, callback) {
   var aggregateSelector = {
     "mean":            function(evolution) { return evolution.means(); },
     "5th-percentile":  function(evolution) { return evolution.percentiles(5); },
@@ -168,15 +133,12 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
 
   var filtersCount = 0;
   var lines = [];
+  var finalEvolution = null;
   filterSets.forEach(function(filterSet) {
-    var finalEvolution = null;
-    evolutionLoader(channel, version, measure, filterSet, function(evolution) {
-      if (finalEvolution === null) {
-        finalEvolution = evolution;
-      } else {
-        finalEvolution = finalEvolution.combine(evolution);
-      }
+    Telemetry.getEvolution(channel, version, measure, filterSet, useSubmissionDate, function(evolution) {
       filtersCount ++;
+      if (evolution === null) { return; } // No evolution available for the current filter set, so it has no lines
+      finalEvolution = finalEvolution === null ? evolution : finalEvolution.combine(evolution);
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         // Obtain the X and Y values of points
         var aggregateValues = aggregates.map(function(aggregate) {
@@ -202,16 +164,17 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         });
         var submissionLine = new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues);
         
-        callback(aggregateLines, submissionLine);
+        callback(aggregateLines, submissionLine, evolution.description + " (" + measure + ")");
       }
     });
   });
+  if (filterSets.length === 0) { callback([], null, measure); }
 }
 
-function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
+function displayEvolutions(lines, submissionLines, minDate, maxDate) {
   minDate = minDate || null; maxDate = maxDate || null;
 
-  // filter out empty lines, and add a workaround for a bug in MetricsGraphics where the input datasets must be in ascending order by first element
+  // filter out empty lines
   lines = lines.filter(function(line) { return line.values.length > 0; });
   submissionLines = submissionLines.filter(function(line) { return line.values.length > 0; });
   
@@ -219,10 +182,10 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
   var lineData = lines.map(function (line) {
     return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
   });
+  console.log(JSON.stringify(lineData));
   var submissionLineData = submissionLines.map(function (line) {
     return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
   });
-  
   var aggregateLabels = lines.map(function(line) { return line.aggregate; })
   
   var aggregateMap = {};
@@ -257,6 +220,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
       var date = d.values ? d.values[0].date : d.date
+      var firstLineId = d.values ? d.values[0].line_id : d.line_id;
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
       var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
@@ -269,7 +233,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       });
       
       // Reposition element
-      var rolloverCircle = $("#evolutions .mg-line-rollover-circle").get(0);
+      var rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + firstLineId + "-color").get(0);
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
       if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
@@ -305,6 +269,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
       var date = d.values ? d.values[0].date : d.date
+      var firstLineId = d.values ? d.values[0].line_id : d.line_id;
       var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
       var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
       var legend = d3.select("#submissions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
@@ -317,7 +282,7 @@ function displayHistogramEvolutions(lines, submissionLines, minDate, maxDate) {
       });
       
       // Reposition element
-      var rolloverCircle = $("#submissions .mg-line-rollover-circle").get(0);
+      var rolloverCircle = $("#submissions .mg-line-rollover-circle.mg-line" + firstLineId + "-color").get(0);
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
       if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
@@ -388,6 +353,9 @@ var Line = (function(){
   Line.prototype.getDescriptionString = function Line_getTitleString() {
     if (this.aggregate === "submissions") { return this.measure + " submissions for " + this.channelVersion.replace("/", " "); }
     return this.aggregate + " " + this.measure + " for " + this.channelVersion.replace("/", " ");
+  };
+  Line.prototype.getStateString = function Line_getTitleString() {
+    return this.aggregate + "/" + this.measure + "/" + this.channelVersion;
   };
   
   return Line;

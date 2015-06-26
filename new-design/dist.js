@@ -1,13 +1,12 @@
-var gVersions = null;
 var gInitialPageState = null;
 var gFilterChangeTimeout = null;
+var gCurrentHistogram = null; gCurrentEvolution = null;
 
 $(function() { Telemetry.init(function() {
-  gVersions = Telemetry.getVersions();
   gInitialPageState = loadStateFromUrlAndCookie();
   
   // Set up aggregate, build, and measure selectors
-  selectSetOptions($("#channel-version"), gVersions.map(function(version) { return [version, version.replace("/", " ")] }));
+  selectSetOptions($("#channel-version"), Telemetry.getVersions().map(function(version) { return [version, version.replace("/", " ")] }));
   if (gInitialPageState.max_channel_version) { $("#channel-version").select2("val", gInitialPageState.max_channel_version); }
   
   updateOptions(function() {      
@@ -18,26 +17,29 @@ $(function() { Telemetry.init(function() {
     else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
     if (gInitialPageState.e10s !== null) { $("#filter-e10s").multiselect("select", gInitialPageState.e10s); }
     else { $("#filter-e10s").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    if (gInitialPageState.processType !== null) { $("#filter-process-type").multiselect("select", gInitialPageState.processType); }
+    else { $("#filter-process-type").multiselect("selectAll", false).multiselect("updateButtonText"); }
+    
+    $("#channel-version").change(function() {
+      updateOptions(function() { $("#measure").trigger("change"); });
+    });
+    $("#build-time-toggle, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function() {
+      if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
+      gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
+        calculateHistogram(function(histogram, evolution) {
+          gCurrentHistogram = histogram; gCurrentEvolution = evolution;
+          displayHistogram(histogram, evolution, $("#cumulative-toggle").prop("checked"));
+          saveStateToUrlAndCookie();
+        });
+      }, 0);
+    });
 
-      $("#channel-version").change(function() {
-        updateOptions(function() { $("#measure").trigger("change"); });
-      });
-      $("#build-time-toggle, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s").change(function() {
-        if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
-        gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-          calculateHistogram(function(histogram, histograms) {
-            displayHistogram(histogram, histograms, $("#cumulative-toggle").prop("checked"));
-            saveStateToUrlAndCookie();
-          });
-        }, 0);
-      });
-
-      // Perform a full display refresh
-      $("#measure").trigger("change");
+    // Perform a full display refresh
+    $("#measure").trigger("change");
   });
 
   $("#cumulative-toggle").change(function() {
-    displayHistogram(gCurrentLines, gCurrentSubmissionLines, $("#cumulative-toggle").prop("checked"));
+    displayHistogram(gCurrentHistogram, gCurrentEvolution, $("#cumulative-toggle").prop("checked"));
   });
   
   // Switch to the evolution dashboard with the same settings
@@ -45,24 +47,6 @@ $(function() { Telemetry.init(function() {
     var evolutionURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
     window.location.href = evolutionURL;
     return false;
-  });
-  
-  // Obtain a short permalink to the current page
-  $("#permalink-value").hide().focus(function() {
-    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
-    var $this = $(this);
-    $this.select().mouseup(function() { $this.unbind("mouseup"); return false; });
-  });
-  $("#get-permalink").click(function() {
-    $.ajax({
-      url: "https://api-ssl.bitly.com/shorten", dataType: "jsonp",
-      data: {longUrl: window.location.href, access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584", format: "json"},
-      success: function(response) {
-        var longUrl = Object.keys(response.results)[0];
-        var shortUrl = response.results[longUrl].shortUrl;
-        $("#permalink-value").show().val(shortUrl).focus();
-      }
-    });
   });
   
   // Automatically resize range bar
@@ -80,18 +64,14 @@ function updateOptions(callback) {
   var channelVersion = $("#channel-version").val();
   var parts = channelVersion.split("/"); //wip: clean this up
   Telemetry.getFilterOptions(parts[0], parts[1], function(optionsMap) {
-    console.log(optionsMap)
-    var measures = deduplicate(optionsMap.metric).filter(function(measure) {
-      return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
-    }).sort();
-    selectSetOptions($("#measure"), measures.map(function(measure) { return [measure, measure]; }));
+    selectSetOptions($("#measure"), getHumanReadableOptions("measure", deduplicate(optionsMap.metric)));
     selectSetSelected($("#measure"), gInitialPageState.measure);
 
     multiselectSetOptions($("#filter-product"), getHumanReadableOptions("product", deduplicate(optionsMap.application)));
     multiselectSetOptions($("#filter-os"), getHumanReadableOptions("os", deduplicate(optionsMap.os)));
-    //wip: other filters like e10sEnabled and such
     multiselectSetOptions($("#filter-arch"), getHumanReadableOptions("arch", deduplicate(optionsMap.architecture)));
     multiselectSetOptions($("#filter-e10s"), getHumanReadableOptions("e10s", deduplicate(optionsMap.e10sEnabled)));
+    multiselectSetOptions($("#filter-process-type"), getHumanReadableOptions("processType", deduplicate(optionsMap.child)));
     if (callback !== undefined) { callback(); }
   });
 }
@@ -100,33 +80,34 @@ function calculateHistogram(callback) {
   // Get selected version, measure, and aggregate options
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
-  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.getHistogramsOverTime : Telemetry.getHistogramsOverBuilds;
   
   var filters = {
     "application":  $("#filter-product"),
     "os":           $("#filter-os"),
     "architecture": $("#filter-arch"),
-    "e10sEnabled": $("#filter-e10s"),
-    //wip: add all the new filters
+    "e10sEnabled":  $("#filter-e10s"),
+    "processType":  $("#filter-process-type"),
   };
   var filterSets = getFilterSets(filters);
   
   var filtersCount = 0;
-  var finalEvolution = null;
+  var fullEvolution = null;
+  var useSubmissionDate = $("#build-time-toggle").prop("checked");
   filterSets.forEach(function(filterSet) {
     var parts = channelVersion.split("/");
-    evolutionLoader(parts[0], parts[1], measure, filterSet, function(evolution) {
-      if (finalEvolution === null) {
-        finalEvolution = evolution;
+    Telemetry.getEvolution(parts[0], parts[1], measure, filterSet, useSubmissionDate, function(evolution) {
+      if (fullEvolution === null) {
+        fullEvolution = evolution;
       } else {
-        finalEvolution = finalEvolution.combine(evolution);
+        fullEvolution = fullEvolution.combine(evolution);
       }
       filtersCount ++;
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         updateDateRange(function(dates) {
-          var fullHistogram = finalEvolution.histogram(dates[0], dates[dates.length - 1]);
-          callback(fullHistogram, finalEvolution);
-        }, finalEvolution, false);
+          var filteredEvolution = fullEvolution.dateRange(dates[0], dates[dates.length - 1])
+          var fullHistogram = filteredEvolution.histogram();
+          callback(fullHistogram, filteredEvolution);
+        }, fullEvolution, false);
       }
     });
   });
@@ -166,7 +147,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
        "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
     },
   }, function(chosenStartMoment, chosenEndMoment, label) {
-    updateDateRange(gCurrentDateRangeUpdateCallback, histograms, true);
+    updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true);
   });
   
   // If the selected date range is now out of bounds, or the bounds were updated programmatically, select the entire range
@@ -193,8 +174,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
       gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
         picker.setStartDate(moment(range[0]));
         picker.setEndDate(moment(range[1]).subtract(1, "days"));
-        updateDateRange(gCurrentDateRangeUpdateCallback, histograms, true, false);
-      }, 100);
+        updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true, false);
+      }, 50);
     });
     $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
@@ -252,7 +233,7 @@ function displayHistogram(histogram, evolution, cumulative) {
     counts = histogram.map(function(count, start, end, i) { return count; });
   }
   var ends = histogram.map(function(count, start, end, i) { return end; });
-  
+
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / histogram.count) * 100}; });
   
   // Plot the data using MetricsGraphics
@@ -317,6 +298,8 @@ function saveStateToUrlAndCookie() {
   if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   var selected = $("#filter-e10s").val() || [];
   if (selected.length !== $("#filter-e10s option").size()) { gInitialPageState.e10s = selected; }
+  var selected = $("#filter-process-type").val() || [];
+  if (selected.length !== $("#filter-process-type option").size()) { gInitialPageState.processType = selected; }
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {

@@ -24,12 +24,7 @@
         <header>
             <form id="histogram-filters" class="navbar-form" style="float: right; margin: 0">
                 <button class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</button>
-                <div class="input-group">
-                    <span class="input-group-btn">
-                        <button type="button" id="get-permalink" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button>
-                    </span>
-                    <input type="text" id="permalink-value" class="form-control">
-                </div>
+                <span class="permalink-control"></span>
             </form>
             <h1>Histogram Dashboard</h1>
         </header>
@@ -44,11 +39,11 @@
                     </span>
                     on
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
-                    <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any OS version" multiple></select>
-                    on
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" multiple></select>
                     with
                     <select id="filter-e10s" class="multiselect" title="e10s setting" data-all-selected="any e10s setting" multiple></select>
+                    as
+                    <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type" multiple></select>
                 </h2>
                 <figure class="col-md-12">
                     <div class="col-md-9" id="distribution"></div>
@@ -126,8 +121,6 @@
     <script src="lib/metricsgraphics.js"></script>
     
     <script src="v2/telemetry.js"></script>
-    
-    <!-- Initialize controls -->
     <script src="dashboards.js"></script>
     <script src="dist.js"></script>
 </body>
