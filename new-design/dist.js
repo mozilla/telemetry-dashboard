@@ -27,6 +27,7 @@ $(function() { Telemetry.init(function() {
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
         calculateHistogram(function(histogram, evolution) {
+          $("#measure-description").text(evolution.description);
           gCurrentHistogram = histogram; gCurrentEvolution = evolution;
           displayHistogram(histogram, evolution, $("#cumulative-toggle").prop("checked"));
           saveStateToUrlAndCookie();
@@ -212,7 +213,6 @@ function displayHistogram(histogram, evolution, cumulative) {
   $("#prop-submissions").text(formatNumber(histogram.submissions));
   $("#prop-count").text(formatNumber(histogram.count));
   if (histogram.kind == "linear" || histogram.kind == "exponential") {
-    $("#prop-mean").text(formatNumber(histogram.mean()));
     $("#prop-p5").text(formatNumber(histogram.percentile(5)));
     $("#prop-p25").text(formatNumber(histogram.percentile(25)));
     $("#prop-p50").text(formatNumber(histogram.percentile(50)));

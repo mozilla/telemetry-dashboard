@@ -219,7 +219,7 @@ function getHumanReadableOptions(filterName, options) {
             }
           }
         }
-        return [entry.value, entry.osName + " " + versionName, entry.osName];
+        return [entry.value, entry.osName + " " + versionName, "Any " + entry.osName];
       });
     }));
   } else if (filterName === "arch") {

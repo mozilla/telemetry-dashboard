@@ -31,14 +31,15 @@ $(function() { Telemetry.init(function() {
       }
       updateOptions(function() { $("#measure").trigger("change"); });
     });
-    $("#build-time-toggle, #aggregates, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
-      calculateEvolutions(function(lines, submissionLines, evolutionDescription) {
-        var measure = $("measure").val();
-        $("#submissions-title").text(measure + " submissions");
-        $("#measure-description").text(evolutionDescription);
-
-        displayEvolutions(lines, submissionLines);
-        saveStateToUrlAndCookie();
+    $("#build-time-toggle, #sanitize-toggle, #aggregates, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+      if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
+      gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
+        calculateEvolutions(function(lines, submissionLines, evolutionDescription) {
+          $("#submissions-title").text($("#measure").val() + " submissions");
+          $("#measure-description").text(evolutionDescription);
+          displayEvolutions(lines, submissionLines);
+          saveStateToUrlAndCookie();
+        });
       });
     });
     
@@ -109,7 +110,7 @@ function calculateEvolutions(callback) {
   var versionCount = 0;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, true, $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLine, evolutionDescription) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("#sanitize-toggle").prop("checked"), $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLine, evolutionDescription) {
       lines = lines.concat(newLines);
       if (newSubmissionLine !== null) { submissionLines.push(newSubmissionLine); }
       versionCount ++;
@@ -164,7 +165,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         });
         var submissionLine = new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues);
         
-        callback(aggregateLines, submissionLine, evolution.description + " (" + measure + ")");
+        callback(aggregateLines, submissionLine, evolution.description);
       }
     });
   });
@@ -180,11 +181,14 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
   
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
-    return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
+    return dataset;
   });
-  console.log(JSON.stringify(lineData));
   var submissionLineData = submissionLines.map(function (line) {
-    return line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
+    return dataset;
   });
   var aggregateLabels = lines.map(function(line) { return line.aggregate; })
   
@@ -195,11 +199,11 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
   var markers = [], usedDates = {};
   lines.forEach(function(line) {
     var minDate = Math.min.apply(Math, line.values.map(function(point) { return point.x; }));
-    if (!(minDate in usedDates)) {
-      markers.push({date: new Date(minDate + 1), label: line.getVersionString()}); // Need to add 1ms because the leftmost marker won't show up otherwise
-      usedDates[minDate] = true;
-    }
+    usedDates[minDate] = usedDates.hasOwnProperty(minDate) ? usedDates[minDate] + ", " + line.getVersionString() : line.getVersionString();
   });
+  for (var date in usedDates) {
+    markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date]}); // Need to add 1ms because the leftmost marker won't show up otherwise
+  }
 
   // Plot the data using MetricsGraphics
   d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
@@ -219,10 +223,22 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
-      var date = d.values ? d.values[0].date : d.date
-      var firstLineId = d.values ? d.values[0].line_id : d.line_id;
-      var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
-      var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
+      var date, rolloverCircle, lineList, values;
+      if (d.values) {
+        date = d.values[0].date;
+        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.values[0].line_id + "-color").get(0);
+        var seen = {}; var entries = d.values.filter(function(entry) {
+          if (seen[entry.line_id]) return false;
+          seen[entry.line_id] = true; return true;
+        });
+        lineList = entries.map(function(entry) { return lines[entry.line_id - 1]; });
+        values = entries.map(function(entry) { return entry.value; });
+      } else {
+        date = d.date;
+        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.line_id + "-color").get(0);
+        lineList = [lines[d.line_id - 1]];
+        values = [d.value];
+      }
       var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
@@ -233,7 +249,6 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
       });
       
       // Reposition element
-      var rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + firstLineId + "-color").get(0);
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
       if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
@@ -268,10 +283,22 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
     min_x: minDate === null ? null : new Date(minDate),
     max_x: maxDate === null ? null : new Date(maxDate),
     mouseover: function(d, i) {
-      var date = d.values ? d.values[0].date : d.date
-      var firstLineId = d.values ? d.values[0].line_id : d.line_id;
-      var lineList = d.values ? d.values.map(function(entry) { return lines[entry.line_id - 1]; }) : [lines[d.line_id - 1]];
-      var values = d.values ? d.values.map(function(entry) { return entry.value; }) : [d.value];
+      var date, rolloverCircle, lineList, values;
+      if (d.values) {
+        date = d.values[0].date;
+        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.values[0].line_id + "-color").get(0);
+        var seen = {}; var entries = d.values.filter(function(entry) {
+          if (seen[entry.line_id]) return false;
+          seen[entry.line_id] = true; return true;
+        });
+        lineList = entries.map(function(entry) { return submissionLines[entry.line_id - 1]; });
+        values = entries.map(function(entry) { return entry.value; });
+      } else {
+        date = d.date;
+        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.line_id + "-color").get(0);
+        lineList = [submissionLines[d.line_id - 1]];
+        values = [d.value];
+      }
       var legend = d3.select("#submissions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
@@ -282,7 +309,6 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
       });
       
       // Reposition element
-      var rolloverCircle = $("#submissions .mg-line-rollover-circle.mg-line" + firstLineId + "-color").get(0);
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
       if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;

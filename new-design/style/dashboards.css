@@ -8,6 +8,7 @@
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
 .multiselect-container .filter .input-group-addon { display: none; }
+.multiselect-group-clickable label { text-decoration: underline; }
 .select2-container { width: auto !important; }
 .select2-selection { border: transparent !important; }
 .select2-selection__rendered { padding: 0 !important; text-decoration: underline; }
