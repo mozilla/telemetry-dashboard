@@ -51,7 +51,7 @@ $(function() { Telemetry.init(function() {
         gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
         
         calculateHistogram(function(histogram, evolution) {
-          $("#measure-description").text(evolution === null ? "" : evolution.description);
+          $("#measure-description").text(evolution === null ? $("#measure").val() : evolution.description);
           gCurrentHistogram = histogram; gCurrentEvolution = evolution;
           displayHistogram(histogram, evolution, $("#cumulative-toggle").prop("checked"));
           saveStateToUrlAndCookie();

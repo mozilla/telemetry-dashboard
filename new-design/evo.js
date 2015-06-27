@@ -127,9 +127,9 @@ function calculateEvolutions(callback) {
   var versionCount = 0;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("#sanitize-toggle").prop("checked"), $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLine, evolutionDescription) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("#sanitize-toggle").prop("checked"), $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLines, evolutionDescription) {
       lines = lines.concat(newLines);
-      if (newSubmissionLine !== null) { submissionLines.push(newSubmissionLine); }
+      submissionLines = submissionLines.concat(newSubmissionLines);
       versionCount ++;
       if (versionCount === channelVersions.length) { // Check if lines were loaded for all the versions
         callback(lines, submissionLines, evolutionDescription);
@@ -155,9 +155,13 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
   filterSets.forEach(function(filterSet) {
     Telemetry.getEvolution(channel, version, measure, filterSet, useSubmissionDate, function(evolution) {
       filtersCount ++;
-      if (evolution === null) { return; } // No evolution available for the current filter set, so it has no lines
       finalEvolution = finalEvolution === null ? evolution : finalEvolution.combine(evolution);
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
+        if (finalEvolution === null) { // No evolutions available
+          callback([], [], measure);
+          return;
+        }
+        
         // Obtain the X and Y values of points
         var aggregateValues = aggregates.map(function(aggregate) {
           return aggregateSelector[aggregate](finalEvolution);
@@ -180,13 +184,13 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         var aggregateLines = finalAggregateValues.map(function(values, i) {
           return new Line(measure, channel + "/" + version, aggregates[i], values);
         });
-        var submissionLine = new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues);
+        var submissionLines = [new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues)];
         
-        callback(aggregateLines, submissionLine, evolution.description);
+        callback(aggregateLines, submissionLines, evolution.description);
       }
     });
   });
-  if (filterSets.length === 0) { callback([], null, measure); }
+  if (filterSets.length === 0) { callback([], [], measure); }
 }
 
 function displayEvolutions(lines, submissionLines, minDate, maxDate) {
