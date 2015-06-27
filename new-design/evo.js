@@ -1,7 +1,15 @@
 var gInitialPageState = null;
 var gFilterChangeTimeout = null;
+var gFilters = null, gPreviousFilterAllSelected = {};
 
 $(function() { Telemetry.init(function() {
+  gFilters = {
+    "application":  $("#filter-product"),
+    "os":           $("#filter-os"),
+    "architecture": $("#filter-arch"),
+    "e10sEnabled":  $("#filter-e10s"),
+    "processType":  $("#filter-process-type"),
+  };
   gInitialPageState = loadStateFromUrlAndCookie();
 
   // Set up aggregate, build, and measure selectors
@@ -22,6 +30,12 @@ $(function() { Telemetry.init(function() {
     if (gInitialPageState.processType !== null) { $("#filter-process-type").multiselect("select", gInitialPageState.processType); }
     else { $("#filter-process-type").multiselect("selectAll", false).multiselect("updateButtonText"); }
     
+    for (var filterName in gFilters) {
+      var selector = gFilters[filterName];
+      var selected = selector.val() || [], options = selector.find("option");
+      gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
+    }
+    
     $("#min-channel-version, #max-channel-version").change(function(e) {
       var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
       var versions = Telemetry.getVersions(fromVersion, toVersion);
@@ -32,8 +46,18 @@ $(function() { Telemetry.init(function() {
       updateOptions(function() { $("#measure").trigger("change"); });
     });
     $("#build-time-toggle, #sanitize-toggle, #aggregates, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+      var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
+        // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
+        var selected = $this.val() || [], options = $this.find("option");
+        if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
+          var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
+            .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
+          $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+        }
+        gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
+        
         calculateEvolutions(function(lines, submissionLines, evolutionDescription) {
           $("#submissions-title").text($("#measure").val() + " submissions");
           $("#measure-description").text(evolutionDescription);
@@ -97,14 +121,7 @@ function calculateEvolutions(callback) {
   var aggregates = $("#aggregates").val() || [];
 
   // Obtain a mapping from filter names to filter options
-  var filters = {
-    "application":  $("#filter-product"),
-    "os":           $("#filter-os"),
-    "architecture": $("#filter-arch"),
-    "e10sEnabled":  $("#filter-e10s"),
-    "processType":  $("#filter-process-type"),
-  };
-  var filterSets = getFilterSets(filters);
+  var filterSets = getFilterSets(gFilters);
 
   var lines = [], submissionLines = [];
   var versionCount = 0;

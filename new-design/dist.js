@@ -1,11 +1,19 @@
 var gInitialPageState = null;
 var gFilterChangeTimeout = null;
 var gCurrentHistogram = null; gCurrentEvolution = null;
+var gFilters = null, gPreviousFilterAllSelected = {};
 
 $(function() { Telemetry.init(function() {
+  gFilters = {
+    "application":  $("#filter-product"),
+    "os":           $("#filter-os"),
+    "architecture": $("#filter-arch"),
+    "e10sEnabled":  $("#filter-e10s"),
+    "processType":  $("#filter-process-type"),
+  };
   gInitialPageState = loadStateFromUrlAndCookie();
   
-  // Set up aggregate, build, and measure selectors
+  // Set up build and measure selectors
   selectSetOptions($("#channel-version"), Telemetry.getVersions().map(function(version) { return [version, version.replace("/", " ")] }));
   if (gInitialPageState.max_channel_version) { $("#channel-version").select2("val", gInitialPageState.max_channel_version); }
   
@@ -20,14 +28,28 @@ $(function() { Telemetry.init(function() {
     if (gInitialPageState.processType !== null) { $("#filter-process-type").multiselect("select", gInitialPageState.processType); }
     else { $("#filter-process-type").multiselect("selectAll", false).multiselect("updateButtonText"); }
     
-    var allSelectedFilters = {}
+    for (var filterName in gFilters) {
+      var selector = gFilters[filterName];
+      var selected = selector.val() || [], options = selector.find("option");
+      gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
+    }
     
     $("#channel-version").change(function() {
       updateOptions(function() { $("#measure").trigger("change"); });
     });
     $("#build-time-toggle, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function() {
+      var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
+        // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
+        var selected = $this.val() || [], options = $this.find("option");
+        if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
+          var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
+            .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
+          $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+        }
+        gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
+        
         calculateHistogram(function(histogram, evolution) {
           $("#measure-description").text(evolution === null ? "" : evolution.description);
           gCurrentHistogram = histogram; gCurrentEvolution = evolution;
@@ -84,14 +106,7 @@ function calculateHistogram(callback) {
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
   
-  var filters = {
-    "application":  $("#filter-product"),
-    "os":           $("#filter-os"),
-    "architecture": $("#filter-arch"),
-    "e10sEnabled":  $("#filter-e10s"),
-    "processType":  $("#filter-process-type"),
-  };
-  var filterSets = getFilterSets(filters);
+  var filterSets = getFilterSets(gFilters);
   
   var filtersCount = 0;
   var fullEvolution = null;
@@ -269,10 +284,11 @@ function displayHistogram(histogram, evolution, cumulative) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label = count + " samples (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
+      var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
       
       // Reposition element
       var legend = d3.select("#distribution .mg-active-datapoint").text(label).attr("transform", offset)
-        .attr("x", "0").attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+        .attr("x", barWidth / 2).attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
       var bbox = legend[0][0].getBBox();
       var padding = 5;
       

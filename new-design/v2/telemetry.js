@@ -20,7 +20,7 @@ Telemetry.Histogram = (function() {
   function Histogram(buckets, values, kind, submissions, description) {
     assert(typeof buckets[0] === "number", "`buckets` must be an array");
     assert(typeof values[0] === "number", "`values` must be an array");
-    assert(typeof kind === "string", "`kind` must be a string");
+    assert(["flag", "boolean", "count", "enumerated", "linear", "exponential"].indexOf(kind) >= 0, "`kind` must be a valid histogram kind");
     assert(typeof submissions === "number", "`submissions` must be a number");
     assert(typeof description === "string", "`description` must be a string");
     this.buckets = buckets;
@@ -33,33 +33,30 @@ Telemetry.Histogram = (function() {
   }
   
   Histogram.prototype.lastBucketUpper = function() {
-    assert(this.kind === "linear" || this.kind === "exponential", "Histogram buckets must be linear or exponential");
     assert(this.buckets.length > 0, "Histogram buckets cannot be empty");
     if (this.buckets.length == 1) return this.buckets[0] + 1;
-    if (this.kind === "linear") {
+    if (this.kind === "linear" || this.kind === "flag" || this.kind === "boolean" || this.kind === "enumerated") { // linear buckets
       return this.buckets[this.buckets.length - 1] + this.buckets[this.buckets.length - 1] - this.buckets[this.buckets.length - 2];
-    } else { // exponential
+    } else { // exponential buckets
       return this.buckets[this.buckets.length - 1] * this.buckets[this.buckets.length - 1] / this.buckets[this.buckets.length - 2];
     }
   };
   
   Histogram.prototype.mean = function() {
-    assert(this.kind === "linear" || this.kind === "exponential", "Histogram buckets must be linear or exponential");
     var buckets = this.buckets.concat([this.lastBucketUpper(this.buckets, this.kind)]);
     var totalHits = 0, bucketHits = 0;
     var linearTerm = (buckets[buckets.length - 1] - buckets[buckets.length - 2]) / 2;
     var exponentialFactor = Math.sqrt(buckets[buckets.length - 1] / buckets[buckets.length - 2]);
-    var linearBuckets = this.kind === "linear";
+    var useLinearBuckets = this.kind === "linear" || this.kind === "flag" || this.kind === "boolean" || this.kind === "enumerated";
     this.values.forEach(function(count, i) {
       totalHits += count;
-      var centralX = linearBuckets ? buckets[i] + linearTerm : buckets[i] * exponentialFactor; // find the center of the current bucket
+      var centralX = useLinearBuckets ? buckets[i] + linearTerm : buckets[i] * exponentialFactor; // find the center of the current bucket
       bucketHits += count * centralX;
     });
     return bucketHits / totalHits;
   }
   
   Histogram.prototype.percentile = function(percentile) {
-    assert(this.kind === "linear" || this.kind === "exponential", "histogram buckets must be linear or exponential");
     assert(typeof percentile === "number", "`percentile` must be a number");
     assert(0 <= percentile && percentile <= 100, "`percentile` must be between 0 and 100 inclusive");
     var buckets = this.buckets.concat([this.lastBucketUpper()]);
@@ -71,9 +68,9 @@ Telemetry.Histogram = (function() {
     while (hitsAtPercentileInBar >= 0) { hitsAtPercentileInBar -= this.values[percentileBucketIndex]; percentileBucketIndex ++; }
     percentileBucketIndex --; hitsAtPercentileInBar += this.values[percentileBucketIndex]; // decrement to get to the bar containing the percentile
     var ratioInBar = hitsAtPercentileInBar / this.values[percentileBucketIndex]; // the ratio of the hits in the percentile to the hits in the bar containing it - how far we are inside the bar
-    if (this.kind === "linear") {
+    if (this.kind === "linear" || this.kind === "flag" || this.kind === "boolean" || this.kind === "enumerated") { // linear buckets
       return buckets[percentileBucketIndex] + linearTerm * ratioInBar; // linear interpolation within bar
-    } else { // exponential
+    } else { // exponential buckets
       return buckets[percentileBucketIndex] * Math.pow(exponentialFactor, ratioInBar); // geometric interpolation within bar
     }
   };
@@ -155,9 +152,9 @@ Telemetry.Evolution = (function() {
   Evolution.prototype.histogram = function() {
     var submissions = this.data.reduce(function(submissions, entry) { return submissions + entry.count; }, 0);
     var values = this.data.reduce(function(values, entry) {
-      entry.histogram.forEach(function(count, i) { values[i] += count; });
+      entry.histogram.forEach(function(count, i) { values[i] = (values[i] || 0) + count; });
       return values;
-    }, this.buckets.map(function(lowerBound) { return 0; }));
+    }, []);
     
     return new Telemetry.Histogram(this.buckets, values, this.kind, submissions, this.description);
   };
