@@ -7,7 +7,6 @@ function assert(condition, message) {
 }
 
 var Telemetry = {
-  //BASE_URL: 'http://ec2-54-185-7-17.us-west-2.compute.amazonaws.com:5000/',
   BASE_URL: 'http://ec2-52-12-57-130.us-west-2.compute.amazonaws.com:5000/',
   CHANNEL_VERSION_DATES: null,
   CHANNEL_VERSION_BUILDIDS: null,
@@ -187,35 +186,42 @@ Telemetry.getJSON = function(url, callback) { // WIP: need CORS headers in the r
   assert(typeof url === "string", "`url` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
   if (Telemetry.CACHE[url] !== undefined) {
-    if (Telemetry.CACHE[url]._loading) { // Requested but not yet loaded
+    if (Telemetry.CACHE[url] !== null && Telemetry.CACHE[url]._loading) { // Requested but not yet loaded
       var xhr = Telemetry.CACHE[url];
       var originalLoadCallback = xhr.onload, originalErrorCallback = xhr.onerror;
       xhr.onload = function() {
-        if (this.status !== 200) { callback(null, this.status); return; }
-        callback(JSON.parse(this.responseText), null);
-        originalLoadCallback.call(xhr);
+        if (this.status !== 200) { callback(null, this.status); }
+        else { callback(JSON.parse(this.responseText), null); }
+        originalLoadCallback.call(this);
       };
       xhr.onerror = function() {
         callback(null, this.status);
         originalErrorCallback.call(xhr);
       };
+      return;
     } else if ((new Date).getTime() - Telemetry.CACHE_LAST_UPDATED[url] < Telemetry.CACHE_TIMEOUT) { // In cache and hasn't expired
-      setTimeout(function() { callback(Telemetry.CACHE[url]); }, 1);
+      setTimeout(function() { callback(Telemetry.CACHE[url], Telemetry.CACHE[url] === null ? 404 : 200); }, 1);
+      return;
     }
-    return;
   }
-  
+
   var xhr = new XMLHttpRequest();
   xhr._loading = true;
   Telemetry.CACHE[url] = xhr; // Mark the URL as being requested but not yet loaded
   xhr.onload = function() {
+    this._loading = false;
+    if (this.status === 404) { // Cache the null result if the URL resolves to a resource or missing resource
+      Telemetry.CACHE[url] = null; Telemetry.CACHE_LAST_UPDATED[url] = (new Date).getTime();
+    }
     if (this.status !== 200) { callback(null, this.status); return; }
     var result = JSON.parse(this.responseText);
-    Telemetry.CACHE[url] = result;
-    Telemetry.CACHE_LAST_UPDATED[url] = (new Date).getTime();
-    callback(result, null);
+    Telemetry.CACHE[url] = result; Telemetry.CACHE_LAST_UPDATED[url] = (new Date).getTime();
+    callback(result, this.status);
   };
-  xhr.onerror = function() { callback(null, this.status); };
+  xhr.onerror = function() { // Network-level error, notify the callback
+    this._loading = false;
+    callback(null, this.status);
+  };
   xhr.open("get", url, true);
   xhr.send();
 }
