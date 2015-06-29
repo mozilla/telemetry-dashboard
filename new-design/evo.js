@@ -323,7 +323,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
         date = d.values[0].date;
-        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.values[0].line_id + "-color").get(0);
+        rolloverCircle = $("#submissions .mg-line-rollover-circle.mg-line" + d.values[0].line_id + "-color").get(0);
         var seen = {}; var entries = d.values.filter(function(entry) {
           if (seen[entry.line_id]) return false;
           seen[entry.line_id] = true; return true;
@@ -332,7 +332,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
         values = entries.map(function(entry) { return entry.value; });
       } else {
         date = d.date;
-        rolloverCircle = $("#evolutions .mg-line-rollover-circle").get(0);
+        rolloverCircle = $("#submissions .mg-line-rollover-circle").get(0);
         lineList = [submissionLines[d.line_id - 1]];
         values = [d.value];
       }
@@ -348,7 +348,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
       // Reposition element
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
-      if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
+      if (x + bbox.width + 50 > $("#submissions svg").width()) x -= bbox.width + 40;
       d3.select("#submissions .mg-active-datapoint-container").attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
       
       // Add background
@@ -367,9 +367,15 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
   // Set the line colors
   lines.forEach(function(line, i) {
     var lineIndex = i + 1;
-    $(".mg-main-line.mg-line" + lineIndex + "-color").css("stroke", line.color);
-    $(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", line.color).css("stroke", line.color);
-    $(".mg-line" + lineIndex + "-legend-color").css("fill", line.color);
+    $("#evolutions .mg-main-line.mg-line" + lineIndex + "-color").css("stroke", line.color);
+    $("#evolutions .mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", line.color).css("stroke", line.color);
+    $("#evolutions .mg-line" + lineIndex + "-legend-color").css("fill", line.color);
+  });
+  submissionLines.forEach(function(line, i) {
+    var lineIndex = i + 1;
+    $("#submissions .mg-main-line.mg-line" + lineIndex + "-color").css("stroke", line.color);
+    $("#submissions .mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", line.color).css("stroke", line.color);
+    $("#submissions .mg-line" + lineIndex + "-legend-color").css("fill", line.color);
   });
   
   // Reposition and resize text
