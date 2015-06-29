@@ -14,12 +14,14 @@ $(function() { Telemetry.init(function() {
   };
   gInitialPageState = loadStateFromUrlAndCookie();
 
-  // Set up aggregate, build, and measure selectors
+  // Set up settings selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
-
   selectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.getVersions().map(function(version) { return [version, version] }));
   if (gInitialPageState.min_channel_version) { selectSetSelected($("#min-channel-version"), gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
+  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
+  $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
+  $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
 
   indicate("Updating filters...");
   updateOptions(function(filterOptions) {
@@ -438,6 +440,12 @@ function saveStateToUrlAndCookie() {
     min_channel_version: $("#min-channel-version").val(),
     max_channel_version: $("#max-channel-version").val(),
     product: $("#filter-product").val() || [],
+    use_submission_date: $("#build-time-toggle").prop("checked") ? 1 : 0,
+    sanitize: $("#sanitize-toggle").prop("checked") ? 1 : 0,
+    
+    // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
+    start_date: $("#date-range").data("daterangepicker").startDate.format("YYYY-MM-DD"),
+    end_date: $("#date-range").data("daterangepicker").endDate.format("YYYY-MM-DD"),
   };
   
   // Only store these in the state if they are not all selected
@@ -450,9 +458,7 @@ function saveStateToUrlAndCookie() {
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {
-    if (v instanceof Array) {
-      v = v.join("!");
-    }
+    if ($.isArray(v)) { v = v.join("!"); }
     fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
   });
   var stateString = fragments.join("&");

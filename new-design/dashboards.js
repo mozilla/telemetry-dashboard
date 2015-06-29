@@ -14,6 +14,23 @@ $(document).ready(function() {
       allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
       enableClickableOptGroups: true,
       maxHeight: 500,
+      /*buttonText: function(options, select) {
+        if (options.length === 0) { return select.; }
+        else if (options.length > 3) {
+            return 'More than 3 options selected!';
+        }
+        else {
+          var labels = [];
+          options.each(function() {
+            if ($(this).attr('label') !== undefined) {
+              labels.push($(this).attr('label'));
+            } else {
+              labels.push($(this).html());
+            }
+          });
+          return labels.join(', ') + '';
+        }
+      },*/
     };
     if ($this.attr("title") !== undefined) {
       options.nonSelectedText = $this.attr("title");
@@ -98,6 +115,13 @@ function loadStateFromUrlAndCookie() {
     pageState.processType.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.os_version = pageState.os_version !== undefined ?
     pageState.os_version.split("!").filter(function(v) { return v !== ""; }) : null;
+  
+  pageState.use_submission_date = pageState.use_submission_date !== undefined ?
+    parseInt(pageState.use_submission_date) : 0;
+  pageState.sanitize = pageState.sanitize !== undefined ?
+    parseInt(pageState.sanitize) : 1;
+  pageState.start_date = pageState.start_date !== undefined ? pageState.start_date : null;
+  pageState.end_date = pageState.end_date !== undefined ? pageState.end_date : null;
   return pageState;
 }
 

@@ -15,9 +15,10 @@ $(function() { Telemetry.init(function() {
   };
   gInitialPageState = loadStateFromUrlAndCookie();
   
-  // Set up build and measure selectors
+  // Set up settings selectors
   selectSetOptions($("#channel-version"), Telemetry.getVersions().map(function(version) { return [version, version.replace("/", " ")] }));
   if (gInitialPageState.max_channel_version) { $("#channel-version").select2("val", gInitialPageState.max_channel_version); }
+  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
   
   indicate("Updating filters...");
   updateOptions(function() {
@@ -128,8 +129,9 @@ function calculateHistogram(callback) {
       }
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         indicate();
+        
         updateDateRange(function(dates) {
-          if (fullEvolution === null) {
+          if (dates == null) {
             callback(null, null);
           } else {
             var filteredEvolution = fullEvolution.dateRange(dates[0], dates[dates.length - 1])
@@ -142,31 +144,34 @@ function calculateHistogram(callback) {
   });
   if (filterSets.length === 0) {
     indicate();
-    callback(null, null); // wip
+    updateDateRange(function(dates) {
+      callback(null, null);
+    }, null, false);
   }
 }
 
 var gLastTimeoutID = null;
+var gLoadedDateRangeFromState = false;
 var gCurrentDateRangeUpdateCallback = null;
+var gPreviousStartMoment = null, gPreviousEndMoment = null;
 function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangebar) {
   shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true : shouldUpdateRangebar;
 
   gCurrentDateRangeUpdateCallback = callback || function() {};
-
-  if (evolution === null) {
+  
+  var dates = [];
+  if (evolution !== null) {
+    var timeCutoff = moment().add(1, "years").toDate().getTime();
+    dates = evolution.dates().filter(function(date) { return date <= timeCutoff; }); // Cut off all dates past one year in the future
+  }
+  if (dates.length == 0) {
     $("#date-range").prop("disabled", true);
+    $("#range-bar").hide();
     callback(null);
     return;
   }
-  $("#date-range").prop("enabled", true);
-  
-  var dates = evolution.dates();
-  if (dates.length == 0) { $("#date-range").attr("disabled", ""); }
-  else { $("#date-range").removeAttr("disabled"); }
-  
-  // Cut off all dates past one year in the future
-  var timeCutoff = moment().add(1, "years").toDate().getTime();
-  dates = dates.filter(function(date) { return date <= timeCutoff; });
+  $("#date-range").prop("disabled", false);
+  $("#range-bar").show();
   
   var startMoment = moment(dates[0]), endMoment = moment(dates[dates.length - 1]);
 
@@ -187,11 +192,22 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true);
   });
   
-  // If the selected date range is now out of bounds, or the bounds were updated programmatically, select the entire range
-  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment) || !updatedByUser) {
+  // First load, update the date picker from the page state
+  if (!gLoadedDateRangeFromState && gInitialPageState.start_date !== null && gInitialPageState.end_date !== null) {
+    var picker = $("#date-range").data("daterangepicker");
+    var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
+    picker.setStartDate(start); picker.setEndDate(end);
+    gPreviousStartMoment = startMoment; gPreviousEndMoment = endMoment;
+    gLoadedDateRangeFromState = true;
+  }
+  
+  // If the selected date range is now out of bounds, or the bounds were updated programmatically and changed, select the entire range
+  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment) ||
+    (!updatedByUser && (!startMoment.isSame(gPreviousStartMoment) || !endMoment.isSame(gPreviousEndMoment)))) {
     picker.setStartDate(startMoment);
     picker.setEndDate(endMoment);
   }
+  gPreviousStartMoment = startMoment; gPreviousEndMoment = endMoment;
   
   // Rebuild rangebar if it was changed by something other than the user
   if (shouldUpdateRangebar) {
@@ -323,9 +339,17 @@ function saveStateToUrlAndCookie() {
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ? // Save the minimum channel version in case we switch to evolution dashboard later
-      gInitialPageState.min_channel_version : "nightly/38",
     product: $("#filter-product").val() || [],
+    start_date: $("#date-range").data("daterangepicker").startDate.format("YYYY-MM-DD"),
+    end_date: $("#date-range").data("daterangepicker").endDate.format("YYYY-MM-DD"),
+    
+    // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
+    min_channel_version: gInitialPageState.min_channel_version !== undefined ?
+      gInitialPageState.min_channel_version : "nightly/38",
+    use_submission_date: gInitialPageState.use_submission_date !== undefined ?
+      gInitialPageState.use_submission_date : 0,
+    sanitize: gInitialPageState.sanitize !== undefined ?
+      gInitialPageState.sanitize : 1,
   };
   
   // Only store these in the state if they are not all selected
@@ -340,7 +364,7 @@ function saveStateToUrlAndCookie() {
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {
-    if (v instanceof Array) {
+    if ($.isArray(v)) {
       v = v.join("!");
     }
     fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
