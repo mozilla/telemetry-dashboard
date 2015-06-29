@@ -2,6 +2,8 @@ var gInitialPageState = null;
 var gFilterChangeTimeout = null;
 var gFilters = null, gPreviousFilterAllSelected = {};
 
+indicate("Initializing Telemetry...");
+
 $(function() { Telemetry.init(function() {
   gFilters = {
     "application":  $("#filter-product"),
@@ -19,6 +21,7 @@ $(function() { Telemetry.init(function() {
   if (gInitialPageState.min_channel_version) { selectSetSelected($("#min-channel-version"), gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
 
+  indicate("Updating filters...");
   updateOptions(function(filterOptions) {
     $("#filter-product").multiselect("select", gInitialPageState.product);
     if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
@@ -43,9 +46,10 @@ $(function() { Telemetry.init(function() {
         if (e.target.id === "min-channel-version") { selectSetSelected($("#max-channel-version"), fromVersion); }
         else { selectSetSelected($("#min-channel-version"), toVersion); }
       }
+      indicate("Updating versions...");
       updateOptions(function() { $("#measure").trigger("change"); });
     });
-    $("#build-time-toggle, #sanitize-toggle, #aggregates, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+    $("#build-time-toggle, #sanitize-toggle, #aggregates, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function(e) {
       var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
@@ -60,7 +64,7 @@ $(function() { Telemetry.init(function() {
         
         calculateEvolutions(function(lines, submissionLines, evolutionDescription) {
           $("#submissions-title").text($("#measure").val() + " submissions");
-          $("#measure-description").text(evolutionDescription);
+          $("#measure-description").text(evolutionDescription === null ? $("#measure").val() : evolutionDescription);
           displayEvolutions(lines, submissionLines);
           saveStateToUrlAndCookie();
         });
@@ -125,11 +129,13 @@ function calculateEvolutions(callback) {
 
   var lines = [], submissionLines = [];
   var versionCount = 0;
+  var evolutionDescription = null;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("#sanitize-toggle").prop("checked"), $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLines, evolutionDescription) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("#sanitize-toggle").prop("checked"), $("#build-time-toggle").prop("checked"), function(newLines, newSubmissionLines, newDescription) {
       lines = lines.concat(newLines);
       submissionLines = submissionLines.concat(newSubmissionLines);
+      evolutionDescription = evolutionDescription || newDescription
       versionCount ++;
       if (versionCount === channelVersions.length) { // Check if lines were loaded for all the versions
         callback(lines, submissionLines, evolutionDescription);
@@ -152,11 +158,18 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
   var filtersCount = 0;
   var lines = [];
   var finalEvolution = null;
+  indicate("Updating evolution for " + channel + " " + version + "... 0%");
   filterSets.forEach(function(filterSet) {
     Telemetry.getEvolution(channel, version, measure, filterSet, useSubmissionDate, function(evolution) {
       filtersCount ++;
-      finalEvolution = finalEvolution === null ? evolution : finalEvolution.combine(evolution);
+      indicate("Updating evolution for " + channel + " " + version + "... " + Math.round(100 * filtersCount / filterSets.length) + "%");
+      if (finalEvolution === null) {
+        finalEvolution = evolution;
+      } else if (evolution !== null) {
+        finalEvolution = finalEvolution.combine(evolution);
+      }
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
+        indicate();
         if (finalEvolution === null) { // No evolutions available
           callback([], [], measure);
           return;
@@ -186,11 +199,14 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         });
         var submissionLines = [new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues)];
         
-        callback(aggregateLines, submissionLines, evolution.description);
+        callback(aggregateLines, submissionLines, finalEvolution !== null ? finalEvolution.description : null);
       }
     });
   });
-  if (filterSets.length === 0) { callback([], [], measure); }
+  if (filterSets.length === 0) {
+    indicate();
+    callback([], [], measure);
+  }
 }
 
 function displayEvolutions(lines, submissionLines, minDate, maxDate) {

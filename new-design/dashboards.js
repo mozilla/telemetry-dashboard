@@ -398,3 +398,19 @@ function multiselectSetOptions(element, options, defaultSelected) {
     element.multiselect("select", selected); // Select the original options where applicable
   }
 }
+
+var indicate = (function() {
+  var indicatorTimeout = null;
+  return function indicate(message) {
+    message = message || null;
+    
+    if (indicatorTimeout !== null) { clearTimeout(indicatorTimeout); }
+    if (message !== null) {
+      indicatorTimeout = setTimeout(function() {
+        $(".busy-indicator").show().find(".busy-indicator-message").text(message);
+      }, 200);
+    } else {
+      $(".busy-indicator").hide();
+    }
+  }
+})();

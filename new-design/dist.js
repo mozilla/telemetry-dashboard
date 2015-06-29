@@ -3,6 +3,8 @@ var gFilterChangeTimeout = null;
 var gCurrentHistogram = null; gCurrentEvolution = null;
 var gFilters = null, gPreviousFilterAllSelected = {};
 
+indicate("Initializing Telemetry...");
+
 $(function() { Telemetry.init(function() {
   gFilters = {
     "application":  $("#filter-product"),
@@ -17,7 +19,8 @@ $(function() { Telemetry.init(function() {
   selectSetOptions($("#channel-version"), Telemetry.getVersions().map(function(version) { return [version, version.replace("/", " ")] }));
   if (gInitialPageState.max_channel_version) { $("#channel-version").select2("val", gInitialPageState.max_channel_version); }
   
-  updateOptions(function() {      
+  indicate("Updating filters...");
+  updateOptions(function() {
     $("#filter-product").multiselect("select", gInitialPageState.product);
     if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
     else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
@@ -35,6 +38,7 @@ $(function() { Telemetry.init(function() {
     }
     
     $("#channel-version").change(function() {
+      indicate("Updating version...");
       updateOptions(function() { $("#measure").trigger("change"); });
     });
     $("#build-time-toggle, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function() {
@@ -111,16 +115,19 @@ function calculateHistogram(callback) {
   var filtersCount = 0;
   var fullEvolution = null;
   var useSubmissionDate = $("#build-time-toggle").prop("checked");
+  indicate("Updating histogram... 0%");
   filterSets.forEach(function(filterSet) {
     var parts = channelVersion.split("/");
     Telemetry.getEvolution(parts[0], parts[1], measure, filterSet, useSubmissionDate, function(evolution) {
+      filtersCount ++;
+      indicate("Updating histogram... " + Math.round(100 * filtersCount / filterSets.length) + "%");
       if (fullEvolution === null) {
         fullEvolution = evolution;
-      } else {
+      } else if (evolution !== null) {
         fullEvolution = fullEvolution.combine(evolution);
       }
-      filtersCount ++;
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
+        indicate();
         updateDateRange(function(dates) {
           if (fullEvolution === null) {
             callback(null, null);
@@ -134,6 +141,7 @@ function calculateHistogram(callback) {
     });
   });
   if (filterSets.length === 0) {
+    indicate();
     callback(null, null); // wip
   }
 }
