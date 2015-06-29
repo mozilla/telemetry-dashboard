@@ -78,11 +78,8 @@ $(function() { Telemetry.init(function() {
   });
   
   // Switch to the evolution dashboard with the same settings
-  $("#switch-views").click(function() {
-    var evolutionURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
-    window.location.href = evolutionURL;
-    return false;
-  });
+  var dashboardURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
+  $("#switch-views").attr("href", dashboardURL);
 }); });
 
 function updateOptions(callback) {
