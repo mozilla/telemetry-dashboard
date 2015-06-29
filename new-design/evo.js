@@ -272,7 +272,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
         values = entries.map(function(entry) { return entry.value; });
       } else {
         date = d.date;
-        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.line_id + "-color").get(0);
+        rolloverCircle = $("#evolutions .mg-line-rollover-circle").get(0);
         lineList = [lines[d.line_id - 1]];
         values = [d.value];
       }
@@ -332,7 +332,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
         values = entries.map(function(entry) { return entry.value; });
       } else {
         date = d.date;
-        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" + d.line_id + "-color").get(0);
+        rolloverCircle = $("#evolutions .mg-line-rollover-circle").get(0);
         lineList = [submissionLines[d.line_id - 1]];
         values = [d.value];
       }
