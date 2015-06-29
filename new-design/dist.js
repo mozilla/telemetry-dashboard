@@ -289,7 +289,6 @@ function displayHistogram(histogram, evolution, cumulative) {
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / histogram.count) * 100}; });
   
   // Plot the data using MetricsGraphics
-  $("#distribution").css("margin", "0 -50px 0 -50px");
   MG.data_graphic({
     data: distributionSamples,
     binned: true,

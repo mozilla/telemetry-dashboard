@@ -66,24 +66,26 @@
             </div>
         </div>
         <div class="row">
-            <div class="panel panel-default" style="margin: 10px 50px">
-                <div class="panel-heading" role="tab" id="headingOne">
-                    <h4 class="panel-title">
-                        <a role="button" id="advanced-settings-toggle" data-toggle="collapse" href="#advanced-settings">Advanced Settings</a>
-                    </h4>
-                </div>
-                <div id="advanced-settings" class="panel-collapse collapse">
-                    <div class="panel-body">
-                        <form class="form-horizontal">
-                            <label style="font-size: 1.5em; font-weight: normal; display: block; margin-top: 20px">
-                                Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
-                                <input id="build-time-toggle" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
-                            </label>
-                            <label style="font-size: 1.5em; font-weight: normal; display: block; margin-top: 20px">
-                                Sanitize data: hide data points that don't have enough submissions:&nbsp;&nbsp;
-                                <input id="sanitize-toggle" name="sanitize-toggle" data-width="150" data-toggle="toggle" data-on="Sanitize" data-off="Don't sanitize" type="checkbox">
-                            </label>
-                        </form>
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a role="button" id="advanced-settings-toggle" data-toggle="collapse" href="#advanced-settings">Advanced Settings</a>
+                        </h4>
+                    </div>
+                    <div id="advanced-settings" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
+                                    Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
+                                    <input id="build-time-toggle" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
+                                </label>
+                                <label style="font-size: 1.5em; font-weight: normal; display: block">
+                                    Sanitize data: hide data points that don't have enough submissions:&nbsp;&nbsp;
+                                    <input id="sanitize-toggle" name="sanitize-toggle" data-width="150" data-toggle="toggle" data-on="Sanitize" data-off="Don't sanitize" type="checkbox">
+                                </label>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
