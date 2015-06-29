@@ -434,7 +434,8 @@ var Line = (function(){
 
 // Save the current state to the URL and the page cookie
 function saveStateToUrlAndCookie() {
-  var gInitialPageState = {
+  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date;
+  gInitialPageState = {
     aggregates: $("#aggregates").val() || [],
     measure: $("#measure").val(),
     min_channel_version: $("#min-channel-version").val(),
@@ -442,11 +443,11 @@ function saveStateToUrlAndCookie() {
     product: $("#filter-product").val() || [],
     use_submission_date: $("#build-time-toggle").prop("checked") ? 1 : 0,
     sanitize: $("#sanitize-toggle").prop("checked") ? 1 : 0,
-    
-    // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
-    start_date: $("#date-range").data("daterangepicker").startDate.format("YYYY-MM-DD"),
-    end_date: $("#date-range").data("daterangepicker").endDate.format("YYYY-MM-DD"),
   };
+  
+  // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
+  if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
+  if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
   
   // Only store these in the state if they are not all selected
   var selected = $("#filter-arch").val() || [];

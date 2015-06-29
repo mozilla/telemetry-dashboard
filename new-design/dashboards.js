@@ -14,23 +14,8 @@ $(document).ready(function() {
       allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
       enableClickableOptGroups: true,
       maxHeight: 500,
-      /*buttonText: function(options, select) {
-        if (options.length === 0) { return select.; }
-        else if (options.length > 3) {
-            return 'More than 3 options selected!';
-        }
-        else {
-          var labels = [];
-          options.each(function() {
-            if ($(this).attr('label') !== undefined) {
-              labels.push($(this).attr('label'));
-            } else {
-              labels.push($(this).html());
-            }
-          });
-          return labels.join(', ') + '';
-        }
-      },*/
+      disableIfEmpty: true,
+      nSelectedText: $this.data("n-selected") !== undefined ? $this.data("n-selected") : "selected",
     };
     if ($this.attr("title") !== undefined) {
       options.nonSelectedText = $this.attr("title");
