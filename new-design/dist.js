@@ -72,10 +72,6 @@ $(function() { Telemetry.init(function() {
     displayHistogram(gCurrentHistogram, gCurrentEvolution, $("#cumulative-toggle").prop("checked"));
   });
   
-  // Switch to the evolution dashboard with the same settings
-  var dashboardURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
-  $("#switch-views").attr("href", dashboardURL);
-  
   // Automatically resize range bar
   $(window).resize(function() {
     var dateControls = $("#date-range-controls");
@@ -376,4 +372,8 @@ function saveStateToUrlAndCookie() {
   var expiry = new Date();
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
+  
+  // Add link to switch to the evolution dashboard with the same settings
+  var dashboardURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
+  $("#switch-views").attr("href", dashboardURL);
 }

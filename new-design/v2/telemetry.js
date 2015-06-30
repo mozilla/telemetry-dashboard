@@ -109,7 +109,7 @@ Telemetry.Evolution = (function() {
     assert(otherEvolution.buckets.length > 0, "`otherEvolution` must be a histograms collection");
     assert(this.kind === otherEvolution.kind, "`this` and `otherEvolution` must be of the same kind");
     assert(this.buckets.length === otherEvolution.buckets.length, "`this` and `otherEvolution` must have the same buckets");
-    var dateMap = {};
+    var dateMap = {}; // Collate the histogram entries by date
     this.data.forEach(function(histogramEntry) {
       if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
       dateMap[histogramEntry.date].push(histogramEntry);
@@ -118,19 +118,18 @@ Telemetry.Evolution = (function() {
       if (!dateMap.hasOwnProperty(histogramEntry.date)) { dateMap[histogramEntry.date] = []; }
       dateMap[histogramEntry.date].push(histogramEntry);
     });
-    var dataset = [];
-    Object.keys(dateMap).sort().forEach(function(date) {
+    var dataset = Object.keys(dateMap).sort().map(function(date) {
       var entries = dateMap[date];
       var histogram = entries[0].histogram.map(function(count) { return 0; });
       entries.forEach(function(entry) { // go through each histogram entry and combine histograms
         entry.histogram.forEach(function(count, i) { histogram[i] += count; });
       });
-      dataset.push({
+      return {
         date: date,
         count: entries.reduce(function(previous, entry) { return previous + entry.count }, 0),
         label: entries[0].label,
         histogram: histogram,
-      });
+      };
     });
     return new Telemetry.Evolution(this.buckets, dataset, this.kind, this.description);
   };

@@ -21,7 +21,6 @@ $(function() { Telemetry.init(function() {
   if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
   $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
   $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
-  $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
 
   indicate("Updating filters...");
   updateOptions(function(filterOptions) {
@@ -76,10 +75,6 @@ $(function() { Telemetry.init(function() {
     // Perform a full display refresh
     $("#measure").trigger("change");
   });
-  
-  // Switch to the evolution dashboard with the same settings
-  var dashboardURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
-  $("#switch-views").attr("href", dashboardURL);
 }); });
 
 function updateOptions(callback) {
@@ -470,4 +465,8 @@ function saveStateToUrlAndCookie() {
   var expiry = new Date();
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
+  
+  // Add link to switch to the evolution dashboard with the same settings
+  var dashboardURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
+  $("#switch-views").attr("href", dashboardURL);
 }
