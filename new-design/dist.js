@@ -123,7 +123,6 @@ function calculateHistogram(callback) {
       }
       if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters
         indicate();
-        
         updateDateRange(function(dates) {
           if (dates == null) {
             callback(null, null);
@@ -186,11 +185,13 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   
   // First load, update the date picker from the page state
   if (!gLoadedDateRangeFromState && gInitialPageState.start_date !== null && gInitialPageState.end_date !== null) {
+    gLoadedDateRangeFromState = true;
     var picker = $("#date-range").data("daterangepicker");
     var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
-    picker.setStartDate(start); picker.setEndDate(end);
-    gPreviousStartMoment = startMoment; gPreviousEndMoment = endMoment;
-    gLoadedDateRangeFromState = true;
+    if (start.isValid() && end.isValid()) {
+      picker.setStartDate(start); picker.setEndDate(end);
+      gPreviousStartMoment = startMoment; gPreviousEndMoment = endMoment;
+    }
   }
   
   // If the selected date range is now out of bounds, or the bounds were updated programmatically and changed, select the entire range
