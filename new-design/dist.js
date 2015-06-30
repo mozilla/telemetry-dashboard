@@ -278,14 +278,11 @@ function displayHistogram(histogram, evolution, cumulative) {
     $(".scalar-only").hide();
   }
   
-  var counts, starts;
+  var starts = histogram.map(function(count, start, end, i) { return start; });
+  var counts = histogram.map(function(count, start, end, i) { return count; });
   if (cumulative) {
-    starts = histogram.map(function(count, start, end, i) { return 0; });
     var total = 0;
-    counts = histogram.map(function(count, start, end, i) { return total += count; });
-  } else {
-    starts = histogram.map(function(count, start, end, i) { return start; });
-    counts = histogram.map(function(count, start, end, i) { return count; });
+    counts = counts.map(function(count) { return total += count; });
   }
   var ends = histogram.map(function(count, start, end, i) { return end; });
 
@@ -308,7 +305,8 @@ function displayHistogram(histogram, evolution, cumulative) {
     yax_format: function(value) { return value + "%"; },
     mouseover: function(d, i) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
-      var label = count + " samples (" + percentage + ") between " + formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      var label = count + " samples (" + percentage + ") between " +
+        formatNumber(cumulative ? 0 : starts[d.x]) + " and " + formatNumber(ends[d.x]);
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
       
