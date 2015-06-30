@@ -15,6 +15,8 @@
     <div class="container">
         <header>
             <form id="histogram-filters" class="navbar-form inline" style="float: right; margin: 0">
+                <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
+                <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
                 <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
             </form>
             <h1>Telemetry Dashboard Documentation</h1>
@@ -154,5 +156,11 @@
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script>
+    $(function() {
+        $("#switch-views-histogram").attr("href", "./dist.html" + window.location.hash);
+        $("#switch-views-evolution").attr("href", "./evo.html" + window.location.hash);
+    });
+    </script>
 </body>
 </html>

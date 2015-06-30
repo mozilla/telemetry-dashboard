@@ -23,9 +23,9 @@
     <div class="container-fluid">
         <header>
             <form id="histogram-filters" class="navbar-form inline" style="float: right; margin: 0">
-                <a href="#" class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</a>
+                <a href="./evo.html" class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</a>
                 <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
-                <a href="./tutorial.html" class="btn btn-default" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
+                <a href="./tutorial.html" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
                 <span class="permalink-control"></span>
             </form>
             <h1>Histogram Dashboard</h1>
@@ -91,12 +91,12 @@
                         <div class="panel-body">
                             <form class="form-horizontal">
                                 <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
-                                    Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
-                                    <input id="build-time-toggle" style="float: right" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
-                                </label>
-                                <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
                                     Cumulative mode: show each bucket as the sum of itself and all buckets on its left:&nbsp;&nbsp;
                                     <input id="cumulative-toggle" name="cumulative-toggle" data-width="150" data-toggle="toggle" data-on="Cumulative" data-off="Individual" type="checkbox">
+                                </label>
+                                <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
+                                    Date range variable: filter submissions by build ID range or submission date range:&nbsp;&nbsp;
+                                    <input id="build-time-toggle" style="float: right" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
                                 </label>
                                 <span id="date-range-controls" class="form-group" style="width: 230px; display: inline-block; margin: 0">
                                     <span class="input-prepend input-group">

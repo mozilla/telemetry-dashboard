@@ -10,7 +10,7 @@ $(function() { Telemetry.init(function() {
     "os":           $("#filter-os"),
     "architecture": $("#filter-arch"),
     "e10sEnabled":  $("#filter-e10s"),
-    "processType":  $("#filter-process-type"),
+    "child":        $("#filter-process-type"),
   };
   gInitialPageState = loadStateFromUrlAndCookie();
 
@@ -67,6 +67,7 @@ $(function() { Telemetry.init(function() {
           $("#submissions-title").text($("#measure").val() + " submissions");
           $("#measure-description").text(evolutionDescription === null ? $("#measure").val() : evolutionDescription);
           displayEvolutions(lines, submissionLines);
+          console.log("aaaa")
           saveStateToUrlAndCookie();
         });
       });
@@ -440,14 +441,16 @@ function saveStateToUrlAndCookie() {
   // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
   if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
-  
+
   // Only store these in the state if they are not all selected
   var selected = $("#filter-arch").val() || [];
   if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = selected; }
-  var selected = $("#filter-os-version").val() || [];
-  if (selected.length !== $("#filter-os-version option").size()) { gInitialPageState.os_version = selected; }
+  var selected = $("#filter-e10s").val() || [];
+  if (selected.length !== $("#filter-e10s option").size()) { gInitialPageState.e10s = selected; }
+  var selected = $("#filter-process-type").val() || [];
+  if (selected.length !== $("#filter-process-type option").size()) { gInitialPageState.processType = selected; }
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {
@@ -469,4 +472,5 @@ function saveStateToUrlAndCookie() {
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
+  $("#tutorial").attr("href", "./tutorial.html" + window.location.hash);
 }
