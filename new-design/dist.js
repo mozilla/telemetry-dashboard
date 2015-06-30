@@ -11,7 +11,7 @@ $(function() { Telemetry.init(function() {
     "os":           $("#filter-os"),
     "architecture": $("#filter-arch"),
     "e10sEnabled":  $("#filter-e10s"),
-    "processType":  $("#filter-process-type"),
+    "child"      :  $("#filter-process-type"),
   };
   gInitialPageState = loadStateFromUrlAndCookie();
   
@@ -160,11 +160,9 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   if (dates.length == 0) {
     $("#date-range").prop("disabled", true);
     $("#range-bar").hide();
-    callback(null);
+    gCurrentDateRangeUpdateCallback(null);
     return;
   }
-  $("#date-range").prop("disabled", false);
-  $("#range-bar").show();
   
   var startMoment = moment(dates[0]), endMoment = moment(dates[dates.length - 1]);
 
@@ -232,7 +230,18 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   var min = picker.startDate.toDate(), max = picker.endDate.toDate();
   dates = dates.filter(function(date) { return min <= date && date <= max; });
   
-  return gCurrentDateRangeUpdateCallback(dates);
+  if (dates.length == 0) {
+    $("#date-range").prop("disabled", true);
+    $("#range-bar").hide();
+    gCurrentDateRangeUpdateCallback(null);
+    return;
+  }
+  
+  // Enable date range controls
+  $("#date-range").prop("disabled", false);
+  $("#range-bar").show();
+  
+  gCurrentDateRangeUpdateCallback(dates);
 }
 
 function displayHistogram(histogram, evolution, cumulative) {
