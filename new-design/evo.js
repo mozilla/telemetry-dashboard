@@ -67,7 +67,6 @@ $(function() { Telemetry.init(function() {
           $("#submissions-title").text($("#measure").val() + " submissions");
           $("#measure-description").text(evolutionDescription === null ? $("#measure").val() : evolutionDescription);
           displayEvolutions(lines, submissionLines);
-          console.log("aaaa")
           saveStateToUrlAndCookie();
         });
       });
@@ -75,6 +74,10 @@ $(function() { Telemetry.init(function() {
     
     // Perform a full display refresh
     $("#measure").trigger("change");
+  });
+  
+  $("#advanced-settings").on("shown.bs.collapse", function () {
+    $(this).get(0).scrollIntoView({behavior: "smooth"}); // Scroll the advanced settings into view when opened
   });
 }); });
 

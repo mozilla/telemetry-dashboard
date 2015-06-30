@@ -75,11 +75,12 @@ $(function() { Telemetry.init(function() {
   // Automatically resize range bar
   $(window).resize(function() {
     var dateControls = $("#date-range-controls");
-    $("#range-bar").outerWidth(dateControls.parent().outerWidth() - dateControls.outerWidth() - 10);
+    $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
   });
   $("#advanced-settings").on("shown.bs.collapse", function () {
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
+    $(this).get(0).scrollIntoView({behavior: "smooth"}); // Scroll the advanced settings into view when opened
   });
 }); });
 
