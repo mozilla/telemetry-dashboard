@@ -9,10 +9,8 @@
 .multiselect-selected-text { text-decoration: underline; }
 .multiselect-container .filter .input-group-addon { display: none; }
 .multiselect-group-clickable label { text-decoration: underline; }
-.select2-container { width: auto !important; }
-.select2-selection { border: transparent !important; }
-.select2-selection__rendered { padding: 0 !important; text-decoration: underline; }
-.select2-selection__arrow { display: none; }
+.multiselect-container input[type="radio"] { display: none; }
+.multiselect-container label.radio { padding-left: 10px; }
 
 /* Rangebar style overrides */
 .elessar-rangebar {

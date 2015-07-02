@@ -8,14 +8,14 @@ Telemetry.init(function() {
   gFilters = {
     "product":    $("#filter-product"),
     "os":         $("#filter-os"),
-    "osVersionn": $("#filter-os"),
+    "os_version": $("#filter-os-version"),
     "arch":       $("#filter-arch"),
   };
   gInitialPageState = loadStateFromUrlAndCookie();
   
   // Set up settings selectors
-  selectSetOptions($("#channel-version"), Telemetry.versions().map(function(version) { return [version, version.replace("/", " ")] }));
-  if (gInitialPageState.max_channel_version) { selectSetSelected($("#channel-version"), gInitialPageState.max_channel_version); }
+  multiselectSetOptions($("#channel-version"), Telemetry.versions().map(function(version) { return [version, version.replace("/", " ")] }));
+  if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
   $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
   
   updateMeasuresList(function() {
@@ -111,8 +111,8 @@ function updateMeasuresList(callback) {
       gMeasureMap[measure] = measures[measure];
       return [measure, measure];
     });
-    selectSetOptions($("#measure"), measuresList);
-    selectSetSelected($("#measure"), gInitialPageState.measure);
+    multiselectSetOptions($("#measure"), measuresList);
+    $("#measure").multiselect("select", gInitialPageState.measure);
     if (callback !== undefined) { callback(); }
   });
 }
@@ -384,6 +384,7 @@ function displayHistogram(histogram, dates, cumulative) {
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); }
   });
   $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
+  $(".mg-missing-pane").remove();
 }
 
 // Save the current state to the URL and the page cookie

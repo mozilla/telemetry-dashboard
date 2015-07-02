@@ -16,7 +16,7 @@ Telemetry.init(function() {
   
   // Set up settings selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
-  selectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.versions().map(function(version) { return [version, version] }));
+  multiselectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.versions().map(function(version) { return [version, version] }));
   
   if (gInitialPageState.min_channel_version) { selectSetSelected($("#min-channel-version"), gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
@@ -114,7 +114,7 @@ function updateMeasuresList(callback) {
   var versionCount = 0;
   gMeasureMap = {};
   if (versions.length == 0) { // All versions are loaded
-    selectSetOptions($("#measure"), []);
+    multiselectSetOptions($("#measure"), []);
     if (callback !== undefined) { callback(); }
     return
   }
@@ -130,7 +130,7 @@ function updateMeasuresList(callback) {
       if (versionCount === versions.length) { // All versions are loaded
         indicate();
         var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
-        selectSetOptions($("#measure"), measureList);
+        multiselectSetOptions($("#measure"), measureList);
         selectSetSelected($("#measure"), gInitialPageState.measure);
         if (callback !== undefined) { callback(); }
       }
