@@ -22,13 +22,10 @@
     <div class="container-fluid">
         <header>
             <form id="histogram-filters" class="navbar-form" style="float: right; margin: 0">
-                <button class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</button>
-                <div class="input-group">
-                    <span class="input-group-btn">
-                        <button type="button" id="get-permalink" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button>
-                    </span>
-                    <input type="text" id="permalink-value" class="form-control">
-                </div>
+                <a href="./dist.html" class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</a>
+                <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+                <a href="./tutorial.html" id="tutorial" class="btn btn-default" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
+                <span class="permalink-control"></span>
             </form>
             <h1>Evolution Dashboard</h1>
         </header>
@@ -51,10 +48,10 @@
                         <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
                     </span>
                     for
-                    <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" multiple></select>
-                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="on any architecture" multiple></select>
+                    <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" data-n-selected="products" multiple></select>
+                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" data-n-selected="architectures" multiple></select>
                     on
-                    <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" multiple></select>
+                    <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" data-n-selected="OSs" multiple></select>
                     <select id="filter-os-version" class="multiselect" title="Target OS version" data-all-selected="for any OS version" multiple></select>
                 </h2>
                 <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
@@ -68,25 +65,38 @@
             </div>
         </div>
         <div class="row">
-            <div class="panel panel-default" style="margin: 10px 50px">
-                <div class="panel-heading" role="tab" id="headingOne">
-                    <h4 class="panel-title">
-                        <a role="button" id="advanced-settings-toggle" data-toggle="collapse" href="#advanced-settings">Advanced Settings</a>
-                    </h4>
-                </div>
-                <div id="advanced-settings" class="panel-collapse collapse">
-                    <div class="panel-body">
-                        <form class="form-horizontal">
-                            <label style="font-size: 1.5em; font-weight: normal; margin-top: 20px">
-                                Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
-                                <input id="build-time-toggle" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
-                            </label>
-                        </form>
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab">
+                        <h4 class="panel-title">
+                            <a role="button" id="advanced-settings-toggle" data-toggle="collapse" href="#advanced-settings">Advanced Settings</a>
+                        </h4>
+                    </div>
+                    <div id="advanced-settings" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
+                                    Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
+                                    <input id="build-time-toggle" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
+                                </label>
+                                <label style="font-size: 1.5em; font-weight: normal; display: block">
+                                    Sanitize data: hide data points that don't have enough submissions:&nbsp;&nbsp;
+                                    <input id="sanitize-toggle" name="sanitize-toggle" data-width="150" data-toggle="toggle" data-on="Sanitize" data-off="Don't sanitize" type="checkbox">
+                                </label>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="busy-indicator">
+        <div>
+            <i style="font-size: 15em" class="fa fa-cog fa-spin"></i>
+            <div class="busy-indicator-message">Loading page...</div>
+        </div>
+    </div>
+
     
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
@@ -101,18 +111,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="lib/metricsgraphics.js"></script>
     
-    <!--
-        big.js and telemetry.js from telemetry.mozilla.org
-        if you're not deploying to telemetry.mozilla.org you must include these
-        from:
-            - telemetry.mozilla.org/v1/big.js
-            - telemetry.mozilla.org/v1/telemetry.js
-        (we'll try to keep it backwards compatible)
-    -->
-    <script src="v1/big.js"></script>
     <script src="v1/telemetry.js"></script>
-    
-    <!-- Initialize controls -->
     <script src="dashboards.js"></script>
     <script src="evo.js"></script>
 </body>

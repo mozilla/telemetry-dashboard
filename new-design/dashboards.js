@@ -1,28 +1,56 @@
 $(document).ready(function() {
-    // Select boxes
-    $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
-        $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
+  // Select boxes
+  $(".select2").select2({dropdownAutoWidth: true}).each(function(i, select) {
+    $(this).next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
+  });
+  
+  // Multiselect boxes
+  $('.multiselect').each(function(i, select) {
+    var $this = $(this);
+    var options = {
+      enableFiltering: true,
+      enableCaseInsensitiveFiltering: true,
+      includeSelectAllOption: true,
+      allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
+      enableClickableOptGroups: true,
+      maxHeight: 500,
+      disableIfEmpty: true,
+      nSelectedText: $this.data("n-selected") !== undefined ? $this.data("n-selected") : "selected",
+    };
+    if ($this.attr("title") !== undefined) {
+      options.nonSelectedText = $this.attr("title");
+    }
+    $this.multiselect(options);
+    $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
+  });
+  
+  // Date range pickers
+  $(".date-range").daterangepicker();
+  
+  // Permalink control
+  $(".permalink-control").append(
+    '<div class="input-group">' +
+    '    <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Permalink"><span class="glyphicon glyphicon-link"></span></button></span>' +
+    '    <input type="text" class="form-control">' +
+    '</div>'
+  );
+  $(".permalink-control input").hide().focus(function() {
+    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+    var $this = $(this);
+    $this.select().mouseup(function() { $this.unbind("mouseup"); return false; });
+  });
+  $(".permalink-control button").click(function() {
+    var $this = $(this);
+    $.ajax({
+      url: "https://api-ssl.bitly.com/shorten", dataType: "jsonp",
+      data: {longUrl: window.location.href, access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584", format: "json"},
+      success: function(response) {
+        var longUrl = Object.keys(response.results)[0];
+        var shortUrl = response.results[longUrl].shortUrl;
+        $this.parent(".permalink-control").find("input").show().val(shortUrl).focus();
+      }
     });
-    
-    // Multiselect boxes
-    $('.multiselect').each(function(i, select) {
-        var $this = $(this);
-        var options = {
-            enableFiltering: true,
-            enableCaseInsensitiveFiltering: true,
-            includeSelectAllOption: true,
-            allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
-            maxHeight: 500,
-        };
-        if ($this.attr("title") !== undefined) {
-            options.nonSelectedText = $this.attr("title");
-        }
-        $this.multiselect(options);
-        $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
-    });
-    
-    // Date range pickers
-    $(".date-range").daterangepicker();
+  });
 });
 
 // Load the current state from the URL, or the cookie if the URL is not specified
@@ -55,17 +83,28 @@ function loadStateFromUrlAndCookie() {
   pageState.measure = pageState.measure !== undefined ?
     pageState.measure : "GC_MS";
   pageState.min_channel_version = pageState.min_channel_version !== undefined ?
-    pageState.min_channel_version : "nightly/38";
+    pageState.min_channel_version : "nightly/39";
   pageState.max_channel_version = pageState.max_channel_version !== undefined ?
     pageState.max_channel_version : "nightly/41";
   pageState.product = pageState.product !== undefined ?
     pageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
-  pageState.arch = pageState.arch !== undefined ?
-    pageState.arch.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.os = pageState.os !== undefined ?
     pageState.os.split("!").filter(function(v) { return v !== ""; }) : null;
+  pageState.arch = pageState.arch !== undefined ?
+    pageState.arch.split("!").filter(function(v) { return v !== ""; }) : null;
+  pageState.e10s = pageState.e10s !== undefined ?
+    pageState.e10s.split("!").filter(function(v) { return v !== ""; }) : null;
+  pageState.processType = pageState.processType !== undefined ?
+    pageState.processType.split("!").filter(function(v) { return v !== ""; }) : null;
   pageState.os_version = pageState.os_version !== undefined ?
     pageState.os_version.split("!").filter(function(v) { return v !== ""; }) : null;
+  
+  pageState.use_submission_date = pageState.use_submission_date !== undefined ?
+    parseInt(pageState.use_submission_date) : 0;
+  pageState.sanitize = pageState.sanitize !== undefined ?
+    parseInt(pageState.sanitize) : 1;
+  pageState.start_date = pageState.start_date !== undefined ? pageState.start_date : null;
+  pageState.end_date = pageState.end_date !== undefined ? pageState.end_date : null;
   return pageState;
 }
 
@@ -192,6 +231,15 @@ function formatNumber(number) {
   return Math.round(number * 100) / 100;
 }
 
+function deduplicate(values) {
+  var seen = {};
+  return values.filter(function(option) {
+    if (seen.hasOwnProperty(option)) { return false; }
+    seen[option] = true;
+    return true;
+  });
+}
+
 function selectSetOptions(element, options, defaultSelected) {
   if (defaultSelected !== undefined && typeof defaultSelected !== "string") {
     throw "Bad defaultSelected value: must be a string.";
@@ -205,29 +253,64 @@ function selectSetOptions(element, options, defaultSelected) {
   element.empty().append(options.map(function(option) {
     return '<option value="' + option[0] + '">' + option[1] + '</option>';
   }).join());
-  if (typeof selected === "string") { element.select2("val", selected); }
+  if (typeof selected === "string") { element.each(function() { $(this).select2("val", selected); }); }
+  else { element.each(function() { $(this).select2("val", options[0][0]); }); }
+}
+
+function selectSetSelected(element, option) {
+  var options = element.find("option").map(function() { return $(this).val(); }).toArray();
+  if (options.indexOf(option) >= 0) {
+    element.select2("val", option);
+  } else {
+    console.log("BAD OPTION: " + option)
+  }
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
 function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
-
+  
+  if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
+  var selected = element.val() || defaultSelected;
+  
   // Check inputs
   if (defaultSelected !== null) {
     defaultSelected.forEach(function(option) {
       if (typeof option !== "string") { throw "Bad defaultSelected value: must be array of strings."; }
     });
   }
-  options.forEach(function(option) {
-    if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
-      throw "Bad options value: must be array of arrays, each with two strings.";
-    }
-  });
   
-  var selected = element.val() || defaultSelected;
-  element.empty().append(options.map(function(option) {
-    return '<option value="' + option[0] + '">' + option[1] + '</option>';
-  }).join()).multiselect("rebuild");
+  var useGroups = options[0].length === 3;
+  if (useGroups) {
+    options.forEach(function(option) {
+      if (!$.isArray(option) || option.length !== 3 || typeof option[0] !== "string" || typeof option[1] !== "string" || typeof option[2] !== "string") {
+        throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
+      }
+    });
+
+    var groups = deduplicate(options.map(function(triple) { return triple[2]; }));
+    var groupOptions = {}; options.forEach(function(triple) {
+      if (!groupOptions.hasOwnProperty(triple[2])) { groupOptions[triple[2]] = []; }
+      groupOptions[triple[2]].push(triple);
+    });
+    element.empty().append(groups.map(function(group) {
+      var optionsString = groupOptions[group].map(function(triple) {
+        return '<option value="' + triple[0] + '">' + triple[1] + '</option>';
+      }).join();
+      return '<optgroup label="' + group + '">' + optionsString + '</optgroup>'
+    }).join()).multiselect("rebuild");
+  } else {
+    options.forEach(function(option) {
+      if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
+        throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
+      }
+    });
+    
+    element.empty().append(options.map(function(option) {
+      return '<option value="' + option[0] + '">' + option[1] + '</option>';
+    }).join()).multiselect("rebuild");
+  }
+  
   if (selected !== null) {
     // Filter out the options that were selected but no longer exist
     var availableOptionMap = {};
@@ -238,3 +321,19 @@ function multiselectSetOptions(element, options, defaultSelected) {
     element.multiselect("select", selected); // Select the original options where applicable
   }
 }
+
+var indicate = (function() {
+  var indicatorTimeout = null;
+  return function indicate(message) {
+    message = message || null;
+    
+    if (indicatorTimeout !== null) { clearTimeout(indicatorTimeout); }
+    if (message !== null) {
+      indicatorTimeout = setTimeout(function() {
+        $(".busy-indicator").show().find(".busy-indicator-message").text(message);
+      }, 200);
+    } else {
+      $(".busy-indicator").hide();
+    }
+  }
+})();

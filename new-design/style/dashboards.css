@@ -8,6 +8,7 @@
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
 .multiselect-container .filter .input-group-addon { display: none; }
+.multiselect-group-clickable label { text-decoration: underline; }
 .select2-container { width: auto !important; }
 .select2-selection { border: transparent !important; }
 .select2-selection__rendered { padding: 0 !important; text-decoration: underline; }
@@ -16,14 +17,30 @@
 /* Rangebar style overrides */
 .elessar-rangebar {
     border-radius: 4px;
-    background: #CCC;
+    background: #e6e6e6;
     box-shadow: inset 0 0 3px 0px rgba(0,0,0,0.5);
     height: 34px;
 }
 .elessar-range {
-    background: #A53E35;
+    background: #B6B6FC;
     border-radius: 4px;
     color: white;
     font-weight: bold;
     height: 100%;
+}
+
+.busy-indicator {
+    z-index: 999;
+    display: table;
+    position: fixed;
+    top: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.busy-indicator > div {
+    display: table-cell;
+    vertical-align: middle;
+    vertical-align: center;
+    text-align: center;
+    color: white;
 }
