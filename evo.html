@@ -10,7 +10,6 @@
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
@@ -21,7 +20,7 @@
 <body>
     <div class="container-fluid">
         <header>
-            <form id="histogram-filters" class="navbar-form" style="float: right; margin: 0">
+            <form class="navbar-form" style="float: right; margin: 0">
                 <a href="./dist.html" class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</a>
                 <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
                 <a href="./tutorial.html" id="tutorial" class="btn btn-default" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
@@ -41,11 +40,11 @@
                             <option value="75th-percentile">75th percentile</option>
                             <option value="95th-percentile">95th percentile</option>
                         </select>
-                        <select id="measure" class="select2" title="Value being measured" style="width: 15em"></select>
+                        <select id="measure" class="multiselect" title="Value being measured" style="width: 15em"></select>
                         from
-                        <select id="min-channel-version" class="select2" title="Minimum build version" style="width: 120px"></select>
+                        <select id="min-channel-version" class="multiselect" title="Minimum build version" style="width: 120px"></select>
                         to
-                        <select id="max-channel-version" class="select2" title="Maximum build version" style="width: 120px"></select>
+                        <select id="max-channel-version" class="multiselect" title="Maximum build version" style="width: 120px"></select>
                     </span>
                     for
                     <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" data-n-selected="products" multiple></select>
@@ -101,7 +100,6 @@
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>

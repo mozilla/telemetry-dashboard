@@ -18,11 +18,11 @@ Telemetry.init(function() {
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   multiselectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.versions().map(function(version) { return [version, version] }));
   
-  if (gInitialPageState.min_channel_version) { selectSetSelected($("#min-channel-version"), gInitialPageState.min_channel_version); }
-  if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
+  if (gInitialPageState.min_channel_version) { $("#min-channel-version").multiselect("select", gInitialPageState.min_channel_version); }
+  if (gInitialPageState.max_channel_version) { $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version); }
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  if (versions.length === 0) { selectSetSelected($("#min-channel-version"), toVersion); }// Invalid range selected, move min version selector
+  if (versions.length === 0) { $("#min-channel-version").multiselect("select", toVersion); }// Invalid range selected, move min version selector
   
   $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
   $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
@@ -49,8 +49,8 @@ Telemetry.init(function() {
         var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
         var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
         if (versions.length === 0) {
-          if (e.target.id === "min-channel-version") { selectSetSelected($("#max-channel-version"), fromVersion); }
-          else { selectSetSelected($("#min-channel-version"), toVersion); }
+          if (e.target.id === "min-channel-version") { $("#max-channel-version").multiselect("select", fromVersion); }
+          else { $("#min-channel-version").multiselect("select", toVersion); }
         }
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
@@ -131,7 +131,7 @@ function updateMeasuresList(callback) {
         indicate();
         var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
         multiselectSetOptions($("#measure"), measureList);
-        selectSetSelected($("#measure"), gInitialPageState.measure);
+        $("#measure").multiselect("select", gInitialPageState.measure);
         if (callback !== undefined) { callback(); }
       }
     });
@@ -416,7 +416,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
     x_extended_ticks: true,
-    x_label: "Build ID", y_label: "Daily Metric Count",
+    x_label: "Build ID", y_label: "Daily Ping Count",
     transition_on_update: false,
     interpolate: "linear",
     markers: markers,
