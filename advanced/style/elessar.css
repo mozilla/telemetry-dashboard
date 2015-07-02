@@ -1,0 +1,121 @@
+.elessar-handle {
+  display: block;
+  background: black;
+  height: 100%;
+  width: 5px;
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.elessar-handle:first-child {
+  left: 0;
+}
+.elessar-handle:last-child {
+  right: 0;
+}
+.elessar-vertical .elessar-handle {
+  height: 5px;
+  width: 100%;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: auto;
+  cursor: ns-resize;
+}
+.elessar-vertical .elessar-handle:first-child {
+  top: 0;
+}
+.elessar-vertical .elessar-handle:last-child {
+  bottom: 0;
+}
+.elessar-indicator {
+  position: absolute;
+  background: black;
+  border-color: white;
+  border-style: solid;
+  border-width: 0 1px;
+  width: 2px;
+  height: 100%;
+  z-index: 15;
+}
+.elessar-vertical .elessar-indicator {
+  width: 100%;
+  height: 2px;
+}
+.elessar-range {
+  position: absolute;
+  cursor: pointer;
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: grab;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #0099FF;
+  width: 0;
+  z-index: 10;
+  text-align: center;
+}
+.elessar-vertical .elessar-range {
+  width: auto;
+  height: 0;
+}
+.elessar-label {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  border-left: 1px solid #999;
+  padding-left: 10px;
+}
+.elessar-readonly {
+  opacity: 0.6;
+  cursor: default !important;
+}
+.elessar-phantom {
+  background-color: transparent;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  cursor: pointer !important;
+}
+.elessar-rangebar {
+  position: relative;
+  height: 30px;
+  line-height: 30px;
+  background: #ccc;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.elessar-delete-confirm {
+  background: red;
+}
+body.elessar-resizing, body.elessar-dragging {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+body.elessar-resizing,
+body.elessar-resizing .bar,
+body.elessar-resizing .handle {
+  cursor: ew-resize !important;
+}
+body.elessar-resizing.elessar-resizing-vertical,
+body.elessar-resizing.elessar-resizing-vertical .bar,
+body.elessar-resizing.elessar-resizing-vertical .handle {
+  cursor: ns-resize !important;
+}
+body.elessar-dragging,
+body.elessar-dragging .bar,
+body.elessar-dragging .handle {
+  cursor: move !important;
+  cursor: -webkit-grabbing !important;
+  cursor: -moz-grabbing !important;
+  cursor: grabbing !important;
+}
