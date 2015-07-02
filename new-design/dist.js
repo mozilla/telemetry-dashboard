@@ -157,9 +157,11 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     var timeCutoff = moment().add(1, "years").toDate().getTime();
     dates = evolution.dates().filter(function(date) { return date <= timeCutoff; }); // Cut off all dates past one year in the future
   }
-  if (dates.length == 0) {
-    $("#date-range").prop("disabled", true);
-    $("#range-bar").hide();
+  if (dates.length === 0) {
+    if (evolution.dates().length === 0) {
+      $("#date-range").prop("disabled", true);
+      $("#range-bar").hide();
+    }
     gCurrentDateRangeUpdateCallback(null);
     return;
   }
@@ -233,8 +235,10 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   dates = dates.filter(function(date) { return min <= date && date <= max; });
   
   if (dates.length == 0) {
-    $("#date-range").prop("disabled", true);
-    $("#range-bar").hide();
+    if (evolution.dates().length === 0) {
+      $("#date-range").prop("disabled", true);
+      $("#range-bar").hide();
+    }
     gCurrentDateRangeUpdateCallback(null);
     return;
   }
@@ -332,6 +336,9 @@ function displayHistogram(histogram, evolution, cumulative) {
     // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .label").attr("dy", "1.2em");
+  $(".mg-x-axis text").each(function(i, text) { // Remove "NaN" labels
+    if ($(text).text() === "NaN") { text.parentNode.removeChild(text); }
+  });
   $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
 }
 
