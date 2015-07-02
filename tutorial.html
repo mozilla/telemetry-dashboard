@@ -10,20 +10,23 @@
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/stylesheets/jquery.tocify.min.css">
+    <link rel="stylesheet" href="style/jquery.tocify.css">
+    <style>
+    #tocify-header0 > .tocify-item { font-weight: bold; } /* bold the top-level entries */
+    </style>
 </head>
 <body>
-    <div class="container-fuild">
+    <form id="histogram-filters" class="navbar-form inline" style="position: fixed; right: 1em; top: 1em">
+        <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
+        <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
+        <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+    </form>
+    <div class="container-fuild" style="margin-top: 1em">
         <div class="row">
             <div class="col-md-3">
-                <div id="toc"></div>
+                <div id="toc" style="margin-top: 5em"></div>
             </div>
-            <div class="col-md-9">
-                <form id="histogram-filters" class="navbar-form inline" style="float: right; margin: 0">
-                    <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
-                    <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
-                    <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
-                </form>
+            <div class="col-md-6">
                 <h1>Telemetry Dashboard Documentation</h1>
                 <hr>
                 <h2 id="BasicConcepts">Basic Concepts</h2>
@@ -158,11 +161,9 @@
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"></script>
+    <script src="lib/jquery.tocify.min.js"></script>
     <script>
-    $(function() {
-        $("#toc").tocify();
-    });
+    $(function() { $("#toc").tocify({theme: "bootstrap3"}); });
     </script>
 </body>
 </html>
