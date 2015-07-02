@@ -10,44 +10,45 @@
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/stylesheets/jquery.tocify.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <form id="histogram-filters" class="navbar-form inline" style="float: right; margin: 0">
-                <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
-                <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
-                <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
-            </form>
-            <h1>Telemetry Dashboard Documentation</h1>
-            <hr>
-        </header>
+    <div class="container-fuild">
         <div class="row">
-            <div class="col-md-12">
-                <h2>Concepts and Definitions</h2>
-                <h3>Basic Concepts</h3>
+            <div class="col-md-3">
+                <div id="toc"></div>
+            </div>
+            <div class="col-md-9">
+                <form id="histogram-filters" class="navbar-form inline" style="float: right; margin: 0">
+                    <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
+                    <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
+                    <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+                </form>
+                <h1>Telemetry Dashboard Documentation</h1>
+                <hr>
+                <h2 id="BasicConcepts">Basic Concepts</h2>
                 <dl class="dl-horizontal">
                     <dt>Histogram</dt>
                     <dd>A type of chart usually used to represent the <u>distribution</u> of data. Typically seen as a column chart where the X axis is a series of buckets and the Y axis is the number of data points that fall into any given bucket.</dd>
                     <dt>Evolution</dt>
-                    <dd>A collection of histograms, each associated with a date. An evolution represents the change in a distribution over time by mapping dates to histograms. If an evolution is <u>over</u> a variable (which must be a date), then it is a mapping from that variable to histograms. For example, an evolution over buildIDs maps buildIDs to histograms.</dd>
+                    <dd>A collection of histograms, each associated with a date. An evolution represents the change in a distribution over time by mapping dates to histograms. If an evolution is <u>over</u> a set of dates (which is generally the build date/buildid or submission date), then it is a mapping from those dates to histograms. For example, an evolution over buildIDs maps dates to histograms submitted from builds made on that buildID's date.</dd>
                     <dt><i>K</i>th Percentile</dt>
                     <dd>A measurement value for which <i>K</i> percent of the data points are at or below this value.</dd>
                     <dt>Aggregate</dt>
                     <dd>A summarizing, single numerical value for a histogram, such as the mean or median. Histograms have one of each aggregate, while evolutions can have many - one for each histogram they contain.</dd>
                     <dt>Measure/Metric</dt>
-                    <dd>A value that can be measured via Telemetry, such as the number of milliseconds used in each garbage collection cycle in Firefox. Since there are a lot of these values, we generally only want to see their aggregates, such as their average.</dd>
+                    <dd>A value that can be measured via Telemetry, such as the number of milliseconds used in each garbage collection cycle in Firefox (GC_MS). Since there are a lot of these values, we generally only want to see their aggregates, such as their average.</dd>
                     <dt>Sample</dt>
-                    <dd>A single reading for a measure.</dd>
+                    <dd>A single reading for a measure. Generally, we only care about the number of these that fall within a certain range, not the sample values themselves.</dd>
                     <dt>Submission/Ping</dt>
                     <dd>A single Telemetry entry from a user. One submission can contain any number of samples, for any number of measures. Note that due to e10s, users will submit pings from both main processes and child processes. Therefore, a single user session might have multiple pings.</dd>
                     <dt>BuildID</dt>
                     <dd>The date at which the Telemetry-enabled program that sent a given submission was built, represented as a timestamp of the form YYYYMMDDHHMMSS.</dd>
                     <dt>Submission Date</dt>
-                    <dd>The date at which a given submission was sent.</dd>
+                    <dd>The date at which a given submission was sent. This is different from the BuildID - a build made on April 5, being used on May 15, submits with a buildID date of April 5, but submits with a submission date of May 15.</dd>
                 </dl>
                 
-                <h3>Histogram Dashboard</h3>
+                <h2 id="HistogramDashboard">Histogram Dashboard</h2>
                 <p>The <a href="./dist.html">histogram dashboard</a> is designed for viewing distributions of measures.</p>
                 <p>Example use cases include:</p>
                 <ul>
@@ -82,7 +83,7 @@
                         The <u>advanced settings</u> control options that most users will not need to use, but might possibly be useful in some situations:
                         <ul>
                             <li>The <u>evolution variable</u> toggle controls whether the date range (at the bottom of the advanced settings) is filtering the range of buildIDs, or submission dates. Basically, this controls whether we show the distribution for builds made in the date range, or builds that are submitting entries in the date range.</li>
-                            <li>The <u>cumulative mode</u> toggle controls whether we show sequential, disjoint buckets in the histogram, or have all buckets start from 0 - whether we add all the buckets on the left of each bucket to the bucket itself. When disabled, the histogram shows the standard distribution, which is useful for finding the number of samples in a range of values. When enabled, the histogram shows the cumulative distribution, which is useful for finding the number of samples that are above or below a certain value.</li>
+                            <li>The <u>cumulative mode</u> toggle controls whether we show sequential, disjoint buckets in the histogram, or have all buckets start from 0 - whether we add all the buckets on the left of each bucket to the bucket itself. When enabled, the histogram shows the cumulative distribution, which is useful for finding the number of samples that are above or below a certain value.</li>
                             <li>The <u>date range</u> controls the dates for which we include submissions in the histogram. This consists of a date range picker and a draggable range bar. The date can be explicitly selected using the date range picker, or the endpoints of the rangebar, visible as vertical black bars, can be dragged to change the start or end dates. The bar itself can also be dragged to shift the range earlier or later.</li>
                         </ul>
                     </li>
@@ -95,7 +96,7 @@
                     </li>
                 </ol>
                 
-                <h3>Evolution Dashboard</h3>
+                <h2 id="EvolutionDashboard">Evolution Dashboard</h2>
                 <p>The <a href="./evo.html">evolution dashboard</a> is designed for viewing the evolution of aggregate values for measures over time.</p>
                 <p>Example use cases include:</p>
                 <ul>
@@ -156,10 +157,11 @@
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"></script>
     <script>
     $(function() {
-        $("#switch-views-histogram").attr("href", "./dist.html" + window.location.hash);
-        $("#switch-views-evolution").attr("href", "./evo.html" + window.location.hash);
+        $("#toc").tocify();
     });
     </script>
 </body>

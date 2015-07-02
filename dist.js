@@ -435,5 +435,4 @@ function saveStateToUrlAndCookie() {
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
-  $("#tutorial").attr("href", "./tutorial.html" + window.location.hash);
 }
