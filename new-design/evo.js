@@ -17,8 +17,13 @@ $(function() { Telemetry.init(function() {
   // Set up settings selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   selectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.getVersions().map(function(version) { return [version, version] }));
+  
   if (gInitialPageState.min_channel_version) { selectSetSelected($("#min-channel-version"), gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { selectSetSelected($("#max-channel-version"), gInitialPageState.max_channel_version); }
+  var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
+  var versions = Telemetry.getVersions(fromVersion, toVersion);
+  if (versions.length === 0) { selectSetSelected($("#min-channel-version"), toVersion); }// Invalid range selected, move min version selector
+  
   $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
   $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
 
