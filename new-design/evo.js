@@ -314,7 +314,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
     x_extended_ticks: true,
-    x_label: "Build ID", y_label: "Daily Ping Count",
+    x_label: "Build ID", y_label: "Daily Metric Count",
     transition_on_update: false,
     interpolate: "linear",
     markers: markers,

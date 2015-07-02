@@ -39,8 +39,8 @@
                     <dd>A value that can be measured via Telemetry, such as the number of milliseconds used in each garbage collection cycle in Firefox. Since there are a lot of these values, we generally only want to see their aggregates, such as their average.</dd>
                     <dt>Sample</dt>
                     <dd>A single reading for a measure.</dd>
-                    <dt>Submission</dt>
-                    <dd>A single Telemetry entry from a user. One submission can contain any number of samples, for any number of measures.</dd>
+                    <dt>Submission/Ping</dt>
+                    <dd>A single Telemetry entry from a user. One submission can contain any number of samples, for any number of measures. Note that due to e10s, users will submit pings from both main processes and child processes. Therefore, a single user session might have multiple pings.</dd>
                     <dt>BuildID</dt>
                     <dd>The date at which the Telemetry-enabled program that sent a given submission was built, represented as a timestamp of the form YYYYMMDDHHMMSS.</dd>
                     <dt>Submission Date</dt>
