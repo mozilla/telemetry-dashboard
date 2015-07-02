@@ -68,12 +68,12 @@
                     
                     <!-- main evolution chart -->
                     <figure style="margin: 15px;"><canvas id="evolution"></canvas></figure>
-                    <form class="form-inline">
-                        <span style="width: 230px" id="date-range-controls" class="form-group">
-                          <span class="input-prepend input-group">
-                              <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
-                              <input type="text" name="dateRange" style="width: 100%" id="dateRange" class="form-control date-range"/>
-                          </span>
+                    <form class="form-horizontal" style="margin: 10px 0px 10px 50px">
+                        <span id="date-range-controls" class="form-group" style="width: 230px; display: inline-block; margin: 0">
+                            <span class="input-prepend input-group">
+                                <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                                <input type="text" name="date-range" style="width: 100%" id="date-range" class="form-control date-range"/>
+                            </span>
                         </span>
                         <span id="range-bar" class="pull-right"></span>
                     </form>
@@ -197,21 +197,23 @@
                 <ul>
                   <!-- Please add new entries here in alphabetical order. -->
                     <li> <a href="http://mozilla.github.io/iacomus/resources/public/index.html#?config=https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_perf/data/addon-perf.json">
-                                                                                        Add-on Bootstrap Performance     </a> </li>
+                                                                                                 Add-on Bootstrap Performance     </a> </li>
                     <li> <a href="http://mozilla.github.io/iacomus/resources/public/index.html#?config=https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_analysis/data/startup.json">
-                                                                                        Add-ons startup correlations     </a> </li>
+                                                                                                 Add-ons startup correlations     </a> </li>
                     <li> <a href="http://mozilla.github.io/iacomus/resources/public/index.html#?config=https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_analysis/data/shutdown.json">
-                                                                                        Add-ons shutdown correlations    </a> </li>
-                    <li> <a href="hang/bhr">                                            Background Hang Reporting (BHR)  </a> </li>
-                    <li> <a href="chromehangs">                                         Chrome Hangs                     </a> </li>
-                    <li> <a href="http://bsmedberg.github.io/telemetry-experiments-dashboard/">Experiment Monitoring     </a> </li>
-                    <li> <a href="hang/anr">                                            Fennec App Not Responding (ANR)  </a> </li>
+                                                                                                 Add-ons shutdown correlations    </a> </li>
+                    <li> <a href="hang/bhr">                                                     Background Hang Reporting (BHR)  </a> </li>
+                    <li> <a href="chromehangs">                                                  Chrome Hangs                     </a> </li>
+                    <li> <a href="http://bsmedberg.github.io/telemetry-experiments-dashboard/">  Experiment Monitoring            </a> </li>
+                    <li> <a href="hang/anr">                                                     Fennec App Not Responding (ANR)  </a> </li>
                     <li> <a href="http://mozilla.github.io/iacomus/resources/public/index.html#?config=https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/mainthreadio/data/iacomus.json">
-                                                                                        Main Thread I/O                  </a> </li>
-                    <li> <a href="distribution">                                        Population Distribution          </a> </li>
-                    <li> <a href="http://people.mozilla.org/~rvitillo/dashboard/">      Power Dashboard (draft)          </a> </li>
-                    <li> <a href="slowsql">                                             SlowSQL                          </a> </li>
-                    <li> <a href="http://alerts.telemetry.mozilla.org/index.html">      Telemetry alerts                 </a> </li>
+                                                                                                 Main Thread I/O                  </a> </li>
+                    <li> <a href="distribution">                                                 Population Distribution          </a> </li>
+                    <li> <a href="http://people.mozilla.org/~rvitillo/dashboard/">               Power Dashboard (draft)          </a> </li>
+                    <li> <a href="slowsql">                                                      SlowSQL                          </a> </li>
+                    <li> <a href="http://alerts.telemetry.mozilla.org/index.html">               Telemetry alerts                 </a> </li>
+                    <li> <a href="https://people.mozilla.org/~mfinkle/uitelemetry/">             Fennec UI Telemetry              </a> </li>
+                    <li> <a href="https://useradvocacy.mozilla.org/dashboards/telemetry-ui/">    Firefox UI Telemetry             </a> </li>
                 </ul>
                 <h4>Documentation</h4>
                 <ul>
