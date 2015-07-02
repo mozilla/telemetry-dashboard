@@ -16,7 +16,7 @@ Telemetry.init(function() {
   // Set up settings selectors
   multiselectSetOptions($("#channel-version"), Telemetry.versions().map(function(version) { return [version, version.replace("/", " ")] }));
   if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
-  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
+  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0).trigger("change");
   
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {

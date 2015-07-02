@@ -23,9 +23,8 @@ Telemetry.init(function() {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
   if (versions.length === 0) { $("#min-channel-version").multiselect("select", toVersion); }// Invalid range selected, move min version selector
-  
-  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0);
-  $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0);
+  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0).trigger("change");
+  $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0).trigger("change");
   
   updateMeasuresList(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
@@ -92,7 +91,7 @@ Telemetry.init(function() {
             // If the OS was changed, select all the OS versions
             if (e.target.id == "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
             
-            displayEvolutions(lines, submissionLines);
+            displayEvolutions(lines, submissionLines, null, null, $("#build-time-toggle").prop("checked"));
             saveStateToUrlAndCookie();
           });
         }, 0);
@@ -314,7 +313,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   return {lines: lines, submissionLine: submissionLine};
 }
 
-function displayEvolutions(lines, submissionLines, minDate, maxDate) {
+function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissionDate) {
   minDate = minDate || null; maxDate = maxDate || null;
 
   // filter out empty lines
@@ -381,7 +380,8 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
         lineList = [lines[d.line_id - 1]];
         values = [d.value];
       }
-      var legend = d3.select("#evolutions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
+      var legendLabel = moment(date).format("MMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legend = d3.select("#evolutions .mg-active-datapoint").text(legendLabel).style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
@@ -441,7 +441,8 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
         lineList = [submissionLines[d.line_id - 1]];
         values = [d.value];
       }
-      var legend = d3.select("#submissions .mg-active-datapoint").text(moment(date).format("MMM D, YYYY") + " (build " + moment(date).format("YYYYMMDD") + "):").style("fill", "white");
+      var legendLabel = moment(date).format("MMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legend = d3.select("#submissions .mg-active-datapoint").text(legendLabel).style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
@@ -490,6 +491,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate) {
   $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
   $(".mg-line-legend text").css("font-size", "12px")
   $(".mg-marker-text").css("font-size", "12px").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
+  $(".mg-markers line").css("stroke-width", "2px");
 }
 
 var Line = (function(){
