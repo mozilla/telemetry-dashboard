@@ -347,10 +347,11 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   var markers = [], usedDates = {};
   lines.forEach(function(line) {
     var minDate = Math.min.apply(Math, line.values.map(function(point) { return point.x; }));
-    usedDates[minDate] = usedDates.hasOwnProperty(minDate) ? usedDates[minDate] + ", " + line.getVersionString() : line.getVersionString();
+    usedDates[minDate] = usedDates[minDate] || [];
+    if (usedDates[minDate].indexOf(line.getVersionString()) < 0) { usedDates[minDate].push(line.getVersionString()); }
   });
   for (var date in usedDates) {
-    markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date]}); // Need to add 1ms because the leftmost marker won't show up otherwise
+    markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
 
   // Plot the data using MetricsGraphics
