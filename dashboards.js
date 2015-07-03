@@ -120,7 +120,7 @@ function getHumanReadableOptions(filterName, options, os) {
   os = os || null;
 
   var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
-  var ignoredOSs = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
+  var ignoredSystems = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
   var darwinVersionPrefixes = {
@@ -131,12 +131,12 @@ function getHumanReadableOptions(filterName, options, os) {
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
   if (filterName === "osVersion") {
     var osName = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os);
-    if (ignoredOSs[os] !== undefined) { return []; } // No versions for ignored OSs
+    if (ignoredSystems[os] !== undefined) { return []; } // No versions for ignored OSs
     if (os === "WINNT") {
       return options.sort(function(a, b) {
         // Sort by explicit version order if available
         if (windowsVersionOrder.hasOwnProperty(a) && windowsVersionOrder.hasOwnProperty(b)) {
-          return windowsVersionOrder[a] < windowsVersionOrder[b] ? -1 : (windowsVersionOrder[a] > windowsVersionOrder[b] ? 1 : 0);
+          return windowsVersionOrder[a] - windowsVersionOrder[b];
         } else if (windowsVersionOrder.hasOwnProperty(a)) {
           return -1;
         } else if (windowsVersionOrder.hasOwnProperty(b)) {
@@ -183,7 +183,7 @@ function getOptions(filterList, histogramEvolution) {
     filterTree._name = histogramEvolution.filterName();
     return filterTree
   }
-  function getOptionsList(filterTree, optionsList, currentPath, depth) {
+  function getOptionsList(filterTree, optionsList, currentPath, depth) { // Flatten the tree of options horizontally to get the options list at each level
     var options = Object.keys(filterTree).sort();
     var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
     if (filterOptions.length === 0) { return optionsList; }

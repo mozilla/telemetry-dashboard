@@ -55,9 +55,7 @@ Telemetry.init(function() {
           if ($this.attr("id") === "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); } // if the OS filter changes, select all the OS versions
           
           calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
-            multiselectSetOptions($("#filter-product"), filterOptionsList[1]);
-            multiselectSetOptions($("#filter-os"), filterOptionsList[3]);
-            multiselectSetOptions($("#filter-arch"), filterOptionsList[4]);
+            refreshFilters(filterOptionsList);
             
             // Update the measure description
             var measureDescription = gMeasureMap[$("#measure").val()].description;
@@ -89,6 +87,31 @@ Telemetry.init(function() {
     $(this).get(0).scrollIntoView({behavior: "smooth"}); // Scroll the advanced settings into view when opened
   });
 });
+
+function refreshFilters(optionsList) {
+  // Sort the OS versions list by OS name
+  var newOSList = [];
+  var systemOrder = {"WINNT": 1, "Darwin": 2};
+  optionsList[2].map(function(entry) { return entry[0]; }).sort(function(a, b) {
+    // Sort by explicit version order if available
+    if (systemOrder.hasOwnProperty(a) && systemOrder.hasOwnProperty(b)) {
+      return systemOrder[a] - systemOrder[b];
+    } else if (systemOrder.hasOwnProperty(a)) {
+      return -1;
+    } else if (systemOrder.hasOwnProperty(b)) {
+      return 1;
+    }
+    return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+  }).forEach(function(os) {
+    newOSList = newOSList.concat(optionsList[3].filter(function(version) {
+      return version[0].split(",")[0] == os;
+    }));
+  });
+  
+  multiselectSetOptions($("#filter-product"), optionsList[1]);
+  multiselectSetOptions($("#filter-os"), newOSList);
+  multiselectSetOptions($("#filter-arch"), optionsList[4]);
+}
 
 function updateMeasuresList(callback) {
   var channelVersion = $("#channel-version").val();
