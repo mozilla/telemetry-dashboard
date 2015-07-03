@@ -109,9 +109,9 @@ function updateMeasuresList(callback) {
       return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
     }).map(function(measure) {
       gMeasureMap[measure] = measures[measure];
-      return [measure, measure];
+      return measure;
     });
-    multiselectSetOptions($("#measure"), measuresList);
+    multiselectSetOptions($("#measure"), getHumanReadableOptions("measure", measuresList));
     $("#measure").multiselect("select", gInitialPageState.measure);
     if (callback !== undefined) { callback(); }
   });

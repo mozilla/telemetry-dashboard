@@ -5,6 +5,8 @@ $(document).ready(function() {
     var options = {
       enableFiltering: true,
       enableCaseInsensitiveFiltering: true,
+      filterBehavior: "both", // Filter by both the value and the text of the option
+      enableHTML: true, // Allow HTML in the selects, used by the measure selector - be careful to avoid XSS from this
       includeSelectAllOption: true,
       allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
       enableClickableOptGroups: true,
@@ -17,6 +19,10 @@ $(document).ready(function() {
     }
     $this.multiselect(options);
     $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
+  });
+  $(".multiselect-container").scroll(function() { // Make the filter box fixed to the top of the select control
+    var $this = $(this);
+    $this.find(".multiselect-item.filter").css("position", "relative").css("top", $this.scrollTop()).css("z-index", 1);
   });
   
   // Date range pickers
@@ -152,6 +158,9 @@ function getHumanReadableOptions(filterName, options, os) {
     return options.map(function(option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
     });
+  } else if (filterName === "measure") {
+    // Add a hidden version of the option with spaces instead of underscores, to be able to search with spaces
+    return options.map(function(option) { return [option, option.replace(/_/g, " ")] });
   }
   return options.map(function(option) { return [option, option] });
 }

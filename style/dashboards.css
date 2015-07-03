@@ -12,6 +12,14 @@
 .multiselect-container input[type="radio"] { display: none; }
 .multiselect-container label.radio { padding-left: 10px; }
 
+.panel-title, .panel-title:hover, .panel-title:focus {
+    display: block;
+    margin: -10px -15px;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: inherit;
+}
+
 /* Rangebar style overrides */
 .elessar-rangebar {
     border-radius: 4px;
