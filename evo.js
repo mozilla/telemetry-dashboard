@@ -16,15 +16,15 @@ Telemetry.init(function() {
   
   // Set up settings selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
-  multiselectSetOptions($("#min-channel-version, #max-channel-version"), Telemetry.versions().map(function(version) { return [version, version] }));
+  multiselectSetOptions($("#min-channel-version, #max-channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
   
   if (gInitialPageState.min_channel_version) { $("#min-channel-version").multiselect("select", gInitialPageState.min_channel_version); }
   if (gInitialPageState.max_channel_version) { $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version); }
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
   if (versions.length === 0) { $("#min-channel-version").multiselect("select", toVersion); }// Invalid range selected, move min version selector
-  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0).trigger("change");
-  $("#sanitize-toggle").prop("checked", gInitialPageState.sanitize !== 0).trigger("change");
+  $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
+  $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   
   updateMeasuresList(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
@@ -72,7 +72,7 @@ Telemetry.init(function() {
         multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
         $("#aggregates").trigger("change");
       });
-      $("#build-time-toggle, #sanitize-toggle, #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+      $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
@@ -91,7 +91,7 @@ Telemetry.init(function() {
             // If the OS was changed, select all the OS versions
             if (e.target.id == "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
             
-            displayEvolutions(lines, submissionLines, null, null, $("#build-time-toggle").prop("checked"));
+            displayEvolutions(lines, submissionLines, null, null, $("input[name=build-time-toggle]:checked").val() !== "0");
             saveStateToUrlAndCookie();
           });
         }, 0);
@@ -159,7 +159,7 @@ function calculateHistogramEvolutions(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var measure = $("#measure").val();
   var aggregates = $("#aggregates").val() || [];
-  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
+  var evolutionLoader = $("input[name=build-time-toggle]:checked").val() !== "0" ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
@@ -201,7 +201,7 @@ function calculateHistogramEvolutions(callback) {
         return options.concat(versionOptionsList[i]);
       });
       
-      var newLines = getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filterList, $("#sanitize-toggle").prop("checked"));
+      var newLines = getHistogramEvolutionLines(version, measure, histogramEvolution, aggregates, filterList, $("input[name=sanitize-toggle]:checked").val() !== "0");
       lines = lines.concat(newLines.lines);
       submissionLines.push(newLines.submissionLine);
       if (lines.length === expectedCount) { // Check if we have loaded all the needed versions

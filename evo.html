@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
-    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.0/css/bootstrap-toggle.min.css" rel="stylesheet">
     
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
 </head>
@@ -72,14 +71,16 @@
                     <div id="advanced-settings" class="panel-collapse collapse">
                         <div class="panel-body">
                             <form class="form-horizontal">
-                                <label style="font-size: 1.5em; font-weight: normal; display: block; margin-bottom: 20px">
-                                    Evolution variable: show evolution over build ID or submission date:&nbsp;&nbsp;
-                                    <input id="build-time-toggle" name="build-time-toggle" data-width="150" data-toggle="toggle" data-on="Submission Date" data-off="Build Date" type="checkbox">
-                                </label>
-                                <label style="font-size: 1.5em; font-weight: normal; display: block">
-                                    Sanitize data: hide data points that don't have enough submissions:&nbsp;&nbsp;
-                                    <input id="sanitize-toggle" name="sanitize-toggle" data-width="150" data-toggle="toggle" data-on="Sanitize" data-off="Don't sanitize" type="checkbox">
-                                </label>
+                                <div>
+                                    Evolution variable: show evolution over build ID or submission date:
+                                    <label><input name="build-time-toggle" type="radio" value="0"> Build Date</label>
+                                    <label><input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
+                                </div>
+                                <div>
+                                    Sanitize data: hide data points that don't have enough submissions:
+                                    <label><input name="sanitize-toggle" type="radio" value="0"> Don't Sanitize</label>
+                                    <label><input name="sanitize-toggle" type="radio" value="1"> Sanitize</label>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -101,7 +102,6 @@
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
-    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script>
     
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>

@@ -14,9 +14,11 @@ Telemetry.init(function() {
   gInitialPageState = loadStateFromUrlAndCookie();
   
   // Set up settings selectors
-  multiselectSetOptions($("#channel-version"), Telemetry.versions().map(function(version) { return [version, version.replace("/", " ")] }));
+  multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
   if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
-  $("#build-time-toggle").prop("checked", gInitialPageState.use_submission_date !== 0).trigger("change");
+  
+  $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
+  $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
@@ -42,7 +44,7 @@ Telemetry.init(function() {
       $("#channel-version").change(function() {
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
-      $("#build-time-toggle, #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
+      $("input[name=build-time-toggle], #measure, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function() {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
@@ -65,7 +67,7 @@ Telemetry.init(function() {
             // Update the measure description
             var measureDescription = gMeasureMap[$("#measure").val()].description;
             gCurrentDates = dates; gCurrentHistogram = histogram;
-            displayHistogram(histogram, dates, $("#cumulative-toggle").prop("checked"));
+            displayHistogram(histogram, dates, $("input[name=cumulative-toggle]:checked").val() !== "0");
             saveStateToUrlAndCookie();
           });
         }, 0);
@@ -76,8 +78,9 @@ Telemetry.init(function() {
     });
   });
 
-  $("#cumulative-toggle").change(function() {
-    displayHistogram(gCurrentHistogram, gCurrentDates, $("#cumulative-toggle").prop("checked"));
+  $("input[name=cumulative-toggle]").change(function() {
+    displayHistogram(gCurrentHistogram, gCurrentDates, $("input[name=cumulative-toggle]:checked").val() !== "0");
+    saveStateToUrlAndCookie();
   });
   
   // Switch to the evolution dashboard with the same settings
@@ -121,7 +124,7 @@ function calculateHistogram(callback) {
   // Get selected version, measure, and aggregate options
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
-  var evolutionLoader = $("#build-time-toggle").prop("checked") ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
+  var evolutionLoader = $("input[name=build-time-toggle]:checked").val() !== "0" ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
   
   // Obtain a mapping from filter names to filter options
   var filters = {};
@@ -208,7 +211,6 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   // First load, update the date picker from the page state
   if (!gLoadedDateRangeFromState && gInitialPageState.start_date !== null && gInitialPageState.end_date !== null) {
     gLoadedDateRangeFromState = true;
-    var picker = $("#date-range").data("daterangepicker");
     var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
     if (start.isValid() && end.isValid()) {
       picker.setStartDate(start); picker.setEndDate(end);
