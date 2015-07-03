@@ -128,7 +128,7 @@ function updateMeasuresList(callback) {
       }).forEach(function(measure) { gMeasureMap[measure] = measures[measure]; });
       if (versionCount === versions.length) { // All versions are loaded
         indicate();
-        var measureList = Object.keys(gMeasureMap).sort().map(function(measure) { return [measure, measure] });
+        var measuresList = Object.keys(gMeasureMap).sort();
         multiselectSetOptions($("#measure"), getHumanReadableOptions("measure", measuresList));
         $("#measure").multiselect("select", gInitialPageState.measure);
         if (callback !== undefined) { callback(); }
