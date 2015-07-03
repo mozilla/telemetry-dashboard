@@ -8,8 +8,7 @@ indicate("Initializing Telemetry...");
 Telemetry.init(function() {
   gFilters = {
     "product":    $("#filter-product"),
-    "os":         $("#filter-os"),
-    "os_version":  $("#filter-os-version"),
+    "os_version": $("#filter-os"),
     "arch":       $("#filter-arch"),
   };
   gInitialPageState = loadStateFromUrlAndCookie();
@@ -35,8 +34,6 @@ Telemetry.init(function() {
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
       if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
       else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      if (gInitialPageState.os_version !== null) { $("#filter-os-version").multiselect("select", gInitialPageState.os_version); }
-      else { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
       
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
@@ -72,7 +69,7 @@ Telemetry.init(function() {
         multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
         $("#aggregates").trigger("change");
       });
-      $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os, #filter-os-version").change(function(e) {
+      $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os").change(function(e) {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
@@ -87,9 +84,6 @@ Telemetry.init(function() {
         
           calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
             refreshFilters(filterList, filterOptionsList);
-            
-            // If the OS was changed, select all the OS versions
-            if (e.target.id == "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); }
             
             displayEvolutions(lines, submissionLines, null, null, $("input[name=build-time-toggle]:checked").val() !== "0");
             saveStateToUrlAndCookie();
@@ -150,10 +144,9 @@ function refreshFilters(filterList, filterOptionsList) {
       return true;
     });
   });
-
+  
   multiselectSetOptions($("#filter-product"), optionsList[1]);
-  multiselectSetOptions($("#filter-os"), optionsList[2]);
-  multiselectSetOptions($("#filter-os-version"), optionsList[3]);
+  multiselectSetOptions($("#filter-os"), optionsList[3]);
   multiselectSetOptions($("#filter-arch"), optionsList[4]);
 }
 
@@ -174,12 +167,17 @@ function calculateHistogramEvolutions(callback) {
       filters[filterName] = selection;
     }
   }
+  
+  // Handle the special case for the OS selector
+  filters.os = deduplicate(filters.os_version.map(function(version) { return version.split(",")[0]; }));
+  filters.os_version = filters.os_version.map(function(version) { return version.split(",")[1] });
+  
   filterList = [
-    ["saved_session"],                                        // "reason" filter
-    ("product" in filters) ? filters["product"] : null,       // "product" filter
-    ("os" in filters) ? filters["os"] : null,                 // "os" filter
-    ("os_version" in filters) ? filters["os_version"] : null, // "os_version" filter
-    ("arch" in filters) ? filters["arch"] : null,             // "arch" filter
+    ["saved_session"],                                                   // "reason" filter
+    filters.hasOwnProperty("product") ? filters["product"] : null,       // "product" filter
+    filters.hasOwnProperty("os") ? filters["os"] : null,                 // "os" filter
+    filters.hasOwnProperty("os_version") ? filters["os_version"] : null, // "os_version" filter
+    filters.hasOwnProperty("arch") ? filters["arch"] : null,             // "arch" filter
   ];
   for (var i = filterList.length - 1; i >= 0; i --) { // Remove unnecessary filters - trailing null entries in the filter list
     if (filterList[i] !== null) { break; }
@@ -558,8 +556,8 @@ function saveStateToUrlAndCookie() {
   };
   
   // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
-  if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
+  if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (cumulative !== undefined) { gInitialPageState.cumulative = cumulative; }
   
   // Only store these in the state if they are not all selected
@@ -567,8 +565,6 @@ function saveStateToUrlAndCookie() {
   if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = selected; }
-  var selected = $("#filter-os-version").val() || [];
-  if (selected.length !== $("#filter-os-version option").size()) { gInitialPageState.os_version = selected; }
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {

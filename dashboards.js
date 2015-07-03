@@ -5,7 +5,7 @@ $(document).ready(function() {
     var options = {
       enableFiltering: true,
       enableCaseInsensitiveFiltering: true,
-      filterBehavior: "both", // Filter by both the value and the text of the option
+      filterBehavior: "text",
       enableHTML: true, // Allow HTML in the selects, used by the measure selector - be careful to avoid XSS from this
       includeSelectAllOption: true,
       allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
@@ -129,13 +129,9 @@ function getHumanReadableOptions(filterName, options, os) {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   };
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
-  if (filterName === "OS") {
-    // Replace OS names with pretty OS names where possible
-    return options.filter(function(option) { return !ignoredOSs[option]; }).map(function(option) {
-      return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option];
-    });
-  } else if (filterName === "osVersion") {
-    var osPrefix = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os) + " ";
+  if (filterName === "osVersion") {
+    var osName = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os);
+    if (ignoredOSs[os] !== undefined) { return []; } // No versions for ignored OSs
     if (os === "WINNT") {
       return options.sort(function(a, b) {
         // Sort by explicit version order if available
@@ -148,19 +144,19 @@ function getHumanReadableOptions(filterName, options, os) {
         }
         return ((a < b) ? -1 : ((a > b) ? 1 : 0));
       }).map(function(option) {
-        return [option, osPrefix + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option)];
+        return [os + "," + option, osName + " " + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option), osName];
       });
     } else if (os === "Darwin") {
       return options.map(function(option) {
         for (var prefix in darwinVersionPrefixes) {
           if (option.startsWith(prefix)) {
-            return [option, osPrefix + option + " (" + darwinVersionPrefixes[prefix] + ")"];
+            return [os + "," + option, osName + " " + option + " (" + darwinVersionPrefixes[prefix] + ")", osName];
           }
         }
-        return [option, osPrefix + option];
+        return [os + "," + option, osName + " " + option, osName];
       });
     }
-    return options.map(function(option) { return [option, osPrefix + option]; });
+    return options.map(function(option) { return [os + "," + option, osName + " " + option, osName]; });
   } else if (filterName === "arch") {
     return options.map(function(option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
@@ -187,34 +183,26 @@ function getOptions(filterList, histogramEvolution) {
     filterTree._name = histogramEvolution.filterName();
     return filterTree
   }
-  function getOptionsList(filterTree, optionsList, currentPath, depth, includeSelf) {
+  function getOptionsList(filterTree, optionsList, currentPath, depth) {
     var options = Object.keys(filterTree).sort();
     var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
     if (filterOptions.length === 0) { return optionsList; }
     
     // Add the current options into the option map
     if (optionsList[depth] === undefined) { optionsList[depth] = []; }
-    if (includeSelf) {
-      var os = null;
-      if (filterTree._name === "osVersion") { os = currentPath[currentPath.length - 1]; }
-      var currentOptions = getHumanReadableOptions(filterTree._name, filterOptions, os);
-      optionsList[depth] = optionsList[depth].concat(currentOptions);
-    }
+    var os = null;
+    if (filterTree._name === "osVersion") { os = currentPath[currentPath.length - 1]; }
+    var currentOptions = getHumanReadableOptions(filterTree._name, filterOptions, os);
+    optionsList[depth] = optionsList[depth].concat(currentOptions);
     
-    var selectedValues = (!filterList[depth] || filterList[depth].length === 0) ?
-                         filterOptions : filterList[depth];
     filterOptions.forEach(function(option) {
-      // Don't include direct children if we are not in the right OS
-      var includeChildren = true;
-      if (filterTree._name === "OS") { includeChildren = selectedValues.indexOf(option) >= 0; }
-      
-      getOptionsList(filterTree[option], optionsList, currentPath.concat([option]), depth + 1, includeChildren);
+      getOptionsList(filterTree[option], optionsList, currentPath.concat([option]), depth + 1);
     });
     return optionsList;
   }
 
   var filterTree = getCombinedFilterTree(histogramEvolution);
-  var optionsList = getOptionsList(filterTree, [], [], 0, true);
+  var optionsList = getOptionsList(filterTree, [], [], 0);
   
   // Remove duplicate options
   optionsList = optionsList.map(function(options) {
