@@ -102,8 +102,8 @@ function loadStateFromUrlAndCookie() {
   
   pageState.use_submission_date = pageState.use_submission_date !== undefined ?
     parseInt(pageState.use_submission_date) : 0;
-  pageState.sanitize = pageState.sanitize !== undefined ?
-    parseInt(pageState.sanitize) : 1;
+  pageState.sanitize = pageState.sanitize !== undefined ? parseInt(pageState.sanitize) : 1;
+  pageState.cumulative = pageState.cumulative !== undefined ? parseInt(pageState.cumulative) : 0;
   pageState.start_date = pageState.start_date !== undefined ? pageState.start_date : null;
   pageState.end_date = pageState.end_date !== undefined ? pageState.end_date : null;
   return pageState;
@@ -161,6 +161,9 @@ function getHumanReadableOptions(filterName, options, os) {
   } else if (filterName === "measure") {
     // Add a hidden version of the option with spaces instead of underscores, to be able to search with spaces
     return options.map(function(option) { return [option, option.replace(/_/g, " ")] });
+  } else if (filterName === "channelVersion") {
+    var pattern = /^\w+\/\d+$/;
+    return options.filter(function(option) { return pattern.test(option); }).map(function(option) { return [option, option.replace("/", " ")] });
   }
   return options.map(function(option) { return [option, option] });
 }

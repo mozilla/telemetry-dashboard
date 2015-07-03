@@ -389,12 +389,15 @@ function displayHistogram(histogram, dates, cumulative) {
 
 // Save the current state to the URL and the page cookie
 function saveStateToUrlAndCookie() {
+  var picker = $("#date-range").data("daterangepicker");
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
     min_channel_version: gInitialPageState.min_channel_version !== undefined ? // Save the minimum channel version in case we switch to evolution dashboard later
       gInitialPageState.min_channel_version : "nightly/38",
     product: $("#filter-product").val() || [],
+    cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
+    start_date: moment(picker.startDate).format("YYYY-MM-DD"), end_date: moment(picker.endDate).format("YYYY-MM-DD"),
     
     // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
     min_channel_version: gInitialPageState.min_channel_version !== undefined ?

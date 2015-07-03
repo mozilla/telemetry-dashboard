@@ -538,20 +538,21 @@ var Line = (function(){
 
 // Save the current state to the URL and the page cookie
 function saveStateToUrlAndCookie() {
-  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date;
+  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative;
   gInitialPageState = {
     aggregates: $("#aggregates").val() || [],
     measure: $("#measure").val(),
     min_channel_version: $("#min-channel-version").val(),
     max_channel_version: $("#max-channel-version").val(),
     product: $("#filter-product").val() || [],
-    use_submission_date: $("#build-time-toggle").prop("checked") ? 1 : 0,
-    sanitize: $("#sanitize-toggle").prop("checked") ? 1 : 0,
+    use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
+    sanitize: $("input[name=sanitize-toggle]:checked").val() !== "0" ? 1 : 0,
   };
   
   // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
   if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
+  if (cumulative !== undefined) { gInitialPageState.cumulative = cumulative; }
   
   // Only store these in the state if they are not all selected
   var selected = $("#filter-arch").val() || [];
