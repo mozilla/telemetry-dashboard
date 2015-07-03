@@ -14,6 +14,13 @@ $(document).ready(function() {
       disableIfEmpty: true,
       nSelectedText: $this.data("n-selected") !== undefined ? $this.data("n-selected") : "selected",
     };
+    if ($this.attr("id") === "measure") {
+      options.filterBehavior = "custom";
+      options.filterCallback = function(element, query) {
+        var value = $(element).find("label").text().toLowerCase();
+        return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0;
+      };
+    }
     if ($this.attr("title") !== undefined) {
       options.nonSelectedText = $this.attr("title");
     }
@@ -159,8 +166,7 @@ function getHumanReadableOptions(filterName, options, os) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
     });
   } else if (filterName === "measure") {
-    // Add a hidden version of the option with spaces instead of underscores, to be able to search with spaces
-    return options.map(function(option) { return [option, option.replace(/_/g, " ")] });
+    return options.map(function(option) { return [option, option] });
   } else if (filterName === "channelVersion") {
     var pattern = /^\w+\/\d+$/;
     return options.filter(function(option) { return pattern.test(option); }).map(function(option) { return [option, option.replace("/", " ")] });

@@ -1,5 +1,5 @@
 var gInitialPageState = {};
-var gMeasureMap = null;
+var gMeasureMap = null, gVersionMeasureMap = null;
 var gFilterChangeTimeout = null;
 var gFilters = null, gPreviousFilterAllSelected = {};
 
@@ -55,7 +55,7 @@ Telemetry.init(function() {
       });
       $("#measure").change(function() {
         // Update the measure description
-        var measure = $(this).val();
+        var measure = $("#measure").val();
         var measureEntry = gMeasureMap[measure];
         $("#measure-description").text(measureEntry.description + " (" + measure + ")");
         $("#submissions-title").text(measure + " submissions");
@@ -111,7 +111,7 @@ function updateMeasuresList(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
   var versionCount = 0;
-  gMeasureMap = {};
+  gMeasureMap = {}; gVersionMeasureMap = {};
   if (versions.length == 0) { // All versions are loaded
     multiselectSetOptions($("#measure"), []);
     if (callback !== undefined) { callback(); }
@@ -125,7 +125,10 @@ function updateMeasuresList(callback) {
       indicate("Updating measures... " + Math.round(100 * versionCount / versions.length) + "%");
       Object.keys(measures).filter(function(measure) {
         return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
-      }).forEach(function(measure) { gMeasureMap[measure] = measures[measure]; });
+      }).forEach(function(measure) {
+        gMeasureMap[measure] = measures[measure];
+        gVersionMeasureMap[channelVersion] = measures;
+      });
       if (versionCount === versions.length) { // All versions are loaded
         indicate();
         var measuresList = Object.keys(gMeasureMap).sort();
@@ -157,7 +160,7 @@ function refreshFilters(filterList, filterOptionsList) {
 function calculateHistogramEvolutions(callback) {
   // Get selected version, measure, and aggregate options
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
-  var measure = $("#measure").val();
+  var measure = $("#measure").val(); // Handle the special case for measures, added in getHumanReadableOptions
   var aggregates = $("#aggregates").val() || [];
   var evolutionLoader = $("input[name=build-time-toggle]:checked").val() !== "0" ? Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
   
@@ -185,6 +188,10 @@ function calculateHistogramEvolutions(callback) {
 
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
   if (versions.length > 10) { versions = versions.slice(0, 10); } // Only show up to 10 versions for performance reasons
+  
+  // Exclude those versions that don't actually have the measure - a measure may be selectable but nonexistant if it exists in some other version, so we just ignore this version if it doesn't have that measure
+  versions = versions.filter(function(channelVersion) { return gVersionMeasureMap[channelVersion][measure] !== undefined; });
+  
   var lines = [];
   var submissionLines = [];
   var expectedCount = versions.length * aggregates.length;

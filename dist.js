@@ -82,13 +82,6 @@ Telemetry.init(function() {
     displayHistogram(gCurrentHistogram, gCurrentDates, $("input[name=cumulative-toggle]:checked").val() !== "0");
     saveStateToUrlAndCookie();
   });
-  
-  // Switch to the evolution dashboard with the same settings
-  $("#switch-views").click(function() {
-    var evolutionURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
-    window.location.href = evolutionURL;
-    return false;
-  });
 
   // Automatically resize range bar
   $(window).resize(function() {
