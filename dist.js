@@ -425,7 +425,7 @@ function saveStateToUrlAndCookie() {
   // Save to the URL hash if it changed
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
-  if (url !== stateString) { window.location.hash = "#" + stateString; }
+  if (url !== stateString) { window.location.replace(window.location.origin + window.location.pathname + "#" + stateString); }
   
   // Save the state in a cookie that expires in 3 days
   var expiry = new Date();
