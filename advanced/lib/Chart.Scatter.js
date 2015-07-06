@@ -35,7 +35,7 @@
 
 				if (hasTime) {
 
-					return "" //dateFormat(date, tFormat || "h:MM", useUtc);
+					return dateFormat(date, tFormat || "h:MM", useUtc);
 				} else {
 
 					return dateFormat(date, dFormat || "mmm d", useUtc);
@@ -328,7 +328,6 @@
 			this.xPadding = this.display && this.showLabels
 				? yLabelMaxWidth + this.padding * 2
 				: this.padding;
-			this.xPadding = 60;
 
 			var xStepWidth = Math.floor((this.chart.width - this.xPadding) / this.xScaleRange.steps);
 			var xLabelHeight = this.fontSize * 1.5;

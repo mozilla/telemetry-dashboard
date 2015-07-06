@@ -80,9 +80,9 @@ function prepareData(state, hgramEvo) {
   // Don't crap up the percentiles / means with lines based on a tiny number
   // of submissions. Flatten them all to zero if there are less than this
   // many submissions.
-  // The cutoff is the greater of 100 or 1% of the maximum number of
+  // The cutoff is the lesser of 100 or 1% of the maximum number of
   // submissions we saw.
-  var submissionsCutoff = Math.max(maxSubmissions / 100, 100);
+  var submissionsCutoff = Math.min(maxSubmissions / 100, 100);
 
   if (hgramEvo.kind() == 'linear' || hgramEvo.kind() == 'exponential') {
     var means = [];

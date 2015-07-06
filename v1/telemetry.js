@@ -229,7 +229,7 @@ Telemetry.init = function Telemetry_load(cb) {
  * @param {Function}  cb         Callback to be invoked after the operation completes
  */
 Telemetry.doAsync = function Telemetry_doAsync(action, thisValue, args, callback) {
-  var worker = new Worker("v1/telemetry-worker.js");
+  var worker = new Worker("/v1/telemetry-worker.js");
   worker.onmessage = function(e) {
     if (e.data === null) {
       throw new Error("Unknown operation: " + action);

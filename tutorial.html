@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Telemetry Dashboard Documentation</title>
+    
+    <!-- Bootstrap and supporting libraries -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style/jquery.tocify.css">
+    <style>
+    #tocify-header0 > .tocify-item { font-weight: bold; } /* bold the top-level entries */
+    </style>
+</head>
+<body>
+    <form id="histogram-filters" class="navbar-form inline" style="position: fixed; right: 1em; top: 1em">
+        <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
+        <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
+        <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+    </form>
+    <div class="container-fuild" style="margin-top: 1em">
+        <div class="row">
+            <div class="col-md-3">
+                <div id="toc" style="margin-top: 5em"></div>
+            </div>
+            <div class="col-md-6">
+                <h1>Telemetry Dashboard Documentation</h1>
+                <hr>
+                <h2 id="BasicConcepts">Basic Concepts</h2>
+                <dl class="dl-horizontal">
+                    <dt>Histogram</dt>
+                    <dd>A type of chart usually used to represent the <u>distribution</u> of data. Typically seen as a column chart where the X axis is a series of buckets and the Y axis is the number of data points that fall into any given bucket.</dd>
+                    <dt>Evolution</dt>
+                    <dd>A collection of histograms, each associated with a date. An evolution represents the change in a distribution over time by mapping dates to histograms. If an evolution is <u>over</u> a set of dates (which is generally the build date/buildid or submission date), then it is a mapping from those dates to histograms. For example, an evolution over buildIDs maps dates to histograms submitted from builds made on that buildID's date.</dd>
+                    <dt><i>K</i>th Percentile</dt>
+                    <dd>A measurement value for which <i>K</i> percent of the data points are at or below this value.</dd>
+                    <dt>Aggregate</dt>
+                    <dd>A summarizing, single numerical value for a histogram, such as the mean or median. Histograms have one of each aggregate, while evolutions can have many - one for each histogram they contain.</dd>
+                    <dt>Measure/Metric</dt>
+                    <dd>A value that can be measured via Telemetry, such as the number of milliseconds used in each garbage collection cycle in Firefox (GC_MS). Since there are a lot of these values, we generally only want to see their aggregates, such as their average.</dd>
+                    <dt>Sample</dt>
+                    <dd>A single reading for a measure. Generally, we only care about the number of these that fall within a certain range, not the sample values themselves.</dd>
+                    <dt>Submission/Ping</dt>
+                    <dd>A single Telemetry entry from a user. One submission can contain any number of samples, for any number of measures. Note that due to e10s, users will submit pings from both main processes and child processes. Therefore, a single user session might have multiple pings.</dd>
+                    <dt>BuildID</dt>
+                    <dd>The date at which the Telemetry-enabled program that sent a given submission was built, represented as a timestamp of the form YYYYMMDDHHMMSS.</dd>
+                    <dt>Submission Date</dt>
+                    <dd>The date at which a given submission was sent. This is different from the BuildID - a build made on April 5, being used on May 15, submits with a buildID date of April 5, but submits with a submission date of May 15.</dd>
+                </dl>
+                
+                <h2 id="HistogramDashboard">Histogram Dashboard</h2>
+                <p>The <a href="./dist.html">histogram dashboard</a> is designed for viewing distributions of measures.</p>
+                <p>Example use cases include:</p>
+                <ul>
+                    <li>Checking aggregate values for a measure over an entire range of dates.</li>
+                    <li>Seeing how the distribution for a measure changes for different builds.</li>
+                    <li>Counting the number of submissions that have a certain range of measure values.</li>
+                </ul>
+                The dashboard has four sections:
+                <img src="img/histogram-sections.png" class="img-responsive">
+                <ol>
+                    <li>
+                        The <u>filters bar</u> has multiple selectors that control which submissions to include in the histogram. In the screenshot above, the filters bar specifies that we want to see the distribution of:
+                        <ul>
+                            <li>GC_MS (the time spent inside the GC, in milliseconds),</li>
+                            <li>for Firefox only (rather than other Telemetry-enabled applications),</li>
+                            <li>for nightly 41,</li>
+                            <li>built for 64-bit computers,</li>
+                            <li>running on any OS,</li>
+                            <li>with either e10s enabled or disabled,</li>
+                            <li>and if e10s is in fact enabled, then include submissions from either main or child processes.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        The <u>histogram view</u> shows the distribution of the measure where submissions are filtered by the filter criteria, as well as summary statistics on the right. In the screenshot above, the view shows:
+                        <ul>
+                            <li>GC_MS has a normal-like distribution, centered around 140-160ms - most users will spend around that much time in the Javascript GC.</li>
+                            <li>The percentile values, such as the median value being 158.29ms.</li>
+                            <li>The total amount of submissions and the number of samples in the time range.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        The <u>advanced settings</u> control options that most users will not need to use, but might possibly be useful in some situations:
+                        <ul>
+                            <li>The <u>evolution variable</u> toggle controls whether the date range (at the bottom of the advanced settings) is filtering the range of buildIDs, or submission dates. Basically, this controls whether we show the distribution for builds made in the date range, or builds that are submitting entries in the date range.</li>
+                            <li>The <u>cumulative mode</u> toggle controls whether we show sequential, disjoint buckets in the histogram, or have all buckets start from 0 - whether we add all the buckets on the left of each bucket to the bucket itself. When enabled, the histogram shows the cumulative distribution, which is useful for finding the number of samples that are above or below a certain value.</li>
+                            <li>The <u>date range</u> controls the dates for which we include submissions in the histogram. This consists of a date range picker and a draggable range bar. The date can be explicitly selected using the date range picker, or the endpoints of the rangebar, visible as vertical black bars, can be dragged to change the start or end dates. The bar itself can also be dragged to shift the range earlier or later.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        On the top right, there is a navigation bar:
+                        <ul>
+                            <li>The <u>Evolution View</u> button switches to the evolution dashboard, transferring all the filtering over where applicable. For example, if we are currently showing the distribution of GC_MS for Firefox 32-bit on Windows, then this link will take us to the evolution dashboard, showing the evolution of GC_MS for Firefox 32-bit on Windows.</li>
+                            <li>The link button on the right obtains a <u>shortened URL</u> for the page in its current state, filters and all. This is useful for sharing certain configurations without copying and pasting long, unwieldy URLs.</li>
+                        </ul>
+                    </li>
+                </ol>
+                
+                <h2 id="EvolutionDashboard">Evolution Dashboard</h2>
+                <p>The <a href="./evo.html">evolution dashboard</a> is designed for viewing the evolution of aggregate values for measures over time.</p>
+                <p>Example use cases include:</p>
+                <ul>
+                    <li>Seeing how the average time taken for painting has changed over the last few nightly builds.</li>
+                    <li>Comparing aggregate values for different versions over time.</li>
+                    <li>Checking the number of Telemetry-enabled applications making submissions.</li>
+                </ul>
+                The dashboard has five sections:
+                <img src="img/evolution-sections.png" class="img-responsive">
+                <ol>
+                    <li>
+                        The <u>filters bar</u> has multiple selectors that control which evolutions to show, and how submissions are filtered for use in evolutions. In the screenshot above, the filters bar specifies that we want to see:
+                        <ul>
+                            <li>the median values of GC_MS (the time spent inside the GC, in milliseconds),</li>
+                            <li>for each version between nightly 39 to nightly 41 (inclusive),</li>
+                            <li>for Firefox only (rather than other Telemetry-enabled applications),</li>
+                            <li>built for any architecture,</li>
+                            <li>running on any OS,</li>
+                            <li>with either e10s enabled or disabled,</li>
+                            <li>and if e10s is in fact enabled, then include submissions from either main or child processes.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        The <u>evolution view</u> shows the aggregate values of the selected evolutions over time. In the screenshot above, the view shows:
+                        <ul>
+                            <li>The median GC_MS is generally between 100ms to 300ms for all versions.</li>
+                            <li>The median GC_MS variance is quite high until nightly 41, after which it stabilizes around 180ms.</li>
+                            <li>Nightly 39, 40, and 41 data start points, labelled by the gray vertical lines.</li>
+                            <li>Detailed information about specific dates (like numerical values) when hovering over any point on the graph.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        The <u>submissions view</u> shows the number of Telemetry submissions made over time. In the screenshot above, we see that:
+                        <ul>
+                            <li>There are very few submissions for each nightly build until around June, after which there is a large increase by several orders of magnitude.</li>
+                            <li>Detailed information is shown about specific dates (like numerical values) when hovering over any point on the graph. This is synchronized with the hover-information on the evolution view.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        The <u>advanced settings</u> control options that most users will not need to use, but might possibly be useful in some situations:
+                        <ul>
+                            <li>The <u>evolution variable</u> toggle controls whether evolutions are taken over buildID (build date) or by the date that the values were submitted (submission date). A build made on April 5, submitting a ping on May 15, will result in a submission with a build date of April 5 and a submission date of May 15. Evolution over buildIDs is usually preferred, since it tells us how a particular build is doing. However, viewing evolutions over submission dates is occasionally useful for other purposes.</li>
+                            <li>The <u>sanitize data</u> toggle controls whether we hide evolution points that don't have enough submissions. When disabled, all evolution points are shown, even those with very few submissions (which may result in unrepresentative data). When enabled, the points in the first percentile of submission counts, and those with a submission count of fewer than 100 are not shown.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        On the top right, there is a navigation bar:
+                        <ul>
+                            <li>The <u>Distribution View</u> button switches to the histogram dashboard, transferring all the filtering over where applicable. For example, if we are currently showing the evolution of GC_MS for Firefox 32-bit on Windows, then this link will take us to the histogram dashboard, showing the distribution of Firefox 32-bit on Windows.</li>
+                            <li>The link button on the right obtains a <u>shortened URL</u> for the page in its current state, filters and all. This is useful for sharing certain configurations without copying and pasting long, unwieldy URLs.</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap and supporting libraries -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script src="lib/jquery.tocify.min.js"></script>
+    <script>
+    $(function() { $("#toc").tocify({theme: "bootstrap3"}); });
+    </script>
+</body>
+</html>

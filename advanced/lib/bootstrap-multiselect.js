@@ -885,10 +885,7 @@
                                         // interesting for this search.
                                         var showElement = false;
 
-                                        if (this.options.filterBehavior === 'custom') {
-                                            showElement = this.options.filterCallback(element, this.query);
-                                        }
-                                        else if (this.options.enableCaseInsensitiveFiltering && filterCandidate.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
+                                        if (this.options.enableCaseInsensitiveFiltering && filterCandidate.toLowerCase().indexOf(this.query.toLowerCase()) > -1) {
                                             showElement = true;
                                         }
                                         else if (filterCandidate.indexOf(this.query) > -1) {

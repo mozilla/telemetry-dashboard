@@ -1,0 +1,52 @@
+/* dropdown style overrides */
+.multiselect {
+    border: transparent !important;
+    padding: 6px 3px !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+}
+.multiselect .caret { display: none; }
+.multiselect-selected-text { text-decoration: underline; }
+.multiselect-container .filter .input-group-addon { display: none; }
+.multiselect-group-clickable label { text-decoration: underline; }
+.multiselect-container input[type="radio"] { display: none; }
+.multiselect-container label.radio { padding-left: 10px; }
+
+.panel-title, .panel-title:hover, .panel-title:focus {
+    display: block;
+    margin: -10px -15px;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Rangebar style overrides */
+.elessar-rangebar {
+    border-radius: 4px;
+    background: #e6e6e6;
+    box-shadow: inset 0 0 3px 0px rgba(0,0,0,0.5);
+    height: 34px;
+}
+.elessar-range {
+    background: #B6B6FC;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    height: 100%;
+}
+
+.busy-indicator {
+    z-index: 999;
+    display: table;
+    position: fixed;
+    top: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.busy-indicator > div {
+    display: table-cell;
+    vertical-align: middle;
+    vertical-align: center;
+    text-align: center;
+    color: white;
+}
