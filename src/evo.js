@@ -66,7 +66,7 @@ Telemetry.init(function() {
         }
         
         // Set the new aggregate options that apply to the current measure
-        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates || [options[0][0]])
+        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates !== undefined && gInitialPageState.aggregates.length > 0 ? gInitialPageState.aggregates : [options[0][0]]);
         $("#aggregates").trigger("change");
       });
       $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os").change(function(e) {
