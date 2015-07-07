@@ -66,13 +66,14 @@ function loadStateFromUrlAndCookie() {
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
   
-  // Load from cookie if URL does not have state, and give up if still no state available
-  if (url.indexOf("&") < 0) {
+  // Load from cookie if URL does not have state
+  if (url.indexOf("max_channel_version=") < 0) {
     var name = "stateFromUrl=";
     document.cookie.split(";").forEach(function(entry) {
       entry = entry.trim();
       if (entry.indexOf(name) == 0) {
-        url = entry.substring(name.length, entry.length);
+        var state = entry.substring(name.length, entry.length);
+        if (state.indexOf("max_channel_version=") >= 0) { url = state; }
       }
     });
   }
@@ -86,33 +87,32 @@ function loadStateFromUrlAndCookie() {
   });
 
   // Process the saved state value
-  pageState.aggregates = pageState.aggregates !== undefined ?
-    pageState.aggregates.split("!").filter(function(v) { return v !== ""; }) : ["median"];
-  pageState.measure = pageState.measure !== undefined ?
-    pageState.measure : "GC_MS";
-  pageState.min_channel_version = pageState.min_channel_version !== undefined ?
+  pageState.aggregates = ["median"];
+  if (typeof pageState.aggregates === "string") {
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return v in ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"]; });
+    if (aggregates.length > 0) { pageState.aggregates = aggregates; }
+  }
+  pageState.measure = typeof pageState.measure === "string" && pageState.measure !== "" && pageState.measure !== "null" ? pageState.measure : "GC_MS";
+  pageState.min_channel_version = typeof pageState.min_channel_version === "string" && pageState.min_channel_version.indexOf("/") >= 0 ?
     pageState.min_channel_version : "nightly/39";
-  pageState.max_channel_version = pageState.max_channel_version !== undefined ?
+  pageState.max_channel_version = typeof pageState.max_channel_version === "string" && pageState.max_channel_version.indexOf("/") >= 0 ?
     pageState.max_channel_version : "nightly/41";
-  pageState.product = pageState.product !== undefined ?
+  pageState.product = typeof pageState.product === "string" && pageState.product !== "" && pageState.product !== "null" ?
     pageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
-  pageState.os = pageState.os !== undefined ?
+  pageState.os = typeof pageState.os === "string" && pageState.os !== "" && pageState.os !== "null" ?
     pageState.os.split("!").filter(function(v) { return v !== ""; }) : null;
-  pageState.arch = pageState.arch !== undefined ?
+  pageState.arch = typeof pageState.arch === "string" && pageState.arch !== "" && pageState.arch !== "null" ?
     pageState.arch.split("!").filter(function(v) { return v !== ""; }) : null;
-  pageState.e10s = pageState.e10s !== undefined ?
+  pageState.e10s = typeof pageState.e10s === "string" && pageState.e10s !== "" && pageState.e10s !== "null" ?
     pageState.e10s.split("!").filter(function(v) { return v !== ""; }) : null;
-  pageState.processType = pageState.processType !== undefined ?
+  pageState.processType = typeof pageState.processType === "string" && pageState.processType !== "" && pageState.processType !== "null" ?
     pageState.processType.split("!").filter(function(v) { return v !== ""; }) : null;
-  pageState.os_version = pageState.os_version !== undefined ?
-    pageState.os_version.split("!").filter(function(v) { return v !== ""; }) : null;
   
-  pageState.use_submission_date = pageState.use_submission_date !== undefined ?
-    parseInt(pageState.use_submission_date) : 0;
-  pageState.sanitize = pageState.sanitize !== undefined ? parseInt(pageState.sanitize) : 1;
-  pageState.cumulative = pageState.cumulative !== undefined ? parseInt(pageState.cumulative) : 0;
-  pageState.start_date = pageState.start_date !== undefined ? pageState.start_date : null;
-  pageState.end_date = pageState.end_date !== undefined ? pageState.end_date : null;
+  pageState.use_submission_date = pageState.use_submission_date === "0" || pageState.use_submission_date === "1" ? parseInt(pageState.use_submission_date) : 0;
+  pageState.sanitize = pageState.sanitize === "0" || pageState.sanitize === "1" ? parseInt(pageState.sanitize) : 1;
+  pageState.cumulative = pageState.cumulative === "0" || pageState.cumulative === "1" ? parseInt(pageState.cumulative) : 0;
+  pageState.start_date = typeof pageState.start_date === "string" && /\d{4}-\d{2}-\d{2}/.test(pageState.start_date) ? pageState.start_date : null;
+  pageState.end_date = typeof pageState.end_date === "string" && /\d{4}-\d{2}-\d{2}/.test(pageState.end_date) ? pageState.end_date : null;
   return pageState;
 }
 
