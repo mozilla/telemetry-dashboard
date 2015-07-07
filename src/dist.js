@@ -400,6 +400,7 @@ function displayHistogram(histogram, dates, cumulative) {
 }
 
 // Save the current state to the URL and the page cookie
+var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
   gInitialPageState = {
@@ -448,4 +449,16 @@ function saveStateToUrlAndCookie() {
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin + window.location.pathname.replace(/dist\.html$/, "evo.html") + window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
+  
+  // Update export links with the new histogram
+  if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
+  if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
+  var csvValue = "start,\tend,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
+    return start + ",\t" + end + ",\t" + count;
+  }).join("\n");
+  var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, end: end, count: count} }));
+  gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
+  gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
+  $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");
+  $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogram.measure() + ".json");
 }
