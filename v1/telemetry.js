@@ -1422,10 +1422,6 @@ Histogram.prototype.count = function Histogram_count() {
  * throw an exception.
  */
 Histogram.prototype.mean = function Histogram_mean() {
-  if (this.kind() != "linear" && this.kind() != "exponential") {
-     throw new Error("Histogram.geometricMean() is only available for " +
-                     "linear and exponential histograms");
-  }
   var sum = this.precomputeAggregateQuantity(Telemetry.DataOffsets.SUM);
   return sum / this.count();
 };
@@ -1574,11 +1570,6 @@ Histogram.prototype.geometricStandardDeviation = function() {
  * @param {Number}    percent           Percentile to estimate between 1 and 100
  */
 Histogram.prototype.percentile = function Histogram_percentile(percent) {
-  if (this.kind() != "linear" && this.kind() != "exponential") {
-    throw new Error("Histogram.percentile() is only available for linear " +
-                    "and exponential histograms");
-  }
-
   var frac  = percent / 100;
   var count = this.count();
 
