@@ -72,10 +72,21 @@ function loadStateFromUrlAndCookie() {
     document.cookie.split(";").forEach(function(entry) {
       entry = entry.trim();
       if (entry.indexOf(name) == 0) {
-        var state = entry.substring(name.length, entry.length);
-        if (state.indexOf("max_channel_version=") >= 0) { url = state; }
+        url = entry.substring(name.length, entry.length);
       }
     });
+  }
+  if (url.indexOf("max_channel_version=") < 0) { // No state or invalid/corrupted state, restore to default settings
+    pageState.aggregates = ["median"];
+    pageState.measure = ["GC_MS"];
+    pageState.min_channel_version = "nightly/38"; pageState.max_channel_version = "nightly/41";
+    pageState.product = ["Firefox"];
+    pageState.os = pageState.arch = pageState.e10s = pageState.processType = null;
+    pageState.use_submission_date = 0;
+    pageState.sanitize = 1;
+    pageState.cumulative = 0;
+    pageState.start_date = pageState.end_date = null;
+    return pageState;
   }
 
   // Load the options
