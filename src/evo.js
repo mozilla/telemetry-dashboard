@@ -56,6 +56,16 @@ Telemetry.init(function() {
         var description = gMeasureMap[measure].description;
         $("#measure-description").text(description + " (" + measure + ")");
         $("#submissions-title").text(measure + " submissions");
+        
+        // Figure out which aggregates actually apply to this measure
+        var options;
+        if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
+          options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]];
+        } else {
+          option = [["mean", "Mean"]];
+        }
+        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates !== undefined && gInitialPageState.aggregates.length > 0 ? gInitialPageState.aggregates : [options[0][0]]);
+        
         $("#aggregates").trigger("change");
       });
       $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os").change(function(e) {
