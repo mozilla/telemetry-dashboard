@@ -393,7 +393,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
         lineList = [lines[d.line_id - 1]];
         values = [d.value];
       }
-      var legendLabel = moment(date).format("MMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legendLabel = moment(date).format("dddd MMMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
       var legend = d3.select("#evolutions .mg-active-datapoint").text(legendLabel).style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
@@ -454,7 +454,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
         lineList = [submissionLines[d.line_id - 1]];
         values = [d.value];
       }
-      var legendLabel = moment(date).format("MMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legendLabel = moment(date).format("dddd MMMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
       var legend = d3.select("#submissions .mg-active-datapoint").text(legendLabel).style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {

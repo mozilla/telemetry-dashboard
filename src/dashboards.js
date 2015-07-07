@@ -18,6 +18,7 @@ $(document).ready(function() {
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
         var value = $(element).find("label").text().toLowerCase();
+        query = query.toLowerCase();
         return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0;
       };
     }
