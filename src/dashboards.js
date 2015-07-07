@@ -65,6 +65,7 @@ $(document).ready(function() {
 function loadStateFromUrlAndCookie() {
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
+  var pageState = {};
   
   // Load from cookie if URL does not have state
   if (url.indexOf("max_channel_version=") < 0) {
@@ -90,7 +91,6 @@ function loadStateFromUrlAndCookie() {
   }
 
   // Load the options
-  var pageState = {};
   url.split("&").forEach(function(fragment, i) {
     var parts = fragment.split("=");
     if (parts.length != 2) return;
