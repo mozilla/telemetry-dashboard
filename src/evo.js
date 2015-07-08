@@ -25,6 +25,11 @@ Telemetry.init(function() {
   $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   
+  // If advanced settings are not at their defaults, expand the settings pane on load
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !== 1) {
+    $("#advanced-settings-toggle").click();
+  }
+  
   updateMeasuresList(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
       refreshFilters(filterList, filterOptionsList);
@@ -53,8 +58,8 @@ Telemetry.init(function() {
       $("#measure").change(function() {
         // Update the measure description
         var measure = $("#measure").val();
-        var description = gMeasureMap[measure].description;
-        $("#measure-description").text(description + " (" + measure + ")");
+        var measureEntry = gMeasureMap[measure];
+        $("#measure-description").text(measureEntry.description + " (" + measure + ")");
         $("#submissions-title").text(measure + " submissions");
         
         // Figure out which aggregates actually apply to this measure
@@ -62,7 +67,7 @@ Telemetry.init(function() {
         if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
           options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]];
         } else {
-          option = [["mean", "Mean"]];
+          options = [["mean", "Mean"]];
         }
         multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates !== undefined && gInitialPageState.aggregates.length > 0 ? gInitialPageState.aggregates : [options[0][0]]);
         
@@ -605,4 +610,11 @@ function saveStateToUrlAndCookie() {
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
+  
+  // If advanced settings are not at their defaults, display a notice in the panel header
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !== 1) {
+    $("#advanced-settings-toggle").find("span").text(" (modified)");
+  } else {
+    $("#advanced-settings-toggle").find("span").text("");
+  }
 }
