@@ -80,10 +80,10 @@ Telemetry.init(function() {
         $("#submissions-title").text(measure + " submissions");
         
         // Figure out which aggregates actually apply to this measure
-        var options;
+        var options = [];
         if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
           options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]];
-        } else {
+        } else if (measureEntry.kind === "boolean" || measureEntry.kind === "flag") {
           options = [["mean", "Mean"]];
         }
         
