@@ -86,9 +86,15 @@ Telemetry.init(function() {
         } else {
           options = [["mean", "Mean"]];
         }
-        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates !== undefined && gInitialPageState.aggregates.length > 0 ? gInitialPageState.aggregates : [options[0][0]]);
         
-        $("#aggregates").trigger("change");
+        var aggregatesFilter = $("#aggregates");
+        var oldAggregates = gInitialPageState.aggregates.filter(function(aggregate) { // Aggregates that are still available
+          return options.reduce(function(contained, option) { return contained || option[0] === aggregate }, false);
+        });
+        multiselectSetOptions(aggregatesFilter, options, oldAggregates.length > 0 ? oldAggregates : [options[0][0]]);
+        gPreviousFilterAllSelected[aggregatesFilter.attr("id")] = false;
+
+        aggregatesFilter.trigger("change");
       });
       $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os").change(function(e) {
         var $this = $(this);
@@ -99,7 +105,7 @@ Telemetry.init(function() {
           if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
             var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
               .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
-            $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+            $this.multiselect("deselectAll", false).multiselect("select", nonSelectedOptions);
           }
           gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
         

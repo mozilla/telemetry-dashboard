@@ -262,14 +262,15 @@ function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
   
   if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
-  var selected = element.val() || defaultSelected;
-  if (!$.isArray(selected) && selected !== null) { selected = [selected]; }
+  var valuesMap = {}; options.forEach(function(option) { valuesMap[option[0]] = true; });
+  var selected = (element.val() || []).filter(function(value) { return valuesMap.hasOwnProperty(value); }); // A list of options that are currently selected that will still be available in the new options
   
   // Check inputs
   if (defaultSelected !== null) {
     defaultSelected.forEach(function(option) {
       if (typeof option !== "string") { throw "Bad defaultSelected value: must be array of strings."; }
     });
+    if (selected.length === 0) { selected = $.isArray(defaultSelected) ? defaultSelected : [defaultSelected]; }
   }
   
   var useGroups = options[0].length === 3;
@@ -302,16 +303,8 @@ function multiselectSetOptions(element, options, defaultSelected) {
       return '<option value="' + option[0] + '">' + option[1] + '</option>';
     }).join()).multiselect("rebuild");
   }
-  
-  if (selected !== null) {
-    // Filter out the options that were selected but no longer exist
-    var availableOptionMap = {};
-    options.forEach(function(option) { availableOptionMap[option[0]] = true; });
-    selected = selected.filter(function(selectedOption) {
-      return availableOptionMap.hasOwnProperty(selectedOption);
-    });
-    element.multiselect("select", selected); // Select the original options where applicable
-  }
+
+  element.multiselect("deselectAll", false).multiselect("select", selected); // Select the original options where applicable
 }
 
 var indicate = (function() {
