@@ -25,6 +25,11 @@ Telemetry.init(function() {
   $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   
+  // If advanced settings are not at their defaults, expand the settings pane on load
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !== 1) {
+    $("#advanced-settings-toggle").click();
+  }
+  
   updateMeasuresList(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
       refreshFilters(filterList, filterOptionsList);
@@ -48,6 +53,23 @@ Telemetry.init(function() {
           if (e.target.id === "min-channel-version") { $("#max-channel-version").multiselect("select", fromVersion); }
           else { $("#min-channel-version").multiselect("select", toVersion); }
         }
+        if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
+          if (e.target.id === "min-channel-version") { // min version changed, change max version to be the largest version in the current channel
+            var channel = fromVersion.split("/")[0];
+            var maxChannelVersion = null;
+            var channelVersions = Telemetry.versions().forEach(function(version) {
+              if (version.startsWith(channel + "/")) { maxChannelVersion = version; }
+            });
+            $("#max-channel-version").multiselect("select", maxChannelVersion);
+          } else { // max version changed, change the min version to be the smallest version in the current channel
+            var channel = toVersion.split("/")[0];
+            var minChannelVersion = null;
+            var channelVersions = Telemetry.versions().forEach(function(version) {
+              if (minChannelVersion === null && version.startsWith(channel + "/")) { minChannelVersion = version; }
+            });
+            $("#min-channel-version").multiselect("select", minChannelVersion);
+          }
+        }
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
       $("#measure").change(function() {
@@ -64,9 +86,15 @@ Telemetry.init(function() {
         } else if (measureEntry.kind === "boolean" || measureEntry.kind === "flag") {
           options = [["mean", "Mean"]];
         }
-        multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates !== undefined && gInitialPageState.aggregates.length > 0 ? gInitialPageState.aggregates : [options[0][0]]);
         
-        $("#aggregates").trigger("change");
+        var aggregatesFilter = $("#aggregates");
+        var oldAggregates = gInitialPageState.aggregates.filter(function(aggregate) { // Aggregates that are still available
+          return options.reduce(function(contained, option) { return contained || option[0] === aggregate }, false);
+        });
+        multiselectSetOptions(aggregatesFilter, options, oldAggregates.length > 0 ? oldAggregates : [options[0][0]]);
+        gPreviousFilterAllSelected[aggregatesFilter.attr("id")] = false;
+
+        aggregatesFilter.trigger("change");
       });
       $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os").change(function(e) {
         var $this = $(this);
@@ -77,7 +105,7 @@ Telemetry.init(function() {
           if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
             var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
               .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
-            $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+            $this.multiselect("deselectAll", false).multiselect("select", nonSelectedOptions);
           }
           gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
         
@@ -357,6 +385,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   
   var aggregateMap = {};
   lines.forEach(function(line) { aggregateMap[line.aggregate] = true; });
+  var variableLabel = useSubmissionDate ? "Submission Date" : "Build ID";
   var valueLabel = Object.keys(aggregateMap).sort().join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
   
   var markers = [], usedDates = {};
@@ -378,7 +407,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#evolutions",
     x_extended_ticks: true,
-    x_label: "Build ID", y_label: valueLabel,
+    x_label: variableLabel, y_label: valueLabel,
     transition_on_update: false,
     interpolate: "linear",
     markers: markers, legend: aggregateLabels,
@@ -605,4 +634,11 @@ function saveStateToUrlAndCookie() {
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin + window.location.pathname.replace(/evo\.html$/, "dist.html") + window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
+  
+  // If advanced settings are not at their defaults, display a notice in the panel header
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !== 1) {
+    $("#advanced-settings-toggle").find("span").text(" (modified)");
+  } else {
+    $("#advanced-settings-toggle").find("span").text("");
+  }
 }
