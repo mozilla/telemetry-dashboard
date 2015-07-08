@@ -18,6 +18,7 @@ $(document).ready(function() {
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
         var value = $(element).find("label").text().toLowerCase();
+        query = query.toLowerCase();
         return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0;
       };
     }
@@ -98,11 +99,11 @@ function loadStateFromUrlAndCookie() {
   });
 
   // Process the saved state value
-  pageState.aggregates = ["median"];
   if (typeof pageState.aggregates === "string") {
     var aggregates = pageState.aggregates.split("!").filter(function(v) { return v in ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"]; });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
-  }
+    else { pageState.aggregates = ["median"]; }
+  } else { pageState.aggregates = ["median"]; }
   pageState.measure = typeof pageState.measure === "string" && pageState.measure !== "" && pageState.measure !== "null" ? pageState.measure : "GC_MS";
   pageState.min_channel_version = typeof pageState.min_channel_version === "string" && pageState.min_channel_version.indexOf("/") >= 0 ?
     pageState.min_channel_version : "nightly/39";

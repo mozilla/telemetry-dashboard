@@ -58,15 +58,14 @@ Telemetry.init(function() {
         $("#submissions-title").text(measure + " submissions");
         
         // Figure out which aggregates actually apply to this measure
-        var options;
+        var options = [];
         if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
-          options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]]
-        } else {
-          options = [["submissions", "Submissions"]];
+          options = [["median", "Median"], ["mean", "Mean"], ["5th-percentile", "5th Percentile"], ["25th-percentile", "25th Percentile"], ["75th-percentile", "75th Percentile"], ["95th-percentile", "95th Percentile"]];
+        } else if (measureEntry.kind === "boolean" || measureEntry.kind === "flag") {
+          options = [["mean", "Mean"]];
         }
-        
-        // Set the new aggregate options that apply to the current measure
         multiselectSetOptions($("#aggregates"), options, gInitialPageState.aggregates !== undefined && gInitialPageState.aggregates.length > 0 ? gInitialPageState.aggregates : [options[0][0]]);
+        
         $("#aggregates").trigger("change");
       });
       $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-arch, #filter-os").change(function(e) {
@@ -204,7 +203,6 @@ function calculateHistogramEvolutions(callback) {
   }
 
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  if (versions.length > 10) { versions = versions.slice(0, 10); } // Only show up to 10 versions for performance reasons
   
   // Exclude those versions that don't actually have the measure - a measure may be selectable but nonexistant if it exists in some other version, so we just ignore this version if it doesn't have that measure
   versions = versions.filter(function(channelVersion) { return gVersionMeasureMap[channelVersion][measure] !== undefined; });
@@ -405,7 +403,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
         lineList = [lines[d.line_id - 1]];
         values = [d.value];
       }
-      var legendLabel = moment(date).format("MMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legendLabel = moment(date).format("dddd MMMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
       var legend = d3.select("#evolutions .mg-active-datapoint").text(legendLabel).style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
@@ -466,7 +464,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
         lineList = [submissionLines[d.line_id - 1]];
         values = [d.value];
       }
-      var legendLabel = moment(date).format("MMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
+      var legendLabel = moment(date).format("dddd MMMM D, YYYY") + (useSubmissionDate ? ":" : " (build " + moment(date).format("YYYYMMDD") + "):");
       var legend = d3.select("#submissions .mg-active-datapoint").text(legendLabel).style("fill", "white");
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
