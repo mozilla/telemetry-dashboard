@@ -53,6 +53,23 @@ Telemetry.init(function() {
           if (e.target.id === "min-channel-version") { $("#max-channel-version").multiselect("select", fromVersion); }
           else { $("#min-channel-version").multiselect("select", toVersion); }
         }
+        if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
+          if (e.target.id === "min-channel-version") { // min version changed, change max version to be the largest version in the current channel
+            var channel = fromVersion.split("/")[0];
+            var maxChannelVersion = null;
+            var channelVersions = Telemetry.versions().forEach(function(version) {
+              if (version.startsWith(channel + "/")) { maxChannelVersion = version; }
+            });
+            $("#max-channel-version").multiselect("select", maxChannelVersion);
+          } else { // max version changed, change the min version to be the smallest version in the current channel
+            var channel = toVersion.split("/")[0];
+            var minChannelVersion = null;
+            var channelVersions = Telemetry.versions().forEach(function(version) {
+              if (minChannelVersion === null && version.startsWith(channel + "/")) { minChannelVersion = version; }
+            });
+            $("#min-channel-version").multiselect("select", minChannelVersion);
+          }
+        }
         updateMeasuresList(function() { $("#measure").trigger("change"); });
       });
       $("#measure").change(function() {
