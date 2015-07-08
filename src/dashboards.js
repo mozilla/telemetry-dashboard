@@ -263,7 +263,9 @@ function multiselectSetOptions(element, options, defaultSelected) {
   
   if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
   var valuesMap = {}; options.forEach(function(option) { valuesMap[option[0]] = true; });
-  var selected = (element.val() || []).filter(function(value) { return valuesMap.hasOwnProperty(value); }); // A list of options that are currently selected that will still be available in the new options
+  var selected = element.val() || [];
+  if (!$.isArray(selected)) { selected = [selected]; } // For single selects, the value is not wrapped in an array
+  selected = selected.filter(function(value) { return valuesMap.hasOwnProperty(value); }); // A list of options that are currently selected that will still be available in the new options
   
   // Check inputs
   if (defaultSelected !== null) {
