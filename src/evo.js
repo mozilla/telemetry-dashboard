@@ -379,6 +379,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   
   var aggregateMap = {};
   lines.forEach(function(line) { aggregateMap[line.aggregate] = true; });
+  var variableLabel = useSubmissionDate ? "Submission Date" : "Build ID";
   var valueLabel = Object.keys(aggregateMap).sort().join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
   
   var markers = [], usedDates = {};
@@ -400,7 +401,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#evolutions",
     x_extended_ticks: true,
-    x_label: "Build ID", y_label: valueLabel,
+    x_label: variableLabel, y_label: valueLabel,
     transition_on_update: false,
     interpolate: "linear",
     markers: markers, legend: aggregateLabels,
