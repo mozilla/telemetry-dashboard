@@ -37,8 +37,10 @@ Telemetry.init(function() {
       $("#filter-product").multiselect("select", gInitialPageState.product);
       if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
-      else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
+      
+      if (gInitialPageState.os !== null) { // We accept values such as "WINNT", as well as "WINNT,6.1"
+        $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
+      } else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
       
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
@@ -192,8 +194,11 @@ function refreshFilters(filterList, filterOptionsList) {
   });
   
   multiselectSetOptions($("#filter-product"), optionsList[1]);
-  multiselectSetOptions($("#filter-os"), newOSList);
   multiselectSetOptions($("#filter-arch"), optionsList[4]);
+  
+  var selectedOSs = compressOSs();
+  multiselectSetOptions($("#filter-os"), newOSList);
+  $("#filter-os").multiselect("select", expandOSs(selectedOSs));
 }
 
 function calculateHistogramEvolutions(callback) {
@@ -206,7 +211,7 @@ function calculateHistogramEvolutions(callback) {
   // Obtain a mapping from filter names to filter options
   var filters = {};
   for (var filterName in gFilters) {
-    var filterSelector = $(gFilters[filterName]);
+    var filterSelector = gFilters[filterName];
     var selection = filterSelector.val() || [];
     var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
     if (selection.length != optionCount) { // Not all options are selected
@@ -610,7 +615,7 @@ function saveStateToUrlAndCookie() {
   var selected = $("#filter-arch").val() || [];
   if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   var selected = $("#filter-os").val() || [];
-  if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = selected; }
+  if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {

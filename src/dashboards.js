@@ -308,6 +308,8 @@ function multiselectSetOptions(element, options, defaultSelected) {
   element.multiselect("deselectAll", false).multiselect("select", selected); // Select the original options where applicable
 }
 
+// =========== Histogram/Evolution Dashboard-specific common code
+
 var indicate = (function() {
   var indicatorTimeout = null;
   return function indicate(message) {
@@ -323,3 +325,40 @@ var indicate = (function() {
     }
   }
 })();
+
+function compressOSs() {
+  var selected = $("#filter-os").val() || [];
+  var options = $("#filter-os option").map(function(i, element) { return $(element).attr("value"); }).toArray();
+  var optionCounts = {}, selectedByOS = {};
+  options.forEach(function(option) {
+    var os = option.split(",")[0]; optionCounts[os] = optionCounts[os] + 1 || 1;
+  });
+  selected.forEach(function(option) {
+    var os = option.split(",")[0];
+    if (!selectedByOS.hasOwnProperty(os)) { selectedByOS[os] = []; }
+    selectedByOS[os].push(option);
+  });
+  var selectedOSs = [];
+  for (os in selectedByOS) {
+    if (selectedByOS[os].length === optionCounts[os]) { // All versions of this OS are selected, just add the OS name
+      selectedOSs.push(os);
+    } else { // Not all versions selected, add each version individually
+      selectedOSs = selectedOSs.concat(selectedByOS[os]);
+    }
+  }
+  return selectedOSs;
+}
+
+function expandOSs(OSs) {
+  var options = $("#filter-os option").map(function(i, element) { return $(element).attr("value"); }).toArray();
+  var osVersions = [];
+  OSs.forEach(function(osVersion) {
+    if (osVersion.indexOf(",") < 0) { // OS only - all OS versions of this OS
+      var allVersions = options.filter(function(option) { return option.startsWith(osVersion + ",") });
+      osVersions = osVersions.concat(allVersions);
+    } else { // Specific OS version
+      osVersions.push(osVersion);
+    }
+  });
+  return osVersions;
+}
