@@ -371,7 +371,7 @@ function displayHistogram(histogram, dates, cumulative) {
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
-    left: 100, right: 200,
+    left: 150, right: 150,
     transition_on_update: false,
     target: "#distribution",
     x_label: histogram.description(), y_label: "Percentage of Samples",
@@ -384,9 +384,9 @@ function displayHistogram(histogram, dates, cumulative) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
       if (ends[d.x] === Infinity) {
-        label = count + " samples (" + percentage + ") above " + formatNumber(cumulative ? 0 : starts[d.x]);
+        label = count + " samples (" + percentage + ") at or above " + formatNumber(cumulative ? 0 : starts[d.x]);
       } else {
-        label = count + " samples (" + percentage + ") between " + formatNumber(cumulative ? 0 : starts[d.x]) + " and " + formatNumber(ends[d.x]);
+        label = count + " samples (" + percentage + ") from " + formatNumber(cumulative ? 0 : starts[d.x]) + " inclusive to " + formatNumber(ends[d.x]) + " exclusive";
       }
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
@@ -412,10 +412,14 @@ function displayHistogram(histogram, dates, cumulative) {
     // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .label").attr("dy", "1.2em");
-  $(".mg-x-axis text").each(function(i, text) { // Remove "NaN" labels
-    if ($(text).text() === "NaN") { text.parentNode.removeChild(text); }
+  $(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
+    if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
+    $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");
   });
-  $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
+  $(".mg-x-axis line").each(function(i, tick) { // Extend axis ticks to 15 pixels
+    $(tick).attr("y2", parseInt($(tick).attr("y1")) + 12);
+  });
+  $(".mg-y-axis .label").attr("y", "55").attr("dy", "0");
 }
 
 // Save the current state to the URL and the page cookie
@@ -472,20 +476,26 @@ function saveStateToUrlAndCookie() {
   $("#switch-views").attr("href", dashboardURL);
   
   // Update export links with the new histogram
-  if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
-  if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-  var csvValue = "start,\tend,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
-    return start + ",\t" + (isFinite(end) ? end : Infinity) + ",\t" + count;
-  }).join("\n");
-  var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, end: end, count: count} }));
-  gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
-  gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
-  $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");
-  $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogram.measure() + ".json");
+  if (gCurrentHistogram !== null) {
+    if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
+    if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
+    var csvValue = "start,\tend,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
+      return start + ",\t" + (isFinite(end) ? end : Infinity) + ",\t" + count;
+    }).join("\n");
+    var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, end: isFinite(end) ? end : Infinity, count: count} }));
+    gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
+    gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
+    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure + ".csv");
+    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogram.measure + ".json");
+  }
   
   // If advanced settings are not at their defaults, display a notice in the panel header
-  var fullDates = gCurrentEvolution.dates();
-  var startMoment = moment(fullDates[0]), endMoment = moment(fullDates[fullDates.length - 1]);
+  if (gCurrentEvolution !== null) {
+    var fullDates = gCurrentEvolution.dates();
+    var startMoment = moment(fullDates[0]), endMoment = moment(fullDates[fullDates.length - 1]);
+  } else {
+    var startMoment = start, endMoment = end;
+  }
   var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || !start.isSame(startMoment) || !end.isSame(endMoment)) {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
