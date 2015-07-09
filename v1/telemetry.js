@@ -300,7 +300,8 @@ Telemetry.versions = function Telemetry_versions() {
   if (_versions === null) {
     throw new Error("Telemetry.versions: Telemetry module isn't initialized!");
   }
-  return _versions;
+  var pattern = /^\w+\/\d+$/;
+  return _versions.filter(function(version) { return pattern.test(version); });
 };
 
 /**

@@ -176,8 +176,7 @@ function getHumanReadableOptions(filterName, options, os) {
   } else if (filterName === "measure") {
     return options.map(function(option) { return [option, option] });
   } else if (filterName === "channelVersion") {
-    var pattern = /^\w+\/\d+$/;
-    return options.filter(function(option) { return pattern.test(option); }).map(function(option) { return [option, option.replace("/", " ")] });
+    return options.map(function(option) { return [option, option.replace("/", " ")] });
   }
   return options.map(function(option) { return [option, option] });
 }
