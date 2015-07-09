@@ -20,9 +20,9 @@ $(document).ready(function() {
     if ($this.attr("id") === "measure") {
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
-        var value = $(element).find("label").text().toLowerCase();
+        var currentOption = $(element).find("label").text().toLowerCase(); // Get the value of the current option being filtered
         query = query.toLowerCase();
-        return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0 || value.indexOf(query.replace(/[ _]/g, "")) >= 0;
+        return currentOption.indexOf(query) >= 0 || currentOption.replace(/_/g, " ").indexOf(query) >= 0 || currentOption.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
     if ($this.attr("title") !== undefined) {
@@ -330,7 +330,8 @@ function compressOSs() {
   var options = $("#filter-os option").map(function(i, element) { return $(element).attr("value"); }).toArray();
   var optionCounts = {}, selectedByOS = {};
   options.forEach(function(option) {
-    var os = option.split(",")[0]; optionCounts[os] = optionCounts[os] + 1 || 1;
+    var os = option.split(",")[0];
+    optionCounts[os] = optionCounts[os] + 1 || 1;
   });
   selected.forEach(function(option) {
     var os = option.split(",")[0];
