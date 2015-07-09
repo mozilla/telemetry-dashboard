@@ -22,7 +22,7 @@ $(document).ready(function() {
       options.filterCallback = function(element, query) {
         var value = $(element).find("label").text().toLowerCase();
         query = query.toLowerCase();
-        return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0;
+        return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0 || value.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
     if ($this.attr("title") !== undefined) {
