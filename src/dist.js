@@ -323,7 +323,8 @@ function getFilteredHistogram(version, measure, histogram, filters, filterList) 
 function displayHistogram(histogram, dates, cumulative) {
   cumulative = cumulative || false;
 
-  if (histogram === null) {
+  // Show that the data is missing if there is no histogram, the histogram has an invalid number of buckets, or the histogram exists but has no samples
+  if (histogram === null || histogram._buckets.length < 2 || histogram.count() === 0) {
     $("#summary").hide();
     MG.data_graphic({
       chart_type: "missing-data",
@@ -331,6 +332,7 @@ function displayHistogram(histogram, dates, cumulative) {
       left: 100, right: 150,
       target: "#distribution",
     });
+    $(".mg-missing-pane").remove();
     return;
   }
   $("#summary").show();
@@ -359,6 +361,7 @@ function displayHistogram(histogram, dates, cumulative) {
     counts = counts.map(function(count) { return total += count; });
   }
   var ends = histogram.map(function(count, start, end, i) { return end; });
+  ends[ends.length - 1] = Infinity;
   var totalCount = histogram.count();
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
 
@@ -366,9 +369,9 @@ function displayHistogram(histogram, dates, cumulative) {
   MG.data_graphic({
     data: distributionSamples,
     binned: true,
-    chart_type: totalCount > 0 ? "histogram" : "missing-data",
+    chart_type: "histogram",
     full_width: true, height: 600,
-    left: 100, right: 150,
+    left: 100, right: 200,
     transition_on_update: false,
     target: "#distribution",
     x_label: histogram.description(), y_label: "Percentage of Samples",
@@ -379,8 +382,12 @@ function displayHistogram(histogram, dates, cumulative) {
     yax_format: function(value) { return value + "%"; },
     mouseover: function(d, i) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
-      var label = count + " samples (" + percentage + ") between " +
-        formatNumber(cumulative ? 0 : starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      var label;
+      if (ends[d.x] === Infinity) {
+        label = count + " samples (" + percentage + ") above " + formatNumber(cumulative ? 0 : starts[d.x]);
+      } else {
+        label = count + " samples (" + percentage + ") between " + formatNumber(cumulative ? 0 : starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      }
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
       
@@ -409,7 +416,6 @@ function displayHistogram(histogram, dates, cumulative) {
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); }
   });
   $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
-  $(".mg-missing-pane").remove();
 }
 
 // Save the current state to the URL and the page cookie
@@ -466,7 +472,7 @@ function saveStateToUrlAndCookie() {
   if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
   if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
   var csvValue = "start,\tend,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
-    return start + ",\t" + end + ",\t" + count;
+    return start + ",\t" + (isFinite(end) ? end : Infinity) + ",\t" + count;
   }).join("\n");
   var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, end: end, count: count} }));
   gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
