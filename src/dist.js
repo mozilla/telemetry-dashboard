@@ -329,7 +329,7 @@ function displayHistogram(histogram, dates, cumulative) {
     MG.data_graphic({
       chart_type: "missing-data",
       full_width: true, height: 600,
-      left: 100, right: 150,
+      left: 100, right: 0,
       target: "#distribution",
     });
     $(".mg-missing-pane").remove();
