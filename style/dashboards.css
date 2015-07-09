@@ -5,9 +5,13 @@
     font-size: inherit !important;
     font-weight: inherit !important;
 }
+.multiselect-container .filter { /* make the search bar stick to the top */
+    position: sticky;
+    z-index: 1;
+    top: 5px;
+}
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
-.multiselect-container .filter .input-group-addon { display: none; }
 .multiselect-group-clickable label { text-decoration: underline; }
 .multiselect-container input[type="radio"] { display: none; }
 .multiselect-container label.radio { padding-left: 10px; }

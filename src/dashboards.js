@@ -28,10 +28,6 @@ $(document).ready(function() {
     $this.multiselect(options);
     $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
   });
-  $(".multiselect-container").scroll(function() { // Make the filter box fixed to the top of the select control
-    var $this = $(this);
-    $this.find(".multiselect-item.filter").css("position", "relative").css("top", $this.scrollTop()).css("z-index", 1);
-  });
   
   // Date range pickers
   $(".date-range").daterangepicker();
