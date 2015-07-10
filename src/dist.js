@@ -384,7 +384,7 @@ function displayHistogram(histogram, dates, cumulative) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
       if (ends[d.x] === Infinity) {
-        label = count + " samples (" + percentage + ") where sample value >= " + formatNumber(cumulative ? 0 : starts[d.x]);
+        label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
       } else {
         label = count + " samples (" + percentage + ") where " + formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
       }
