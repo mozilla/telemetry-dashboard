@@ -215,11 +215,11 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     minDate: startMoment,
     maxDate: endMoment,
     showDropdowns: true,
-    drops: "up",
+    drops: "up", opens: "center",
     ranges: {
        "All": [startMoment, endMoment],
        "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
-       "Last 7 Days": [endMoment.clone().subtract(6, 'days'), endMoment],
+       "Last 7 Days": [endMoment.clone().subtract(6, "days"), endMoment],
     },
   }, function(chosenStartMoment, chosenEndMoment, label) {
     updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true);

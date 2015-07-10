@@ -24,6 +24,10 @@
     color: inherit;
 }
 
+/* Date range picker style overrides */
+.daterangepicker .calendar { display: none !important; }
+.daterangepicker .ranges ul li:last-child { display: none !important; }
+
 /* Rangebar style overrides */
 .elessar-rangebar {
     border-radius: 4px;
