@@ -19,6 +19,10 @@ $(function() {
   $("#generate-normal").click(function() {
     var lower = parseInt($("input[name=histogram-lower]").val());
     var upper = parseInt($("input[name=histogram-upper]").val());
+    if (lower < 0 || lower >= upper) {
+      $("#data-status").text("Invalid bounds");
+      return;
+    }
     
     // Generate normally-distributed values using box-muller transform
     var values = normalRandoms((lower + upper) / 2, (upper - lower) / 4, 10000)
@@ -30,6 +34,10 @@ $(function() {
   $("#generate-log-normal").click(function() {
     var lower = parseInt($("input[name=histogram-lower]").val());
     var upper = parseInt($("input[name=histogram-upper]").val());
+    if (lower < 0 || lower >= upper) {
+      $("#data-status").text("Invalid bounds");
+      return;
+    }
     
     // Generate normally-distributed values using box-muller transform
     var values = logNormalRandoms(Math.sqrt(Math.max(lower, 1) * upper), Math.pow(upper / Math.max(lower, 1), 1 / 4), 10000)
@@ -41,6 +49,10 @@ $(function() {
   $("#generate-uniform").click(function() {
     var lower = parseInt($("input[name=histogram-lower]").val());
     var upper = parseInt($("input[name=histogram-upper]").val());
+    if (lower < 0 || lower >= upper) {
+      $("#data-status").text("Invalid bounds");
+      return;
+    }
     
     var values = [];
     for (var i = 0; i < 10000; i ++) { values.push(Math.random() * (upper - lower) + lower); }
@@ -130,6 +142,15 @@ function update() {
   var lower = parseInt($("input[name=histogram-lower]").val());
   var upper = parseInt($("input[name=histogram-upper]").val());
   var bucketCount = parseInt($("input[name=histogram-bucket-count]").val());
+  if (!isFinite(lower) || !isFinite(upper) || lower < 0 || lower >= upper) {
+    $("#data-status").text("Invalid bounds");
+    return;
+  }
+  if (!isFinite(bucketCount) || bucketCount < 3) {
+    $("#data-status").text("Invalid bucket count");
+    return;
+  }
+  
   var buckets = $("#histogram-bucket-type").val() === "linear"
     ? linearBuckets(lower, upper, bucketCount) : exponentialBuckets(lower, upper, bucketCount);
   var kind = $("#histogram-bucket-type").val() === "linear" ? "linear" : "exponential";
@@ -145,8 +166,7 @@ function update() {
   }
   
   var histogram = new Telemetry.Histogram(buckets, buckets, kind, 1000000, "Test Histogram");
-  var totalHitCount = values.reduce(function(previous, value) { return previous + value; }, 0)
-  var bucketValues = histogram.map(function(count, start, end, i) {
+  var counts = histogram.map(function(count, start, end, i) {
     var hitCount = 0;
     if (i === buckets.length - 1) { // Last bucket, no upper bound
       values.forEach(function(value, i) {
@@ -157,19 +177,25 @@ function update() {
         if (start <= value && value < end) { hitCount ++; }
       });
     }
-    return {value: i, count: (hitCount / values.length) * 100};
+    return hitCount;
   });
-  console.log(bucketValues)
   var starts = histogram.map(function(count, start, end, i) { return start; });
   var ends = histogram.map(function(count, start, end, i) { return end; });
-  displayHistogram(bucketValues, starts, ends);
+  ends[ends.length - 1] = Infinity;
+  displayHistogram(counts, starts, ends);
 }
 
-function displayHistogram(values, starts, ends) {
+function displayHistogram(counts, starts, ends) {
+  var totalCount = counts.reduce(function(previous, count) { return previous + count; }, 0);
+  var values = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
+
+  // Plot the data using MetricsGraphics
   MG.data_graphic({
-    data: values, binned: true,
+    data: values,
+    binned: true,
     chart_type: "histogram",
     full_width: true, height: 800,
+    left: 150, right: 50,
     transition_on_update: false,
     target: "#distribution",
     x_label: "Test Histogram", y_label: "Percentage of Samples",
@@ -179,27 +205,29 @@ function displayHistogram(values, starts, ends) {
     xax_format: function(index) { return formatNumber(starts[index]); },
     yax_format: function(value) { return value + "%"; },
     mouseover: function(d, i) {
-      var count = formatNumber(values[d.x].count), percentage = Math.round(d.y * 100) / 100 + "%";
-      var label = count + " samples (" + percentage + ") between " +
-        formatNumber(starts[d.x]) + " and " + formatNumber(ends[d.x]);
+      var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
+      var label;
+      if (ends[d.x] === Infinity) {
+       label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(starts[d.x]);
+      } else {
+       label = count + " samples (" + percentage + ") where " + formatNumber(starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
+      }
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
       
       // Reposition element
-      var legend = d3.select("#distribution .mg-active-datapoint").text(label);
-    },
-    mouseout: function(d, i) {
-      d3.select("#distribution .active-datapoint-background").remove(); // Remove old background
+      var legend = d3.select("#distribution .mg-active-datapoint").text(label)
     },
   });
   
-    // Reposition and resize text
+  // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .label").attr("dy", "1.2em");
   $(".mg-x-axis text").each(function(i, text) { // Remove "NaN" labels
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); }
   });
   $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
+  $(".mg-missing-pane").remove();
 }
 
 function formatNumber(number) {
