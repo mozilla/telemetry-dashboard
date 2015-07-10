@@ -384,9 +384,9 @@ function displayHistogram(histogram, dates, cumulative) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
       if (ends[d.x] === Infinity) {
-        label = count + " samples (" + percentage + ") at or above " + formatNumber(cumulative ? 0 : starts[d.x]);
+        label = count + " samples (" + percentage + ") where sample value >= " + formatNumber(cumulative ? 0 : starts[d.x]);
       } else {
-        label = count + " samples (" + percentage + ") from " + formatNumber(cumulative ? 0 : starts[d.x]) + " inclusive to " + formatNumber(ends[d.x]) + " exclusive";
+        label = count + " samples (" + percentage + ") where " + formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
       }
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
