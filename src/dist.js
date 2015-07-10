@@ -460,10 +460,10 @@ function saveStateToUrlAndCookie() {
   // Update export links with the new histogram
   if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
   if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-  var csvValue = "start,\tend,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
-    return start + ",\t" + end + ",\t" + count;
+  var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
+    return start + ",\t" + count;
   }).join("\n");
-  var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, end: end, count: count} }));
+  var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, count: count} }));
   gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
   gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
   $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");
