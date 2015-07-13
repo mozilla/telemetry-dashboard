@@ -707,13 +707,19 @@ function renderHistogramTable(hgram) {
   }
 
   // Build table after aggregating in the background worker
+  var tickName = ["flag", "boolean", "enumerated"].indexOf(hgram.kind()) >= 0 ? "Key" : "Start";
+  var head = $('#histogram-table').find("thead");
+  head.empty().append($('<tr>')
+    .append($('<th>').text(tickName))
+    .append($('<th>').text("Count"))
+    .append($('<th>').text("Percentage"))
+  );
   var body = $('#histogram-table').find('tbody');
   body.empty();
   Telemetry.doAsync("Histogram_count", hgram, [], function(hgram, total) {
     body.append.apply(body, hgram.map(function (count, start, end, index) {
       return $('<tr>')
         .append($('<td>').text(fmt(start)))
-        .append($('<td>').text(fmt(end)))
         .append($('<td>').text(fmt(count)))
         .append($('<td>').text(Math.round(100 * count / total) + "%"));
     }));
@@ -854,9 +860,9 @@ $('#export-link').mousedown(function () {
     URL.revokeObjectURL(gPreviousBlobUrl);
     gPreviousBlobUrl = null;
   }
-  var csv = "start,\tend,\tcount\n";
+  var csv = "start,\tcount\n";
   csv += gCurrentHistogram.map(function (count, start, end, index) {
-    return [start, end, count].join(",\t");
+    return start + ",\t" + count;
   }).join("\n");
 
   gPreviousBlobUrl = URL.createObjectURL(new Blob([csv]));
