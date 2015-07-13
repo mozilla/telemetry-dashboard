@@ -20,13 +20,18 @@
 
 /* hide spinners for number inputs */
 input[type=number] { -moz-appearance: textfield; }
-::-webkit-inner-spin-button { -webkit-appearance: none;}
-::-webkit-outer-spin-button { -webkit-appearance: none;}
+::-webkit-inner-spin-button { -webkit-appearance: none; }
+::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input { margin-top: 3px; }
     </style>
 </head>
 <body>
     <div class="container-fluid">
         <header>
+            <form class="navbar-form inline pull-right">
+                <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+            </form>
             <h1>Histogram Simulator <span class="label label-warning" style="font-size: 12px">DRAFT</span></h1>
             <p>Tweak histogram settings for data fitting purposes. See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe">Adding a new Telemetry Probe</a> for information about new Telemetry probes.</p>
         </header>
@@ -38,7 +43,7 @@ input[type=number] { -moz-appearance: textfield; }
                     <br>
                     Upper bound (<code>high</code>): <input name="histogram-upper" class="form-control" type="number" value="500" min="0">
                     <br>
-                    Bucket count (<code>n_buckets</code>): <input name="histogram-bucket-count" class="form-control" type="number" value="20">
+                    Bucket count (<code>n_buckets</code>/<code>n_values</code>): <input name="histogram-bucket-count" class="form-control" type="number" value="20">
                     <br>
                     Histogram Kind (<code>kind</code>): 
                     <select id="histogram-kind">
@@ -49,14 +54,15 @@ input[type=number] { -moz-appearance: textfield; }
                         <option value="exponential">exponential</option>
                     </select>
                 </form>
-                <h2>...to plot this data...</h2>
-                <textarea id="data-editor">[]</textarea>
-                <div id="data-status" class="text-warning"></div>
+                <hr>
                 <form class="form-horizontal">
-                    <button id="generate-normal" class="btn btn-default btn-block">Generate normally distributed data</button>
-                    <button id="generate-log-normal" class="btn btn-default btn-block">Generate log-normally distributed data</button>
-                    <button id="generate-uniform" class="btn btn-default btn-block">Generate uniformly distributed data</button>
+                    <div><label><input id="generate-normal" name="generate" type="radio" value="normal"> Generate normally distributed data</label></div>
+                    <div><label><input id="generate-log-normal" name="generate" type="radio" value="log-normal"> Generate log-normally distributed data</label></div>
+                    <div><label><input id="generate-uniform" name="generate" type="radio" value="uniform"> Generate uniformly distributed data</label></div>
+                    <div><label><input id="generate-custom" name="generate" type="radio" value="custom"> Use custom data</label></div>
                 </form>
+                <textarea id="data-editor">[0, 1, 2]</textarea>
+                <div id="data-status" class="text-warning"></div>
             </div>
             <figure class="col-md-8">
                 <div id="distribution"></div>
