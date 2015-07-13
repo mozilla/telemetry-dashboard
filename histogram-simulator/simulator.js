@@ -22,7 +22,7 @@ $(function() {
     var lower = gCurrentBuckets[0], upper = gCurrentBuckets[gCurrentBuckets.length - 1];
     
     // Generate normally-distributed values using box-muller transform
-    var values = normalRandoms((lower + upper) / 2, (upper - lower) / 4, gSampleCount)
+    var values = normalRandoms((lower + upper) / 2, (upper - lower) / 8, gSampleCount)
       .map(function(value) { return value >= 0 ? value : 0; });
     var result = "[\n  " + values.join(",\n  ") + "\n]"
     gDataEditor.setValue(result);
@@ -32,7 +32,7 @@ $(function() {
     var lower = gCurrentBuckets[0], upper = gCurrentBuckets[gCurrentBuckets.length - 1];
     
     // Generate normally-distributed values using box-muller transform
-    var values = logNormalRandoms(Math.sqrt(Math.max(lower, 1) * upper), Math.pow(upper / Math.max(lower, 1), 1 / 4), gSampleCount)
+    var values = logNormalRandoms(Math.sqrt(Math.max(lower, 1) * upper), Math.pow(upper / Math.max(lower, 1), 1 / 8), gSampleCount)
       .map(function(value) { return value >= 0 ? value : 0; });
     var result = "[\n  " + values.join(",\n  ") + "\n]"
     gDataEditor.setValue(result);
@@ -52,19 +52,19 @@ $(function() {
   $("#generate-normal").click();
 });
 
-function normalRandoms(mu, sigma, count) { // Box-Muller transform
+function normalRandoms(mu, sigma, count) { // Box-Muller transform in polar form
   var values = [];
-  var z0 = 0, z1 = 0;
-  var value;
+  var z0, z1, value;
   for (var i = 0; values.length < count; i ++) {
     if (i % 2 === 0) {
-      var u1, u2;
+      var x1, x2;
       do {
-        u1 = Math.random();
-        u2 = Math.random();
-      } while (u1 <= 0.00001);
-      z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      z1 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+        x1 = 2 * Math.random() - 1;
+        x2 = 2 * Math.random() - 1;
+        w = x1 * x1 + x2 * x2;
+      } while (w >= 1);
+      w = Math.sqrt((-2 * Math.log(w)) / w)
+      z0 = x1 * w; z1 = x2 * w;
       value = z0;
     } else {
       value = z1;
@@ -77,19 +77,19 @@ function normalRandoms(mu, sigma, count) { // Box-Muller transform
   return values;
 }
 
-function logNormalRandoms(mu, sigma, count) { // Box-Muller transform for log-normal distributions
+function logNormalRandoms(mu, sigma, count) { // Box-Muller transform in polar form for log-normal distributions
   var values = [];
-  var z0 = 0, z1 = 0;
-  var value;
+  var z0, z1, value;
   for (var i = 0; i < count; i ++) {
-    if (i % 2 == 0) {
-      var u1, u2;
+    if (i % 2 === 0) {
+      var x1, x2;
       do {
-        u1 = Math.random();
-        u2 = Math.random();
-      } while (u1 <= 0.00001);
-      z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      z1 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+        x1 = 2 * Math.random() - 1;
+        x2 = 2 * Math.random() - 1;
+        w = x1 * x1 + x2 * x2;
+      } while (w >= 1);
+      w = Math.sqrt((-2 * Math.log(w)) / w)
+      z0 = x1 * w; z1 = x2 * w;
       value = z0;
     } else {
       value = z1;
