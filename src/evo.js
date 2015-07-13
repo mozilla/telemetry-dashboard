@@ -93,7 +93,7 @@ Telemetry.init(function() {
         var oldAggregates = gInitialPageState.aggregates.filter(function(aggregate) { // Aggregates that are still available
           return options.reduce(function(contained, option) { return contained || option[0] === aggregate }, false);
         });
-        multiselectSetOptions(aggregatesFilter, options, oldAggregates.length > 0 ? oldAggregates : [options[0][0]]);
+        multiselectSetOptions(aggregatesFilter, options, oldAggregates.length > 0 ? oldAggregates : (options.length > 0 ? [options[0][0]] : []));
         gPreviousFilterAllSelected[aggregatesFilter.attr("id")] = false;
 
         aggregatesFilter.trigger("change");
@@ -390,7 +390,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   
   var aggregateMap = {};
   lines.forEach(function(line) { aggregateMap[line.aggregate] = true; });
-  var variableLabel = useSubmissionDate ? "Submission Date" : "Build ID";
+  var variableLabel = useSubmissionDate ? "Submission Date (click to use Build ID)" : "Build ID (click to use Submission Date)";
   var valueLabel = Object.keys(aggregateMap).sort().join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
   
   var markers = [], usedDates = {};
@@ -473,7 +473,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
     x_extended_ticks: true,
-    x_label: "Build ID", y_label: "Daily Ping Count",
+    x_label: variableLabel, y_label: "Daily Ping Count",
     transition_on_update: false,
     interpolate: "linear",
     markers: markers,
@@ -549,6 +549,12 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   $(".mg-line-legend text").css("font-size", "12px")
   $(".mg-marker-text").css("font-size", "12px").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
   $(".mg-markers line").css("stroke-width", "2px");
+  
+  // X axis label should also be build time toggle
+  $(".mg-x-axis .label").attr("text-decoration", "underline").click(function() {
+    var newUseSubmissionDate = $("input[name=build-time-toggle]:checked").val() !== "0" ? 0 : 1;
+    $("input[name=build-time-toggle][value=" + newUseSubmissionDate + "]").prop("checked", true).trigger("change");
+  });
 }
 
 var Line = (function(){
