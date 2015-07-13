@@ -199,11 +199,12 @@ function displayHistogram(counts, starts, ends) {
 }
 
 function saveStateToURL() {
-  window.location.hash = "#low=" + encodeURIComponent($("input[name=histogram-lower]").val()) +
-                         "&high=" + encodeURIComponent($("input[name=histogram-upper]").val()) +
-                         "&n_buckets=" + encodeURIComponent($("input[name=histogram-bucket-count]").val()) +
-                         "&kind=" + encodeURIComponent($("#histogram-kind").val()) +
-                         "&generate=" + encodeURIComponent($("input[name=generate]:checked").val());
+  var hashState = "#low=" + encodeURIComponent($("input[name=histogram-lower]").val()) +
+                  "&high=" + encodeURIComponent($("input[name=histogram-upper]").val()) +
+                  "&n_buckets=" + encodeURIComponent($("input[name=histogram-bucket-count]").val()) +
+                  "&kind=" + encodeURIComponent($("#histogram-kind").val()) +
+                  "&generate=" + encodeURIComponent($("input[name=generate]:checked").val());
+  window.location.replace(window.location.origin + window.location.pathname + hashState);
 }
 
 function formatNumber(number) {
