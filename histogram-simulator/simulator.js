@@ -1,4 +1,5 @@
 var gDataEditor = null;
+var gSampleCount = 20000;
 
 $(function() {
   gDataEditor = CodeMirror.fromTextArea($("#data-editor").get(0), {
@@ -25,7 +26,7 @@ $(function() {
     }
     
     // Generate normally-distributed values using box-muller transform
-    var values = normalRandoms((lower + upper) / 2, (upper - lower) / 4, 10000)
+    var values = normalRandoms((lower + upper) / 2, (upper - lower) / 4, gSampleCount)
       .map(function(value) { return value >= 0 ? value : 0; });
     var result = "[\n  " + values.join(",\n  ") + "\n]"
     gDataEditor.setValue(result);
@@ -40,7 +41,7 @@ $(function() {
     }
     
     // Generate normally-distributed values using box-muller transform
-    var values = logNormalRandoms(Math.sqrt(Math.max(lower, 1) * upper), Math.pow(upper / Math.max(lower, 1), 1 / 4), 10000)
+    var values = logNormalRandoms(Math.sqrt(Math.max(lower, 1) * upper), Math.pow(upper / Math.max(lower, 1), 1 / 4), gSampleCount)
       .map(function(value) { return value >= 0 ? value : 0; });
     var result = "[\n  " + values.join(",\n  ") + "\n]"
     gDataEditor.setValue(result);
@@ -55,7 +56,7 @@ $(function() {
     }
     
     var values = [];
-    for (var i = 0; i < 10000; i ++) { values.push(Math.random() * (upper - lower) + lower); }
+    for (var i = 0; i < gSampleCount; i ++) { values.push(Math.random() * (1 + upper - lower) + lower); }
     var result = "[\n  " + values.join(",\n  ") + "\n]"
     gDataEditor.setValue(result);
     return false;
@@ -69,7 +70,7 @@ function normalRandoms(mu, sigma, count) { // Box-Muller transform
   var values = [];
   var z0 = 0, z1 = 0;
   var value;
-  for (var i = 0; i < count; i ++) {
+  for (var i = 0; values.length < count; i ++) {
     if (i % 2 === 0) {
       var u1, u2;
       do {
@@ -83,6 +84,8 @@ function normalRandoms(mu, sigma, count) { // Box-Muller transform
       value = z1;
     }
     value = value * sigma + mu;
+    if (value < 0) continue; // Discard the current value if it is negative
+    
     values.push(value);
   }
   return values;
@@ -106,6 +109,7 @@ function logNormalRandoms(mu, sigma, count) { // Box-Muller transform for log-no
       value = z1;
     }
     value = Math.exp(value * Math.log(sigma) + Math.log(mu));
+    
     values.push(value);
   }
   return values;
@@ -115,7 +119,7 @@ function linearBuckets(min, max, count) {
   var result = [0];
   for (var i = 1; i < count; i ++) {
     var linearRange = (min * (count - 1 - i) + max * (i - 1)) / (count - 2);
-    result.push(linearRange + 0.5);
+    result.push(Math.round(linearRange));
   }
   return result;
 }
@@ -131,7 +135,7 @@ function exponentialBuckets(min, max, count) {
     var logCurrent = Math.log(current);
     var logRatio = (logMax - logCurrent) / (count - i);
     var logNext = logCurrent + logRatio;
-    var nextValue = Math.floor(Math.exp(logNext) + 0.5);
+    var nextValue = Math.round(Math.exp(logNext));
     current = nextValue > current ? nextValue : current + 1;
     result.push(current);
   }
