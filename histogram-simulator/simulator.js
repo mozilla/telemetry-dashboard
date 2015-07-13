@@ -1,5 +1,6 @@
 var gDataEditor = null;
 var gSampleCount = 20000;
+var gCurrentBuckets = null;
 
 $(function() {
   gDataEditor = CodeMirror.fromTextArea($("#data-editor").get(0), {
@@ -9,7 +10,7 @@ $(function() {
 
   var currentUpdateTimeout = null;
   
-  $("input[name=histogram-lower], input[name=histogram-upper], input[name=histogram-bucket-count], #histogram-bucket-type").change(function() {
+  $("input[name=histogram-lower], input[name=histogram-upper], #histogram-kind").change(function() {
     clearTimeout(currentUpdateTimeout);
     currentUpdateTimeout = setTimeout(update, 100);
   });
@@ -18,12 +19,7 @@ $(function() {
   });
   
   $("#generate-normal").click(function() {
-    var lower = parseInt($("input[name=histogram-lower]").val());
-    var upper = parseInt($("input[name=histogram-upper]").val());
-    if (lower < 0 || lower >= upper) {
-      $("#data-status").text("Invalid bounds");
-      return;
-    }
+    var lower = gCurrentBuckets[0], upper = gCurrentBuckets[gCurrentBuckets.length - 1];
     
     // Generate normally-distributed values using box-muller transform
     var values = normalRandoms((lower + upper) / 2, (upper - lower) / 4, gSampleCount)
@@ -33,12 +29,7 @@ $(function() {
     return false;
   });
   $("#generate-log-normal").click(function() {
-    var lower = parseInt($("input[name=histogram-lower]").val());
-    var upper = parseInt($("input[name=histogram-upper]").val());
-    if (lower < 0 || lower >= upper) {
-      $("#data-status").text("Invalid bounds");
-      return;
-    }
+    var lower = gCurrentBuckets[0], upper = gCurrentBuckets[gCurrentBuckets.length - 1];
     
     // Generate normally-distributed values using box-muller transform
     var values = logNormalRandoms(Math.sqrt(Math.max(lower, 1) * upper), Math.pow(upper / Math.max(lower, 1), 1 / 4), gSampleCount)
@@ -48,22 +39,17 @@ $(function() {
     return false;
   });
   $("#generate-uniform").click(function() {
-    var lower = parseInt($("input[name=histogram-lower]").val());
-    var upper = parseInt($("input[name=histogram-upper]").val());
-    if (lower < 0 || lower >= upper) {
-      $("#data-status").text("Invalid bounds");
-      return;
-    }
+    var lower = gCurrentBuckets[0], upper = gCurrentBuckets[gCurrentBuckets.length - 1];
     
     var values = [];
-    for (var i = 0; i < gSampleCount; i ++) { values.push(Math.random() * (1 + upper - lower) + lower); }
+    for (var i = 0; i < gSampleCount; i ++) { values.push(Math.random() * (upper - lower) + lower); }
     var result = "[\n  " + values.join(",\n  ") + "\n]"
     gDataEditor.setValue(result);
     return false;
   });
 
-  $("#generate-normal").click();
   update();
+  $("#generate-normal").click();
 });
 
 function normalRandoms(mu, sigma, count) { // Box-Muller transform
@@ -155,24 +141,37 @@ function update() {
     return;
   }
   
-  var buckets = $("#histogram-bucket-type").val() === "linear"
-    ? linearBuckets(lower, upper, bucketCount) : exponentialBuckets(lower, upper, bucketCount);
-  var kind = $("#histogram-bucket-type").val() === "linear" ? "linear" : "exponential";
+  var kind = $("#histogram-kind").val();
+  switch (kind) {
+    case "flag": case "boolean":
+      gCurrentBuckets = linearBuckets(1, 2, 3);
+      break;
+    case "enumerated":
+      gCurrentBuckets = linearBuckets(1, upper, upper + 1);
+      break;
+    case "linear":
+      gCurrentBuckets = linearBuckets(lower, upper, bucketCount);
+      break
+    case "exponential":
+      gCurrentBuckets = exponentialBuckets(lower, upper, bucketCount);
+  }
   var values = [];
   try {
     values = JSON.parse(gDataEditor.getValue());
-    if (!$.isArray(values)) { throw "Values must be array of numbers"; }
+    if (!$.isArray(values) || values.length === 0) { throw "Values must be array of numbers"; }
     values.forEach(function(value) {
       if (typeof value !== "number" || value < 0) { throw "Values must be array of non-negative numbers"; }
     });
   } catch(e) {
     $("#data-status").text(e)
+    return;
   }
+  $("#data-status").text("");
   
-  var histogram = new Telemetry.Histogram(buckets, buckets, kind, 1000000, "Test Histogram");
+  var histogram = new Telemetry.Histogram(gCurrentBuckets, gCurrentBuckets, kind, values.length, "Test Histogram");
   var counts = histogram.map(function(count, start, end, i) {
     var hitCount = 0;
-    if (i === buckets.length - 1) { // Last bucket, no upper bound
+    if (i === gCurrentBuckets.length - 1) { // Last bucket, no upper bound
       values.forEach(function(value, i) {
         if (start <= value) { hitCount ++; }
       });
@@ -193,13 +192,12 @@ function displayHistogram(counts, starts, ends) {
   var totalCount = counts.reduce(function(previous, count) { return previous + count; }, 0);
   var values = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
 
-  // Plot the data using MetricsGraphics
   MG.data_graphic({
     data: values,
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 800,
-    left: 150, right: 50,
+    left: 150, right: ($("#distribution").width() - 100) / values.length + 150,
     transition_on_update: false,
     target: "#distribution",
     x_label: "Test Histogram", y_label: "Percentage of Samples",
@@ -212,26 +210,42 @@ function displayHistogram(counts, starts, ends) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
       if (ends[d.x] === Infinity) {
-       label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(starts[d.x]);
+        label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(starts[d.x]);
       } else {
-       label = count + " samples (" + percentage + ") where " + formatNumber(starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
+        label = count + " samples (" + percentage + ") where " + formatNumber(starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
       }
       var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
       var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
       
       // Reposition element
-      var legend = d3.select("#distribution .mg-active-datapoint").text(label)
+      var legend = d3.select("#distribution .mg-active-datapoint").text(label).attr("transform", offset)
+        .attr("x", barWidth / 2).attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+      var bbox = legend[0][0].getBBox();
+      var padding = 5;
+      
+      // Add background
+      d3.select("#distribution .active-datapoint-background").remove(); // Remove old background
+      d3.select("#distribution svg").insert("rect", ".mg-active-datapoint").classed("active-datapoint-background", true)
+        .attr("x", bbox.x - padding).attr("y", bbox.y - padding).attr("transform", offset)
+        .attr("width", bbox.width + padding * 2).attr("height", bbox.height + padding * 2)
+        .attr("rx", "3").attr("ry", "3").style("fill", "#333");
+    },
+    mouseout: function(d, i) {
+      d3.select("#distribution .active-datapoint-background").remove(); // Remove old background
     },
   });
   
-  // Reposition and resize text
+    // Reposition and resize text
   $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .label").attr("dy", "1.2em");
-  $(".mg-x-axis text").each(function(i, text) { // Remove "NaN" labels
-    if ($(text).text() === "NaN") { text.parentNode.removeChild(text); }
+  $(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
+    if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
+    $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");
   });
-  $(".mg-y-axis .label").attr("y", "50").attr("dy", "0");
-  $(".mg-missing-pane").remove();
+  $(".mg-x-axis line").each(function(i, tick) { // Extend axis ticks to 15 pixels
+    $(tick).attr("y2", parseInt($(tick).attr("y1")) + 12);
+  });
+  $(".mg-y-axis .label").attr("y", "55").attr("dy", "0");
 }
 
 function formatNumber(number) {

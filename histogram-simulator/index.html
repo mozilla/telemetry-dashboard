@@ -28,7 +28,7 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="container-fluid">
         <header>
             <h1>Histogram Simulator <span class="label label-warning" style="font-size: 12px">DRAFT</span></h1>
-            <p>Tweak histogram settings for data fitting purposes.</p>
+            <p>Tweak histogram settings for data fitting purposes. See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe">Adding a new Telemetry Probe</a> for information about new Telemetry probes.</p>
         </header>
         <div class="row">
             <div class="col-md-4">
@@ -36,17 +36,21 @@ input[type=number] { -moz-appearance: textfield; }
                 <form class="form-horizontal">
                     Lower bound (<code>low</code>): <input name="histogram-lower" class="form-control" type="number" value="1" min="1">
                     <br>
-                    Upper bound (<code>high</code>): <input name="histogram-upper" class="form-control" type="number" value="10000" min="0">
+                    Upper bound (<code>high</code>): <input name="histogram-upper" class="form-control" type="number" value="500" min="0">
                     <br>
                     Bucket count (<code>n_buckets</code>): <input name="histogram-bucket-count" class="form-control" type="number" value="20">
                     <br>
-                    <select id="histogram-bucket-type">
-                        <option value="linear">Linear buckets</option>
-                        <option value="exponential">Exponential buckets</option>
+                    Histogram Kind (<code>kind</code>): 
+                    <select id="histogram-kind">
+                        <option value="flag">flag</option>
+                        <option value="boolean">boolean</option>
+                        <option value="enumerated">enumerated</option>
+                        <option value="linear">linear</option>
+                        <option value="exponential">exponential</option>
                     </select>
                 </form>
                 <h2>...to plot this data...</h2>
-                <textarea id="data-editor"></textarea>
+                <textarea id="data-editor">[]</textarea>
                 <div id="data-status" class="text-warning"></div>
                 <form class="form-horizontal">
                     <button id="generate-normal" class="btn btn-default btn-block">Generate normally distributed data</button>
