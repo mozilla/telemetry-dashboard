@@ -176,9 +176,13 @@ function calculateHistogram(callback) {
     indicate();
     updateDateRange(function(dates) {
       var filterOptionsList = getOptions(filterList, histogramEvolution); // Update filter options
-      var fullHistogram = histogramEvolution.range(dates[0], dates[dates.length - 1]);
-      var filteredHistogram = getFilteredHistogram(channelVersion, measure, fullHistogram, filters, filterList);
-      callback(filterList, filterOptionsList, filteredHistogram, dates);
+      if (dates === null) {
+        callback(filterList, filterOptionsList, null, []);
+      } else {
+        var fullHistogram = histogramEvolution.range(dates[0], dates[dates.length - 1]);
+        var filteredHistogram = getFilteredHistogram(channelVersion, measure, fullHistogram, filters, filterList);
+        callback(filterList, filterOptionsList, filteredHistogram, dates);
+      }
     }, histogramEvolution, false);
   });
 }

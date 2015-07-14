@@ -34,6 +34,15 @@ $(document).ready(function() {
   
   // Date range pickers
   $(".date-range").daterangepicker();
+  $(".daterangepicker input[name=daterangepicker_start], .daterangepicker input[name=daterangepicker_start]").keydown(function(event){
+    // Cause Enter to apply the settings
+    if(event.keyCode == 13) {
+      var $this = $(this).parents(".daterangepicker");
+      $this.find(".applyBtn").focus().click();
+      event.preventDefault();
+      return false;
+    }
+  });
   
   // Permalink control
   $(".permalink-control").append(
