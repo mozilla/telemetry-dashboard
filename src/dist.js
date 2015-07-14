@@ -148,15 +148,17 @@ function calculateHistogram(callback) {
   for (var filterName in gFilters) {
     var filterSelector = gFilters[filterName];
     var selection = filterSelector.val() || [];
-    var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
+    var optionCount = filterSelector.find("option").length; // Number of options
     if (selection.length != optionCount) { // Not all options are selected
       filters[filterName] = selection;
     }
   }
 
   // Handle the special case for the OS selector
-  filters.os = deduplicate(filters.os_version.map(function(version) { return version.split(",")[0]; }));
-  filters.os_version = filters.os_version.map(function(version) { return version.split(",")[1] });
+  if (filters.os_version !== undefined) {
+    filters.os = deduplicate(filters.os_version.map(function(version) { return version.split(",")[0]; }));
+    filters.os_version = filters.os_version.map(function(version) { return version.split(",")[1] });
+  }
 
   filterList = [
     ["saved_session"],                                                   // "reason" filter
