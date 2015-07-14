@@ -58,3 +58,10 @@
     text-align: center;
     color: white;
 }
+
+/* MetricsGraphics style overrides */
+.mg-x-axis .label:hover { cursor: pointer; }
+.mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint { font-size: 12px !important; }
+.mg-line-legend text { font-size: 12px !important; }
+.mg-marker-text { font-size: 12px !important; }
+.mg-markers line { stroke-width: 2px !important; }

@@ -542,13 +542,10 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   });
   
   // Reposition and resize text
-  $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .mg-year-marker text").attr("dy", "5");
   $(".mg-x-axis .label").attr("dy", "20");
   $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
-  $(".mg-line-legend text").css("font-size", "12px")
-  $(".mg-marker-text").css("font-size", "12px").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
-  $(".mg-markers line").css("stroke-width", "2px");
+  $(".mg-marker-text").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
   
   // X axis label should also be build time toggle
   $(".mg-x-axis .label").attr("text-decoration", "underline").click(function() {

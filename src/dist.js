@@ -244,8 +244,10 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   }
   
   // If the selected date range is now out of bounds, or the bounds were updated programmatically and changed, select the entire range
-  if (picker.startDate.isAfter(endMoment) || picker.endDate.isBefore(startMoment) ||
-    (!updatedByUser && (!startMoment.isSame(gPreviousStartMoment) || !endMoment.isSame(gPreviousEndMoment)))) {
+  var realEndDate = picker.endDate.clone().add(1, "milliseconds").subtract(1, "days");
+  if (picker.startDate.isAfter(endMoment) || picker.startDate.isBefore(startMoment) ||
+      realEndDate.isBefore(startMoment) || realEndDate.isAfter(endMoment) ||
+      (!updatedByUser && (!startMoment.isSame(gPreviousStartMoment) || !endMoment.isSame(gPreviousEndMoment)))) {
     picker.setStartDate(startMoment);
     picker.setEndDate(endMoment);
   }
@@ -412,7 +414,6 @@ function displayHistogram(histogram, dates, cumulative) {
   });
   
     // Reposition and resize text
-  $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .label").attr("dy", "1.2em");
   $(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
@@ -487,8 +488,8 @@ function saveStateToUrlAndCookie() {
     var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, end: isFinite(end) ? end : Infinity, count: count} }));
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
-    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure + ".csv");
-    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogram.measure + ".json");
+    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");
+    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogram.measure() + ".json");
   }
   
   // If advanced settings are not at their defaults, display a notice in the panel header
