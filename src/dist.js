@@ -148,8 +148,7 @@ function calculateHistogram(callback) {
   for (var filterName in gFilters) {
     var filterSelector = gFilters[filterName];
     var selection = filterSelector.val() || [];
-    var optionCount = filterSelector.find("option").length; // Number of options
-    if (selection.length != optionCount) { // Not all options are selected
+    if (selection.length != filterSelector.find("option").length) { // Not all options are selected
       filters[filterName] = selection;
     }
   }
