@@ -1,0 +1,154 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+    background-color: white;
+    color: black;
+    font-family: Verdana, sans-serif;
+}
+
+#header {
+    margin: 30px auto 0px auto;
+    font-size: 3em;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+#subheader {
+    margin: 0px auto;
+    font-size: 2em;
+    text-align: center;
+}
+
+#navbar {
+    text-align: center;
+    margin: 20px auto;
+}
+
+.options {
+    display: inline-block;
+    padding: 0px 20px;
+    list-style: none;
+}
+
+.options li {
+    display: inline-block;
+    margin: 0px 10px;
+}
+
+.options li a {
+    display: inline-block;
+    padding: 10px 50px;
+    text-decoration: none;
+    color: black;
+    border-bottom: solid 10px #f0f0f0;
+}
+
+.options li a:hover {
+    background-color: #f0f0f0;
+}
+
+#tooltip {
+    position: absolute;
+    padding: 20px;
+    color: white;
+    background-color: black;
+    border: solid 5px black;
+    border-radius: 5px;
+    z-index: 1;
+    list-style: none;
+    opacity: 0;
+}
+
+#graphs {
+    position: relative;
+}
+
+.graph {
+    width: 1000px;
+    height: 620px;
+    margin: auto;
+}
+
+#throbber {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    margin: auto;
+    z-index: 2;
+}
+
+#throbber-fg {
+    width: 100%;
+    margin-top: 50px;
+    text-align: center;
+}
+
+#throbber-bg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: -1;
+}
+
+#footer {
+    margin-top: 50px;
+}
+
+.data {
+    margin:0px;
+    padding:0px;
+    width:100%;
+    border:1px solid #000000;
+}
+.data tr:nth-child(odd)  { background-color:#eee; }
+.data tr:nth-child(even) { background-color:#fff; }
+.data td {
+    vertical-align:middle;
+    border:1px solid #000000;
+    text-align:left;
+    padding:7px;
+    font-size:10px;
+    font-family:Arial;
+    font-weight:normal;
+}
+.data th.header {
+    background-image: url(bg.gif);
+    border:1px solid #000000;
+    cursor: pointer;
+    font-weight: bold;
+    background-repeat: no-repeat;
+    background-position: center left;
+    padding-left: 20px;
+    border-right: 1px solid #dad9c7;
+    margin-left: -1px;
+}
+
+.up {
+    color: #22c;
+}
+.down {
+    color: #c22;
+}
+.new {
+    color: #2c2;
+}
+.missing {
+    color: #c0b159;
+}
+
+#week_nav {
+    width: 100%;
+    text-align: center;
+}
+
+.week_nav_button {
+    margin: 20px;
+    font-size: larger;
+}
