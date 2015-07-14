@@ -58,17 +58,17 @@ Telemetry.init(function() {
         if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
           if (e.target.id === "min-channel-version") { // min version changed, change max version to be the largest version in the current channel
             var channel = fromVersion.split("/")[0];
-            var maxChannelVersion = null;
-            var channelVersions = Telemetry.versions().forEach(function(version) {
-              if (version.startsWith(channel + "/")) { maxChannelVersion = version; }
+            var channelVersions = Telemetry.versions().filter(function(version) {
+              return version.startsWith(channel + "/") && version >= fromVersion;
             });
+            var maxChannelVersion = channelVersions[Math.min(channelVersions.length - 1, 3)];
             $("#max-channel-version").multiselect("select", maxChannelVersion);
           } else { // max version changed, change the min version to be the smallest version in the current channel
             var channel = toVersion.split("/")[0];
-            var minChannelVersion = null;
-            var channelVersions = Telemetry.versions().forEach(function(version) {
-              if (minChannelVersion === null && version.startsWith(channel + "/")) { minChannelVersion = version; }
+            var channelVersions = Telemetry.versions().filter(function(version) {
+              return version.startsWith(channel + "/") && version <= toVersion;
             });
+            var minChannelVersion = channelVersions[Math.max(0, channelVersions.length - 4)];
             $("#min-channel-version").multiselect("select", minChannelVersion);
           }
         }
@@ -296,10 +296,12 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
       
       // precomputeAggregateQuantity will perform the actual filtering for us, and then we set the filter ID manually
       var timestamp = date.getTime();
-      if (!(timestamp in dateDatasets)) { dateDatasets[timestamp] = []; }
-      var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
-      filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
-      dateDatasets[timestamp].push(filteredDataset);
+      if (isFinite(timestamp)) {
+        if (!dateDatasets.hasOwnProperty(timestamp)) { dateDatasets[timestamp] = []; }
+        var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
+        filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
+        dateDatasets[timestamp].push(filteredDataset);
+      }
     });
   });
   
@@ -329,7 +331,10 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
     
     // Obtain the aggregate values from the histogram
     aggregates.forEach(function(aggregate) {
-      aggregatePoints[aggregate].push({x: timestamp, y: aggregateValue[aggregate](histogram)});
+      var pointValue = aggregateValue[aggregate](histogram);
+      if (isFinite(pointValue)) {
+        aggregatePoints[aggregate].push({x: timestamp, y: pointValue});
+      }
     });
     
     // Process submission points
