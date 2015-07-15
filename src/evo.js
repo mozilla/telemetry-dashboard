@@ -408,6 +408,9 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   for (var date in usedDates) {
     markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
+  if (markers.length > 0) {
+    markers[markers.length - 1].date = new Date(markers[markers.length - 1].date.getTime() - 2)
+  }
 
   // Plot the data using MetricsGraphics
   d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
