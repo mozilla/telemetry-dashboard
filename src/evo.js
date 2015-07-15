@@ -639,7 +639,7 @@ function saveStateToUrlAndCookie() {
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
   if (url !== stateString) {
-    window.location.replace(window.location.origin + window.location.pathname + "#" + stateString);
+    window.location.replace(window.location.origin + window.location.pathname + "#" + encodeURI(stateString));
     $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
   }
   
