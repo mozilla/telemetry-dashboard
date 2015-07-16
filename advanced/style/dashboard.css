@@ -51,8 +51,13 @@ header h1 {
   height:       500px;
 }
 
-#histogram-table{
+#histogram-table {
   display:      none;
+  text-align: center;
+}
+
+#histogram-table th {
+  text-align: center;
 }
 
 #export-link{
