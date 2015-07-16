@@ -395,7 +395,7 @@ function displayHistogram(histogram, dates, cumulative) {
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
-    left: 150, right: 150,
+    left: 150, right: $("#distribution").width() / (distributionSamples.length + 1) + 150,
     transition_on_update: false,
     target: "#distribution",
     x_label: histogram.description(), y_label: "Percentage of Samples",
@@ -443,6 +443,13 @@ function displayHistogram(histogram, dates, cumulative) {
     $(tick).attr("y2", parseInt($(tick).attr("y1")) + 12);
   });
   $(".mg-y-axis .label").attr("y", "55").attr("dy", "0");
+  
+  // Extend the Y axis ticks to cover the last bucket
+  var barWidth = parseFloat($("#distribution .mg-rollover-rects:last-child rect").attr("width"))
+  $("#distribution .mg-extended-y-ticks").each(function(i, yTick) {
+    var x2 = parseFloat(yTick.attributes.x2.value) + barWidth;
+    yTick.setAttribute("x2", x2);
+  });
 }
 
 // Save the current state to the URL and the page cookie
