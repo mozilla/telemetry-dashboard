@@ -149,7 +149,9 @@ function getHumanReadableOptions(filterName, options, os) {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   };
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
-  if (filterName === "osVersion") {
+  if (filterName === "os") {
+    return options.map(function(option) { return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option]; });
+  } else if (filterName === "osVersion") {
     var osName = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os);
     if (ignoredSystems[os] !== undefined) { return []; } // No versions for ignored OSs
     if (os === "WINNT") {
@@ -314,6 +316,21 @@ function multiselectSetOptions(element, options, defaultSelected) {
   }
 
   element.multiselect("deselectAll", false).multiselect("select", selected); // Select the original options where applicable
+  
+  if (useGroups) { // Make the group labels sticky to the top and bottom of the selector
+    var selector = element.next().find(".multiselect-container");
+    var groupHeadings = selector.find(".multiselect-group-clickable").toArray();
+    var wasOpen = selector.parent().hasClass("open");
+    selector.parent().addClass("open");
+    var topOffset = selector.find(".filter").outerHeight() + 10;
+    var bottomOffset = groupHeadings.reduce(function(height, heading) { return height + $(heading).outerHeight(); }, 0);
+    groupHeadings.forEach(function(heading, i) {
+      bottomOffset -= $(heading).outerHeight();
+      $(heading).css("position", "sticky").css("z-index", "1").css("bottom", bottomOffset).css("top", topOffset).css("background", "white");
+      topOffset += $(heading).outerHeight();
+    });
+    if (!wasOpen) { selector.parent().removeClass("open"); }
+  }
 }
 
 // =========== Histogram/Evolution Dashboard-specific common code

@@ -117,6 +117,17 @@ function refreshFilters(optionsList) {
   var selectedOSs = compressOSs();
   multiselectSetOptions($("#filter-os"), newOSList);
   $("#filter-os").multiselect("select", expandOSs(selectedOSs));
+  
+  // Update CSS classes for labels marking whether they are all selected
+  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
+  var selector = $("#filter-os").next().find(".multiselect-container");
+  selector.find(".multiselect-group-clickable").removeClass("all-selected");
+  var optionsMap = {};
+  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
+  allSelectedOSList.forEach(function(os) {
+    var optionGroupLabel = selector.find(".multiselect-group-clickable:contains('" + optionsMap[os] + "')");
+    optionGroupLabel.addClass("all-selected");
+  });
 }
 
 function updateMeasuresList(callback) {
