@@ -36,8 +36,10 @@ Telemetry.init(function() {
 
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
-        var selected = selector.val() || [], options = selector.find("option");
-        gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
+        if (selector.is("[multiple]")) {
+          var selected = selector.val() || [], options = selector.find("option");
+          gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
+        }
       }
       
       $("#channel-version").change(function() {
@@ -47,15 +49,16 @@ Telemetry.init(function() {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-          // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
-          var selected = $this.val() || [], options = $this.find("option");
-          if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
-            var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
-              .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
-            $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+          if ($this.is("[multiple]")) { // Only apply the select all change to controls that allow multiple selections
+            // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
+            var selected = $this.val() || [], options = $this.find("option");
+            if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
+              var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
+                .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
+              $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+            }
+            gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
           }
-          gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
-          if ($this.attr("id") === "filter-os") { $("#filter-os-version").multiselect("selectAll", false).multiselect("updateButtonText"); } // if the OS filter changes, select all the OS versions
           
           calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
             refreshFilters(filterOptionsList);
@@ -201,16 +204,17 @@ function calculateHistogram(callback) {
 var gLastTimeoutID = null;
 var gLoadedDateRangeFromState = false;
 var gCurrentDateRangeUpdateCallback = null;
-var gPreviousStartMoment = null, gPreviousEndMoment = null;
+var gPreviousMinMoment = null, gPreviousMaxMoment = null;
 function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangebar) {
   gCurrentEvolution = evolution;
   shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true : shouldUpdateRangebar;
 
   gCurrentDateRangeUpdateCallback = callback || function() {};
   
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
   var dates = [];
   if (evolution !== null) {
-    var timeCutoff = moment().add(1, "years").toDate().getTime();
+    var timeCutoff = moment.utc().add(1, "years").toDate().getTime();
     dates = evolution.dates().filter(function(date) { return date <= timeCutoff; }); // Cut off all dates past one year in the future
   }
   if (dates.length === 0) {
@@ -222,20 +226,20 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     return;
   }
   
-  var startMoment = moment(dates[0]), endMoment = moment(dates[dates.length - 1]);
+  var minMoment = moment.utc(dates[0]).subtract(timezoneOffsetMinutes, "minutes"), maxMoment = moment.utc(dates[dates.length - 1]).subtract(timezoneOffsetMinutes, "minutes");
 
   // Update the start and end range and update the selection if necessary
   var picker = $("#date-range").data("daterangepicker");
   picker.setOptions({
     format: "YYYY/MM/DD",
-    minDate: startMoment,
-    maxDate: endMoment,
+    minDate: minMoment,
+    maxDate: maxMoment,
     showDropdowns: true,
     drops: "up", opens: "center",
     ranges: {
-       "All": [startMoment, endMoment],
-       "Last 30 Days": [endMoment.clone().subtract(30, "days"), endMoment],
-       "Last 7 Days": [endMoment.clone().subtract(6, "days"), endMoment],
+       "All": [minMoment, maxMoment],
+       "Last 30 Days": [maxMoment.clone().subtract(30, "days"), endMoment],
+       "Last 7 Days": [maxMoment.clone().subtract(6, "days"), endMoment],
     },
   }, function(chosenStartMoment, chosenEndMoment, label) {
     updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true);
@@ -243,58 +247,60 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   
   // First load, update the date picker from the page state
   if (!gLoadedDateRangeFromState && gInitialPageState.start_date !== null && gInitialPageState.end_date !== null) {
-    var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
     gLoadedDateRangeFromState = true;
-    if (start.isValid() && end.isValid()) {
-      picker.setStartDate(start); picker.setEndDate(end);
-      gPreviousStartMoment = startMoment; gPreviousEndMoment = endMoment;
+    var startMoment = moment.utc(gInitialPageState.start_date), endMoment = moment.utc(gInitialPageState.end_date);
+    if (startMoment.isValid() && endMoment.isValid()) {
+      picker.setStartDate(startMoment.clone().local()); picker.setEndDate(endMoment.clone().local());
+      gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
     }
     
     // If advanced settings are not at their defaults, expand the settings pane on load
     var fullDates = evolution.dates();
-    if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || !start.isSame(fullDates[0]) || !end.isSame(fullDates[fullDates.length - 1])) {
+    if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || !startMoment.isSame(fullDates[0]) || !endMoment.isSame(fullDates[fullDates.length - 1])) {
       $("#advanced-settings-toggle").click();
     }
   }
   
   // If the selected date range is now out of bounds, or the bounds were updated programmatically and changed, select the entire range
-  var realEndDate = picker.endDate.clone().add(1, "milliseconds").subtract(1, "days");
-  if (picker.startDate.isAfter(endMoment) || picker.startDate.isBefore(startMoment) ||
-      realEndDate.isBefore(startMoment) || realEndDate.isAfter(endMoment) ||
-      (!updatedByUser && (!startMoment.isSame(gPreviousStartMoment) || !endMoment.isSame(gPreviousEndMoment)))) {
-    picker.setStartDate(startMoment);
-    picker.setEndDate(endMoment);
+  var pickerStartDate = moment.utc(picker.startDate).subtract(timezoneOffsetMinutes, "minutes");
+  var pickerEndDate = moment.utc(picker.endDate).subtract(timezoneOffsetMinutes, "minutes");
+  if (pickerStartDate.isAfter(maxMoment) || pickerEndDate.isBefore(minMoment) ||
+    (!updatedByUser && (!minMoment.isSame(gPreviousMinMoment) || !maxMoment.isSame(gPreviousMaxMoment)))) {
+    picker.setStartDate(minMoment.clone().local());
+    picker.setEndDate(maxMoment.clone().local());
+    pickerStartDate = minMoment;
+    pickerEndDate = maxMoment;
   }
-  gPreviousStartMoment = startMoment; gPreviousEndMoment = endMoment;
+  gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
   
   // Rebuild rangebar if it was changed by something other than the user
   if (shouldUpdateRangebar) {
     var rangeBarControl = RangeBar({
-      min: startMoment, max: endMoment.clone().add(1, "days"),
+      min: minMoment, max: maxMoment.clone().add(1, "days"),
       maxRanges: 1,
       valueFormat: function(ts) { return ts; },
-      valueParse: function(date) { return moment(date).valueOf(); },
+      valueParse: function(date) { return moment.utc(date).valueOf(); },
       label: function(a) {
         var days = (a[1] - a[0]) / 86400000;
-        return days < 5 ? days : moment(a[1]).from(a[0], true);
+        return days < 5 ? days : moment.utc(a[1]).from(a[0], true);
       },
       snap: 1000 * 60 * 60 * 24, minSize: 1000 * 60 * 60 * 24, bgLabels: 0,
     }).on("changing", function(e, ranges, changed) {
       var range = ranges[0];
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
       gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
-        picker.setStartDate(moment(range[0]));
-        picker.setEndDate(moment(range[1]).subtract(1, "days"));
+        picker.setStartDate(moment.utc(range[0]).local());
+        picker.setEndDate(moment.utc(range[1]).subtract(1, "days").local());
         updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true, false);
       }, 50);
     });
     $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-    rangeBarControl.val([[picker.startDate, picker.endDate]]);
+    rangeBarControl.val([[pickerStartDate, pickerEndDate]]);
   }
   
-  var min = picker.startDate.toDate(), max = picker.endDate.toDate();
+  var min = pickerStartDate.toDate(), max = pickerEndDate.toDate();
   dates = dates.filter(function(date) { return min <= date && date <= max; });
   
   if (dates.length == 0) {
