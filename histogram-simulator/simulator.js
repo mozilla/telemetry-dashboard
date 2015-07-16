@@ -23,11 +23,14 @@ $(function() {
     lineNumbers: true,
   });
 
+  // Set up the change callback
   var currentUpdateTimeout = null;
-  $("input[name=histogram-lower], input[name=histogram-upper], input[name=histogram-bucket-count], #histogram-kind").change(function() {
+  var deferredUpdate = function() {
     clearTimeout(currentUpdateTimeout);
     currentUpdateTimeout = setTimeout(update, 100);
-  });
+  };
+  $("input[name=histogram-lower], input[name=histogram-upper], input[name=histogram-bucket-count]").on("input", deferredUpdate);
+  $("#histogram-kind").change(deferredUpdate);
   gDataEditor.on("changes", function() {
     if (gIgnoreGeneration) { return; }
     $("input[name=histogram-lower]").trigger("change");
@@ -68,14 +71,17 @@ function update() {
   var bucketCount = parseInt($("input[name=histogram-bucket-count]").val());
   if (!isFinite(lower) || !isFinite(upper) || lower < 0 || lower >= upper) {
     $("#data-status").text("Lower bound should be finite, positive, and less than upper bound");
+    displayHistogram();
     return;
   }
   if (!isFinite(bucketCount) || bucketCount < 3) {
     $("#data-status").text("Bucket count must be finite and at least 3");
+    displayHistogram();
     return;
   }
   if (bucketCount > upper - lower) {
     $("#data-status").text("Bucket count must be at most number of distinct integers in range");
+    displayHistogram();
     return;
   }
   
@@ -113,6 +119,7 @@ function update() {
     });
   } catch(e) {
     $("#data-status").text(e)
+    displayHistogram();
     return;
   }
   $("#data-status").text("");
@@ -139,9 +146,21 @@ function update() {
 }
 
 function displayHistogram(counts, starts, ends) {
+  if (!counts) {
+    MG.data_graphic({
+      data: values,
+      chart_type: "missing-data",
+      full_width: true, height: 800,
+      target: "#distribution",
+    });
+    $("#distribution").css("border", "1px solid gray")
+    $(".mg-missing-pane").remove();
+    return;
+  }
+
   var totalCount = counts.reduce(function(previous, count) { return previous + count; }, 0);
   var values = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
-
+  
   MG.data_graphic({
     data: values,
     binned: true,
@@ -185,17 +204,25 @@ function displayHistogram(counts, starts, ends) {
     },
   });
   
-    // Reposition and resize text
-  $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
-  $(".mg-x-axis .label").attr("dy", "1.2em");
-  $(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
+  // Reposition and resize text
+  $("#distribution .mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
+  $("#distribution .mg-x-axis .label").attr("dy", "1.2em");
+  $("#distribution .mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
     $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");
   });
-  $(".mg-x-axis line").each(function(i, tick) { // Extend axis ticks to 15 pixels
+  $("#distribution .mg-x-axis line").each(function(i, tick) { // Extend axis ticks to 15 pixels
     $(tick).attr("y2", parseInt($(tick).attr("y1")) + 12);
   });
-  $(".mg-y-axis .label").attr("y", "55").attr("dy", "0");
+  $("#distribution .mg-y-axis .label").attr("y", "55").attr("dy", "0");
+  $("#distribution").css("border", "1px solid gray")
+  
+  // Extend the Y axis ticks to cover the last bucket
+  var barWidth = parseFloat($("#distribution .mg-rollover-rects:last-child rect").attr("width"))
+  $("#distribution .mg-extended-y-ticks").each(function(i, yTick) {
+    var x2 = parseFloat(yTick.attributes.x2.value) + barWidth;
+    yTick.setAttribute("x2", x2);
+  });
 }
 
 function saveStateToURL() {
