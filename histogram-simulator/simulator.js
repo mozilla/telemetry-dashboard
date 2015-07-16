@@ -33,7 +33,7 @@ $(function() {
   $("#histogram-kind").change(deferredUpdate);
   gDataEditor.on("changes", function() {
     if (gIgnoreGeneration) { return; }
-    $("input[name=histogram-lower]").trigger("change");
+    $("input[name=histogram-lower]").trigger("input");
   });
   
   $("#generate-normal, #generate-log-normal, #generate-uniform").click(function(e) {
@@ -166,7 +166,7 @@ function displayHistogram(counts, starts, ends) {
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 800,
-    left: 150, right: ($("#distribution").width() - 100) / values.length + 150,
+    left: 150, right: $("#distribution").width() / (values.length + 1) + 150,
     transition_on_update: false,
     target: "#distribution",
     x_label: "Buckets", y_label: "Percentage of Samples",
