@@ -297,7 +297,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-    rangeBarControl.val([[pickerStartDate, pickerEndDate]]);
+    rangeBarControl.val([[pickerStartDate.toDate(), pickerEndDate.clone().add(1, "days").subtract(1, "milliseconds").toDate()]]);
   }
   
   var min = pickerStartDate.toDate(), max = pickerEndDate.toDate();

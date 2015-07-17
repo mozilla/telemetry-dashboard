@@ -34,7 +34,7 @@ $(document).ready(function() {
   
   // Date range pickers
   $(".date-range").daterangepicker();
-  $(".daterangepicker input[name=daterangepicker_start], .daterangepicker input[name=daterangepicker_start]").keydown(function(event){
+  $(".daterangepicker input[name=daterangepicker_start], .daterangepicker input[name=daterangepicker_end]").keydown(function(event){
     // Cause Enter to apply the settings
     if(event.keyCode == 13) {
       var $this = $(this).parents(".daterangepicker");
