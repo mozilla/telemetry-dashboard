@@ -157,6 +157,9 @@ function displayHistogram(counts, starts, ends) {
     $(".mg-missing-pane").remove();
     return;
   }
+  
+  var maxWidth = starts[starts.length - 1] - starts[starts.length - 2];
+  $("#bucket-width").text("The widest bucket's width is " + maxWidth + ".");
 
   var totalCount = counts.reduce(function(previous, count) { return previous + count; }, 0);
   var values = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
@@ -166,11 +169,11 @@ function displayHistogram(counts, starts, ends) {
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 800,
-    left: 150, right: $("#distribution").width() / (values.length + 1) + 150,
+    left: 150, right: $("#distribution").width() / (values.length + 1) + 150, bottom: 90,
     transition_on_update: false,
     target: "#distribution",
     x_label: "Buckets", y_label: "Percentage of Samples",
-    xax_ticks: 20,
+    xax_count: values.length, xax_tick_length: 0.5,
     y_extended_ticks: true,
     x_accessor: "value", y_accessor: "count",
     xax_format: function(index) { return formatNumber(starts[index]); },
@@ -178,8 +181,10 @@ function displayHistogram(counts, starts, ends) {
     mouseover: function(d, i) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
-      if (ends[d.x] === Infinity) {
-        label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(starts[d.x]);
+      if (starts[d.x] === 0) {
+        label = count + " samples (" + percentage + ") where sample value < " + formatNumber(ends[d.x]) + " (underflow)";
+      } else if (ends[d.x] === Infinity) {
+        label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(starts[d.x]) + " (overflow)";
       } else {
         label = count + " samples (" + percentage + ") where " + formatNumber(starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
       }
@@ -206,10 +211,16 @@ function displayHistogram(counts, starts, ends) {
   
   // Reposition and resize text
   $("#distribution .mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
-  $("#distribution .mg-x-axis .label").attr("dy", "1.2em");
+  $("#distribution .mg-x-axis .label").attr("dy", "2.5em");
   $("#distribution .mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
-    $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");
+    var y = text.getAttribute("y");
+    text.setAttribute("y", "-" + text.getAttribute("x"));
+    text.setAttribute("x", y);
+    text.setAttribute("dx", "12");
+    text.setAttribute("dy", "-1");
+    text.setAttribute("text-anchor", "start");
+    text.setAttribute("transform", "rotate(90)");
   });
   $("#distribution .mg-x-axis line").each(function(i, tick) { // Extend axis ticks to 15 pixels
     $(tick).attr("y2", parseInt($(tick).attr("y1")) + 12);
