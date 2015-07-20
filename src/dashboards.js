@@ -13,13 +13,16 @@ $(document).ready(function() {
       maxHeight: 500,
       disableIfEmpty: true,
       nSelectedText: $this.data("n-selected") !== undefined ? $this.data("n-selected") : "selected",
+      onDropdownShow: function(event) { // Focus the search box whenever the dropdown is opened
+        setTimeout(function() { $(event.currentTarget).find(".filter input").focus(); }, 0);
+      },
     };
     if ($this.attr("id") === "measure") {
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
-        var value = $(element).find("label").text().toLowerCase();
+        var currentOption = $(element).find("label").text().toLowerCase(); // Get the value of the current option being filtered
         query = query.toLowerCase();
-        return value.indexOf(query) >= 0 || value.replace(/_/g, " ").indexOf(query) >= 0;
+        return currentOption.indexOf(query) >= 0 || currentOption.replace(/_/g, " ").indexOf(query) >= 0 || currentOption.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
     if ($this.attr("title") !== undefined) {
@@ -28,13 +31,18 @@ $(document).ready(function() {
     $this.multiselect(options);
     $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
   });
-  $(".multiselect-container").scroll(function() { // Make the filter box fixed to the top of the select control
-    var $this = $(this);
-    $this.find(".multiselect-item.filter").css("position", "relative").css("top", $this.scrollTop()).css("z-index", 1);
-  });
   
   // Date range pickers
   $(".date-range").daterangepicker();
+  $(".daterangepicker input[name=daterangepicker_start], .daterangepicker input[name=daterangepicker_end]").keydown(function(event){
+    // Cause Enter to apply the settings
+    if(event.keyCode == 13) {
+      var $this = $(this).parents(".daterangepicker");
+      $this.find(".applyBtn").focus().click();
+      event.preventDefault();
+      return false;
+    }
+  });
   
   // Permalink control
   $(".permalink-control").append(
@@ -100,7 +108,7 @@ function loadStateFromUrlAndCookie() {
 
   // Process the saved state value
   if (typeof pageState.aggregates === "string") {
-    var aggregates = pageState.aggregates.split("!").filter(function(v) { return v in ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"]; });
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) > 0; });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
     else { pageState.aggregates = ["median"]; }
   } else { pageState.aggregates = ["median"]; }
@@ -141,7 +149,9 @@ function getHumanReadableOptions(filterName, options, os) {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   };
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
-  if (filterName === "osVersion") {
+  if (filterName === "os") {
+    return options.map(function(option) { return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option]; });
+  } else if (filterName === "osVersion") {
     var osName = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os);
     if (ignoredSystems[os] !== undefined) { return []; } // No versions for ignored OSs
     if (os === "WINNT") {
@@ -176,8 +186,7 @@ function getHumanReadableOptions(filterName, options, os) {
   } else if (filterName === "measure") {
     return options.map(function(option) { return [option, option] });
   } else if (filterName === "channelVersion") {
-    var pattern = /^\w+\/\d+$/;
-    return options.filter(function(option) { return pattern.test(option); }).map(function(option) { return [option, option.replace("/", " ")] });
+    return options.map(function(option) { return [option, option.replace("/", " ")] });
   }
   return options.map(function(option) { return [option, option] });
 }
@@ -307,7 +316,24 @@ function multiselectSetOptions(element, options, defaultSelected) {
   }
 
   element.multiselect("deselectAll", false).multiselect("select", selected); // Select the original options where applicable
+  
+  if (useGroups) { // Make the group labels sticky to the top and bottom of the selector
+    var selector = element.next().find(".multiselect-container");
+    var groupHeadings = selector.find(".multiselect-group-clickable").toArray();
+    var wasOpen = selector.parent().hasClass("open");
+    selector.parent().addClass("open");
+    var topOffset = selector.find(".filter").outerHeight() + 10;
+    var bottomOffset = groupHeadings.reduce(function(height, heading) { return height + $(heading).outerHeight(); }, 0);
+    groupHeadings.forEach(function(heading, i) {
+      bottomOffset -= $(heading).outerHeight();
+      $(heading).css("position", "sticky").css("z-index", "1").css("bottom", bottomOffset).css("top", topOffset).css("background", "white");
+      topOffset += $(heading).outerHeight();
+    });
+    if (!wasOpen) { selector.parent().removeClass("open"); }
+  }
 }
+
+// =========== Histogram/Evolution Dashboard-specific common code
 
 var indicate = (function() {
   var indicatorTimeout = null;
@@ -324,3 +350,41 @@ var indicate = (function() {
     }
   }
 })();
+
+function compressOSs() {
+  var selected = $("#filter-os").val() || [];
+  var options = $("#filter-os option").map(function(i, element) { return $(element).attr("value"); }).toArray();
+  var optionCounts = {}, selectedByOS = {};
+  options.forEach(function(option) {
+    var os = option.split(",")[0];
+    optionCounts[os] = optionCounts[os] + 1 || 1;
+  });
+  selected.forEach(function(option) {
+    var os = option.split(",")[0];
+    if (!selectedByOS.hasOwnProperty(os)) { selectedByOS[os] = []; }
+    selectedByOS[os].push(option);
+  });
+  var selectedOSs = [];
+  for (os in selectedByOS) {
+    if (selectedByOS[os].length === optionCounts[os]) { // All versions of this OS are selected, just add the OS name
+      selectedOSs.push(os);
+    } else { // Not all versions selected, add each version individually
+      selectedOSs = selectedOSs.concat(selectedByOS[os]);
+    }
+  }
+  return selectedOSs;
+}
+
+function expandOSs(OSs) {
+  var options = $("#filter-os option").map(function(i, element) { return $(element).attr("value"); }).toArray();
+  var osVersions = [];
+  OSs.forEach(function(osVersion) {
+    if (osVersion.indexOf(",") < 0) { // OS only - all OS versions of this OS
+      var allVersions = options.filter(function(option) { return option.startsWith(osVersion + ",") });
+      osVersions = osVersions.concat(allVersions);
+    } else { // Specific OS version
+      osVersions.push(osVersion);
+    }
+  });
+  return osVersions;
+}

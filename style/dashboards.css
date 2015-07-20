@@ -5,10 +5,15 @@
     font-size: inherit !important;
     font-weight: inherit !important;
 }
+.multiselect-container .filter { /* make the search bar stick to the top */
+    position: sticky;
+    z-index: 1;
+    top: 5px;
+}
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
-.multiselect-container .filter .input-group-addon { display: none; }
-.multiselect-group-clickable label { text-decoration: underline; }
+.multiselect-group-clickable label { text-decoration: underline; padding: 5px 5px 2px 5px; }
+.multiselect-group-clickable.all-selected label:after { content: " (all selected)"; }
 .multiselect-container input[type="radio"] { display: none; }
 .multiselect-container label.radio { padding-left: 10px; }
 
@@ -19,6 +24,10 @@
     text-decoration: none;
     color: inherit;
 }
+
+/* Date range picker style overrides */
+.daterangepicker .calendar { display: none !important; }
+.daterangepicker .ranges ul li:last-child { display: none !important; }
 
 /* Rangebar style overrides */
 .elessar-rangebar {
@@ -50,3 +59,10 @@
     text-align: center;
     color: white;
 }
+
+/* MetricsGraphics style overrides */
+.mg-x-axis .label:hover { cursor: pointer; }
+.mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint { font-size: 12px !important; }
+.mg-line-legend text { font-size: 12px !important; }
+.mg-marker-text { font-size: 12px !important; }
+.mg-markers line { stroke-width: 2px !important; }

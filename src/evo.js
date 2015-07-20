@@ -37,13 +37,17 @@ Telemetry.init(function() {
       $("#filter-product").multiselect("select", gInitialPageState.product);
       if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      if (gInitialPageState.os !== null) { $("#filter-os").multiselect("select", gInitialPageState.os); }
-      else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
+      
+      if (gInitialPageState.os !== null) { // We accept values such as "WINNT", as well as "WINNT,6.1"
+        $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
+      } else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
       
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
-        var selected = selector.val() || [], options = selector.find("option");
-        gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
+        if (selector.is("[multiple]")) {
+          var selected = selector.val() || [], options = selector.find("option");
+          gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
+        }
       }
       
       $("#min-channel-version, #max-channel-version").change(function(e) {
@@ -56,17 +60,17 @@ Telemetry.init(function() {
         if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
           if (e.target.id === "min-channel-version") { // min version changed, change max version to be the largest version in the current channel
             var channel = fromVersion.split("/")[0];
-            var maxChannelVersion = null;
-            var channelVersions = Telemetry.versions().forEach(function(version) {
-              if (version.startsWith(channel + "/")) { maxChannelVersion = version; }
+            var channelVersions = Telemetry.versions().filter(function(version) {
+              return version.startsWith(channel + "/") && version >= fromVersion;
             });
+            var maxChannelVersion = channelVersions[Math.min(channelVersions.length - 1, 3)];
             $("#max-channel-version").multiselect("select", maxChannelVersion);
           } else { // max version changed, change the min version to be the smallest version in the current channel
             var channel = toVersion.split("/")[0];
-            var minChannelVersion = null;
-            var channelVersions = Telemetry.versions().forEach(function(version) {
-              if (minChannelVersion === null && version.startsWith(channel + "/")) { minChannelVersion = version; }
+            var channelVersions = Telemetry.versions().filter(function(version) {
+              return version.startsWith(channel + "/") && version <= toVersion;
             });
+            var minChannelVersion = channelVersions[Math.max(0, channelVersions.length - 4)];
             $("#min-channel-version").multiselect("select", minChannelVersion);
           }
         }
@@ -91,7 +95,7 @@ Telemetry.init(function() {
         var oldAggregates = gInitialPageState.aggregates.filter(function(aggregate) { // Aggregates that are still available
           return options.reduce(function(contained, option) { return contained || option[0] === aggregate }, false);
         });
-        multiselectSetOptions(aggregatesFilter, options, oldAggregates.length > 0 ? oldAggregates : [options[0][0]]);
+        multiselectSetOptions(aggregatesFilter, options, oldAggregates.length > 0 ? oldAggregates : (options.length > 0 ? [options[0][0]] : []));
         gPreviousFilterAllSelected[aggregatesFilter.attr("id")] = false;
 
         aggregatesFilter.trigger("change");
@@ -100,14 +104,16 @@ Telemetry.init(function() {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-          // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
-          var selected = $this.val() || [], options = $this.find("option");
-          if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
-            var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
-              .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
-            $this.multiselect("deselectAll", false).multiselect("select", nonSelectedOptions);
+          if ($this.is("[multiple]")) { // Only apply the select all change to controls that allow multiple selections
+            // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
+            var selected = $this.val() || [], options = $this.find("option");
+            if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
+              var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
+                .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
+              $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+            }
+            gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
           }
-          gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
         
           calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
             refreshFilters(filterList, filterOptionsList);
@@ -192,8 +198,22 @@ function refreshFilters(filterList, filterOptionsList) {
   });
   
   multiselectSetOptions($("#filter-product"), optionsList[1]);
-  multiselectSetOptions($("#filter-os"), newOSList);
   multiselectSetOptions($("#filter-arch"), optionsList[4]);
+  
+  var selectedOSs = compressOSs();
+  multiselectSetOptions($("#filter-os"), newOSList);
+  $("#filter-os").multiselect("select", expandOSs(selectedOSs));
+  
+  // Update CSS classes for labels marking whether they are all selected
+  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
+  var selector = $("#filter-os").next().find(".multiselect-container");
+  selector.find(".multiselect-group-clickable").removeClass("all-selected");
+  var optionsMap = {};
+  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
+  allSelectedOSList.forEach(function(os) {
+    var optionGroupLabel = selector.find(".multiselect-group-clickable:contains('" + optionsMap[os] + "')");
+    optionGroupLabel.addClass("all-selected");
+  });
 }
 
 function calculateHistogramEvolutions(callback) {
@@ -206,17 +226,18 @@ function calculateHistogramEvolutions(callback) {
   // Obtain a mapping from filter names to filter options
   var filters = {};
   for (var filterName in gFilters) {
-    var filterSelector = $(gFilters[filterName]);
+    var filterSelector = gFilters[filterName];
     var selection = filterSelector.val() || [];
-    var optionCount = filterSelector.find("option").length - 1; // Number of options, minus the "Select All" option
-    if (selection.length != optionCount) { // Not all options are selected
+    if (selection.length != filterSelector.find("option").length) { // Not all options are selected
       filters[filterName] = selection;
     }
   }
   
   // Handle the special case for the OS selector
-  filters.os = deduplicate(filters.os_version.map(function(version) { return version.split(",")[0]; }));
-  filters.os_version = filters.os_version.map(function(version) { return version.split(",")[1] });
+  if (filters.os_version !== undefined) {
+    filters.os = deduplicate(filters.os_version.map(function(version) { return version.split(",")[0]; }));
+    filters.os_version = filters.os_version.map(function(version) { return version.split(",")[1] });
+  }
   
   filterList = [
     ["saved_session"],                                                   // "reason" filter
@@ -290,10 +311,12 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
       
       // precomputeAggregateQuantity will perform the actual filtering for us, and then we set the filter ID manually
       var timestamp = date.getTime();
-      if (!(timestamp in dateDatasets)) { dateDatasets[timestamp] = []; }
-      var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
-      filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
-      dateDatasets[timestamp].push(filteredDataset);
+      if (isFinite(timestamp)) {
+        if (!dateDatasets.hasOwnProperty(timestamp)) { dateDatasets[timestamp] = []; }
+        var filteredDataset = hgram._dataset[0].map(function(value, i) { return hgram.precomputeAggregateQuantity(i); });
+        filteredDataset[filteredDataset.length + Telemetry.DataOffsets.FILTER_ID] = firstFilterId;
+        dateDatasets[timestamp].push(filteredDataset);
+      }
     });
   });
   
@@ -323,7 +346,10 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
     
     // Obtain the aggregate values from the histogram
     aggregates.forEach(function(aggregate) {
-      aggregatePoints[aggregate].push({x: timestamp, y: aggregateValue[aggregate](histogram)});
+      var pointValue = aggregateValue[aggregate](histogram);
+      if (isFinite(pointValue)) {
+        aggregatePoints[aggregate].push({x: timestamp, y: pointValue});
+      }
     });
     
     // Process submission points
@@ -385,7 +411,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   
   var aggregateMap = {};
   lines.forEach(function(line) { aggregateMap[line.aggregate] = true; });
-  var variableLabel = useSubmissionDate ? "Submission Date" : "Build ID";
+  var variableLabel = useSubmissionDate ? "Submission Date (click to use Build ID)" : "Build ID (click to use Submission Date)";
   var valueLabel = Object.keys(aggregateMap).sort().join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
   
   var markers = [], usedDates = {};
@@ -396,6 +422,9 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   });
   for (var date in usedDates) {
     markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
+  }
+  if (markers.length > 0) {
+    markers[markers.length - 1].date = new Date(markers[markers.length - 1].date.getTime() - 2)
   }
 
   // Plot the data using MetricsGraphics
@@ -468,7 +497,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
     x_extended_ticks: true,
-    x_label: "Build ID", y_label: "Daily Ping Count",
+    x_label: variableLabel, y_label: "Daily Ping Count",
     transition_on_update: false,
     interpolate: "linear",
     markers: markers,
@@ -537,13 +566,16 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   });
   
   // Reposition and resize text
-  $(".mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint").css("font-size", "12px");
   $(".mg-x-axis .mg-year-marker text").attr("dy", "5");
   $(".mg-x-axis .label").attr("dy", "20");
   $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
-  $(".mg-line-legend text").css("font-size", "12px")
-  $(".mg-marker-text").css("font-size", "12px").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
-  $(".mg-markers line").css("stroke-width", "2px");
+  $(".mg-marker-text").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
+  
+  // X axis label should also be build time toggle
+  $(".mg-x-axis .label").attr("text-decoration", "underline").click(function() {
+    var newUseSubmissionDate = $("input[name=build-time-toggle]:checked").val() !== "0" ? 0 : 1;
+    $("input[name=build-time-toggle][value=" + newUseSubmissionDate + "]").prop("checked", true).trigger("change");
+  });
 }
 
 var Line = (function(){
@@ -610,7 +642,7 @@ function saveStateToUrlAndCookie() {
   var selected = $("#filter-arch").val() || [];
   if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   var selected = $("#filter-os").val() || [];
-  if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = selected; }
+  if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
   
   var fragments = [];
   $.each(gInitialPageState, function(k, v) {
@@ -624,7 +656,10 @@ function saveStateToUrlAndCookie() {
   // Save to the URL hash if it changed
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
-  if (url !== stateString) { window.location.replace(window.location.origin + window.location.pathname + "#" + stateString); }
+  if (url !== stateString) {
+    window.location.replace(window.location.origin + window.location.pathname + "#" + encodeURI(stateString));
+    $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
+  }
   
   // Save the state in a cookie that expires in 3 days
   var expiry = new Date();

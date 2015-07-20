@@ -290,6 +290,7 @@ function urlHashToPageState(url) {
   if (pageState.aggregates !== undefined) {
     pageState.aggregates = pageState.aggregates.split("!").filter(function(e) { return e !== "";});
   }
+  
   return pageState;
 }
 
@@ -397,23 +398,29 @@ Telemetry.init(function () {
   var urlPageState = urlHashToPageState(window.location.hash);
 
   //if I don't come with a custom url I check for a cookie
+  var restoredSuccessfully = true;
   if (!restoreFromPageState(urlPageState, {})) {
     var cookie = readCookie();
     if (cookie) {
       // cookie should be set from #
       var pgState = urlHashToPageState(cookie);
-      restoreFromPageState(pgState, {});
+      if (!restoreFromPageState(pgState, {})) { // Cookie is also invalid
+        restoredSuccessfully = false;
+      }
     } else {
-      // Could not restore from either url or cookie => create a default hs filter.
-      var nightlies = Telemetry.versions().sort().filter(function(version) {
-        return version.startsWith("nightly/")
-      });
-      var latest_nightly = nightlies[nightlies.length - 1];
-      addHistogramFilter(true, latest_nightly + "/GC_MS/saved_session/Firefox"); //  first filter
-      changeLockButton(true);  // default: locked
+      restoredSuccessfully = false;
     }
 
     $('input[value="Graph"]').prop('checked',true);
+  }
+  if (!restoredSuccessfully) {
+    // Could not restore from either url or cookie => create a default hs filter.
+    var nightlies = Telemetry.versions().sort().filter(function(version) {
+      return version.startsWith("nightly/")
+    });
+    var latest_nightly = nightlies[nightlies.length - 1];
+    addHistogramFilter(true, latest_nightly + "/GC_MS/saved_session/Firefox"); //  first filter
+    changeLockButton(true);  // default: locked
   }
   
   $(window).bind("hashchange", function () {
