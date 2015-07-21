@@ -58,7 +58,7 @@ $(function() {
   });
   $("#generate-custom").click(function(e) {
     $("#data-editor").next().show();
-    gDataEditor.setValue(gDataEditor.getValue());
+    $("input[name=histogram-lower]").trigger("input");
   });
 
   gCurrentBuckets = linearBuckets(1, 2, 3);
@@ -79,7 +79,7 @@ function update() {
     displayHistogram();
     return;
   }
-  if (bucketCount > upper - lower) {
+  if (bucketCount > upper - lower + 2) { // There are 2 additional buckets - one for underflow, and one for overflow
     $("#data-status").text("Bucket count must be at most number of distinct integers in range");
     displayHistogram();
     return;
