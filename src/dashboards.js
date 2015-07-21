@@ -108,7 +108,7 @@ function loadStateFromUrlAndCookie() {
 
   // Process the saved state value
   if (typeof pageState.aggregates === "string") {
-    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) > 0; });
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0; });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
     else { pageState.aggregates = ["median"]; }
   } else { pageState.aggregates = ["median"]; }
@@ -186,7 +186,35 @@ function getHumanReadableOptions(filterName, options, os) {
   } else if (filterName === "measure") {
     return options.map(function(option) { return [option, option] });
   } else if (filterName === "channelVersion") {
-    return options.map(function(option) { return [option, option.replace("/", " ")] });
+    var latest = {};
+    options.forEach(function(option) {
+      var parts = option.split("/");
+      if (!latest.hasOwnProperty(parts[0]) || (parseInt(parts[1]) > latest[parts[0]] && parseInt(parts[1]) < 70)) {
+        latest[parts[0]] = parseInt(parts[1]);
+      }
+    });
+    newOptions = Object.keys(latest).map(function(channel) { return channel + "/" + latest[channel]; }).sort();
+    var otherOptions = options.filter(function(option) { // Filter out the latest versions for each channel
+      var parts = option.split("/");
+      return latest[parts[0]] !== parseInt(parts[1]);
+    }).sort(function(a, b) {
+      var parts1 = a.split("/"), parts2 = b.split("/");
+      if (parseInt(parts1[1]) < 10) { return 1; }
+      if (parseInt(parts2[1]) < 10) { return -1; }
+      if (parts1[0] === "OTHER") { return 1; }
+      if (parts2[0] === "OTHER") { return -1; }
+      if (parts1[0] < parts2[0]) { return -1; }
+      if (parts1[0] > parts2[0]) { return 1; }
+      return parseInt(parts1[1]) - parseInt(parts2[1]);
+    });
+    var previousChannel = null;
+    otherOptions.forEach(function(option) {
+      var channel = option.split("/")[0];
+      if (channel !== previousChannel) { newOptions.push(null); }
+      previousChannel = channel;
+      newOptions.push(option);
+    });
+    return newOptions.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
   }
   return options.map(function(option) { return [option, option] });
 }
@@ -271,7 +299,9 @@ function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
   
   if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
-  var valuesMap = {}; options.forEach(function(option) { valuesMap[option[0]] = true; });
+  var valuesMap = {}; options.forEach(function(option) {
+    if (option) { valuesMap[option[0]] = true; }
+  });
   var selected = element.val() || [];
   if (!$.isArray(selected)) { selected = [selected]; } // For single selects, the value is not wrapped in an array
   selected = selected.filter(function(value) { return valuesMap.hasOwnProperty(value); }); // A list of options that are currently selected that will still be available in the new options
@@ -305,12 +335,13 @@ function multiselectSetOptions(element, options, defaultSelected) {
     }).join()).multiselect("rebuild");
   } else {
     options.forEach(function(option) {
-      if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
-        throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
-      }
+      if (option === null) { return; }
+      if ($.isArray(option) && option.length === 2 && typeof option[0] === "string" && typeof option[1] === "string") { return; }
+      throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
     });
     
     element.empty().append(options.map(function(option) {
+      if (option === null) { return '<option disabled>&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;</option>'; }
       return '<option value="' + option[0] + '">' + option[1] + '</option>';
     }).join()).multiselect("rebuild");
   }
