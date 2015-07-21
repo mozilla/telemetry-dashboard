@@ -211,7 +211,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
 
   gCurrentDateRangeUpdateCallback = callback || function() {};
   
-  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset(); // All moments and dates are UTC mode where possible, and should have 00:00:00 as their time
   var dates = [];
   if (evolution !== null) {
     var timeCutoff = moment.utc().add(1, "years").toDate().getTime();
@@ -226,14 +226,14 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     return;
   }
   
-  var minMoment = moment.utc(dates[0]).subtract(timezoneOffsetMinutes, "minutes"), maxMoment = moment.utc(dates[dates.length - 1]).subtract(timezoneOffsetMinutes, "minutes");
+  var minMoment = moment.utc(dates[0]).clone(), maxMoment = moment.utc(dates[dates.length - 1]);
 
   // Update the start and end range and update the selection if necessary
   var picker = $("#date-range").data("daterangepicker");
   picker.setOptions({
     format: "YYYY/MM/DD",
-    minDate: minMoment,
-    maxDate: maxMoment,
+    minDate: minMoment.clone().add(timezoneOffsetMinutes, "minutes").local(),
+    maxDate: maxMoment.clone().add(timezoneOffsetMinutes, "minutes").local(),
     showDropdowns: true,
     drops: "up", opens: "center",
     ranges: {
@@ -250,7 +250,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     gLoadedDateRangeFromState = true;
     var startMoment = moment.utc(gInitialPageState.start_date), endMoment = moment.utc(gInitialPageState.end_date);
     if (startMoment.isValid() && endMoment.isValid()) {
-      picker.setStartDate(startMoment.clone().local()); picker.setEndDate(endMoment.clone().local());
+      picker.setStartDate(startMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
+      picker.setEndDate(endMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
       gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
     }
     
@@ -262,12 +263,12 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   }
   
   // If the selected date range is now out of bounds, or the bounds were updated programmatically and changed, select the entire range
-  var pickerStartDate = moment.utc(picker.startDate).subtract(timezoneOffsetMinutes, "minutes");
-  var pickerEndDate = moment.utc(picker.endDate).subtract(timezoneOffsetMinutes, "minutes");
+  var pickerStartDate = picker.startDate.clone().subtract(timezoneOffsetMinutes, "minutes").utc();
+  var pickerEndDate = picker.endDate.clone().subtract(timezoneOffsetMinutes, "minutes").utc();
   if (pickerStartDate.isAfter(maxMoment) || pickerEndDate.isBefore(minMoment) ||
     (!updatedByUser && (!minMoment.isSame(gPreviousMinMoment) || !maxMoment.isSame(gPreviousMaxMoment)))) {
-    picker.setStartDate(minMoment.clone().local());
-    picker.setEndDate(maxMoment.clone().local());
+    picker.setStartDate(minMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
+    picker.setEndDate(maxMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
     pickerStartDate = minMoment;
     pickerEndDate = maxMoment.clone().add(1, "days").subtract(1, "milliseconds");
   }
@@ -276,7 +277,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   // Rebuild rangebar if it was changed by something other than the user
   if (shouldUpdateRangebar) {
     var rangeBarControl = RangeBar({
-      min: minMoment, max: maxMoment.clone().add(1, "days"),
+      min: minMoment.clone().add(timezoneOffsetMinutes, "minutes").local(),
+      max: maxMoment.clone().add(timezoneOffsetMinutes, "minutes").local(),
       maxRanges: 1,
       valueFormat: function(ts) { return ts; },
       valueParse: function(date) { return moment.utc(date).valueOf(); },
@@ -289,15 +291,17 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
       var range = ranges[0];
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
       gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
-        picker.setStartDate(moment.utc(range[0]).local());
-        picker.setEndDate(moment.utc(range[1]).subtract(1, "days").local());
+        picker.setStartDate(moment(range[0])); picker.setEndDate(moment(range[1]));
         updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true, false);
       }, 50);
     });
     $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-    rangeBarControl.val([[pickerStartDate.toDate(), pickerEndDate.toDate()]]);
+    rangeBarControl.val([[
+      pickerStartDate.clone().add(timezoneOffsetMinutes, "minutes").local().toDate(),
+      pickerEndDate.clone().add(timezoneOffsetMinutes, "minutes").local().subtract(1, "days").add(1, "milliseconds").toDate(),
+    ]]);
   }
   
   var min = pickerStartDate.toDate(), max = pickerEndDate.toDate();
@@ -364,7 +368,11 @@ function displayHistogram(histogram, dates, cumulative) {
   // Update the summary
   $("#prop-kind").text(histogram.kind());
   $("#prop-dates").text(formatNumber(dates.length));
-  $("#prop-date-range").text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ? "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
+  $("#prop-date-range").text(
+    moment.utc(dates[0]).format("YYYY/MM/DD") +
+    ((dates.length == 1) ? "" : " to " + moment.utc(dates[dates.length - 1]).format("YYYY/MM/DD"))
+  );
   $("#prop-submissions").text(formatNumber(histogram.submissions()));
   $("#prop-count").text(formatNumber(histogram.count()));
   if (histogram.kind() == "linear" || histogram.kind() == "exponential") {

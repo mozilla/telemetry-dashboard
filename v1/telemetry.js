@@ -553,7 +553,7 @@ Telemetry.HistogramEvolution = (function(){
 
 /*! Auxiliary function to parse a date string from JSON data format */
 function _parseDateString(d) {
-  return new Date(d.substr(0,4) + "/" + d.substr(4,2) + "/"+ d.substr(6,2));
+  return new Date(d.substr(0,4) + "-" + d.substr(4,2) + "-"+ d.substr(6,2));
 }
 
 /*!

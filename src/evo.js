@@ -396,14 +396,16 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   lines = lines.filter(function(line) { return line.values.length > 0; });
   submissionLines = submissionLines.filter(function(line) { return line.values.length > 0; });
   
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
+  
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
-    var dataset = line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: moment(point.x).add(timezoneOffsetMinutes, "minutes").toDate(), value: point.y}; });
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
   var submissionLineData = submissionLines.map(function (line) {
-    var dataset = line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: moment(point.x).add(timezoneOffsetMinutes, "minutes").toDate(), value: point.y}; });
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
@@ -421,10 +423,10 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     if (usedDates[minDate].indexOf(line.getVersionString()) < 0) { usedDates[minDate].push(line.getVersionString()); }
   });
   for (var date in usedDates) {
-    markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
+    markers.push({date: moment(parseInt(date) + 1).add(timezoneOffsetMinutes, "minutes").toDate(), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
-  if (markers.length > 0) {
-    markers[markers.length - 1].date = new Date(markers[markers.length - 1].date.getTime() - 2)
+  if (markers.length > 1) { // If there is a marker on the far right, move it back 2 milliseconds in order to make it visible again
+    markers[markers.length - 1].date = moment(markers[markers.length - 1].date.getTime() - 2).toDate();
   }
 
   // Plot the data using MetricsGraphics
@@ -442,8 +444,8 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     markers: markers, legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
-    min_x: minDate === null ? null : new Date(minDate),
-    max_x: maxDate === null ? null : new Date(maxDate),
+    min_x: minDate === null ? null : moment.utc(minDate).add(timezoneOffsetMinutes, "minutes").toDate(),
+    max_x: maxDate === null ? null : moment.utc(maxDate).add(timezoneOffsetMinutes, "minutes").toDate(),
     mouseover: function(d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
