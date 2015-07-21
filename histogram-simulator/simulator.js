@@ -58,7 +58,7 @@ $(function() {
   });
   $("#generate-custom").click(function(e) {
     $("#data-editor").next().show();
-    $("input[name=histogram-lower]").trigger("input");
+    gDataEditor.setValue(gDataEditor.getValue());
   });
 
   gCurrentBuckets = linearBuckets(1, 2, 3);
@@ -107,7 +107,9 @@ function update() {
   
   // Regenerate the data if necessary
   gIgnoreGeneration = true;
-  $("input[name=generate]:checked").click();
+  if ($("input[name=generate]:checked").attr("id") !== "generate-custom") {
+    $("input[name=generate]:checked").click();
+  }
   gIgnoreGeneration = false;
   
   var values = [];
