@@ -17,7 +17,9 @@ $(document).ready(function() {
         setTimeout(function() { $(event.currentTarget).find(".filter input").focus(); }, 0);
       },
     };
-    if ($this.attr("id") === "measure") {
+    
+    // Horrible hacks to make some very specific functionality work
+    if ($this.attr("id") === "measure") { // Measure should search as if spaces were underscores
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
         var currentOption = $(element).find("label").text().toLowerCase(); // Get the value of the current option being filtered
@@ -25,6 +27,35 @@ $(document).ready(function() {
         return currentOption.indexOf(query) >= 0 || currentOption.replace(/_/g, " ").indexOf(query) >= 0 || currentOption.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
+    if ($this.attr("id") === "filter-os") { // OS filter should show custom text for selections
+      options.buttonText = function(options, select) {
+        if (options.length === 0) { // None selected
+          return this.nonSelectedText;
+        } else if (this.allSelectedText  && options.length === $('option', $(select)).length && $('option', $(select)).length !== 1 && this.multiple) { // All selected
+          return this.allSelectedText + ' (' + options.length + ')';
+        } else {
+          var systems = compressOSs();
+          if (systems.length > this.numberDisplayed) { // Some selected, more than list-all threshold
+            return options.length + ' ' + this.nSelectedText;
+          } else { // Some selected, under or at list-all threshold
+            var selected = '';
+            var delimiter = this.delimiterText;
+            var listing = options.parent().parent();
+            systems.forEach(function(os) {
+              if (os.indexOf(",") >= 0) {
+                var option = listing.find('option[value="' + os + '"]');
+                selected += (option.attr('label') !== undefined ? option.attr('label') : option.text()) + delimiter;
+              } else {
+                var label = getHumanReadableOptions("os", [os])[0][1];
+                selected += label + delimiter;
+              }
+            });
+            return selected.substr(0, selected.length - 2);
+          }
+        }
+      }
+    }
+    
     if ($this.attr("title") !== undefined) {
       options.nonSelectedText = $this.attr("title");
     }
@@ -199,13 +230,11 @@ function getHumanReadableOptions(filterName, options, os) {
       return latest[parts[0]] !== parseInt(parts[1]);
     }).sort(function(a, b) {
       var parts1 = a.split("/"), parts2 = b.split("/");
-      if (parseInt(parts1[1]) < 10) { return 1; }
-      if (parseInt(parts2[1]) < 10) { return -1; }
       if (parts1[0] === "OTHER") { return 1; }
       if (parts2[0] === "OTHER") { return -1; }
       if (parts1[0] < parts2[0]) { return -1; }
       if (parts1[0] > parts2[0]) { return 1; }
-      return parseInt(parts1[1]) - parseInt(parts2[1]);
+      return parseInt(parts2[1]) - parseInt(parts1[1]);
     });
     var previousChannel = null;
     otherOptions.forEach(function(option) {
