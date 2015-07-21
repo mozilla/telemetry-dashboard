@@ -232,8 +232,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   var picker = $("#date-range").data("daterangepicker");
   picker.setOptions({
     format: "YYYY/MM/DD",
-    minDate: minMoment.clone().add(timezoneOffsetMinutes, "minutes").local(),
-    maxDate: maxMoment.clone().add(timezoneOffsetMinutes, "minutes").local(),
+    minDate: minMoment.format("YYYY-MM-DD"),
+    maxDate: maxMoment.format("YYYY-MM-DD"),
     showDropdowns: true,
     drops: "up", opens: "center",
     ranges: {
@@ -250,8 +250,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     gLoadedDateRangeFromState = true;
     var startMoment = moment.utc(gInitialPageState.start_date), endMoment = moment.utc(gInitialPageState.end_date);
     if (startMoment.isValid() && endMoment.isValid()) {
-      picker.setStartDate(startMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
-      picker.setEndDate(endMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
+      picker.setStartDate(startMoment.format("YYYY-MM-DD"));
+      picker.setEndDate(endMoment.format("YYYY-MM-DD"));
       gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
     }
     
@@ -267,8 +267,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   var pickerEndDate = picker.endDate.clone().subtract(timezoneOffsetMinutes, "minutes").utc();
   if (pickerStartDate.isAfter(maxMoment) || pickerEndDate.isBefore(minMoment) ||
     (!updatedByUser && (!minMoment.isSame(gPreviousMinMoment) || !maxMoment.isSame(gPreviousMaxMoment)))) {
-    picker.setStartDate(minMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
-    picker.setEndDate(maxMoment.clone().add(timezoneOffsetMinutes, "minutes").local());
+    picker.setStartDate(minMoment.format("YYYY-MM-DD"));
+    picker.setEndDate(maxMoment.format("YYYY-MM-DD"));
     pickerStartDate = minMoment;
     pickerEndDate = maxMoment.clone().add(1, "days").subtract(1, "milliseconds");
   }
@@ -291,7 +291,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
       var range = ranges[0];
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
       gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
-        picker.setStartDate(moment(range[0])); picker.setEndDate(moment(range[1]));
+        picker.setStartDate(moment.utc(range[0]).format("YYYY-MM-DD"))
+        picker.setEndDate(moment.utc(range[1]).format("YYYY-MM-DD"));
         updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true, false);
       }, 50);
     });
@@ -528,13 +529,13 @@ function saveStateToUrlAndCookie() {
   }
   
   // If advanced settings are not at their defaults, display a notice in the panel header
+  var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
   if (gCurrentEvolution !== null) {
     var fullDates = gCurrentEvolution.dates();
     var startMoment = moment(fullDates[0]), endMoment = moment(fullDates[fullDates.length - 1]);
   } else {
     var startMoment = start, endMoment = end;
   }
-  var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || !start.isSame(startMoment) || !end.isSame(endMoment)) {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
