@@ -391,6 +391,15 @@ function multiselectSetOptions(element, options, defaultSelected) {
     });
     if (!wasOpen) { selector.parent().removeClass("open"); }
   }
+  
+  $(".multiselect-container input.multiselect-search").keydown(function(event){
+    // Cause Enter to select the first visible item
+    if(event.keyCode == 13) {
+      $(this).parents("ul").find('li:not(.filter-hidden):not(.filter):first input').focus().click();
+      event.preventDefault();
+      return false;
+    }
+  });
 }
 
 // =========== Histogram/Evolution Dashboard-specific common code
