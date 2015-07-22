@@ -870,12 +870,12 @@ HistogramEvolution.prototype.range = function (start, end) {
   // If start is given, we reduce it to UTC year, month and day, this prevents
   // ensure that less-then-or-equal operator works as expected, in corner cases
   // where people submit dates that holds a none-zero timestamp
-  if(start !== undefined) {
+  if(start) {
     start = new Date(("0000" + start.getUTCFullYear()).slice(-4) + "-" + ("00" + (start.getUTCMonth() + 1)).slice(-2) + "-" + ("00" + start.getUTCDate()).slice(-2));
   }
 
   // Sanitize end too½
-  if(end !== undefined) {
+  if(end) {
     end = new Date(("0000" + end.getUTCFullYear()).slice(-4) + "-" + ("00" + (end.getUTCMonth() + 1)).slice(-2) + "-" + ("00" + end.getUTCDate()).slice(-2));
   }
 
@@ -890,7 +890,7 @@ HistogramEvolution.prototype.range = function (start, end) {
 
     // Check that date is between start and end (if start and end is defined)
     var date = _parseDateString(datekey);
-    if((start === undefined || start <= date) && (end === undefined || date <= end)) {
+    if((!start || start <= date) && (!end || date <= end)) {
 
       // Find dataset of this datekey, merge filter_ids for this dataset into
       // merged_dataset.
