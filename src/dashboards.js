@@ -167,6 +167,7 @@ function loadStateFromUrlAndCookie() {
   return pageState;
 }
 
+// A whole bucketful of dirty hacks in this function to clean up options and give them nice names
 function getHumanReadableOptions(filterName, options, os) {
   os = os || null;
 
@@ -218,17 +219,19 @@ function getHumanReadableOptions(filterName, options, os) {
   } else if (filterName === "measure") {
     return options.map(function(option) { return [option, option] });
   } else if (filterName === "channelVersion") {
-    var latest = {};
+    // Find the latest nightly version
+    var latestNightlyVersion = 0;
     options.forEach(function(option) {
       var parts = option.split("/");
-      if (!latest.hasOwnProperty(parts[0]) || (parseInt(parts[1]) > latest[parts[0]] && parseInt(parts[1]) < 70)) {
-        latest[parts[0]] = parseInt(parts[1]);
+      if (parts[0] === "nightly" && parseInt(parts[1]) > latestNightlyVersion) {
+        latestNightlyVersion = parseInt(parts[1]);
       }
     });
-    newOptions = Object.keys(latest).map(function(channel) { return channel + "/" + latest[channel]; }).sort(function(a, b) {
+    
+    // Sort the options in the specified order and set aside the bad ones
+    var badOptions = [], goodOptions = [];
+    options.sort(function(a, b) {
       var parts1 = a.split("/"), parts2 = b.split("/");
-      if (parts1[0] === "OTHER") { return 1; }
-      if (parts2[0] === "OTHER") { return -1; }
       if (channelVersionOrder.hasOwnProperty(parts1[0]) && channelVersionOrder.hasOwnProperty(parts2[0])) {
         if (channelVersionOrder[parts1[0]] !== channelVersionOrder[parts2[0]]) {
           return channelVersionOrder[parts1[0]] - channelVersionOrder[parts2[0]];
@@ -240,34 +243,29 @@ function getHumanReadableOptions(filterName, options, os) {
       if (parts1[0] > parts2[0]) { return 1; }
       if (parts1[0] < parts2[0]) { return -1; }
       return parseInt(parts2[1]) - parseInt(parts1[1]);
-    });
-    var otherOptions = options.filter(function(option) { // Filter out the latest versions for each channel
+    }).forEach(function(option) {
       var parts = option.split("/");
-      return latest[parts[0]] !== parseInt(parts[1]);
-    }).sort(function(a, b) {
-      var parts1 = a.split("/"), parts2 = b.split("/");
-      if (parts1[0] === "OTHER") { return 1; }
-      if (parts2[0] === "OTHER") { return -1; }
-      if (channelVersionOrder.hasOwnProperty(parts1[0]) && channelVersionOrder.hasOwnProperty(parts2[0])) {
-        if (channelVersionOrder[parts1[0]] !== channelVersionOrder[parts2[0]]) {
-          return channelVersionOrder[parts1[0]] - channelVersionOrder[parts2[0]];
-        }
-        return parseInt(parts2[1]) - parseInt(parts1[1]);
-      }
-      if (channelVersionOrder.hasOwnProperty(parts1[0])) { return -1; }
-      if (channelVersionOrder.hasOwnProperty(parts2[0])) { return 1; }
-      if (parts1[0] > parts2[0]) { return 1; }
-      if (parts1[0] < parts2[0]) { return -1; }
-      return parseInt(parts2[1]) - parseInt(parts1[1]);
+      var version = parseInt(parts[1]);
+      if (parts[0] === "nightly") { goodOptions.push(option); }
+      else if (parts[0] === "aurora") { (version <= latestNightlyVersion - 1 ? goodOptions : badOptions).push(option); }
+      else if (parts[0] === "beta") { (version <= latestNightlyVersion - 2 ? goodOptions : badOptions).push(option); }
+      else if (parts[0] === "release") { (version <= latestNightlyVersion - 3 ? goodOptions : badOptions).push(option); }
+      else { badOptions.push(option); }
     });
+    
+    options = [];
     var previousChannel = null;
-    otherOptions.forEach(function(option) {
+    goodOptions.forEach(function(option, i) {
       var channel = option.split("/")[0];
-      if (channel !== previousChannel) { newOptions.push(null); }
+      if (channel !== previousChannel && i !== 0) { options.push(null); }
       previousChannel = channel;
-      newOptions.push(option);
+      options.push(option);
     });
-    return newOptions.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
+    if (badOptions.length > 0) {
+      options.push(null);
+      options = options.concat(badOptions);
+    }
+    return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
   }
   return options.map(function(option) { return [option, option] });
 }
