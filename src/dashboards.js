@@ -415,7 +415,8 @@ function multiselectSetOptions(element, options, defaultSelected) {
     }).join()).multiselect("rebuild");
   }
 
-  element.multiselect("deselectAll", false).multiselect("select", selected); // Select the original options where applicable
+  element.multiselect("deselectAll", false).next().find("input[type=radio]").attr("checked", false); // Workaround for bug where the first radio button is always checked
+  element.multiselect("select", selected); // Select the original options where applicable
   
   if (useGroups) { // Make the group labels sticky to the top and bottom of the selector
     var selector = element.next().find(".multiselect-container");
