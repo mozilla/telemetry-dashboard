@@ -253,6 +253,24 @@ function getHumanReadableOptions(filterName, options, os) {
       else { badOptions.push(option); }
     });
     
+    // Move the latest version of each channel into their own section
+    var latest = {};
+    goodOptions.forEach(function(option) {
+      var parts = option.split("/");
+      if (!latest.hasOwnProperty(parts[0]) || (parseInt(parts[1]) > latest[parts[0]] && parseInt(parts[1]) < 70)) {
+        latest[parts[0]] = parseInt(parts[1]);
+      }
+    });
+    var latestOptions = [];
+    goodOptions = goodOptions.filter(function(option) {
+      var parts = option.split("/");
+      if (parseInt(parts[1]) === latest[parts[0]]) { // Latest version in the channel
+        latestOptions.push(option);
+        return false;
+      }
+      return true;
+    });
+    
     options = [];
     var previousChannel = null;
     goodOptions.forEach(function(option, i) {
@@ -261,10 +279,10 @@ function getHumanReadableOptions(filterName, options, os) {
       previousChannel = channel;
       options.push(option);
     });
-    if (badOptions.length > 0) {
-      options.push(null);
-      options = options.concat(badOptions);
-    }
+    
+    options = latestOptions.concat([null]).concat(options);
+    
+    if (badOptions.length > 0) { options = options.concat([null]).concat(badOptions); }
     return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
   }
   return options.map(function(option) { return [option, option] });
