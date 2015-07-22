@@ -126,6 +126,10 @@ function update() {
   }
   $("#data-status").text("");
   
+  if (kind === "linear" && bucketCount == upper - lower + 2) {
+    $("#data-status").text("Consider using enumerated histograms when using individual buckets for each integer.");
+  }
+  
   var histogram = new Telemetry.Histogram(gCurrentBuckets, gCurrentBuckets, kind, values.length, "Test Histogram");
   var counts = histogram.map(function(count, start, end, i) {
     var hitCount = 0;
