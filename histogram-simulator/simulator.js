@@ -164,8 +164,14 @@ function displayHistogram(counts, starts, ends) {
     return;
   }
   
-  var maxWidth = starts[starts.length - 1] - starts[starts.length - 2];
-  $("#bucket-width").text("The widest bucket's width is " + maxWidth + ".");
+  var maxWidth = 0;
+  starts.forEach(function(start, i) {
+    var width = ends[i] - start;
+    if (isFinite(width) && width > maxWidth) {
+      maxWidth = width;
+    }
+  });
+  $("#bucket-width").text("Using these parameters, the widest bucket's width is " + maxWidth + ".");
 
   var totalCount = counts.reduce(function(previous, count) { return previous + count; }, 0);
   var values = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
