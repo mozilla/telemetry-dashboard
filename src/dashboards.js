@@ -171,6 +171,7 @@ function getHumanReadableOptions(filterName, options, os) {
   os = os || null;
 
   var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
+  var channelVersionOrder = {"nightly": 0, "aurora": 1, "beta": 2, "release": 3};
   var ignoredSystems = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
@@ -224,7 +225,22 @@ function getHumanReadableOptions(filterName, options, os) {
         latest[parts[0]] = parseInt(parts[1]);
       }
     });
-    newOptions = Object.keys(latest).map(function(channel) { return channel + "/" + latest[channel]; }).sort();
+    newOptions = Object.keys(latest).map(function(channel) { return channel + "/" + latest[channel]; }).sort(function(a, b) {
+      var parts1 = a.split("/"), parts2 = b.split("/");
+      if (parts1[0] === "OTHER") { return 1; }
+      if (parts2[0] === "OTHER") { return -1; }
+      if (channelVersionOrder.hasOwnProperty(parts1[0]) && channelVersionOrder.hasOwnProperty(parts2[0])) {
+        if (channelVersionOrder[parts1[0]] !== channelVersionOrder[parts2[0]]) {
+          return channelVersionOrder[parts1[0]] - channelVersionOrder[parts2[0]];
+        }
+        return parseInt(parts2[1]) - parseInt(parts1[1]);
+      }
+      if (channelVersionOrder.hasOwnProperty(parts1[0])) { return -1; }
+      if (channelVersionOrder.hasOwnProperty(parts2[0])) { return 1; }
+      if (parts1[0] > parts2[0]) { return 1; }
+      if (parts1[0] < parts2[0]) { return -1; }
+      return parseInt(parts2[1]) - parseInt(parts1[1]);
+    });
     var otherOptions = options.filter(function(option) { // Filter out the latest versions for each channel
       var parts = option.split("/");
       return latest[parts[0]] !== parseInt(parts[1]);
@@ -232,8 +248,16 @@ function getHumanReadableOptions(filterName, options, os) {
       var parts1 = a.split("/"), parts2 = b.split("/");
       if (parts1[0] === "OTHER") { return 1; }
       if (parts2[0] === "OTHER") { return -1; }
-      if (parts1[0] < parts2[0]) { return -1; }
+      if (channelVersionOrder.hasOwnProperty(parts1[0]) && channelVersionOrder.hasOwnProperty(parts2[0])) {
+        if (channelVersionOrder[parts1[0]] !== channelVersionOrder[parts2[0]]) {
+          return channelVersionOrder[parts1[0]] - channelVersionOrder[parts2[0]];
+        }
+        return parseInt(parts2[1]) - parseInt(parts1[1]);
+      }
+      if (channelVersionOrder.hasOwnProperty(parts1[0])) { return -1; }
+      if (channelVersionOrder.hasOwnProperty(parts2[0])) { return 1; }
       if (parts1[0] > parts2[0]) { return 1; }
+      if (parts1[0] < parts2[0]) { return -1; }
       return parseInt(parts2[1]) - parseInt(parts1[1]);
     });
     var previousChannel = null;
