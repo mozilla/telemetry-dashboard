@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Histogram Simulator</title>
+    
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/style/metricsgraphics.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.4.0/codemirror.css">
+    <style>
+.CodeMirror {
+  border: 1px solid #aaa;
+  height: 300px;
+  margin: 10px;
+}
+
+/* hide spinners for number inputs */
+input[type=number] { -moz-appearance: textfield; }
+::-webkit-inner-spin-button { -webkit-appearance: none; }
+::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input { margin-top: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <form class="navbar-form inline pull-right">
+                <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+            </form>
+            <h1>Histogram Simulator <span class="label label-warning" style="font-size: 12px">DRAFT</span></h1>
+            <p>Tweak histogram settings for data fitting purposes. See <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe">Adding a new Telemetry Probe</a> for information about new Telemetry probes.</p>
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <h2>Histogram Properties</h2>
+                <form class="form-horizontal">
+                    <label>
+                        Histogram Kind (<code>kind</code>): 
+                        <select id="histogram-kind">
+                            <option value="flag">flag</option>
+                            <option value="boolean">boolean</option>
+                            <option value="enumerated">enumerated</option>
+                            <option value="linear" selected>linear</option>
+                            <option value="exponential">exponential</option>
+                        </select>
+                    </label>
+                    <br>
+                    <label>Lower bound (<code>low</code>): <input name="histogram-lower" class="form-control" type="number" value="1" min="1"></label>
+                    <br>
+                    <label>Upper bound (<code>high</code>): <input name="histogram-upper" class="form-control" type="number" value="500" min="0"></label>
+                    <br>
+                    <label>Bucket count (<code>n_buckets</code>/<code>n_values</code>): <input name="histogram-bucket-count" class="form-control" type="number" value="20"></label>
+                </form>
+                <hr>
+                <form class="form-horizontal">
+                    <div><label><input id="generate-normal" name="generate" type="radio" value="normal" checked> Generate normally distributed data</label></div>
+                    <div><label><input id="generate-log-normal" name="generate" type="radio" value="log-normal"> Generate log-normally distributed data</label></div>
+                    <div><label><input id="generate-uniform" name="generate" type="radio" value="uniform"> Generate uniformly distributed data</label></div>
+                    <div><label><input id="generate-custom" name="generate" type="radio" value="custom"> Use custom data</label></div>
+                </form>
+                <textarea id="data-editor">[0, 1, 2]</textarea>
+                <div id="data-status" class="text-warning"></div>
+                <hr>
+                <p id="bucket-width"></p>
+                <p id="bucket-width"></p>
+                <p>The leftmost bucket is the <b>underflow bucket</b>, used for values at the bottom of the expected range - generally, this means between 0 and 1.</p>
+                <p>The rightmost bucket is the <b>overflow bucket</b>, used for values at or above <code>high</code> - all values greater or equal to <code>high</code> go here.</p>
+            </div>
+            <figure class="col-md-8">
+                <div id="distribution"></div>
+            </figure>
+        </div>
+    </div>
+    
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <script src="/lib/metricsgraphics.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.4.0/codemirror.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/5.4.0/mode/javascript/javascript.js"></script>
+    
+    <script src="//telemetry.mozilla.org/v2/telemetry.js"></script>
+    <script src="simulator.js"></script>
+</body>
+</html>
