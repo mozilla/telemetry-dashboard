@@ -60,6 +60,7 @@ $(document).ready(function() {
       options.nonSelectedText = $this.attr("title");
     }
     $this.multiselect(options);
+    $this.next().find("input[type=radio]").attr("checked", false); // Workaround for bug where the first radio button is always checked
     $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
   });
   
