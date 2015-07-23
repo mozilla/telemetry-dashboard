@@ -103,8 +103,10 @@ $(document).ready(function() {
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
-  var url = window.location.hash;
-  url = url[0] === "#" ? url.slice(1) : url;
+  var url = "";
+  var index = location.href.indexOf("#");
+  if (index > -1) { url = location.href.substring(index + 1); }
+  url = decodeURI(url);
   var pageState = {};
   
   // Load from cookie if URL does not have state
