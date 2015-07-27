@@ -17,8 +17,9 @@ Telemetry.init(function() {
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
   if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
   
-  $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
+  $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
+  $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
@@ -66,8 +67,7 @@ Telemetry.init(function() {
             // Update the measure description
             var measureDescription = gMeasureMap[$("#measure").val()].description;
             gCurrentDates = dates; gCurrentHistogram = histogram;
-            displayHistogram(histogram, dates, $("input[name=cumulative-toggle]:checked").val() !== "0");
-            saveStateToUrlAndCookie();
+            $("input[name=cumulative-toggle]").trigger("change");
           });
         }, 0);
       });
@@ -77,8 +77,8 @@ Telemetry.init(function() {
     });
   });
 
-  $("input[name=cumulative-toggle]").change(function() {
-    displayHistogram(gCurrentHistogram, gCurrentDates, $("input[name=cumulative-toggle]:checked").val() !== "0");
+  $("input[name=cumulative-toggle], input[name=trim-toggle]").change(function() {
+    displayHistogram(gCurrentHistogram, gCurrentDates, $("input[name=cumulative-toggle]:checked").val() !== "0", $("input[name=trim-toggle]:checked").val() !== "0");
     saveStateToUrlAndCookie();
   });
 
@@ -257,7 +257,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     
     // If advanced settings are not at their defaults, expand the settings pane on load
     var fullDates = evolution.dates();
-    if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 ||
+    if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
       startMoment !== moment.utc(fullDates[0]).format("YYYY-MM-DD") || endMoment !== moment.utc(fullDates[fullDates.length - 1]).format("YYYY-MM-DD")) {
       $("#advanced-settings-toggle").click();
     }
@@ -344,8 +344,9 @@ function getFilteredHistogram(version, measure, histogram, filters, filterList) 
   return new Telemetry.Histogram(measure, histogram._filter_path, histogram._buckets, dataset, histogram._filter_tree, histogram._spec);
 }
 
-function displayHistogram(histogram, dates, cumulative) {
-  cumulative = cumulative || false;
+function displayHistogram(histogram, dates, cumulative, trim) {
+  cumulative = cumulative === undefined ? false : cumulative;
+  trim = trim === undefined ? true : trim;
 
   // Show that the data is missing if there is no histogram, the histogram has an invalid number of buckets, or the histogram exists but has no samples
   if (histogram === null || histogram._buckets.length < 2 || histogram.count() === 0) {
@@ -391,6 +392,17 @@ function displayHistogram(histogram, dates, cumulative) {
   var ends = histogram.map(function(count, start, end, i) { return end; });
   ends[ends.length - 1] = Infinity;
   var totalCount = histogram.count();
+  
+  if (trim) { // Trim buckets on both ends in the histogram if their counts are too low
+    var countCutoff = totalCount * 0.0001; // Set the samples cutoff to 0.01% of the total samples
+    while (counts[0] < countCutoff) {
+      counts.shift(); starts.shift(); ends.shift();
+    }
+    while (counts[counts.length - 1] < countCutoff) {
+      counts.pop(); starts.pop(); ends.pop();
+    }
+  }
+  
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
 
   // Plot the data using MetricsGraphics
@@ -458,6 +470,7 @@ function displayHistogram(histogram, dates, cumulative) {
 
 // Save the current state to the URL and the page cookie
 var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
+var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
   gInitialPageState = {
@@ -468,6 +481,7 @@ function saveStateToUrlAndCookie() {
     product: $("#filter-product").val() || [],
     cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
+    trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
     start_date: moment(picker.startDate).format("YYYY-MM-DD"), end_date: moment(picker.endDate).format("YYYY-MM-DD"),
     
     // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
@@ -483,20 +497,19 @@ function saveStateToUrlAndCookie() {
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
   
-  var fragments = [];
-  $.each(gInitialPageState, function(k, v) {
-    if (v instanceof Array) {
-      v = v.join("!");
-    }
-    fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
-  });
-  var stateString = fragments.join("&");
+  var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
+    var value = gInitialPageState[key];
+    if ($.isArray(value)) { value = value.join("!"); }
+    return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+  }).join("&");
   
   // Save to the URL hash if it changed
-  var url = window.location.hash;
-  url = url[0] === "#" ? url.slice(1) : url;
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) { url = decodeURI(window.location.href.substring(index + 1)); }
+  if (url[0] == "!") { url = url.slice(1); }
   if (url !== stateString) {
-    window.location.replace(window.location.origin + window.location.pathname + "#" + stateString);
+    window.location.replace(window.location.origin + window.location.pathname + "#!" + encodeURI(stateString));
     $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
   }
   
@@ -531,10 +544,23 @@ function saveStateToUrlAndCookie() {
   } else {
     var startMoment = start, endMoment = end;
   }
-  console.log(start, end, startMoment, endMoment)
-  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || start !== startMoment || end !== endMoment) {
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 || start !== startMoment || end !== endMoment) {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
     $("#advanced-settings-toggle").find("span").text("");
+  }
+  
+  // Reload Disqus comments for the new page state
+  var identifier = "dist@" + gInitialPageState.measure;
+  if (identifier !== gPreviousDisqusIdentifier) {
+    gPreviousDisqusIdentifier = identifier;
+    DISQUS.reset({
+      reload: true,
+      config: function () {
+        this.page.identifier = identifier;
+        this.page.url = window.location.href;
+        console.log("reloading comments for page ID ", this.page.identifier)
+      }
+    });
   }
 }

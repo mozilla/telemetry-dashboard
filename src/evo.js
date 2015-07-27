@@ -623,8 +623,9 @@ var Line = (function(){
 })();
 
 // Save the current state to the URL and the page cookie
+var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
-  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative;
+  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative, trim = gInitialPageState.trim;
   gInitialPageState = {
     aggregates: $("#aggregates").val() || [],
     measure: $("#measure").val(),
@@ -639,6 +640,7 @@ function saveStateToUrlAndCookie() {
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
   if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (cumulative !== undefined) { gInitialPageState.cumulative = cumulative; }
+  if (trim !== undefined) { gInitialPageState.trim = trim; }
   
   // Only store these in the state if they are not all selected
   var selected = $("#filter-arch").val() || [];
@@ -646,20 +648,19 @@ function saveStateToUrlAndCookie() {
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
   
-  var fragments = [];
-  $.each(gInitialPageState, function(k, v) {
-    if (v instanceof Array) {
-      v = v.join("!");
-    }
-    fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
-  });
-  var stateString = fragments.join("&");
+  var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
+    var value = gInitialPageState[key];
+    if ($.isArray(value)) { value = value.join("!"); }
+    return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+  }).join("&");
   
   // Save to the URL hash if it changed
-  var url = window.location.hash;
-  url = url[0] === "#" ? url.slice(1) : url;
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) { url = decodeURI(window.location.href.substring(index + 1)); }
+  if (url[0] == "!") { url = url.slice(1); }
   if (url !== stateString) {
-    window.location.replace(window.location.origin + window.location.pathname + "#" + encodeURI(stateString));
+    window.location.replace(window.location.origin + window.location.pathname + "#!" + encodeURI(stateString));
     $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
   }
   
@@ -677,5 +678,19 @@ function saveStateToUrlAndCookie() {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
     $("#advanced-settings-toggle").find("span").text("");
+  }
+  
+  // Reload Disqus comments for the new page state
+  var identifier = "evo@" + gInitialPageState.measure;
+  if (identifier !== gPreviousDisqusIdentifier) {
+    gPreviousDisqusIdentifier = identifier;
+    DISQUS.reset({
+      reload: true,
+      config: function () {
+        this.page.identifier = identifier;
+        this.page.url = window.location.href;
+        console.log("reloading comments for page ID ", this.page.identifier)
+      }
+    });
   }
 }

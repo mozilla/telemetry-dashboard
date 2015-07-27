@@ -4,6 +4,10 @@
     padding: 6px 3px !important;
     font-size: inherit !important;
     font-weight: inherit !important;
+    max-width: 500px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 .multiselect-container .filter { /* make the search bar stick to the top */
     position: sticky;
