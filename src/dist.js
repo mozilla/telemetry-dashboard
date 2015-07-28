@@ -27,10 +27,11 @@ Telemetry.init(function() {
       multiselectSetOptions($("#filter-os"), filterOptionsList[3]);
       multiselectSetOptions($("#filter-arch"), filterOptionsList[4]);
       
-      $("#filter-product").multiselect("select", gInitialPageState.product);
+      // Set the initial selection for the selectors
+      if (gInitialPageState.product !== null) { $("#filter-product").multiselect("select", gInitialPageState.product); }
+      else { $("#filter-product").multiselect("selectAll", false).multiselect("updateButtonText"); }
       if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      
       if (gInitialPageState.os !== null) { // We accept values such as "WINNT", as well as "WINNT,6.1"
         $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
       } else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
@@ -120,17 +121,7 @@ function refreshFilters(optionsList) {
   var selectedOSs = compressOSs();
   multiselectSetOptions($("#filter-os"), newOSList);
   $("#filter-os").multiselect("select", expandOSs(selectedOSs));
-  
-  // Update CSS classes for labels marking whether they are all selected
-  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
-  var selector = $("#filter-os").next().find(".multiselect-container");
-  selector.find(".multiselect-group-clickable").removeClass("all-selected");
-  var optionsMap = {};
-  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
-  allSelectedOSList.forEach(function(os) {
-    var optionGroupLabel = selector.find(".multiselect-group-clickable:contains('" + optionsMap[os] + "')");
-    optionGroupLabel.addClass("all-selected");
-  });
+  updateOSs();
 }
 
 function updateMeasuresList(callback) {
@@ -250,8 +241,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     gLoadedDateRangeFromState = true;
     var startMoment = gInitialPageState.start_date, endMoment = gInitialPageState.end_date;
     if (moment.utc(startMoment).isValid() && moment.utc(endMoment).isValid()) {
-      picker.setStartDate(startMoment);
-      picker.setEndDate(endMoment);
+      picker.setStartDate(moment(startMoment));
+      picker.setEndDate(moment(endMoment));
       gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
     }
     
@@ -268,7 +259,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   var pickerEndDate = picker.endDate.format("YYYY-MM-DD");
   if (pickerStartDate > maxMoment || pickerStartDate < minMoment || pickerEndDate > maxMoment || pickerEndDate < minMoment ||
     (!updatedByUser && (minMoment !== gPreviousMinMoment || maxMoment !== gPreviousMaxMoment))) {
-    picker.setStartDate(minMoment); picker.setEndDate(maxMoment);
+    picker.setStartDate(moment(minMoment)); picker.setEndDate(moment(maxMoment));
     pickerStartDate = minMoment; pickerEndDate = maxMoment;
   }
   gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
@@ -289,8 +280,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
       var range = ranges[0];
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
       gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
-        picker.setStartDate(moment.utc(range[0]).format("YYYY-MM-DD"))
-        picker.setEndDate(moment.utc(range[1]).subtract(1, "days").format("YYYY-MM-DD"));
+        picker.setStartDate(moment(moment.utc(range[0]).format("YYYY-MM-DD")))
+        picker.setEndDate(moment(moment.utc(range[1]).subtract(1, "days").format("YYYY-MM-DD")));
         updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true, false);
       }, 50);
     });
@@ -478,7 +469,6 @@ function saveStateToUrlAndCookie() {
     max_channel_version: $("#channel-version").val(),
     min_channel_version: gInitialPageState.min_channel_version !== undefined ? // Save the minimum channel version in case we switch to evolution dashboard later
       gInitialPageState.min_channel_version : "nightly/38",
-    product: $("#filter-product").val() || [],
     cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
     trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
@@ -492,10 +482,12 @@ function saveStateToUrlAndCookie() {
   };
   
   // Only store these in the state if they are not all selected
-  var selected = $("#filter-arch").val() || [];
-  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
+  var selected = $("#filter-product").val() || [];
+  if (selected.length !== $("#filter-product option").size()) { gInitialPageState.product = selected; }
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
+  var selected = $("#filter-arch").val() || [];
+  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   
   var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
     var value = gInitialPageState[key];

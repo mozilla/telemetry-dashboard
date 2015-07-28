@@ -203,19 +203,19 @@ function getHumanReadableOptions(filterName, options, os) {
         }
         return ((a < b) ? -1 : ((a > b) ? 1 : 0));
       }).map(function(option) {
-        return [os + "," + option, osName + " " + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option), osName];
+        return [os + "," + option, osName + " " + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option), "Any " + osName];
       });
     } else if (os === "Darwin") {
       return options.map(function(option) {
         for (var prefix in darwinVersionPrefixes) {
           if (option.startsWith(prefix)) {
-            return [os + "," + option, osName + " " + option + " (" + darwinVersionPrefixes[prefix] + ")", osName];
+            return [os + "," + option, osName + " " + option + " (" + darwinVersionPrefixes[prefix] + ")", "Any " + osName];
           }
         }
-        return [os + "," + option, osName + " " + option, osName];
+        return [os + "," + option, osName + " " + option, "Any " + osName];
       });
     }
-    return options.map(function(option) { return [os + "," + option, osName + " " + option, osName]; });
+    return options.map(function(option) { return [os + "," + option, osName + " " + option, "Any " + osName]; });
   } else if (filterName === "arch") {
     return options.map(function(option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
@@ -368,6 +368,8 @@ function multiselectSetSelected(element, options) {
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
+// If `defaultSelected` is unspecified or null, then the currently selected values are transferred to the new options
+// If `defaultSelected` is an array or an option value, and nothing would otherwise be selected, then the specified values will be selected
 function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
   
@@ -377,6 +379,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
   });
   var selected = element.val() || [];
   if (!$.isArray(selected)) { selected = [selected]; } // For single selects, the value is not wrapped in an array
+  var allSelected = selected.length > 0 && selected.length === element.find("option").length; // Check if all options are selected, in which case all options should be selected afterward as well
   selected = selected.filter(function(value) { return valuesMap.hasOwnProperty(value); }); // A list of options that are currently selected that will still be available in the new options
   
   // Check inputs
@@ -388,7 +391,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
   }
   
   var useGroups = options[0].length === 3;
-  if (useGroups) {
+  if (useGroups) { // Build option elements categorized by options group
     options.forEach(function(option) {
       if (!$.isArray(option) || option.length !== 3 || typeof option[0] !== "string" || typeof option[1] !== "string" || typeof option[2] !== "string") {
         throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
@@ -406,7 +409,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
       }).join();
       return '<optgroup label="' + group + '">' + optionsString + '</optgroup>'
     }).join()).multiselect("rebuild");
-  } else {
+  } else { // Build option elements
     options.forEach(function(option) {
       if (option === null) { return; }
       if ($.isArray(option) && option.length === 2 && typeof option[0] === "string" && typeof option[1] === "string") { return; }
@@ -419,14 +422,20 @@ function multiselectSetOptions(element, options, defaultSelected) {
     }).join()).multiselect("rebuild");
   }
 
+  // Select elements in the new multiselect control
   element.multiselect("deselectAll", false).next().find("input[type=radio]").attr("checked", false); // Workaround for bug where the first radio button is always checked
-  element.multiselect("select", selected); // Select the original options where applicable
+  if (allSelected) { // Previously, everything was selected, so select everything here as well
+    element.multiselect("selectAll", false).multiselect("updateButtonText");
+  } else { // Some elements were selected before, select them again
+    element.multiselect("select", selected); // Select the original options where applicable
+  }
   
-  if (useGroups) { // Make the group labels sticky to the top and bottom of the selector
+  // Make the group labels sticky to the top and bottom of the selector
+  if (useGroups) {
     var selector = element.next().find(".multiselect-container");
     var groupHeadings = selector.find(".multiselect-group-clickable").toArray();
     var wasOpen = selector.parent().hasClass("open");
-    selector.parent().addClass("open");
+    selector.parent().addClass("open"); // We have to open it temporarily in order to get an accurate outer height
     var topOffset = selector.find(".filter").outerHeight() + 10;
     var bottomOffset = groupHeadings.reduce(function(height, heading) { return height + $(heading).outerHeight(); }, 0);
     groupHeadings.forEach(function(heading, i) {
@@ -437,10 +446,11 @@ function multiselectSetOptions(element, options, defaultSelected) {
     if (!wasOpen) { selector.parent().removeClass("open"); }
   }
   
+  // Cause Enter to select the first visible item
   $(".multiselect-container input.multiselect-search").keydown(function(event){
-    // Cause Enter to select the first visible item
     if(event.keyCode == 13) {
       $(this).parents("ul").find('li:not(.filter-hidden):not(.filter):first input').focus().click();
+      $(this).focus();
       event.preventDefault();
       return false;
     }
@@ -501,4 +511,18 @@ function expandOSs(OSs) {
     }
   });
   return osVersions;
+}
+
+function updateOSs() {
+  // Update CSS classes for labels marking whether they are all selected
+  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
+  var selector = $("#filter-os").next().find(".multiselect-container");
+  selector.find(".multiselect-group-clickable").removeClass("all-selected");
+  var optionsMap = {};
+  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
+  var optionGroupLabels = selector.find(".multiselect-group-clickable");
+  allSelectedOSList.forEach(function(os) {
+    var optionGroupLabel = optionGroupLabels.filter(function() { return $(this).text().endsWith(" " + optionsMap[os]); });
+    optionGroupLabel.addClass("all-selected");
+  });
 }
