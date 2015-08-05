@@ -576,7 +576,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         
         var legend = d3.select(axes).select(".mg-active-datapoint").text(label).attr("transform", offset)
           .attr("x", barWidth / 2).attr("y", "0").attr("text-anchor", "middle").style("fill", "white");
-        legend.append("tspan").attr({x: "0px", y: "1.1em"}).text(histogram.measure + ": " + count + " samples (" + percentage + ")").attr("text-anchor", "middle");
+        legend.append("tspan").attr({x: barWidth / 2, y: "1.1em"}).text(histogram.measure + ": " + count + " samples (" + percentage + ")").attr("text-anchor", "middle");
         
         var bbox = legend[0][0].getBBox();
         if (x - bbox.width / 2 < 0) {
@@ -615,7 +615,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       chart_type: "line",
       full_width: true, height: $(axes).width() * 0.6,
       left: 70,
-      max_y: maxPercentage,
+      max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
       x_label: histograms[0].description, y_label: "Percentage of Samples",
