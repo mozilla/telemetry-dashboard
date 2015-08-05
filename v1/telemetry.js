@@ -553,7 +553,8 @@ Telemetry.HistogramEvolution = (function(){
 
 /*! Auxiliary function to parse a date string from JSON data format */
 function _parseDateString(d) {
-  return new Date(d.substr(0,4) + "/" + d.substr(4,2) + "/"+ d.substr(6,2));
+  // It is important to use "-" instead of "/" - "-" results in UTC, while "/" is implementation defined and often means local time
+  return new Date(d.substr(0,4) + "-" + d.substr(4,2) + "-"+ d.substr(6,2));
 }
 
 /*!
@@ -866,16 +867,16 @@ HistogramEvolution.prototype.dates = function HistogramEvolution_dates() {
  * @param {Date}      end               Optinoal, date to aggregate to
  */
 HistogramEvolution.prototype.range = function (start, end) {
-  // If start is given, we reduce it to year, month and day, this prevents
+  // If start is given, we reduce it to UTC year, month and day, this prevents
   // ensure that less-then-or-equal operator works as expected, in corner cases
   // where people submit dates that holds a none-zero timestamp
   if(start) {
-    start = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    start = new Date(("0000" + start.getUTCFullYear()).slice(-4) + "-" + ("00" + (start.getUTCMonth() + 1)).slice(-2) + "-" + ("00" + start.getUTCDate()).slice(-2));
   }
 
   // Sanitize end too½
   if(end) {
-    end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    end = new Date(("0000" + end.getUTCFullYear()).slice(-4) + "-" + ("00" + (end.getUTCMonth() + 1)).slice(-2) + "-" + ("00" + end.getUTCDate()).slice(-2));
   }
 
   // Construct a dataset by merging all datasets/histograms in the range

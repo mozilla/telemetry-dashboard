@@ -17,7 +17,9 @@ $(document).ready(function() {
         setTimeout(function() { $(event.currentTarget).find(".filter input").focus(); }, 0);
       },
     };
-    if ($this.attr("id") === "measure") {
+    
+    // Horrible hacks to make some very specific functionality work
+    if ($this.attr("id") === "measure") { // Measure should search as if spaces were underscores
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
         var currentOption = $(element).find("label").text().toLowerCase(); // Get the value of the current option being filtered
@@ -25,10 +27,40 @@ $(document).ready(function() {
         return currentOption.indexOf(query) >= 0 || currentOption.replace(/_/g, " ").indexOf(query) >= 0 || currentOption.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
+    if ($this.attr("id") === "filter-os") { // OS filter should show custom text for selections
+      options.buttonText = function(options, select) {
+        if (options.length === 0) { // None selected
+          return this.nonSelectedText;
+        } else if (this.allSelectedText  && options.length === $('option', $(select)).length && $('option', $(select)).length !== 1 && this.multiple) { // All selected
+          return this.allSelectedText + ' (' + options.length + ')';
+        } else {
+          var systems = compressOSs();
+          if (systems.length > this.numberDisplayed) { // Some selected, more than list-all threshold
+            return options.length + ' ' + this.nSelectedText;
+          } else { // Some selected, under or at list-all threshold
+            var selected = '';
+            var delimiter = this.delimiterText;
+            var listing = options.parent().parent();
+            systems.forEach(function(os) {
+              if (os.indexOf(",") >= 0) {
+                var option = listing.find('option[value="' + os + '"]');
+                selected += (option.attr('label') !== undefined ? option.attr('label') : option.text()) + delimiter;
+              } else {
+                var label = getHumanReadableOptions("os", [os])[0][1];
+                selected += label + delimiter;
+              }
+            });
+            return selected.substr(0, selected.length - 2);
+          }
+        }
+      }
+    }
+    
     if ($this.attr("title") !== undefined) {
       options.nonSelectedText = $this.attr("title");
     }
     $this.multiselect(options);
+    $this.next().find("input[type=radio]").attr("checked", false); // Workaround for bug where the first radio button is always checked
     $this.next().css("margin-top", "-0.25em"); // Align the control so that the baseline matches surrounding text
   });
   
@@ -72,8 +104,10 @@ $(document).ready(function() {
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
-  var url = window.location.hash;
-  url = url[0] === "#" ? url.slice(1) : url;
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) { url = decodeURI(window.location.href.substring(index + 1)); }
+  if (url[0] == "!") { url = url.slice(1); }
   var pageState = {};
   
   // Load from cookie if URL does not have state
@@ -108,7 +142,7 @@ function loadStateFromUrlAndCookie() {
 
   // Process the saved state value
   if (typeof pageState.aggregates === "string") {
-    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) > 0; });
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0; });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
     else { pageState.aggregates = ["median"]; }
   } else { pageState.aggregates = ["median"]; }
@@ -131,15 +165,18 @@ function loadStateFromUrlAndCookie() {
   pageState.use_submission_date = pageState.use_submission_date === "0" || pageState.use_submission_date === "1" ? parseInt(pageState.use_submission_date) : 0;
   pageState.sanitize = pageState.sanitize === "0" || pageState.sanitize === "1" ? parseInt(pageState.sanitize) : 1;
   pageState.cumulative = pageState.cumulative === "0" || pageState.cumulative === "1" ? parseInt(pageState.cumulative) : 0;
+  pageState.trim = pageState.trim === "0" || pageState.trim === "1" ? parseInt(pageState.trim) : 1;
   pageState.start_date = typeof pageState.start_date === "string" && /\d{4}-\d{2}-\d{2}/.test(pageState.start_date) ? pageState.start_date : null;
   pageState.end_date = typeof pageState.end_date === "string" && /\d{4}-\d{2}-\d{2}/.test(pageState.end_date) ? pageState.end_date : null;
   return pageState;
 }
 
+// A whole bucketful of dirty hacks in this function to clean up options and give them nice names
 function getHumanReadableOptions(filterName, options, os) {
   os = os || null;
 
   var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
+  var channelVersionOrder = {"nightly": 0, "aurora": 1, "beta": 2, "release": 3};
   var ignoredSystems = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
   var windowsVersionOrder = {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8};
@@ -166,27 +203,91 @@ function getHumanReadableOptions(filterName, options, os) {
         }
         return ((a < b) ? -1 : ((a > b) ? 1 : 0));
       }).map(function(option) {
-        return [os + "," + option, osName + " " + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option), osName];
+        return [os + "," + option, osName + " " + (windowsVersionNames.hasOwnProperty(option) ? windowsVersionNames[option] : option), "Any " + osName];
       });
     } else if (os === "Darwin") {
       return options.map(function(option) {
         for (var prefix in darwinVersionPrefixes) {
           if (option.startsWith(prefix)) {
-            return [os + "," + option, osName + " " + option + " (" + darwinVersionPrefixes[prefix] + ")", osName];
+            return [os + "," + option, osName + " " + option + " (" + darwinVersionPrefixes[prefix] + ")", "Any " + osName];
           }
         }
-        return [os + "," + option, osName + " " + option, osName];
+        return [os + "," + option, osName + " " + option, "Any " + osName];
       });
     }
-    return options.map(function(option) { return [os + "," + option, osName + " " + option, osName]; });
+    return options.map(function(option) { return [os + "," + option, osName + " " + option, "Any " + osName]; });
   } else if (filterName === "arch") {
     return options.map(function(option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] : option];
     });
   } else if (filterName === "measure") {
-    return options.map(function(option) { return [option, option] });
+    return options.sort().map(function(option) { return [option, option] });
   } else if (filterName === "channelVersion") {
-    return options.map(function(option) { return [option, option.replace("/", " ")] });
+    // Find the latest nightly version
+    var latestNightlyVersion = 0;
+    options.forEach(function(option) {
+      var parts = option.split("/");
+      if (parts[0] === "nightly" && parseInt(parts[1]) > latestNightlyVersion) {
+        latestNightlyVersion = parseInt(parts[1]);
+      }
+    });
+    
+    // Sort the options in the specified order and set aside the bad ones
+    var badOptions = [], goodOptions = [];
+    options.sort(function(a, b) {
+      var parts1 = a.split("/"), parts2 = b.split("/");
+      if (channelVersionOrder.hasOwnProperty(parts1[0]) && channelVersionOrder.hasOwnProperty(parts2[0])) {
+        if (channelVersionOrder[parts1[0]] !== channelVersionOrder[parts2[0]]) {
+          return channelVersionOrder[parts1[0]] - channelVersionOrder[parts2[0]];
+        }
+        return parseInt(parts2[1]) - parseInt(parts1[1]);
+      }
+      if (channelVersionOrder.hasOwnProperty(parts1[0])) { return -1; }
+      if (channelVersionOrder.hasOwnProperty(parts2[0])) { return 1; }
+      if (parts1[0] > parts2[0]) { return 1; }
+      if (parts1[0] < parts2[0]) { return -1; }
+      return parseInt(parts2[1]) - parseInt(parts1[1]);
+    }).forEach(function(option) {
+      var parts = option.split("/");
+      var version = parseInt(parts[1]);
+      if (parts[0] === "nightly") { goodOptions.push(option); }
+      else if (parts[0] === "aurora") { (version <= latestNightlyVersion - 1 ? goodOptions : badOptions).push(option); }
+      else if (parts[0] === "beta") { (version <= latestNightlyVersion - 2 ? goodOptions : badOptions).push(option); }
+      else if (parts[0] === "release") { (version <= latestNightlyVersion - 3 ? goodOptions : badOptions).push(option); }
+      else { badOptions.push(option); }
+    });
+    
+    // Move the latest version of each channel into their own section
+    var latest = {};
+    goodOptions.forEach(function(option) {
+      var parts = option.split("/");
+      if (!latest.hasOwnProperty(parts[0]) || (parseInt(parts[1]) > latest[parts[0]] && parseInt(parts[1]) < 70)) {
+        latest[parts[0]] = parseInt(parts[1]);
+      }
+    });
+    var latestOptions = [];
+    goodOptions = goodOptions.filter(function(option) {
+      var parts = option.split("/");
+      if (parseInt(parts[1]) === latest[parts[0]]) { // Latest version in the channel
+        latestOptions.push(option);
+        return false;
+      }
+      return true;
+    });
+    
+    options = [];
+    var previousChannel = null;
+    goodOptions.forEach(function(option, i) {
+      var channel = option.split("/")[0];
+      if (channel !== previousChannel && i !== 0) { options.push(null); }
+      previousChannel = channel;
+      options.push(option);
+    });
+    
+    options = latestOptions.concat([null]).concat(options);
+    
+    if (badOptions.length > 0) { options = options.concat([null]).concat(badOptions); }
+    return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
   }
   return options.map(function(option) { return [option, option] });
 }
@@ -267,13 +368,18 @@ function multiselectSetSelected(element, options) {
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
+// If `defaultSelected` is unspecified or null, then the currently selected values are transferred to the new options
+// If `defaultSelected` is an array or an option value, and nothing would otherwise be selected, then the specified values will be selected
 function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
   
   if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
-  var valuesMap = {}; options.forEach(function(option) { valuesMap[option[0]] = true; });
+  var valuesMap = {}; options.forEach(function(option) {
+    if (option) { valuesMap[option[0]] = true; }
+  });
   var selected = element.val() || [];
   if (!$.isArray(selected)) { selected = [selected]; } // For single selects, the value is not wrapped in an array
+  var allSelected = selected.length > 0 && selected.length === element.find("option").length; // Check if all options are selected, in which case all options should be selected afterward as well
   selected = selected.filter(function(value) { return valuesMap.hasOwnProperty(value); }); // A list of options that are currently selected that will still be available in the new options
   
   // Check inputs
@@ -285,7 +391,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
   }
   
   var useGroups = options[0].length === 3;
-  if (useGroups) {
+  if (useGroups) { // Build option elements categorized by options group
     options.forEach(function(option) {
       if (!$.isArray(option) || option.length !== 3 || typeof option[0] !== "string" || typeof option[1] !== "string" || typeof option[2] !== "string") {
         throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
@@ -303,25 +409,33 @@ function multiselectSetOptions(element, options, defaultSelected) {
       }).join();
       return '<optgroup label="' + group + '">' + optionsString + '</optgroup>'
     }).join()).multiselect("rebuild");
-  } else {
+  } else { // Build option elements
     options.forEach(function(option) {
-      if (!$.isArray(option) || option.length !== 2 || typeof option[0] !== "string" || typeof option[1] !== "string") {
-        throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
-      }
+      if (option === null) { return; }
+      if ($.isArray(option) && option.length === 2 && typeof option[0] === "string" && typeof option[1] === "string") { return; }
+      throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
     });
     
     element.empty().append(options.map(function(option) {
+      if (option === null) { return '<option disabled>&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;</option>'; }
       return '<option value="' + option[0] + '">' + option[1] + '</option>';
     }).join()).multiselect("rebuild");
   }
 
-  element.multiselect("deselectAll", false).multiselect("select", selected); // Select the original options where applicable
+  // Select elements in the new multiselect control
+  element.multiselect("deselectAll", false).next().find("input[type=radio]").attr("checked", false); // Workaround for bug where the first radio button is always checked
+  if (allSelected) { // Previously, everything was selected, so select everything here as well
+    element.multiselect("selectAll", false).multiselect("updateButtonText");
+  } else { // Some elements were selected before, select them again
+    element.multiselect("select", selected); // Select the original options where applicable
+  }
   
-  if (useGroups) { // Make the group labels sticky to the top and bottom of the selector
+  // Make the group labels sticky to the top and bottom of the selector
+  if (useGroups) {
     var selector = element.next().find(".multiselect-container");
     var groupHeadings = selector.find(".multiselect-group-clickable").toArray();
     var wasOpen = selector.parent().hasClass("open");
-    selector.parent().addClass("open");
+    selector.parent().addClass("open"); // We have to open it temporarily in order to get an accurate outer height
     var topOffset = selector.find(".filter").outerHeight() + 10;
     var bottomOffset = groupHeadings.reduce(function(height, heading) { return height + $(heading).outerHeight(); }, 0);
     groupHeadings.forEach(function(heading, i) {
@@ -331,6 +445,16 @@ function multiselectSetOptions(element, options, defaultSelected) {
     });
     if (!wasOpen) { selector.parent().removeClass("open"); }
   }
+  
+  // Cause Enter to select the first visible item
+  $(".multiselect-container input.multiselect-search").keydown(function(event){
+    if(event.keyCode == 13) {
+      $(this).parents("ul").find('li:not(.filter-hidden):not(.filter):first input').focus().click();
+      $(this).focus();
+      event.preventDefault();
+      return false;
+    }
+  });
 }
 
 // =========== Histogram/Evolution Dashboard-specific common code
@@ -387,4 +511,18 @@ function expandOSs(OSs) {
     }
   });
   return osVersions;
+}
+
+function updateOSs() {
+  // Update CSS classes for labels marking whether they are all selected
+  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
+  var selector = $("#filter-os").next().find(".multiselect-container");
+  selector.find(".multiselect-group-clickable").removeClass("all-selected");
+  var optionsMap = {};
+  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
+  var optionGroupLabels = selector.find(".multiselect-group-clickable");
+  allSelectedOSList.forEach(function(os) {
+    var optionGroupLabel = optionGroupLabels.filter(function() { return $(this).text().endsWith(" " + optionsMap[os]); });
+    optionGroupLabel.addClass("all-selected");
+  });
 }

@@ -34,10 +34,11 @@ Telemetry.init(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
       refreshFilters(filterList, filterOptionsList);
       
-      $("#filter-product").multiselect("select", gInitialPageState.product);
+      // Set the initial selection for the selectors
+      if (gInitialPageState.product !== null) { $("#filter-product").multiselect("select", gInitialPageState.product); }
+      else { $("#filter-product").multiselect("selectAll", false).multiselect("updateButtonText"); }
       if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      
       if (gInitialPageState.os !== null) { // We accept values such as "WINNT", as well as "WINNT,6.1"
         $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
       } else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
@@ -203,17 +204,7 @@ function refreshFilters(filterList, filterOptionsList) {
   var selectedOSs = compressOSs();
   multiselectSetOptions($("#filter-os"), newOSList);
   $("#filter-os").multiselect("select", expandOSs(selectedOSs));
-  
-  // Update CSS classes for labels marking whether they are all selected
-  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
-  var selector = $("#filter-os").next().find(".multiselect-container");
-  selector.find(".multiselect-group-clickable").removeClass("all-selected");
-  var optionsMap = {};
-  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
-  allSelectedOSList.forEach(function(os) {
-    var optionGroupLabel = selector.find(".multiselect-group-clickable:contains('" + optionsMap[os] + "')");
-    optionGroupLabel.addClass("all-selected");
-  });
+  updateOSs();
 }
 
 function calculateHistogramEvolutions(callback) {
@@ -396,14 +387,16 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   lines = lines.filter(function(line) { return line.values.length > 0; });
   submissionLines = submissionLines.filter(function(line) { return line.values.length > 0; });
   
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
+  
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
-    var dataset = line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: moment(point.x).add(timezoneOffsetMinutes, "minutes").toDate(), value: point.y}; });
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
   var submissionLineData = submissionLines.map(function (line) {
-    var dataset = line.values.map(function(point) { return {date: new Date(point.x), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: moment(point.x).add(timezoneOffsetMinutes, "minutes").toDate(), value: point.y}; });
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
@@ -421,10 +414,10 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     if (usedDates[minDate].indexOf(line.getVersionString()) < 0) { usedDates[minDate].push(line.getVersionString()); }
   });
   for (var date in usedDates) {
-    markers.push({date: new Date(parseInt(date) + 1), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
+    markers.push({date: moment(parseInt(date) + 1).add(timezoneOffsetMinutes, "minutes").toDate(), label: usedDates[date].join(", ")}); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
-  if (markers.length > 0) {
-    markers[markers.length - 1].date = new Date(markers[markers.length - 1].date.getTime() - 2)
+  if (markers.length > 1) { // If there is a marker on the far right, move it back 2 milliseconds in order to make it visible again
+    markers[markers.length - 1].date = moment(markers[markers.length - 1].date.getTime() - 2).toDate();
   }
 
   // Plot the data using MetricsGraphics
@@ -442,8 +435,8 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     markers: markers, legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
-    min_x: minDate === null ? null : new Date(minDate),
-    max_x: maxDate === null ? null : new Date(maxDate),
+    min_x: minDate === null ? null : moment.utc(minDate).add(timezoneOffsetMinutes, "minutes").toDate(),
+    max_x: maxDate === null ? null : moment.utc(maxDate).add(timezoneOffsetMinutes, "minutes").toDate(),
     mouseover: function(d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
@@ -621,14 +614,14 @@ var Line = (function(){
 })();
 
 // Save the current state to the URL and the page cookie
+var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
-  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative;
+  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative, trim = gInitialPageState.trim;
   gInitialPageState = {
     aggregates: $("#aggregates").val() || [],
     measure: $("#measure").val(),
     min_channel_version: $("#min-channel-version").val(),
     max_channel_version: $("#max-channel-version").val(),
-    product: $("#filter-product").val() || [],
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
     sanitize: $("input[name=sanitize-toggle]:checked").val() !== "0" ? 1 : 0,
   };
@@ -637,27 +630,29 @@ function saveStateToUrlAndCookie() {
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
   if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (cumulative !== undefined) { gInitialPageState.cumulative = cumulative; }
+  if (trim !== undefined) { gInitialPageState.trim = trim; }
   
   // Only store these in the state if they are not all selected
-  var selected = $("#filter-arch").val() || [];
-  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
+  var selected = $("#filter-product").val() || [];
+  if (selected.length !== $("#filter-product option").size()) { gInitialPageState.product = selected; }
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
+  var selected = $("#filter-arch").val() || [];
+  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   
-  var fragments = [];
-  $.each(gInitialPageState, function(k, v) {
-    if (v instanceof Array) {
-      v = v.join("!");
-    }
-    fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
-  });
-  var stateString = fragments.join("&");
+  var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
+    var value = gInitialPageState[key];
+    if ($.isArray(value)) { value = value.join("!"); }
+    return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+  }).join("&");
   
   // Save to the URL hash if it changed
-  var url = window.location.hash;
-  url = url[0] === "#" ? url.slice(1) : url;
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) { url = decodeURI(window.location.href.substring(index + 1)); }
+  if (url[0] == "!") { url = url.slice(1); }
   if (url !== stateString) {
-    window.location.replace(window.location.origin + window.location.pathname + "#" + encodeURI(stateString));
+    window.location.replace(window.location.origin + window.location.pathname + "#!" + encodeURI(stateString));
     $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
   }
   
@@ -675,5 +670,19 @@ function saveStateToUrlAndCookie() {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
     $("#advanced-settings-toggle").find("span").text("");
+  }
+  
+  // Reload Disqus comments for the new page state
+  var identifier = "evo@" + gInitialPageState.measure;
+  if (identifier !== gPreviousDisqusIdentifier) {
+    gPreviousDisqusIdentifier = identifier;
+    DISQUS.reset({
+      reload: true,
+      config: function () {
+        this.page.identifier = identifier;
+        this.page.url = window.location.href;
+        console.log("reloading comments for page ID ", this.page.identifier)
+      }
+    });
   }
 }

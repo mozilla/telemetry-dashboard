@@ -17,8 +17,9 @@ Telemetry.init(function() {
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
   if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
   
-  $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
+  $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
+  $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   
   updateMeasuresList(function() {
     calculateHistogram(function(filterList, filterOptionsList, histogram, dates) {
@@ -26,10 +27,11 @@ Telemetry.init(function() {
       multiselectSetOptions($("#filter-os"), filterOptionsList[3]);
       multiselectSetOptions($("#filter-arch"), filterOptionsList[4]);
       
-      $("#filter-product").multiselect("select", gInitialPageState.product);
+      // Set the initial selection for the selectors
+      if (gInitialPageState.product !== null) { $("#filter-product").multiselect("select", gInitialPageState.product); }
+      else { $("#filter-product").multiselect("selectAll", false).multiselect("updateButtonText"); }
       if (gInitialPageState.arch !== null) { $("#filter-arch").multiselect("select", gInitialPageState.arch); }
       else { $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText"); }
-      
       if (gInitialPageState.os !== null) { // We accept values such as "WINNT", as well as "WINNT,6.1"
         $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
       } else { $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText"); }
@@ -66,8 +68,7 @@ Telemetry.init(function() {
             // Update the measure description
             var measureDescription = gMeasureMap[$("#measure").val()].description;
             gCurrentDates = dates; gCurrentHistogram = histogram;
-            displayHistogram(histogram, dates, $("input[name=cumulative-toggle]:checked").val() !== "0");
-            saveStateToUrlAndCookie();
+            $("input[name=cumulative-toggle]").trigger("change");
           });
         }, 0);
       });
@@ -77,8 +78,8 @@ Telemetry.init(function() {
     });
   });
 
-  $("input[name=cumulative-toggle]").change(function() {
-    displayHistogram(gCurrentHistogram, gCurrentDates, $("input[name=cumulative-toggle]:checked").val() !== "0");
+  $("input[name=cumulative-toggle], input[name=trim-toggle]").change(function() {
+    displayHistogram(gCurrentHistogram, gCurrentDates, $("input[name=cumulative-toggle]:checked").val() !== "0", $("input[name=trim-toggle]:checked").val() !== "0");
     saveStateToUrlAndCookie();
   });
 
@@ -120,17 +121,7 @@ function refreshFilters(optionsList) {
   var selectedOSs = compressOSs();
   multiselectSetOptions($("#filter-os"), newOSList);
   $("#filter-os").multiselect("select", expandOSs(selectedOSs));
-  
-  // Update CSS classes for labels marking whether they are all selected
-  var allSelectedOSList = compressOSs().filter(function(os) { return os.indexOf(",") < 0; }); // List of all OSs that are all selected
-  var selector = $("#filter-os").next().find(".multiselect-container");
-  selector.find(".multiselect-group-clickable").removeClass("all-selected");
-  var optionsMap = {};
-  getHumanReadableOptions("os", allSelectedOSList).forEach(function(option) { optionsMap[option[0]] = option[1]; });
-  allSelectedOSList.forEach(function(os) {
-    var optionGroupLabel = selector.find(".multiselect-group-clickable:contains('" + optionsMap[os] + "')");
-    optionGroupLabel.addClass("all-selected");
-  });
+  updateOSs();
 }
 
 function updateMeasuresList(callback) {
@@ -211,7 +202,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
 
   gCurrentDateRangeUpdateCallback = callback || function() {};
   
-  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset(); // All moments and dates are UTC mode where possible, and should have 00:00:00 as their time
   var dates = [];
   if (evolution !== null) {
     var timeCutoff = moment.utc().add(1, "years").toDate().getTime();
@@ -226,7 +217,7 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     return;
   }
   
-  var minMoment = moment.utc(dates[0]).subtract(timezoneOffsetMinutes, "minutes"), maxMoment = moment.utc(dates[dates.length - 1]).subtract(timezoneOffsetMinutes, "minutes");
+  var minMoment = moment.utc(dates[0]).format("YYYY-MM-DD"), maxMoment = moment.utc(dates[dates.length - 1]).format("YYYY-MM-DD");
 
   // Update the start and end range and update the selection if necessary
   var picker = $("#date-range").data("daterangepicker");
@@ -238,8 +229,8 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
     drops: "up", opens: "center",
     ranges: {
        "All": [minMoment, maxMoment],
-       "Last 30 Days": [maxMoment.clone().subtract(30, "days"), endMoment],
-       "Last 7 Days": [maxMoment.clone().subtract(6, "days"), endMoment],
+       "Last 30 Days": [moment.utc(maxMoment).subtract(30, "days").format("YYYY-MM-DD"), endMoment],
+       "Last 7 Days": [moment.utc(maxMoment).subtract(6, "days").format("YYYY-MM-DD"), endMoment],
     },
   }, function(chosenStartMoment, chosenEndMoment, label) {
     updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true);
@@ -248,35 +239,35 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
   // First load, update the date picker from the page state
   if (!gLoadedDateRangeFromState && gInitialPageState.start_date !== null && gInitialPageState.end_date !== null) {
     gLoadedDateRangeFromState = true;
-    var startMoment = moment.utc(gInitialPageState.start_date), endMoment = moment.utc(gInitialPageState.end_date);
-    if (startMoment.isValid() && endMoment.isValid()) {
-      picker.setStartDate(startMoment.clone().local()); picker.setEndDate(endMoment.clone().local());
+    var startMoment = gInitialPageState.start_date, endMoment = gInitialPageState.end_date;
+    if (moment.utc(startMoment).isValid() && moment.utc(endMoment).isValid()) {
+      picker.setStartDate(moment(startMoment));
+      picker.setEndDate(moment(endMoment));
       gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
     }
     
     // If advanced settings are not at their defaults, expand the settings pane on load
     var fullDates = evolution.dates();
-    if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || !startMoment.isSame(fullDates[0]) || !endMoment.isSame(fullDates[fullDates.length - 1])) {
+    if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
+      startMoment !== moment.utc(fullDates[0]).format("YYYY-MM-DD") || endMoment !== moment.utc(fullDates[fullDates.length - 1]).format("YYYY-MM-DD")) {
       $("#advanced-settings-toggle").click();
     }
   }
   
   // If the selected date range is now out of bounds, or the bounds were updated programmatically and changed, select the entire range
-  var pickerStartDate = moment.utc(picker.startDate).subtract(timezoneOffsetMinutes, "minutes");
-  var pickerEndDate = moment.utc(picker.endDate).subtract(timezoneOffsetMinutes, "minutes");
-  if (pickerStartDate.isAfter(maxMoment) || pickerEndDate.isBefore(minMoment) ||
-    (!updatedByUser && (!minMoment.isSame(gPreviousMinMoment) || !maxMoment.isSame(gPreviousMaxMoment)))) {
-    picker.setStartDate(minMoment.clone().local());
-    picker.setEndDate(maxMoment.clone().local());
-    pickerStartDate = minMoment;
-    pickerEndDate = maxMoment.clone().add(1, "days").subtract(1, "milliseconds");
+  var pickerStartDate = picker.startDate.format("YYYY-MM-DD");
+  var pickerEndDate = picker.endDate.format("YYYY-MM-DD");
+  if (pickerStartDate > maxMoment || pickerStartDate < minMoment || pickerEndDate > maxMoment || pickerEndDate < minMoment ||
+    (!updatedByUser && (minMoment !== gPreviousMinMoment || maxMoment !== gPreviousMaxMoment))) {
+    picker.setStartDate(moment(minMoment)); picker.setEndDate(moment(maxMoment));
+    pickerStartDate = minMoment; pickerEndDate = maxMoment;
   }
   gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
   
   // Rebuild rangebar if it was changed by something other than the user
   if (shouldUpdateRangebar) {
     var rangeBarControl = RangeBar({
-      min: minMoment, max: maxMoment.clone().add(1, "days"),
+      min: minMoment, max: moment(maxMoment).add(1, "days").format("YYYY-MM-DD"),
       maxRanges: 1,
       valueFormat: function(ts) { return ts; },
       valueParse: function(date) { return moment.utc(date).valueOf(); },
@@ -289,18 +280,18 @@ function updateDateRange(callback, evolution, updatedByUser, shouldUpdateRangeba
       var range = ranges[0];
       if (gLastTimeoutID !== null) { clearTimeout(gLastTimeoutID); }
       gLastTimeoutID = setTimeout(function() { // Debounce slider movement callback
-        picker.setStartDate(moment.utc(range[0]).local());
-        picker.setEndDate(moment.utc(range[1]).subtract(1, "days").local());
+        picker.setStartDate(moment(moment.utc(range[0]).format("YYYY-MM-DD")))
+        picker.setEndDate(moment(moment.utc(range[1]).subtract(1, "days").format("YYYY-MM-DD")));
         updateDateRange(gCurrentDateRangeUpdateCallback, evolution, true, false);
       }, 50);
     });
     $("#range-bar").empty().append(rangeBarControl.$el);
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-    rangeBarControl.val([[pickerStartDate.toDate(), pickerEndDate.toDate()]]);
+    rangeBarControl.val([[moment(pickerStartDate).toDate(), moment(pickerEndDate).add(1, "days").toDate()]]);
   }
   
-  var min = pickerStartDate.toDate(), max = pickerEndDate.toDate();
+  var min = moment.utc(pickerStartDate).toDate(), max = moment.utc(pickerEndDate).toDate();
   dates = dates.filter(function(date) { return min <= date && date <= max; });
   
   if (dates.length == 0) {
@@ -344,8 +335,9 @@ function getFilteredHistogram(version, measure, histogram, filters, filterList) 
   return new Telemetry.Histogram(measure, histogram._filter_path, histogram._buckets, dataset, histogram._filter_tree, histogram._spec);
 }
 
-function displayHistogram(histogram, dates, cumulative) {
-  cumulative = cumulative || false;
+function displayHistogram(histogram, dates, cumulative, trim) {
+  cumulative = cumulative === undefined ? false : cumulative;
+  trim = trim === undefined ? true : trim;
 
   // Show that the data is missing if there is no histogram, the histogram has an invalid number of buckets, or the histogram exists but has no samples
   if (histogram === null || histogram._buckets.length < 2 || histogram.count() === 0) {
@@ -364,7 +356,11 @@ function displayHistogram(histogram, dates, cumulative) {
   // Update the summary
   $("#prop-kind").text(histogram.kind());
   $("#prop-dates").text(formatNumber(dates.length));
-  $("#prop-date-range").text(moment(dates[0]).format("YYYY/MM/DD") + ((dates.length == 1) ? "" : " to " + moment(dates[dates.length - 1]).format("YYYY/MM/DD")));
+  var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
+  $("#prop-date-range").text(
+    moment.utc(dates[0]).format("YYYY/MM/DD") +
+    ((dates.length == 1) ? "" : " to " + moment.utc(dates[dates.length - 1]).format("YYYY/MM/DD"))
+  );
   $("#prop-submissions").text(formatNumber(histogram.submissions()));
   $("#prop-count").text(formatNumber(histogram.count()));
   if (histogram.kind() == "linear" || histogram.kind() == "exponential") {
@@ -387,6 +383,18 @@ function displayHistogram(histogram, dates, cumulative) {
   var ends = histogram.map(function(count, start, end, i) { return end; });
   ends[ends.length - 1] = Infinity;
   var totalCount = histogram.count();
+  
+  if (trim) { // Trim buckets on both ends in the histogram if their counts are too low
+    // Histograms need at least 3 buckets to render properly, so make sure not to trim off too much
+    var countCutoff = totalCount * 0.0001; // Set the samples cutoff to 0.01% of the total samples
+    while (counts[0] < countCutoff && counts.length > 3) {
+      counts.shift(); starts.shift(); ends.shift();
+    }
+    while (counts[counts.length - 1] < countCutoff && counts.length > 3) {
+      counts.pop(); starts.pop(); ends.pop();
+    }
+  }
+  
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
 
   // Plot the data using MetricsGraphics
@@ -454,6 +462,7 @@ function displayHistogram(histogram, dates, cumulative) {
 
 // Save the current state to the URL and the page cookie
 var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
+var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
   gInitialPageState = {
@@ -461,9 +470,9 @@ function saveStateToUrlAndCookie() {
     max_channel_version: $("#channel-version").val(),
     min_channel_version: gInitialPageState.min_channel_version !== undefined ? // Save the minimum channel version in case we switch to evolution dashboard later
       gInitialPageState.min_channel_version : "nightly/38",
-    product: $("#filter-product").val() || [],
     cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
+    trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
     start_date: moment(picker.startDate).format("YYYY-MM-DD"), end_date: moment(picker.endDate).format("YYYY-MM-DD"),
     
     // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
@@ -474,25 +483,26 @@ function saveStateToUrlAndCookie() {
   };
   
   // Only store these in the state if they are not all selected
-  var selected = $("#filter-arch").val() || [];
-  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
+  var selected = $("#filter-product").val() || [];
+  if (selected.length !== $("#filter-product option").size()) { gInitialPageState.product = selected; }
   var selected = $("#filter-os").val() || [];
   if (selected.length !== $("#filter-os option").size()) { gInitialPageState.os = compressOSs(); }
+  var selected = $("#filter-arch").val() || [];
+  if (selected.length !== $("#filter-arch option").size()) { gInitialPageState.arch = selected; }
   
-  var fragments = [];
-  $.each(gInitialPageState, function(k, v) {
-    if (v instanceof Array) {
-      v = v.join("!");
-    }
-    fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
-  });
-  var stateString = fragments.join("&");
+  var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
+    var value = gInitialPageState[key];
+    if ($.isArray(value)) { value = value.join("!"); }
+    return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+  }).join("&");
   
   // Save to the URL hash if it changed
-  var url = window.location.hash;
-  url = url[0] === "#" ? url.slice(1) : url;
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) { url = decodeURI(window.location.href.substring(index + 1)); }
+  if (url[0] == "!") { url = url.slice(1); }
   if (url !== stateString) {
-    window.location.replace(window.location.origin + window.location.pathname + "#" + stateString);
+    window.location.replace(window.location.origin + window.location.pathname + "#!" + encodeURI(stateString));
     $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
   }
   
@@ -520,16 +530,30 @@ function saveStateToUrlAndCookie() {
   }
   
   // If advanced settings are not at their defaults, display a notice in the panel header
+  var start = gInitialPageState.start_date, end = gInitialPageState.end_date;
   if (gCurrentEvolution !== null) {
     var fullDates = gCurrentEvolution.dates();
-    var startMoment = moment(fullDates[0]), endMoment = moment(fullDates[fullDates.length - 1]);
+    var startMoment = moment.utc(fullDates[0]).format("YYYY-MM-DD"), endMoment = moment.utc(fullDates[fullDates.length - 1]).format("YYYY-MM-DD");
   } else {
     var startMoment = start, endMoment = end;
   }
-  var start = moment(gInitialPageState.start_date), end = moment(gInitialPageState.end_date);
-  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || !start.isSame(startMoment) || !end.isSame(endMoment)) {
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 || start !== startMoment || end !== endMoment) {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
     $("#advanced-settings-toggle").find("span").text("");
+  }
+  
+  // Reload Disqus comments for the new page state
+  var identifier = "dist@" + gInitialPageState.measure;
+  if (identifier !== gPreviousDisqusIdentifier) {
+    gPreviousDisqusIdentifier = identifier;
+    DISQUS.reset({
+      reload: true,
+      config: function () {
+        this.page.identifier = identifier;
+        this.page.url = window.location.href;
+        console.log("reloading comments for page ID ", this.page.identifier)
+      }
+    });
   }
 }
