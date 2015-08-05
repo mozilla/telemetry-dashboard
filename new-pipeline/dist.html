@@ -122,27 +122,39 @@
                         <div class="panel-body">
                             <form class="form-horizontal">
                                 <div>
-                                    Table mode: show histograms as tables of values rather than visual charts:
+                                    <b>Key sorting:</b> sort the key names in the graph titles by
+                                    <select id="sort-keys" class="multiselect" title="sorting criteria">
+                                        <option value="submissions">total submissions</option>
+                                        <option value="5th-percentile">mean of 5th percentiles</option>
+                                        <option value="25th-percentile">mean of 25th percentiles</option>
+                                        <option value="median">mean of medians</option>
+                                        <option value="75th-percentile">mean of 75th percentiles</option>
+                                        <option value="95th-percentile">mean of 95th percentiles</option>
+                                        <option value="mean">mean of means</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <b>Table mode:</b> show histograms as tables of values rather than visual charts:
                                     <label><input name="table-toggle" type="radio" value="0"> Show histograms</label>
                                     <label><input name="table-toggle" type="radio" value="1"> Show tables</label>
                                 </div>
                                 <div>
-                                    Cumulative mode: show each bucket as the sum of itself and all buckets on its left:
+                                    <b>Cumulative mode:</b> show each bucket as the sum of itself and all buckets on its left:
                                     <label><input name="cumulative-toggle" type="radio" value="0"> Non-cumulative</label>
                                     <label><input name="cumulative-toggle" type="radio" value="1"> Cumulative</label>
                                 </div>
                                 <div>
-                                    Date range variable: filter submissions by build date range or submission date range:
+                                    <b>Date range variable:</b> filter submissions by build date range or submission date range:
                                     <label><input name="build-time-toggle" type="radio" value="0"> Build Date</label>
                                     <label><input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
                                 </div>
                                 <div>
-                                    Sanitize data: hide data points that don't have enough submissions:
+                                    <b>Sanitize data:</b> hide data points that don't have enough submissions:
                                     <label><input name="sanitize-toggle" type="radio" value="0"> Don't Sanitize</label>
                                     <label><input name="sanitize-toggle" type="radio" value="1"> Sanitize</label>
                                 </div>
                                 <div>
-                                    Trim small buckets: hide buckets on both sides that don't have enough samples:
+                                    <b>Trim small buckets:</b> hide buckets on both sides that don't have enough samples:
                                     <label><input name="trim-toggle" type="radio" value="0"> Don't Trim Buckets</label>
                                     <label><input name="trim-toggle" type="radio" value="1"> Trim Buckets</label>
                                 </div>

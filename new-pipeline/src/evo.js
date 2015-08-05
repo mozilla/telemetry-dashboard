@@ -478,7 +478,7 @@ var Line = (function(){
 // Save the current state to the URL and the page cookie
 var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
-  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative, trim = gInitialPageState.trim;
+  var startDate = gInitialPageState.start_date, endDate = gInitialPageState.end_date, cumulative = gInitialPageState.cumulative, trim = gInitialPageState.trim, sortKeys = gInitialPageState.sort_keys;
   gInitialPageState = {
     aggregates: $("#aggregates").val() || [],
     measure: $("#measure").val(),
@@ -493,6 +493,7 @@ function saveStateToUrlAndCookie() {
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
   if (cumulative !== undefined) { gInitialPageState.cumulative = cumulative; }
   if (trim !== undefined) { gInitialPageState.trim = trim; }
+  if (sortKeys !== undefined) { gInitialPageState.sort_keys = sortKeys; }
 
   // Only store these in the state if they are not all selected
   var selected = $("#filter-product").val() || [];

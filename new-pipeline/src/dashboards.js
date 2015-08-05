@@ -145,7 +145,7 @@ function loadStateFromUrlAndCookie() {
 
   // Process the saved state value
   if (typeof pageState.aggregates === "string") {
-    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) > 0; });
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0; });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
     else { pageState.aggregates = ["median"]; }
   } else { pageState.aggregates = ["median"]; }
@@ -180,6 +180,7 @@ function loadStateFromUrlAndCookie() {
   
   pageState.use_submission_date = pageState.use_submission_date === "0" || pageState.use_submission_date === "1" ? parseInt(pageState.use_submission_date) : 0;
   pageState.sanitize = pageState.sanitize === "0" || pageState.sanitize === "1" ? parseInt(pageState.sanitize) : 1;
+  pageState.sort_keys = ["submissions", "5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(pageState.sort_keys) >= 0 ? pageState.sort_keys : "submissions";
   pageState.table = pageState.table === "0" || pageState.table === "1" ? parseInt(pageState.table) : 0;
   pageState.cumulative = pageState.cumulative === "0" || pageState.cumulative === "1" ? parseInt(pageState.cumulative) : 0;
   pageState.trim = pageState.trim === "0" || pageState.trim === "1" ? parseInt(pageState.trim) : 1;

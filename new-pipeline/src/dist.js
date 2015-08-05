@@ -33,6 +33,8 @@ $(function() { Telemetry.init(function() {
   if (gInitialPageState.max_channel_version !== undefined) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
   if (gInitialPageState.compare !== undefined) { $("#compare").multiselect("select", gInitialPageState.compare); }
   
+  // Initialize setting values from the page state
+  $("#sort-keys").val(gInitialPageState.sort_keys);
   $("input[name=table-toggle][value=" + (gInitialPageState.table !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
@@ -64,7 +66,7 @@ $(function() { Telemetry.init(function() {
     $("#channel-version").change(function() {
       updateOptions(function() { $("#measure").trigger("change"); });
     });
-    $("input[name=build-time-toggle], input[name=sanitize-toggle], #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type, #compare").change(function(e) {
+    $("input[name=build-time-toggle], input[name=sanitize-toggle], #sort-keys, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type, #compare").change(function(e) {
       var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
@@ -108,12 +110,20 @@ $(function() { Telemetry.init(function() {
           gCurrentHistogramsList = histogramsList;
           
           // Set up key selectors, selecting the previously selected key if it still exists and the first key otherwise
+          var getAggregate = { // Function to get an aggregate for a list of histograms, used for sorting later
+            "submissions": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.count; }, 0); },
+            "mean": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.mean(); }, 0) / histograms.length; },
+            "5th-percentile": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(5); }, 0) / histograms.length; },
+            "25th-percentile": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(25); }, 0) / histograms.length; },
+            "median": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(50); }, 0) / histograms.length; },
+            "75th-percentile": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(75); }, 0) / histograms.length; },
+            "95th-percentile": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(95); }, 0) / histograms.length; },
+          }[$("#sort-keys").val()];
+          if (getAggregate === undefined) { throw "Could not obtain aggregate function" };
           gAxesSelectors.forEach(function(selector, i) {
             var selected = selector.val();
-            var keys = histogramsList.sort(function(entry1, entry2) {
-              var submissions1 = entry1.histograms.reduce(function(total, histogram) { return total + histogram.count }, 0);
-              var submissions2 = entry2.histograms.reduce(function(total, histogram) { return total + histogram.count }, 0);
-              return submissions2 - submissions1;
+            var keys = histogramsList.sort(function(entry1, entry2) { // Sort by the desired aggregate
+              return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
             }).map(function(entry) { return entry.title; });
             var options = getHumanReadableOptions("key", keys);
             multiselectSetOptions(selector, options);
@@ -334,7 +344,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
     
     // If advanced settings are not at their defaults, expand the settings pane on load
     if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
-      startMoment !== minMoment || endMoment !== maxMoment) {
+      gInitialPageState.sort_keys !== "submissions" || startMoment !== minMoment || endMoment !== maxMoment) {
       $("#advanced-settings-toggle").click();
     }
   }
@@ -734,6 +744,7 @@ function saveStateToUrlAndCookie() {
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
+    sort_keys: $("#sort-keys").val(),
     table: $("input[name=table-toggle]:checked").val() !== "0" ? 1 : 0,
     cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
@@ -811,7 +822,8 @@ function saveStateToUrlAndCookie() {
     var minMoment = start, maxMoment = end;
   }
   
-  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 || start !== minMoment || end !== maxMoment) {
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !== 0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
+    gInitialPageState.sort_keys !== "submissions" || start !== minMoment || end !== maxMoment) {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
     $("#advanced-settings-toggle").find("span").text("");
