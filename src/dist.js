@@ -385,11 +385,12 @@ function displayHistogram(histogram, dates, cumulative, trim) {
   var totalCount = histogram.count();
   
   if (trim) { // Trim buckets on both ends in the histogram if their counts are too low
+    // Histograms need at least 3 buckets to render properly, so make sure not to trim off too much
     var countCutoff = totalCount * 0.0001; // Set the samples cutoff to 0.01% of the total samples
-    while (counts[0] < countCutoff) {
+    while (counts[0] < countCutoff && counts.length > 3) {
       counts.shift(); starts.shift(); ends.shift();
     }
-    while (counts[counts.length - 1] < countCutoff) {
+    while (counts[counts.length - 1] < countCutoff && counts.length > 3) {
       counts.pop(); starts.pop(); ends.pop();
     }
   }
