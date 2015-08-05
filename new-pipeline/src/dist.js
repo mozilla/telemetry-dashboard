@@ -417,6 +417,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
   });
 
   if (trim) { // Figure out how much to trim buckets on both ends in the histogram if their counts are too low
+    // Histograms must have at least 3 buckets to render properly, so ensure that we don't trim them too much
     minTrimLeft = Infinity; minTrimRight = Infinity;
     histogramsList.forEach(function(entry) {
       var trimLeft = 0, trimRight = 0;
@@ -433,8 +434,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       countsList.forEach(function(counts) { counts.forEach(function(count, i) { countList[i] += count; }); });
       var total = countList.reduce(function(total, count) { return total + count; }, 0);
       var countCutoff = total * 0.0001; // Set the samples cutoff to 0.01% of the total samples
-      while (countList[trimLeft] < countCutoff && countList.length - trimLeft - trimRight > 2) { trimLeft ++; }
-      while (countList[countList.length - 1 - trimRight] < countCutoff && countList.length - trimLeft - trimRight > 2) { trimRight ++; }
+      while (countList[trimLeft] < countCutoff && countList.length - trimLeft - trimRight > 3) { trimLeft ++; }
+      while (countList[countList.length - 1 - trimRight] < countCutoff && countList.length - trimLeft - trimRight > 3) { trimRight ++; }
       if (trimLeft < minTrimLeft) { minTrimLeft = trimLeft; }
       if (trimRight < minTrimRight) { minTrimRight = trimRight; }
     });
