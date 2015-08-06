@@ -18,8 +18,20 @@ $(function() { Telemetry.init(function() {
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   multiselectSetOptions($("#min-channel-version, #max-channel-version"), getHumanReadableOptions("channelVersion", Telemetry.getVersions()));
   
-  if (gInitialPageState.min_channel_version) { $("#min-channel-version").multiselect("select", gInitialPageState.min_channel_version); }
-  if (gInitialPageState.max_channel_version) { $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version); }
+  // Select previously selected channel versions, or the latest nightlies if not possible
+  var nightlyVersions = Telemetry.getVersions().filter(function(channelVersion) { return channelVersion.split("/")[0] === "nightly"; }).sort();
+  if (gInitialPageState.min_channel_version !== undefined) {
+    if (gInitialPageState.min_channel_version === null) {
+      gInitialPageState.min_channel_version = nightlyVersions[nightlyVersions.length - 1];
+    }
+    $("#min-channel-version").multiselect("select", gInitialPageState.min_channel_version);
+  }
+  if (gInitialPageState.max_channel_version !== undefined) {
+    if (gInitialPageState.max_channel_version === null) {
+      gInitialPageState.max_channel_version = nightlyVersions[Math.max(nightlyVersions.length - 3, 0)];
+    }
+    $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version);
+  }
 
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = Telemetry.getVersions(fromVersion, toVersion);

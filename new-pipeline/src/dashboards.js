@@ -124,11 +124,12 @@ function loadStateFromUrlAndCookie() {
   if (url.indexOf("max_channel_version=") < 0) { // No state or invalid/corrupted state, restore to default settings
     pageState.aggregates = ["median"];
     pageState.measure = ["GC_MS"];
-    pageState.min_channel_version = "nightly/38"; pageState.max_channel_version = "nightly/41";
+    pageState.min_channel_version = null; pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
     pageState.os = pageState.arch = pageState.e10s = pageState.processType = null;
     pageState.use_submission_date = 0;
     pageState.sanitize = 1;
+    pageState.sort_keys = "submissions";
     pageState.table = 0;
     pageState.cumulative = 0;
     pageState.trim = 1;
@@ -151,9 +152,9 @@ function loadStateFromUrlAndCookie() {
   } else { pageState.aggregates = ["median"]; }
   pageState.measure = typeof pageState.measure === "string" && pageState.measure !== "" && pageState.measure !== "null" ? pageState.measure : "GC_MS";
   pageState.min_channel_version = typeof pageState.min_channel_version === "string" && pageState.min_channel_version.indexOf("/") >= 0 ?
-    pageState.min_channel_version : "nightly/39";
+    pageState.min_channel_version : null;
   pageState.max_channel_version = typeof pageState.max_channel_version === "string" && pageState.max_channel_version.indexOf("/") >= 0 ?
-    pageState.max_channel_version : "nightly/41";
+    pageState.max_channel_version : null;
   pageState.product = typeof pageState.product === "string" && pageState.product !== "" && pageState.product !== "null" ?
     pageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
   pageState.os = typeof pageState.os === "string" && pageState.os !== "" && pageState.os !== "null" ?

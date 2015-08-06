@@ -30,7 +30,13 @@ $(function() { Telemetry.init(function() {
   
   // Set up settings selectors
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.getVersions()));
-  if (gInitialPageState.max_channel_version !== undefined) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
+  if (gInitialPageState.max_channel_version !== undefined) {
+    if (gInitialPageState.max_channel_version === null) { // No version selected, select the first one
+      var nightlyVersions = Telemetry.getVersions().filter(function(channelVersion) { return channelVersion.split("/")[0] === "nightly"; }).sort();
+      gInitialPageState.max_channel_version = nightlyVersions[nightlyVersions.length - 1];
+    }
+    $("#channel-version").multiselect("select", gInitialPageState.max_channel_version);
+  }
   if (gInitialPageState.compare !== undefined) { $("#compare").multiselect("select", gInitialPageState.compare); }
   
   // Initialize setting values from the page state
