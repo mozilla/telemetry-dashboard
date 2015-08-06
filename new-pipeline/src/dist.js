@@ -108,13 +108,6 @@ $(function() { Telemetry.init(function() {
             return new Date(parseInt(dateString));
           }).sort(function(a, b) { return a - b; });
 
-          var histogramsList = Object.keys(histogramsMap).map(function(label) {
-            return {title: label, histograms: histogramsMap[label]};
-          }).sort(function(a, b) { // Sort alphabetically by label
-            return a.title < b.title ? -1 : a.title > b.title ? 1 : 0;
-          });
-          gCurrentHistogramsList = histogramsList;
-          
           // Set up key selectors, selecting the previously selected key if it still exists and the first key otherwise
           var getAggregate = { // Function to get an aggregate for a list of histograms, used for sorting later
             "submissions": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.count; }, 0); },
@@ -126,22 +119,30 @@ $(function() { Telemetry.init(function() {
             "95th-percentile": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(95); }, 0) / histograms.length; },
           }[$("#sort-keys").val()];
           if (getAggregate === undefined) { throw "Could not obtain aggregate function" };
+
+          gCurrentHistogramsList = Object.keys(histogramsMap).map(function(label) {
+            return {title: label, histograms: histogramsMap[label]};
+          }).sort(function(entry1, entry2) { // Sort by the desired aggregate
+            return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
+          });
+          
           gAxesSelectors.forEach(function(selector, i) {
-            var selected = selector.val();
-            var keys = histogramsList.sort(function(entry1, entry2) { // Sort by the desired aggregate
-              return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
-            }).map(function(entry) { return entry.title; });
+            var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
             var options = getHumanReadableOptions("key", keys);
             multiselectSetOptions(selector, options);
-            if (i < options.length) { selector.multiselect("select", options[i][0]); }
-            options.forEach(function(pair) {
-              if (pair[0] === selected) { selector.multiselect("select", selected); }
-            });
             
+            // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
+            if (e.target.id === "sort-keys") {
+              gInitialPageState.keys = options.map(function(option) { return option[0] }).filter(function(value, i) { return i < 4; });
+            }
+            
+            // Select i-th key if not possible
+            if (i < options.length) { selector.multiselect("select", options[i][0]); }
           });
-          if (gInitialPageState.keys) { // Selected key
+          if (gInitialPageState.keys) { // Reselect previously selected keys
             gInitialPageState.keys.forEach(function(key, i) {
-              if (key !== undefined) {
+              // Check to make sure the key can actually still be selected
+              if (gAxesSelectors[i].find("option").filter(function(i, option) { return $(option).val() === key; }).length > 0) {
                 gAxesSelectors[i].next().find("input[type=radio]").attr("checked", false);
                 gAxesSelectors[i].multiselect("select", key);
               }
@@ -748,6 +749,7 @@ var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
 var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
+  var minChannelVersion = gInitialPageState.min_channel_version;
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
@@ -759,11 +761,10 @@ function saveStateToUrlAndCookie() {
     trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
     start_date: moment(picker.startDate).format("YYYY-MM-DD"),
     end_date: moment(picker.endDate).format("YYYY-MM-DD"),
-    
-    // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ?
-      gInitialPageState.min_channel_version : "nightly/38",
   };
+  
+  // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
+  if (minChannelVersion !== undefined) { gInitialPageState.min_channel_version = minChannelVersion; }
   
   var selected = $("#compare").val();
   if (selected !== "") { gInitialPageState.compare = selected; }
