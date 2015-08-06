@@ -809,15 +809,31 @@ function saveStateToUrlAndCookie() {
   $("#switch-views").attr("href", dashboardURL);
   
   // Update export links with the new histogram
-  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].length === 1) { // wip: remove this
+  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].histograms.length === 1) { // wip: remove this
     if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
     if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-    var csvValue = "start,\tcount\n" + gCurrentHistogramsList[0].map(function (count, start, end, i) { return start + ",\t" + count; }).join("\n");
-    var jsonValue = JSON.stringify(gCurrentHistogramsList[0].map(function(count, start, end, i) { return {start: start, count: count} }));
+    var histogram = gCurrentHistogramsList[0].histograms[0];
+    if ($("input[name=cumulative-toggle]:checked").val() !== "0") {
+      var total = 0;
+      var csvValue = "start,\tcount\n" + histogram.map(function (count, start, end, i) {
+        total += count;
+        return start + ",\t" + total;
+      }).join("\n");
+      total = 0;
+      var jsonValue = JSON.stringify(histogram.map(function(count, start, end, i) {
+        total += count;
+        return {start: start, count: total};
+      }), null, 2);
+    } else {
+      var csvValue = "start,\tcount\n" + histogram.map(function (count, start, end, i) {
+        return start + ",\t" + count;
+      }).join("\n");
+      var jsonValue = JSON.stringify(histogram.map(function(count, start, end, i) { return {start: start, count: count} }), null, 2);
+    }
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
-    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogramsList[0][0].measure + ".csv");
-    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogramsList[0][0].measure + ".json");
+    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", histogram.measure + ".csv");
+    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", histogram.measure + ".json");
   } else {
     $("#export-csv, #export-json").hide();
   }
