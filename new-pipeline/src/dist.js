@@ -615,7 +615,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       yTick.setAttribute("x2", x2);
     });
   } else { // Multiple histograms available, display as overlaid lines
-    var goodColors = ["#FCC376", "#EE816A", "#5C8E6F", "#030303", "#93AE9F", "#E7DB8F", "#9E956A", "#FFB284", "#4BB4A3", "#32506C", "#77300F", "#C8B173"];
+    var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
     var colors = countsList.map(function(counts, i) { return goodColors[i % goodColors.length]; });
     MG.data_graphic({
       data: distributionSamples,
