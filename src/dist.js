@@ -404,12 +404,13 @@ function displayHistogram(histogram, dates, cumulative, trim) {
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
 
   // Plot the data using MetricsGraphics
+  var axes = $("#distribution").get(0);
   MG.data_graphic({
     data: distributionSamples,
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
-    left: 150, right: $("#distribution").width() / (distributionSamples.length + 1) + 150,
+    left: 150, right: $(axes).width() / (distributionSamples.length + 1) + 150,
     transition_on_update: false,
     target: "#distribution",
     x_label: histogram.description(), y_label: "Percentage of Samples",
@@ -422,22 +423,34 @@ function displayHistogram(histogram, dates, cumulative, trim) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
       if (ends[d.x] === Infinity) {
-        label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
+       label = "sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
       } else {
-        label = count + " samples (" + percentage + ") where " + formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
+       label = formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
       }
-      var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
-      var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
+
+      var offset = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
+      var barWidth = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
+      var x = parseFloat(offset.replace(/^translate\(([-\d\.]+).*$/, "$1"));
+      offset = "translate(" + x + ",60)";
       
-      // Reposition element
-      var legend = d3.select("#distribution .mg-active-datapoint").text(label).attr("transform", offset)
-        .attr("x", barWidth / 2).attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+      var legend = d3.select(axes).select(".mg-active-datapoint").text(label).attr("transform", offset)
+        .attr("x", barWidth / 2).attr("y", "0").attr("text-anchor", "middle").style("fill", "white");
+      legend.append("tspan").attr({x: barWidth / 2, y: "1.1em"}).text(histogram.measure() + ": " + count + " samples (" + percentage + ")").attr("text-anchor", "middle");
+      
       var bbox = legend[0][0].getBBox();
-      var padding = 5;
+      if (x - bbox.width / 2 < 0) {
+        offset = "translate(" + (bbox.width / 2 + 10) + ",60)";
+        legend.attr("transform", offset);
+      }
+      if (x + bbox.width / 2 > $(axes).find("svg").width()) {
+        offset = "translate(" + ($(axes).find("svg").width() - bbox.width / 2 - 10) + ",60)";
+        legend.attr("transform", offset);
+      }
       
       // Add background
-      d3.select("#distribution .active-datapoint-background").remove(); // Remove old background
-      d3.select("#distribution svg").insert("rect", ".mg-active-datapoint").classed("active-datapoint-background", true)
+      var padding = 5;
+      d3.select(axes).select(".active-datapoint-background").remove(); // Remove old background
+      d3.select(axes).select("svg").insert("rect", ".mg-active-datapoint").classed("active-datapoint-background", true)
         .attr("x", bbox.x - padding).attr("y", bbox.y - padding).attr("transform", offset)
         .attr("width", bbox.width + padding * 2).attr("height", bbox.height + padding * 2)
         .attr("rx", "3").attr("ry", "3").style("fill", "#333");
