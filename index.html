@@ -11,14 +11,7 @@
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     
-    <style>
-        .dashboard-list .list-group-item { font-size: 18px; }
-        .dashboard-list .list-group-item .dashboard-description { font-size: 12px; }
-        .big-dashboard-list .list-group-item { font-size: 36px; background: #337AB7; color: white; }
-        .big-dashboard-list .list-group-item:focus { font-size: 36px; background: #337AB7; color: white; }
-        .big-dashboard-list .list-group-item:hover { background: #326AA7; color: white; }
-        .big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
-    </style>
+    <link rel="stylesheet" href="style/dashboards.css">
 </head>
 <body>
     <div class="container-fluid">
@@ -43,10 +36,10 @@
                 <h3>For power users</h3>
                 <div class="dashboard-list list-group">
                     <a class="list-group-item" href="new-pipeline/dist.html">
-                        Histogram Dashboard V4 <span class="label label-warning" style="font-size: 12px">DRAFT</span><div class="dashboard-description">Histogram dashboard running on the unified Telemetry pipeline.</div>
+                        Histogram Dashboard V4 <div class="dashboard-description">Histogram dashboard running on the unified Telemetry pipeline.</div>
                     </a>
                     <a class="list-group-item" href="new-pipeline/evo.html">
-                        Evolution Dashboard V4 <span class="label label-warning" style="font-size: 12px">DRAFT</span><div class="dashboard-description">Evolution dashboard running on the unified Telemetry pipeline.</div>
+                        Evolution Dashboard V4 <div class="dashboard-description">Evolution dashboard running on the unified Telemetry pipeline.</div>
                     </a>
                     <a class="list-group-item" href="/advanced/">
                         Old Dashboard <div class="dashboard-description">View and compare distributions and evolutions.</div>
@@ -90,7 +83,7 @@
             </div>
             <div class="col-md-4">
                 <h3>Other dashboards</h3>
-                <div class="dashboard-list list-group">
+                <div class="dashboard-list scrollable-dashboard-list list-group">
                     <a class="list-group-item" href="http://mozilla.github.io/iacomus/resources/public/index.html#?config=https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/addon_perf/data/addon-perf.json">
                         Addon Bootstrap Performance <div class="dashboard-description">View and compare the startup and shutdown times for various addons.</div>
                     </a>
