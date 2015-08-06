@@ -31,10 +31,11 @@ $(function() { Telemetry.init(function() {
   // Set up settings selectors
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.getVersions()));
   if (gInitialPageState.max_channel_version !== undefined) {
-    if (gInitialPageState.max_channel_version === null) { // No version selected, select the first one
-      var nightlyVersions = Telemetry.getVersions().filter(function(channelVersion) { return channelVersion.split("/")[0] === "nightly"; }).sort();
+    if (gInitialPageState.max_channel_version === null) { // No version selected, select the latest nightly
+      var nightlyVersions = Telemetry.getVersions().filter(function(channelVersion) { return channelVersion.startsWith("nightly/"); }).sort();
       gInitialPageState.max_channel_version = nightlyVersions[nightlyVersions.length - 1];
     }
+    $("#channel-version").next().find("input[type=radio]").attr("checked", false);
     $("#channel-version").multiselect("select", gInitialPageState.max_channel_version);
   }
   if (gInitialPageState.compare !== undefined) { $("#compare").multiselect("select", gInitialPageState.compare); }
@@ -91,14 +92,7 @@ $(function() { Telemetry.init(function() {
         calculateHistograms(function(histogramsMap, evolutionsMap) {
           // histogramsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of histograms (one per comparison option, so each histogram in a list has the same buckets)
           // evolutionsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of evolutions (one per comparison option, so each evolution in a list has the same dates)
-          
-          var description = $("#measure").val();
-          for (var label in evolutionsMap) {
-            description = evolutionsMap[label][0].description;
-            break;
-          }
-          $("#measure-description").text(description);
-          
+
           // Get the set union of all the dates in all the evolutions
           var datesMap = {};
           for (var label in evolutionsMap) {
@@ -281,7 +275,6 @@ function calculateHistograms(callback, sanitize) {
                     filteredEvolutionsMap[label] = filteredEvolutions;
                     filteredHistogramsMap[label] = filteredEvolutions.map(function(evolution, i) {
                       var histogram = evolution.histogram();
-                      histogram.description = label;
                       if (comparisonName !== "") { // We are comparing by an option value
                         var humanReadableOption = getHumanReadableOptions(comparisonName, [optionValues[i]])[0][1];
                         histogram.measure = humanReadableOption;

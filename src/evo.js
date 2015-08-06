@@ -17,8 +17,24 @@ Telemetry.init(function() {
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   multiselectSetOptions($("#min-channel-version, #max-channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
   
-  if (gInitialPageState.min_channel_version) { $("#min-channel-version").multiselect("select", gInitialPageState.min_channel_version); }
-  if (gInitialPageState.max_channel_version) { $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version); }
+  // Select previously selected channel versions, or the latest nightlies if not possible
+  var nightlyVersions = Telemetry.versions().filter(function(channelVersion) { return channelVersion.startsWith("nightly/"); }).sort();
+  console.log(nightlyVersions)
+  if (gInitialPageState.min_channel_version !== undefined) {
+    if (gInitialPageState.min_channel_version === null) {
+      gInitialPageState.min_channel_version = nightlyVersions[Math.max(nightlyVersions.length - 4, 0)];
+    }
+    $("#min-channel-version").next().find("input[type=radio]").attr("checked", false);
+    $("#min-channel-version").multiselect("select", gInitialPageState.min_channel_version);
+  }
+  if (gInitialPageState.max_channel_version !== undefined) {
+    if (gInitialPageState.max_channel_version === null) {
+      gInitialPageState.max_channel_version = nightlyVersions[nightlyVersions.length - 1];
+    }
+    $("#max-channel-version").next().find("input[type=radio]").attr("checked", false);
+    $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version);
+  }
+  
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
   if (versions.length === 0) { $("#min-channel-version").multiselect("select", toVersion); }// Invalid range selected, move min version selector
@@ -61,8 +77,25 @@ Telemetry.init(function() {
         if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
           if (e.target.id === "min-channel-version") { // min version changed, change max version to be the largest version in the current channel
             var channel = fromVersion.split("/")[0];
-            var channelVersions = Telemetry.versions().filter(function(version) {
-              return version.startsWith(channel + "/") && version >= fromVersion;
+            
+            // Dirty hack to get the valid channel versions (by excluding those versions that are too high)
+            var latestNightlyVersion = 0;
+            var channelVersions = Telemetry.versions();
+            channelVersions.forEach(function(option) {
+              var parts = option.split("/");
+              if (parts[0] === "nightly" && parseInt(parts[1]) > latestNightlyVersion) {
+                latestNightlyVersion = parseInt(parts[1]);
+              }
+            });
+            var latestChannelVersion = Infinity;
+            if (channel === "nightly") { latestChannelVersion = latestNightlyVersion; }
+            else if (channel === "aurora") { latestChannelVersion = latestNightlyVersion - 1; }
+            else if (channel === "beta") { latestChannelVersion = latestNightlyVersion - 2; }
+            else if (channel === "release") { latestChannelVersion = latestNightlyVersion - 3; }
+            if (!isFinite(latestChannelVersion)) { latestChannelVersion = Infinity; }
+            channelVersions = channelVersions.filter(function(version) {
+              var parts = version.split("/");
+              return parts[0] === channel && version >= fromVersion && parseInt(parts[1]) <= latestChannelVersion;
             });
             var maxChannelVersion = channelVersions[Math.min(channelVersions.length - 1, 3)];
             $("#max-channel-version").multiselect("select", maxChannelVersion);
@@ -573,7 +606,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
 
 var Line = (function(){
   var lineColors = {};
-  var goodColors = ["#FCC376", "#EE816A", "#5C8E6F", "#030303", "#93AE9F", "#E7DB8F", "#9E956A", "#FFB284", "#4BB4A3", "#32506C", "#77300F", "#C8B173"];
+  var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
   var goodColorIndex = 0;
 
   function Line(measure, channelVersion, aggregate, values) {

@@ -15,7 +15,14 @@ Telemetry.init(function() {
   
   // Set up settings selectors
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
-  if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
+  if (gInitialPageState.max_channel_version !== undefined) {
+    if (gInitialPageState.max_channel_version === null) { // No version selected, select the latest nightly
+      var nightlyVersions = Telemetry.versions().filter(function(channelVersion) { return channelVersion.startsWith("nightly/"); }).sort();
+      gInitialPageState.max_channel_version = nightlyVersions[nightlyVersions.length - 1];
+    }
+    $("#channel-version").next().find("input[type=radio]").attr("checked", false);
+    $("#channel-version").multiselect("select", gInitialPageState.max_channel_version);
+  }
   
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
@@ -38,7 +45,7 @@ Telemetry.init(function() {
 
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
-        if (selector.is("[multiple]")) {
+        if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
           var selected = selector.val() || [], options = selector.find("option");
           gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
         }
@@ -51,7 +58,7 @@ Telemetry.init(function() {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-          if ($this.is("[multiple]")) { // Only apply the select all change to controls that allow multiple selections
+          if (["filter-product", "filter-os"].indexOf($this.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
             // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
             var selected = $this.val() || [], options = $this.find("option");
             if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
@@ -464,22 +471,22 @@ var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
 var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
+  var minChannelVersion = gInitialPageState.min_channel_version;
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ? // Save the minimum channel version in case we switch to evolution dashboard later
-      gInitialPageState.min_channel_version : "nightly/38",
     cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
     trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
     start_date: moment(picker.startDate).format("YYYY-MM-DD"), end_date: moment(picker.endDate).format("YYYY-MM-DD"),
     
     // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ?
-      gInitialPageState.min_channel_version : "nightly/38",
     sanitize: gInitialPageState.sanitize !== undefined ?
       gInitialPageState.sanitize : 1,
   };
+  
+  // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
+  if (minChannelVersion !== undefined) { gInitialPageState.min_channel_version = minChannelVersion; }
   
   // Only store these in the state if they are not all selected
   var selected = $("#filter-product").val() || [];
@@ -518,10 +525,23 @@ function saveStateToUrlAndCookie() {
   if (gCurrentHistogram !== null) {
     if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
     if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-    var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
-      return start + ",\t" + count;
-    }).join("\n");
-    var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, count: count} }));
+    if ($("input[name=cumulative-toggle]:checked").val() !== "0") {
+      var total = 0;
+      var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
+        total += count;
+        return start + ",\t" + total;
+      }).join("\n");
+      total = 0;
+      var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) {
+        total += count;
+        return {start: start, count: total};
+      }), null, 2);
+    } else {
+      var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
+        return start + ",\t" + count;
+      }).join("\n");
+      var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, count: count}; }), null, 2);
+    }
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
     $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");
