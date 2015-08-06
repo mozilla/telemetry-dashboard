@@ -53,6 +53,9 @@ $(document).ready(function() {
           }
         }
       }
+      options.buttonTitle = function(options, select) {
+        return getHumanReadableOptions("os", compressOSs()).map(function(option) { return option[1]; }).join(", ");
+      }
     }
     
     if ($this.attr("title") !== undefined) {
