@@ -78,8 +78,25 @@ $(function() { Telemetry.init(function() {
       if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
         if (e.target.id === "min-channel-version") { // min version changed, change max version to be the largest version in the current channel
           var channel = fromVersion.split("/")[0];
-          var channelVersions = Telemetry.getVersions().filter(function(version) {
-            return version.startsWith(channel + "/") && version >= fromVersion;
+          
+          // Dirty hack to get the valid channel versions (by excluding those versions that are too high)
+          var latestNightlyVersion = 0;
+          var channelVersions = Telemetry.getVersions();
+          channelVersions.forEach(function(option) {
+            var parts = option.split("/");
+            if (parts[0] === "nightly" && parseInt(parts[1]) > latestNightlyVersion) {
+              latestNightlyVersion = parseInt(parts[1]);
+            }
+          });
+          var latestChannelVersion = Infinity;
+          if (channel === "nightly") { latestChannelVersion = latestNightlyVersion; }
+          else if (channel === "aurora") { latestChannelVersion = latestNightlyVersion - 1; }
+          else if (channel === "beta") { latestChannelVersion = latestNightlyVersion - 2; }
+          else if (channel === "release") { latestChannelVersion = latestNightlyVersion - 3; }
+          if (!isFinite(latestChannelVersion)) { latestChannelVersion = Infinity; }
+          channelVersions = channelVersions.filter(function(version) {
+            var parts = version.split("/");
+            return parts[0] === channel && version >= fromVersion && parseInt(parts[1]) <= latestChannelVersion;
           });
           var maxChannelVersion = channelVersions[Math.min(channelVersions.length - 1, 3)];
           $("#max-channel-version").multiselect("select", maxChannelVersion);
