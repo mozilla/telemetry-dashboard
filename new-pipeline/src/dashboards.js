@@ -115,7 +115,7 @@ function loadStateFromUrlAndCookie() {
   var pageState = {};
   
   // Load from cookie if URL does not have state
-  if (url.indexOf("max_channel_version=") < 0) {
+  if (url.indexOf("measure=") < 0) {
     var name = "stateFromUrl=";
     document.cookie.split(";").forEach(function(entry) {
       entry = entry.trim();
@@ -124,7 +124,7 @@ function loadStateFromUrlAndCookie() {
       }
     });
   }
-  if (url.indexOf("max_channel_version=") < 0) { // No state or invalid/corrupted state, restore to default settings
+  if (url.indexOf("measure=") < 0) { // No state or invalid/corrupted state, restore to default settings
     pageState.aggregates = ["median"];
     pageState.measure = ["GC_MS"];
     pageState.min_channel_version = null; pageState.max_channel_version = null;
@@ -174,7 +174,7 @@ function loadStateFromUrlAndCookie() {
   pageState.keys = typeof pageState.keys === "string" ? pageState.keys.split("!") : [];
   
   // versions are on two different channels, change the min version to be the smallest version in the max version's channel
-  if (pageState.min_channel_version.split("/")[0] !== pageState.max_channel_version.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
+  if (pageState.min_channel_version !== null && pageState.max_channel_version !== null && pageState.min_channel_version.split("/")[0] !== pageState.max_channel_version.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
     var channel = pageState.max_channel_version.split("/")[0];
     var channelVersions = Telemetry.getVersions().filter(function(version) {
       return version.startsWith(channel + "/") && version <= pageState.max_channel_version;
