@@ -222,7 +222,7 @@ function calculateHistograms(callback, sanitize) {
   
   var useSubmissionDate = $("input[name=build-time-toggle]:checked").val() !== "0";
   var fullEvolutionsMap = {}; // Mapping from labels (the keys in keyed histograms) to lists of combined filtered evolutions (one per comparison option, combined from all filter sets in that option)
-  var optionValues = []; // List of options in the order that they were done being processed, rather than the order they appeared in
+  var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0, totalFiltersCount = 0;
   var filterSetsMappingOptions = Object.keys(filterSetsMapping);
   filterSetsMappingOptions.forEach(function(filterSetsMappingOption, i) { // For each option being compared by
@@ -242,13 +242,14 @@ function calculateHistograms(callback, sanitize) {
         
         if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters in the current filter set
           filterSetsCount ++;
-          optionValues.push(filterSetsMappingOption); // Add the current option value being compared by
-          for (var label in fullEvolutionMap) { // Make a list of evolutions for each label in the evolution
+          for (var label in fullEvolutionMap) { // Make a list of evolutions and option labels for each label in the evolution
             if (sanitize) { fullEvolutionMap[label] = fullEvolutionMap[label].sanitized(); }
             if (fullEvolutionMap[label] !== null) {
               if (!fullEvolutionsMap.hasOwnProperty(label)) { fullEvolutionsMap[label] = []; }
               fullEvolutionsMap[label].push(fullEvolutionMap[label]);
             }
+            if (!optionValues.hasOwnProperty(label)) { optionValues[label] = []; }
+            optionValues[label].push(filterSetsMappingOption); // Add the current option value being compared by
           }
           if (filterSetsCount === filterSetsMappingOptions.length) { // Check if we have loaded all the filter set collections
             indicate();
@@ -268,15 +269,17 @@ function calculateHistograms(callback, sanitize) {
               } else { // Filter the evolution to include only those histograms that are in the selected range
                 var filteredEvolutionsMap = {}, filteredHistogramsMap = {};
                 for (var label in fullEvolutionsMap) {
-                  var filteredEvolutions = fullEvolutionsMap[label].map(function(evolution) {
-                    return evolution.dateRange(dates[0], dates[dates.length - 1]); // We don't need to worry about this returning null since the dates came from the evolution originally
-                  }).filter(function(evolution) { return evolution !== null; });
+                  var filteredEntries = fullEvolutionsMap[label].map(function(evolution, i) {
+                    return {option: optionValues[label][i], evolution: evolution.dateRange(dates[0], dates[dates.length - 1])}; // We don't need to worry about this returning null since the dates came from the evolution originally
+                  }).filter(function(entry) { return entry.evolution !== null; });
+                  var filteredEvolutions = filteredEntries.map(function(entry) { return entry.evolution; });
+                  var filteredOptionValues = filteredEntries.map(function(entry) { return entry.option; });
                   if (filteredEvolutions.length > 0) { // There are evolutions in this date
                     filteredEvolutionsMap[label] = filteredEvolutions;
                     filteredHistogramsMap[label] = filteredEvolutions.map(function(evolution, i) {
                       var histogram = evolution.histogram();
                       if (comparisonName !== "") { // We are comparing by an option value
-                        var humanReadableOption = getHumanReadableOptions(comparisonName, [optionValues[i]])[0][1];
+                        var humanReadableOption = getHumanReadableOptions(comparisonName, [filteredOptionValues[i]])[0][1];
                         histogram.measure = humanReadableOption;
                       }
                       return histogram;
