@@ -328,8 +328,8 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
     drops: "up", opens: "center",
     ranges: {
        "All": [minMoment, maxMoment],
-       "Last 30 Days": [moment.utc(maxMoment).subtract(30, "days").format("YYYY-MM-DD"), endMoment],
-       "Last 7 Days": [moment.utc(maxMoment).subtract(6, "days").format("YYYY-MM-DD"), endMoment],
+       "Last 30 days of data": [moment.utc(maxMoment).subtract(30, "days").format("YYYY-MM-DD"), endMoment],
+       "Last 7 days of data": [moment.utc(maxMoment).subtract(6, "days").format("YYYY-MM-DD"), endMoment],
     },
   }, function(chosenStartMoment, chosenEndMoment, label) {
     updateDateRange(gCurrentDateRangeUpdateCallback, dates, true);
