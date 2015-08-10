@@ -410,7 +410,7 @@ function displayHistogram(histogram, dates, cumulative, trim) {
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
-    left: 150, right: $(axes).width() / (distributionSamples.length + 1) + 150,
+    left: 150, right: $(axes).width() / (distributionSamples.length + 1),
     transition_on_update: false,
     target: "#distribution",
     x_label: histogram.description(), y_label: "Percentage of Samples",
@@ -442,8 +442,8 @@ function displayHistogram(histogram, dates, cumulative, trim) {
         offset = "translate(" + (bbox.width / 2 + 10) + ",60)";
         legend.attr("transform", offset);
       }
-      if (x + bbox.width / 2 > $(axes).find("svg").width()) {
-        offset = "translate(" + ($(axes).find("svg").width() - bbox.width / 2 - 10) + ",60)";
+      if (x + bbox.width / 2 > $(axes).find("svg").width() - 5) {
+        offset = "translate(" + ($(axes).find("svg").width() - 5 - bbox.width / 2 - 10) + ",60)";
         legend.attr("transform", offset);
       }
       
@@ -540,21 +540,19 @@ function saveStateToUrlAndCookie() {
     if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
     if ($("input[name=cumulative-toggle]:checked").val() !== "0") {
       var total = 0;
-      var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
+      jsonHistogram = gCurrentHistogram.map(function(count, start, end, i) {
         total += count;
-        return start + ",\t" + total;
-      }).join("\n");
-      total = 0;
-      var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) {
-        total += count;
-        return {start: start, count: total};
-      }), null, 2);
+        return {start: start, count: total, percentage: 100 * total / gCurrentHistogram.count()};
+      });
     } else {
-      var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
-        return start + ",\t" + count;
-      }).join("\n");
-      var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, count: count}; }), null, 2);
+      jsonHistogram = gCurrentHistogram.map(function(count, start, end, i) {
+        return {start: start, count: count, percentage: 100 * count / gCurrentHistogram.count()}
+      });
     }
+    var csvValue = "start,\tcount,\tpercentage\n" + jsonHistogram.map(function (entry) {
+      return entry.start + ",\t" + entry.count + ",\t" + entry.percentage;
+    }).join("\n");
+    var jsonValue = JSON.stringify(jsonHistogram, null, 2);
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
     $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");
