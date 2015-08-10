@@ -445,62 +445,6 @@ function getHumanReadableOptions(filterName, options) {
   return options.map(function(option) { return [option, option] });
 }
 
-function getOptions(filterList, histogramEvolution) {
-  function getCombinedFilterTree(histogramEvolution) {
-    var fullOptions = histogramEvolution.filterOptions(), filterTree = {};
-    if (histogramEvolution.filterName() == "os") {
-      return filterTree
-    }
-    fullOptions.forEach(function(option) {
-      var filteredEvolution = histogramEvolution.filter(option);
-      filterTree[option] = getCombinedFilterTree(filteredEvolution);
-    });
-    filterTree._name = histogramEvolution.filterName();
-    return filterTree
-  }
-  function getOptionsList(filterTree, optionsList, currentPath, depth, includeSelf) {
-    var options = Object.keys(filterTree).sort();
-    var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
-    if (filterOptions.length === 0) { return optionsList; }
-    
-    // Add the current options into the option map
-    if (optionsList[depth] === undefined) { optionsList[depth] = []; }
-    if (includeSelf) {
-      var os = null;
-      if (filterTree._name === "osVersion") { os = currentPath[currentPath.length - 1]; }
-      var currentOptions = getHumanReadableOptions(filterTree._name, filterOptions, os);
-      optionsList[depth] = optionsList[depth].concat(currentOptions);
-    }
-    
-    var selectedValues = (!filterList[depth] || filterList[depth].length === 0) ?
-                         filterOptions : filterList[depth];
-    filterOptions.forEach(function(option) {
-      // Don't include direct children if we are not in the right OS
-      var includeChildren = true;
-      if (filterTree._name === "OS") { includeChildren = selectedValues.indexOf(option) >= 0; }
-      
-      getOptionsList(filterTree[option], optionsList, currentPath.concat([option]), depth + 1, includeChildren);
-    });
-    return optionsList;
-  }
-
-  var filterTree = getCombinedFilterTree(histogramEvolution);
-  var optionsList = getOptionsList(filterTree, [], [], 0, true);
-  
-  // Remove duplicate options
-  optionsList = optionsList.map(function(options) {
-    var result = [], seen = {};
-    options.forEach(function(option) {
-      if (!(option[0] in seen)) {
-        result.push(option);
-        seen[option[0]] = true;
-      }
-    })
-    return result;
-  })
-  return optionsList;
-}
-
 function formatNumber(number) {
   if (number == Infinity) return "Infinity";
   if (number == -Infinity) return "-Infinity";
