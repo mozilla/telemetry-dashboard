@@ -64,7 +64,7 @@ $(function() { Telemetry.init(function() {
     
     for (var filterName in gFilters) {
       var selector = gFilters[filterName];
-      if (selector.is("[multiple]")) {
+      if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
         var selected = selector.val() || [], options = selector.find("option");
         gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
       }
@@ -119,7 +119,7 @@ $(function() { Telemetry.init(function() {
       var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-        if ($this.is("[multiple]")) { // Only apply the select all change to controls that allow multiple selections
+        if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
           // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
           var selected = $this.val() || [], options = $this.find("option");
           if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
