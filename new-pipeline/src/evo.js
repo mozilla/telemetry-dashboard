@@ -96,9 +96,11 @@ $(function() { Telemetry.init(function() {
           else if (channel === "beta") { latestChannelVersion = latestNightlyVersion - 2; }
           else if (channel === "release") { latestChannelVersion = latestNightlyVersion - 3; }
           if (!isFinite(latestChannelVersion)) { latestChannelVersion = Infinity; }
+          var oldestChannelVersion = parseInt(fromVersion.split("/")[1]);
           channelVersions = channelVersions.filter(function(version) {
             var parts = version.split("/");
-            return parts[0] === channel && version >= fromVersion && parseInt(parts[1]) <= latestChannelVersion;
+            var versionNumber = parseInt(parts[1]);
+              return parts[0] === channel && oldestChannelVersion <= versionNumber && versionNumber <= latestChannelVersion;
           });
           var maxChannelVersion = channelVersions[Math.min(channelVersions.length - 1, 3)];
           $("#max-channel-version").multiselect("select", maxChannelVersion);
