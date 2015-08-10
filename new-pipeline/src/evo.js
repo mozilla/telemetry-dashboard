@@ -121,7 +121,7 @@ $(function() { Telemetry.init(function() {
         if (kind === "boolean" || kind === "flag") { // Boolean or flag histogram selected
           var aggregates = $("#aggregates").val() || [];
           if (aggregates.length === 0 || aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
-            $("#aggregates").multiselect("deselectAll").multiselect("select", ["mean"]);
+            $("#aggregates").multiselect("deselectAll", false).multiselect("updateButtonText").multiselect("select", ["mean"]);
           }
         }
         $("#aggregates").trigger("change");
