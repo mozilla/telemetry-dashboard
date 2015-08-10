@@ -17,7 +17,7 @@
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
 .multiselect-group-clickable { border-top: 1px solid gray; }
-.multiselect-group-clickable label { text-decoration: underline; padding: 5px 5px 2px 5px; }
+.multiselect-group-clickable label { text-decoration: underline; padding: 5px 5px 2px 5px; white-space: nowrap; }
 .multiselect-group-clickable.all-selected label:after { content: " (all selected)"; }
 .multiselect-container input[type="radio"] { display: none; }
 .multiselect-container label.radio { padding-left: 10px; }

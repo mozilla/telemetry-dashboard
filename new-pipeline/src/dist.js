@@ -817,7 +817,9 @@ function saveStateToUrlAndCookie() {
         return {start: start, count: total, percentage: 100 * total / histogram.count};
       });
     } else {
-      jsonHistogram = histogram.map(function(count, start, end, i) { return {start: start, count: count, percentage: 100 * count / histogram.count} });
+      jsonHistogram = histogram.map(function(count, start, end, i) {
+        return {start: start, count: count, percentage: 100 * count / histogram.count}
+      });
     }
     var csvValue = "start,\tcount,\tpercentage\n" + jsonHistogram.map(function (entry) {
       return entry.start + ",\t" + entry.count + ",\t" + entry.percentage;
