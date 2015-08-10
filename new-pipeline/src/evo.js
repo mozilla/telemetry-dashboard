@@ -113,9 +113,21 @@ $(function() { Telemetry.init(function() {
       }
 
       indicate("Updating versions...");
-      updateOptions(function() { $("#measure").trigger("change"); });
+      updateOptions(function() { $("#aggregates").trigger("change"); });
     });
-    $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #measure, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function(e) {
+    $("#measure").change(function(e) {
+      var parts = $("#max-channel-version").val().split("/");
+      Telemetry.getHistogramInfo(parts[0], parts[1], $("#measure").val(), false, function(kind, description, buckets, dates) {
+        if (kind === "boolean" || kind === "flag") { // Boolean or flag histogram selected
+          var aggregates = $("#aggregates").val() || [];
+          if (aggregates.length === 0 || aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
+            $("#aggregates").multiselect("deselectAll").multiselect("select", ["mean"]);
+          }
+        }
+        $("#aggregates").trigger("change");
+      });
+    });
+    $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function(e) {
       var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
@@ -203,7 +215,7 @@ function calculateEvolutions(callback) {
   var evolutionDescription = null;
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
-    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("input[name=sanitize-toggle]:checked").val() !== "0", $("input[name=build-time-toggle]:checked").val() !== "0", function(newLines, newSubmissionLines, newDescription) {
+    getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("input[name=sanitize-toggle]:checked").val() !== "0", $("input[name=build-time-toggle]:checked").val() !== "0", function(newLines, newSubmissionLines, newDescription, newKind) {
       lines = lines.concat(newLines);
       submissionLines = submissionLines.concat(newSubmissionLines);
       evolutionDescription = evolutionDescription || newDescription
@@ -267,12 +279,12 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         });
         var submissionLines = [new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues)];
         
-        callback(aggregateLines, submissionLines, finalEvolution !== null ? finalEvolution.description : null);
+        callback(aggregateLines, submissionLines, finalEvolution !== null ? finalEvolution.description : null, finalEvolution !== null ? finalEvolution.kind : null);
       }
     });
   });
   if (filterSets.length === 0) {
-    callback([], [], measure);
+    callback([], [], measure, null);
   }
 }
 

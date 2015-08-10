@@ -19,7 +19,6 @@ Telemetry.init(function() {
   
   // Select previously selected channel versions, or the latest nightlies if not possible
   var nightlyVersions = Telemetry.versions().filter(function(channelVersion) { return channelVersion.startsWith("nightly/"); }).sort();
-  console.log(nightlyVersions)
   if (gInitialPageState.min_channel_version !== undefined) {
     if (gInitialPageState.min_channel_version === null) {
       gInitialPageState.min_channel_version = nightlyVersions[Math.max(nightlyVersions.length - 4, 0)];
