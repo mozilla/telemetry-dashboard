@@ -553,7 +553,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       binned: true,
       chart_type: "histogram",
       full_width: true, height: $(axes).width() * 0.6,
-      left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
+      top: 0, left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
       max_y: maxPercentage,
       transition_on_update: false,
       target: axes,
@@ -707,7 +707,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
 
 function displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms) {
   $(axes).empty().append(
-    $("<div></div>").css("margin", "30px 250px 0 130px").append(
+    $("<div></div>").css("margin", "0 250px 0 130px").append(
       $("<table></table>").addClass("table table-striped table-hover").css("width", "auto").css("margin", "0 auto").append([
         $("<thead></table>").append(
           $("<tr></tr>").append(
