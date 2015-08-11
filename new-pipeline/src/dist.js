@@ -827,8 +827,8 @@ function saveStateToUrlAndCookie() {
     var jsonValue = JSON.stringify(jsonHistogram, null, 2);
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
-    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", histogram.measure + ".csv");
-    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", histogram.measure + ".json");
+    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", histogram.measure + ".csv").show();
+    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", histogram.measure + ".json").show();
   } else {
     $("#export-csv, #export-json").hide();
   }
