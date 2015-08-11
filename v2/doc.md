@@ -95,6 +95,9 @@ The `os` filter is a bit of a special case: it is actually the `os` filter and t
 
 An always up-to-date listing of the available filters can be found [here](https://github.com/vitillo/python_mozaggregator#api).
 
+### `Telemetry.getHistogramInfo(channel, version, metric, useSubmissionDate, function callback(kind, description, buckets, dates) { ... })`
+
+Retrieves various properties of histograms, for the measure `metric` in channel `channel` and version `version` with `filters` as the filters. Calls `callback` with the properties as parameters. Does not return anything.
 
 ### `Telemetry.getEvolution(channel, version, metric, filters, useSubmissionDate, function callback(evolutionMap) { ... })`
 
@@ -105,6 +108,8 @@ If `useSubmissionDate` is false, the evolutions will be over buildIDs - each dat
 If `metric` is a keyed measure, each key in `evolutionMap` is a key in the keyed measure, and the associated evolution is for that particular key.
 
 If `metric` is not a keyed measure, then the only key will be the empty string `""`, and associated evolution is for the entire measure.
+
+The resulting mapping can be empty if there are no histograms available for the specified parameters.
 
 ### `Telemetry.Evolution`
 

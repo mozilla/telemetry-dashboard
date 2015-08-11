@@ -302,8 +302,11 @@ Telemetry.getHistogramInfo = function Telemetry_getHistogramInfo(channel, versio
     "/channels/" + encodeURIComponent(channel) + "/?version=" + encodeURIComponent(version) + "&dates=" + buildDate +
     "&metric=" + encodeURIComponent(metric);
   Telemetry.getJSON(url, function(histograms, status) {
-    assert(histograms !== null, "Could not obtain histogram info: status " + status + " (" + url + ")");
-    callback(histograms.kind, histograms.description, histograms.buckets, dates);
+    if (histograms === null) {
+      callback(null, null, null, dates);
+    } else {
+      callback(histograms.kind, histograms.description, histograms.buckets, dates);
+    }
   });
 }
 

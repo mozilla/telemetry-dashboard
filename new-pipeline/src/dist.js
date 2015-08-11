@@ -30,7 +30,14 @@ $(function() { Telemetry.init(function() {
   
   // Set up settings selectors
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.getVersions()));
-  if (gInitialPageState.max_channel_version !== undefined) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
+  if (gInitialPageState.max_channel_version !== undefined) {
+    if (gInitialPageState.max_channel_version === null) { // No version selected, select the latest nightly
+      var nightlyVersions = Telemetry.getVersions().filter(function(channelVersion) { return channelVersion.startsWith("nightly/"); }).sort();
+      gInitialPageState.max_channel_version = nightlyVersions[nightlyVersions.length - 1];
+    }
+    $("#channel-version").next().find("input[type=radio]").attr("checked", false);
+    $("#channel-version").multiselect("select", gInitialPageState.max_channel_version);
+  }
   if (gInitialPageState.compare !== undefined) { $("#compare").multiselect("select", gInitialPageState.compare); }
   
   // Initialize setting values from the page state
@@ -57,7 +64,7 @@ $(function() { Telemetry.init(function() {
     
     for (var filterName in gFilters) {
       var selector = gFilters[filterName];
-      if (selector.is("[multiple]")) {
+      if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
         var selected = selector.val() || [], options = selector.find("option");
         gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
       }
@@ -70,7 +77,7 @@ $(function() { Telemetry.init(function() {
       var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-        if ($this.is("[multiple]")) { // Only apply the select all change to controls that allow multiple selections
+        if (["filter-product", "filter-os"].indexOf($this.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
           // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
           var selected = $this.val() || [], options = $this.find("option");
           if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
@@ -85,14 +92,7 @@ $(function() { Telemetry.init(function() {
         calculateHistograms(function(histogramsMap, evolutionsMap) {
           // histogramsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of histograms (one per comparison option, so each histogram in a list has the same buckets)
           // evolutionsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of evolutions (one per comparison option, so each evolution in a list has the same dates)
-          
-          var description = $("#measure").val();
-          for (var label in evolutionsMap) {
-            description = evolutionsMap[label][0].description;
-            break;
-          }
-          $("#measure-description").text(description);
-          
+
           // Get the set union of all the dates in all the evolutions
           var datesMap = {};
           for (var label in evolutionsMap) {
@@ -102,13 +102,6 @@ $(function() { Telemetry.init(function() {
             return new Date(parseInt(dateString));
           }).sort(function(a, b) { return a - b; });
 
-          var histogramsList = Object.keys(histogramsMap).map(function(label) {
-            return {title: label, histograms: histogramsMap[label]};
-          }).sort(function(a, b) { // Sort alphabetically by label
-            return a.title < b.title ? -1 : a.title > b.title ? 1 : 0;
-          });
-          gCurrentHistogramsList = histogramsList;
-          
           // Set up key selectors, selecting the previously selected key if it still exists and the first key otherwise
           var getAggregate = { // Function to get an aggregate for a list of histograms, used for sorting later
             "submissions": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.count; }, 0); },
@@ -120,22 +113,30 @@ $(function() { Telemetry.init(function() {
             "95th-percentile": function(histograms) { return histograms.reduce(function(total, histogram) { return total + histogram.percentile(95); }, 0) / histograms.length; },
           }[$("#sort-keys").val()];
           if (getAggregate === undefined) { throw "Could not obtain aggregate function" };
+
+          gCurrentHistogramsList = Object.keys(histogramsMap).map(function(label) {
+            return {title: label, histograms: histogramsMap[label]};
+          }).sort(function(entry1, entry2) { // Sort by the desired aggregate
+            return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
+          });
+          
           gAxesSelectors.forEach(function(selector, i) {
-            var selected = selector.val();
-            var keys = histogramsList.sort(function(entry1, entry2) { // Sort by the desired aggregate
-              return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
-            }).map(function(entry) { return entry.title; });
+            var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
             var options = getHumanReadableOptions("key", keys);
             multiselectSetOptions(selector, options);
-            if (i < options.length) { selector.multiselect("select", options[i][0]); }
-            options.forEach(function(pair) {
-              if (pair[0] === selected) { selector.multiselect("select", selected); }
-            });
             
+            // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
+            if ($this.attr("id") === "sort-keys") {
+              gInitialPageState.keys = options.map(function(option) { return option[0] }).filter(function(value, i) { return i < 4; });
+            }
+            
+            // Select i-th key if not possible
+            if (i < options.length) { selector.multiselect("select", options[i][0]); }
           });
-          if (gInitialPageState.keys) { // Selected key
+          if (gInitialPageState.keys) { // Reselect previously selected keys
             gInitialPageState.keys.forEach(function(key, i) {
-              if (key !== undefined) {
+              // Check to make sure the key can actually still be selected
+              if (gAxesSelectors[i].find("option").filter(function(i, option) { return $(option).val() === key; }).length > 0) {
                 gAxesSelectors[i].next().find("input[type=radio]").attr("checked", false);
                 gAxesSelectors[i].multiselect("select", key);
               }
@@ -221,7 +222,7 @@ function calculateHistograms(callback, sanitize) {
   
   var useSubmissionDate = $("input[name=build-time-toggle]:checked").val() !== "0";
   var fullEvolutionsMap = {}; // Mapping from labels (the keys in keyed histograms) to lists of combined filtered evolutions (one per comparison option, combined from all filter sets in that option)
-  var optionValues = []; // List of options in the order that they were done being processed, rather than the order they appeared in
+  var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0, totalFiltersCount = 0;
   var filterSetsMappingOptions = Object.keys(filterSetsMapping);
   filterSetsMappingOptions.forEach(function(filterSetsMappingOption, i) { // For each option being compared by
@@ -241,13 +242,14 @@ function calculateHistograms(callback, sanitize) {
         
         if (filtersCount === filterSets.length) { // Check if we have loaded all the needed filters in the current filter set
           filterSetsCount ++;
-          optionValues.push(filterSetsMappingOption); // Add the current option value being compared by
-          for (var label in fullEvolutionMap) { // Make a list of evolutions for each label in the evolution
+          for (var label in fullEvolutionMap) { // Make a list of evolutions and option labels for each label in the evolution
             if (sanitize) { fullEvolutionMap[label] = fullEvolutionMap[label].sanitized(); }
             if (fullEvolutionMap[label] !== null) {
               if (!fullEvolutionsMap.hasOwnProperty(label)) { fullEvolutionsMap[label] = []; }
               fullEvolutionsMap[label].push(fullEvolutionMap[label]);
             }
+            if (!optionValues.hasOwnProperty(label)) { optionValues[label] = []; }
+            optionValues[label].push(filterSetsMappingOption); // Add the current option value being compared by
           }
           if (filterSetsCount === filterSetsMappingOptions.length) { // Check if we have loaded all the filter set collections
             indicate();
@@ -267,16 +269,17 @@ function calculateHistograms(callback, sanitize) {
               } else { // Filter the evolution to include only those histograms that are in the selected range
                 var filteredEvolutionsMap = {}, filteredHistogramsMap = {};
                 for (var label in fullEvolutionsMap) {
-                  var filteredEvolutions = fullEvolutionsMap[label].map(function(evolution) {
-                    return evolution.dateRange(dates[0], dates[dates.length - 1]); // We don't need to worry about this returning null since the dates came from the evolution originally
-                  }).filter(function(evolution) { return evolution !== null; });
+                  var filteredEntries = fullEvolutionsMap[label].map(function(evolution, i) {
+                    return {option: optionValues[label][i], evolution: evolution.dateRange(dates[0], dates[dates.length - 1])}; // We don't need to worry about this returning null since the dates came from the evolution originally
+                  }).filter(function(entry) { return entry.evolution !== null; });
+                  var filteredEvolutions = filteredEntries.map(function(entry) { return entry.evolution; });
+                  var filteredOptionValues = filteredEntries.map(function(entry) { return entry.option; });
                   if (filteredEvolutions.length > 0) { // There are evolutions in this date
                     filteredEvolutionsMap[label] = filteredEvolutions;
                     filteredHistogramsMap[label] = filteredEvolutions.map(function(evolution, i) {
                       var histogram = evolution.histogram();
-                      histogram.description = label;
                       if (comparisonName !== "") { // We are comparing by an option value
-                        var humanReadableOption = getHumanReadableOptions(comparisonName, [optionValues[i]])[0][1];
+                        var humanReadableOption = getHumanReadableOptions(comparisonName, [filteredOptionValues[i]])[0][1];
                         histogram.measure = humanReadableOption;
                       }
                       return histogram;
@@ -325,8 +328,8 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
     drops: "up", opens: "center",
     ranges: {
        "All": [minMoment, maxMoment],
-       "Last 30 Days": [moment.utc(maxMoment).subtract(30, "days").format("YYYY-MM-DD"), endMoment],
-       "Last 7 Days": [moment.utc(maxMoment).subtract(6, "days").format("YYYY-MM-DD"), endMoment],
+       "Last 30 days of data": [moment.utc(maxMoment).subtract(30, "days").format("YYYY-MM-DD"), endMoment],
+       "Last 7 days of data": [moment.utc(maxMoment).subtract(6, "days").format("YYYY-MM-DD"), endMoment],
     },
   }, function(chosenStartMoment, chosenEndMoment, label) {
     updateDateRange(gCurrentDateRangeUpdateCallback, dates, true);
@@ -550,7 +553,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       binned: true,
       chart_type: "histogram",
       full_width: true, height: $(axes).width() * 0.6,
-      left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
+      top: 0, left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
       max_y: maxPercentage,
       transition_on_update: false,
       target: axes,
@@ -608,7 +611,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       yTick.setAttribute("x2", x2);
     });
   } else { // Multiple histograms available, display as overlaid lines
-    var goodColors = ["#FCC376", "#EE816A", "#5C8E6F", "#030303", "#93AE9F", "#E7DB8F", "#9E956A", "#FFB284", "#4BB4A3", "#32506C", "#77300F", "#C8B173"];
+    var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
     var colors = countsList.map(function(counts, i) { return goodColors[i % goodColors.length]; });
     MG.data_graphic({
       data: distributionSamples,
@@ -704,7 +707,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
 
 function displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms) {
   $(axes).empty().append(
-    $("<div></div>").css("margin", "30px 250px 0 130px").append(
+    $("<div></div>").css("margin", "0 250px 0 130px").append(
       $("<table></table>").addClass("table table-striped table-hover").css("width", "auto").css("margin", "0 auto").append([
         $("<thead></table>").append(
           $("<tr></tr>").append(
@@ -742,6 +745,7 @@ var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
 var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
+  var minChannelVersion = gInitialPageState.min_channel_version;
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
@@ -753,11 +757,10 @@ function saveStateToUrlAndCookie() {
     trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
     start_date: moment(picker.startDate).format("YYYY-MM-DD"),
     end_date: moment(picker.endDate).format("YYYY-MM-DD"),
-    
-    // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ?
-      gInitialPageState.min_channel_version : "nightly/38",
   };
+  
+  // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
+  if (minChannelVersion !== undefined) { gInitialPageState.min_channel_version = minChannelVersion; }
   
   var selected = $("#compare").val();
   if (selected !== "") { gInitialPageState.compare = selected; }
@@ -802,15 +805,30 @@ function saveStateToUrlAndCookie() {
   $("#switch-views").attr("href", dashboardURL);
   
   // Update export links with the new histogram
-  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].length === 1) { // wip: remove this
+  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].histograms.length === 1) { // wip: remove this
     if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
     if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-    var csvValue = "start,\tcount\n" + gCurrentHistogramsList[0].map(function (count, start, end, i) { return start + ",\t" + count; }).join("\n");
-    var jsonValue = JSON.stringify(gCurrentHistogramsList[0].map(function(count, start, end, i) { return {start: start, count: count} }));
+    var histogram = gCurrentHistogramsList[0].histograms[0];
+    var jsonHistogram;
+    if ($("input[name=cumulative-toggle]:checked").val() !== "0") {
+      var total = 0;
+      jsonHistogram = histogram.map(function(count, start, end, i) {
+        total += count;
+        return {start: start, count: total, percentage: 100 * total / histogram.count};
+      });
+    } else {
+      jsonHistogram = histogram.map(function(count, start, end, i) {
+        return {start: start, count: count, percentage: 100 * count / histogram.count}
+      });
+    }
+    var csvValue = "start,\tcount,\tpercentage\n" + jsonHistogram.map(function (entry) {
+      return entry.start + ",\t" + entry.count + ",\t" + entry.percentage;
+    }).join("\n");
+    var jsonValue = JSON.stringify(jsonHistogram, null, 2);
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
-    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogramsList[0][0].measure + ".csv");
-    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", gCurrentHistogramsList[0][0].measure + ".json");
+    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", histogram.measure + ".csv").show();
+    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", histogram.measure + ".json").show();
   } else {
     $("#export-csv, #export-json").hide();
   }

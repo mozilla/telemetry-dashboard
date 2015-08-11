@@ -53,6 +53,9 @@ $(document).ready(function() {
           }
         }
       }
+      options.buttonTitle = function(options, select) {
+        return getHumanReadableOptions("os", compressOSs()).map(function(option) { return option[1]; }).join(", ");
+      }
     }
     
     if ($this.attr("title") !== undefined) {
@@ -112,7 +115,7 @@ function loadStateFromUrlAndCookie() {
   var pageState = {};
   
   // Load from cookie if URL does not have state
-  if (url.indexOf("max_channel_version=") < 0) {
+  if (url.indexOf("measure=") < 0) {
     var name = "stateFromUrl=";
     document.cookie.split(";").forEach(function(entry) {
       entry = entry.trim();
@@ -121,14 +124,15 @@ function loadStateFromUrlAndCookie() {
       }
     });
   }
-  if (url.indexOf("max_channel_version=") < 0) { // No state or invalid/corrupted state, restore to default settings
+  if (url.indexOf("measure=") < 0) { // No state or invalid/corrupted state, restore to default settings
     pageState.aggregates = ["median"];
     pageState.measure = ["GC_MS"];
-    pageState.min_channel_version = "nightly/38"; pageState.max_channel_version = "nightly/41";
+    pageState.min_channel_version = null; pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
     pageState.os = pageState.arch = pageState.e10s = pageState.processType = null;
     pageState.use_submission_date = 0;
     pageState.sanitize = 1;
+    pageState.sort_keys = "submissions";
     pageState.table = 0;
     pageState.cumulative = 0;
     pageState.trim = 1;
@@ -151,9 +155,9 @@ function loadStateFromUrlAndCookie() {
   } else { pageState.aggregates = ["median"]; }
   pageState.measure = typeof pageState.measure === "string" && pageState.measure !== "" && pageState.measure !== "null" ? pageState.measure : "GC_MS";
   pageState.min_channel_version = typeof pageState.min_channel_version === "string" && pageState.min_channel_version.indexOf("/") >= 0 ?
-    pageState.min_channel_version : "nightly/39";
+    pageState.min_channel_version : null;
   pageState.max_channel_version = typeof pageState.max_channel_version === "string" && pageState.max_channel_version.indexOf("/") >= 0 ?
-    pageState.max_channel_version : "nightly/41";
+    pageState.max_channel_version : null;
   pageState.product = typeof pageState.product === "string" && pageState.product !== "" && pageState.product !== "null" ?
     pageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
   pageState.os = typeof pageState.os === "string" && pageState.os !== "" && pageState.os !== "null" ?
@@ -170,7 +174,7 @@ function loadStateFromUrlAndCookie() {
   pageState.keys = typeof pageState.keys === "string" ? pageState.keys.split("!") : [];
   
   // versions are on two different channels, change the min version to be the smallest version in the max version's channel
-  if (pageState.min_channel_version.split("/")[0] !== pageState.max_channel_version.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
+  if (pageState.min_channel_version !== null && pageState.max_channel_version !== null && pageState.min_channel_version.split("/")[0] !== pageState.max_channel_version.split("/")[0]) { // Two versions are on different channels, move the other one into the right channel
     var channel = pageState.max_channel_version.split("/")[0];
     var channelVersions = Telemetry.getVersions().filter(function(version) {
       return version.startsWith(channel + "/") && version <= pageState.max_channel_version;
@@ -268,6 +272,8 @@ function getFilterSetsMapping(filters, comparisonName) {
 
 function getHumanReadableOptions(filterName, options) {
   var channelVersionOrder = {"nightly": 0, "aurora": 1, "beta": 2, "release": 3};
+  var productNames = {"Firefox": "Firefox Desktop", "Fennec": "Firefox Mobile"};
+  var productOrder = {"Firefox": 0, "Fennec": 1, "Thunderbird": 2};
   var systemNames = {"Windows_NT": "Windows", "Darwin": "OS X"};
   var systemOrder = {"Windows_NT": 1, "Darwin": 2};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
@@ -280,7 +286,21 @@ function getHumanReadableOptions(filterName, options) {
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
   var e10sNames = {"false": "no e10s", "true": "e10s"};
   var processTypeNames = {"false": "main process", "true": "child process"};
-  if (filterName === "os" || filterName === "osVersion") {
+  if (filterName === "application") {
+    return options.sort(function(a, b) {
+      // Sort by explicit product order if available
+      if (productOrder.hasOwnProperty(a) && productOrder.hasOwnProperty(b)) {
+        return productOrder[a] - productOrder[b];
+      } else if (productOrder.hasOwnProperty(a)) {
+        return -1;
+      } else if (productOrder.hasOwnProperty(b)) {
+        return 1;
+      }
+      return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+    }).map(function(option) {
+      return [option, productNames.hasOwnProperty(option) ? productNames[option] : option];
+    });
+  } else if (filterName === "os" || filterName === "osVersion") {
     var entries = options.map(function(option) {
       var parts = option.split(",");
       return {
@@ -423,62 +443,6 @@ function getHumanReadableOptions(filterName, options) {
     return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
   }
   return options.map(function(option) { return [option, option] });
-}
-
-function getOptions(filterList, histogramEvolution) {
-  function getCombinedFilterTree(histogramEvolution) {
-    var fullOptions = histogramEvolution.filterOptions(), filterTree = {};
-    if (histogramEvolution.filterName() == "os") {
-      return filterTree
-    }
-    fullOptions.forEach(function(option) {
-      var filteredEvolution = histogramEvolution.filter(option);
-      filterTree[option] = getCombinedFilterTree(filteredEvolution);
-    });
-    filterTree._name = histogramEvolution.filterName();
-    return filterTree
-  }
-  function getOptionsList(filterTree, optionsList, currentPath, depth, includeSelf) {
-    var options = Object.keys(filterTree).sort();
-    var filterOptions = Object.keys(filterTree).filter(function(option) { return option != "_name"; });
-    if (filterOptions.length === 0) { return optionsList; }
-    
-    // Add the current options into the option map
-    if (optionsList[depth] === undefined) { optionsList[depth] = []; }
-    if (includeSelf) {
-      var os = null;
-      if (filterTree._name === "osVersion") { os = currentPath[currentPath.length - 1]; }
-      var currentOptions = getHumanReadableOptions(filterTree._name, filterOptions, os);
-      optionsList[depth] = optionsList[depth].concat(currentOptions);
-    }
-    
-    var selectedValues = (!filterList[depth] || filterList[depth].length === 0) ?
-                         filterOptions : filterList[depth];
-    filterOptions.forEach(function(option) {
-      // Don't include direct children if we are not in the right OS
-      var includeChildren = true;
-      if (filterTree._name === "OS") { includeChildren = selectedValues.indexOf(option) >= 0; }
-      
-      getOptionsList(filterTree[option], optionsList, currentPath.concat([option]), depth + 1, includeChildren);
-    });
-    return optionsList;
-  }
-
-  var filterTree = getCombinedFilterTree(histogramEvolution);
-  var optionsList = getOptionsList(filterTree, [], [], 0, true);
-  
-  // Remove duplicate options
-  optionsList = optionsList.map(function(options) {
-    var result = [], seen = {};
-    options.forEach(function(option) {
-      if (!(option[0] in seen)) {
-        result.push(option);
-        seen[option[0]] = true;
-      }
-    })
-    return result;
-  })
-  return optionsList;
 }
 
 function formatNumber(number) {

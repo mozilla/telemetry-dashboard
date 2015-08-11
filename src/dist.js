@@ -15,7 +15,14 @@ Telemetry.init(function() {
   
   // Set up settings selectors
   multiselectSetOptions($("#channel-version"), getHumanReadableOptions("channelVersion", Telemetry.versions()));
-  if (gInitialPageState.max_channel_version) { $("#channel-version").multiselect("select", gInitialPageState.max_channel_version); }
+  if (gInitialPageState.max_channel_version !== undefined) {
+    if (gInitialPageState.max_channel_version === null) { // No version selected, select the latest nightly
+      var nightlyVersions = Telemetry.versions().filter(function(channelVersion) { return channelVersion.startsWith("nightly/"); }).sort();
+      gInitialPageState.max_channel_version = nightlyVersions[nightlyVersions.length - 1];
+    }
+    $("#channel-version").next().find("input[type=radio]").attr("checked", false);
+    $("#channel-version").multiselect("select", gInitialPageState.max_channel_version);
+  }
   
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
@@ -38,7 +45,7 @@ Telemetry.init(function() {
 
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
-        if (selector.is("[multiple]")) {
+        if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
           var selected = selector.val() || [], options = selector.find("option");
           gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
         }
@@ -51,7 +58,7 @@ Telemetry.init(function() {
         var $this = $(this);
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-          if ($this.is("[multiple]")) { // Only apply the select all change to controls that allow multiple selections
+          if (["filter-product", "filter-os"].indexOf($this.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
             // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
             var selected = $this.val() || [], options = $this.find("option");
             if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
@@ -398,12 +405,13 @@ function displayHistogram(histogram, dates, cumulative, trim) {
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });
 
   // Plot the data using MetricsGraphics
+  var axes = $("#distribution").get(0);
   MG.data_graphic({
     data: distributionSamples,
     binned: true,
     chart_type: "histogram",
     full_width: true, height: 600,
-    left: 150, right: $("#distribution").width() / (distributionSamples.length + 1) + 150,
+    left: 150, right: $(axes).width() / (distributionSamples.length + 1),
     transition_on_update: false,
     target: "#distribution",
     x_label: histogram.description(), y_label: "Percentage of Samples",
@@ -416,22 +424,34 @@ function displayHistogram(histogram, dates, cumulative, trim) {
       var count = formatNumber(counts[d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
       var label;
       if (ends[d.x] === Infinity) {
-        label = count + " samples (" + percentage + ") where sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
+       label = "sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
       } else {
-        label = count + " samples (" + percentage + ") where " + formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
+       label = formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
       }
-      var offset = $("#distribution .mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
-      var barWidth = $("#distribution .mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
+
+      var offset = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
+      var barWidth = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
+      var x = parseFloat(offset.replace(/^translate\(([-\d\.]+).*$/, "$1"));
+      offset = "translate(" + x + ",60)";
       
-      // Reposition element
-      var legend = d3.select("#distribution .mg-active-datapoint").text(label).attr("transform", offset)
-        .attr("x", barWidth / 2).attr("y", "0").attr("dy", "-10").attr("text-anchor", "middle").style("fill", "white");
+      var legend = d3.select(axes).select(".mg-active-datapoint").text(label).attr("transform", offset)
+        .attr("x", barWidth / 2).attr("y", "0").attr("text-anchor", "middle").style("fill", "white");
+      legend.append("tspan").attr({x: barWidth / 2, y: "1.1em"}).text(histogram.measure() + ": " + count + " samples (" + percentage + ")").attr("text-anchor", "middle");
+      
       var bbox = legend[0][0].getBBox();
-      var padding = 5;
+      if (x - bbox.width / 2 < 0) {
+        offset = "translate(" + (bbox.width / 2 + 10) + ",60)";
+        legend.attr("transform", offset);
+      }
+      if (x + bbox.width / 2 > $(axes).find("svg").width() - 5) {
+        offset = "translate(" + ($(axes).find("svg").width() - 5 - bbox.width / 2 - 10) + ",60)";
+        legend.attr("transform", offset);
+      }
       
       // Add background
-      d3.select("#distribution .active-datapoint-background").remove(); // Remove old background
-      d3.select("#distribution svg").insert("rect", ".mg-active-datapoint").classed("active-datapoint-background", true)
+      var padding = 5;
+      d3.select(axes).select(".active-datapoint-background").remove(); // Remove old background
+      d3.select(axes).select("svg").insert("rect", ".mg-active-datapoint").classed("active-datapoint-background", true)
         .attr("x", bbox.x - padding).attr("y", bbox.y - padding).attr("transform", offset)
         .attr("width", bbox.width + padding * 2).attr("height", bbox.height + padding * 2)
         .attr("rx", "3").attr("ry", "3").style("fill", "#333");
@@ -465,22 +485,22 @@ var gPreviousCSVBlobUrl = null, gPreviousJSONBlobUrl = null;
 var gPreviousDisqusIdentifier = null;
 function saveStateToUrlAndCookie() {
   var picker = $("#date-range").data("daterangepicker");
+  var minChannelVersion = gInitialPageState.min_channel_version;
   gInitialPageState = {
     measure: $("#measure").val(),
     max_channel_version: $("#channel-version").val(),
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ? // Save the minimum channel version in case we switch to evolution dashboard later
-      gInitialPageState.min_channel_version : "nightly/38",
     cumulative: $("input[name=cumulative-toggle]:checked").val() !== "0" ? 1 : 0,
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
     trim: $("input[name=trim-toggle]:checked").val() !== "0" ? 1 : 0,
     start_date: moment(picker.startDate).format("YYYY-MM-DD"), end_date: moment(picker.endDate).format("YYYY-MM-DD"),
     
     // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
-    min_channel_version: gInitialPageState.min_channel_version !== undefined ?
-      gInitialPageState.min_channel_version : "nightly/38",
     sanitize: gInitialPageState.sanitize !== undefined ?
       gInitialPageState.sanitize : 1,
   };
+  
+  // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
+  if (minChannelVersion !== undefined) { gInitialPageState.min_channel_version = minChannelVersion; }
   
   // Only store these in the state if they are not all selected
   var selected = $("#filter-product").val() || [];
@@ -519,10 +539,21 @@ function saveStateToUrlAndCookie() {
   if (gCurrentHistogram !== null) {
     if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
     if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-    var csvValue = "start,\tcount\n" + gCurrentHistogram.map(function (count, start, end, i) {
-      return start + ",\t" + count;
+    if ($("input[name=cumulative-toggle]:checked").val() !== "0") {
+      var total = 0;
+      jsonHistogram = gCurrentHistogram.map(function(count, start, end, i) {
+        total += count;
+        return {start: start, count: total, percentage: 100 * total / gCurrentHistogram.count()};
+      });
+    } else {
+      jsonHistogram = gCurrentHistogram.map(function(count, start, end, i) {
+        return {start: start, count: count, percentage: 100 * count / gCurrentHistogram.count()}
+      });
+    }
+    var csvValue = "start,\tcount,\tpercentage\n" + jsonHistogram.map(function (entry) {
+      return entry.start + ",\t" + entry.count + ",\t" + entry.percentage;
     }).join("\n");
-    var jsonValue = JSON.stringify(gCurrentHistogram.map(function(count, start, end, i) { return {start: start, count: count} }));
+    var jsonValue = JSON.stringify(jsonHistogram, null, 2);
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
     $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", gCurrentHistogram.measure() + ".csv");

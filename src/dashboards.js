@@ -54,6 +54,9 @@ $(document).ready(function() {
           }
         }
       }
+      options.buttonTitle = function(options, select) {
+        return getHumanReadableOptions("os", compressOSs()).map(function(option) { return option[1]; }).join(", ");
+      }
     }
     
     if ($this.attr("title") !== undefined) {
@@ -123,7 +126,7 @@ function loadStateFromUrlAndCookie() {
   if (url.indexOf("max_channel_version=") < 0) { // No state or invalid/corrupted state, restore to default settings
     pageState.aggregates = ["median"];
     pageState.measure = ["GC_MS"];
-    pageState.min_channel_version = "nightly/38"; pageState.max_channel_version = "nightly/41";
+    pageState.min_channel_version = null; pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
     pageState.os = pageState.arch = pageState.e10s = pageState.processType = null;
     pageState.use_submission_date = 0;
@@ -148,9 +151,9 @@ function loadStateFromUrlAndCookie() {
   } else { pageState.aggregates = ["median"]; }
   pageState.measure = typeof pageState.measure === "string" && pageState.measure !== "" && pageState.measure !== "null" ? pageState.measure : "GC_MS";
   pageState.min_channel_version = typeof pageState.min_channel_version === "string" && pageState.min_channel_version.indexOf("/") >= 0 ?
-    pageState.min_channel_version : "nightly/39";
+    pageState.min_channel_version : null;
   pageState.max_channel_version = typeof pageState.max_channel_version === "string" && pageState.max_channel_version.indexOf("/") >= 0 ?
-    pageState.max_channel_version : "nightly/41";
+    pageState.max_channel_version : null;
   pageState.product = typeof pageState.product === "string" && pageState.product !== "" && pageState.product !== "null" ?
     pageState.product.split("!").filter(function(v) { return v !== ""; }) : ["Firefox"];
   pageState.os = typeof pageState.os === "string" && pageState.os !== "" && pageState.os !== "null" ?
@@ -174,7 +177,8 @@ function loadStateFromUrlAndCookie() {
 // A whole bucketful of dirty hacks in this function to clean up options and give them nice names
 function getHumanReadableOptions(filterName, options, os) {
   os = os || null;
-
+  var productNames = {"Firefox": "Firefox Desktop", "Fennec": "Firefox Mobile"};
+  var productOrder = {"Firefox": 0, "Fennec": 1, "Thunderbird": 2};
   var systemNames = {"WINNT": "Windows", "Darwin": "OS X"};
   var channelVersionOrder = {"nightly": 0, "aurora": 1, "beta": 2, "release": 3};
   var ignoredSystems = {"Windows_95": true, "Windows_NT": true, "Windows_98": true};
@@ -186,7 +190,21 @@ function getHumanReadableOptions(filterName, options, os) {
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
   };
   var archNames = {"x86": "32-bit", "x86-64": "64-bit"};
-  if (filterName === "os") {
+  if (filterName === "application") {
+    return options.sort(function(a, b) {
+      // Sort by explicit product order if available
+      if (productOrder.hasOwnProperty(a) && productOrder.hasOwnProperty(b)) {
+        return productOrder[a] - productOrder[b];
+      } else if (productOrder.hasOwnProperty(a)) {
+        return -1;
+      } else if (productOrder.hasOwnProperty(b)) {
+        return 1;
+      }
+      return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+    }).map(function(option) {
+      return [option, productNames.hasOwnProperty(option) ? productNames[option] : option];
+    });
+  } else if (filterName === "os") {
     return options.map(function(option) { return [option, systemNames.hasOwnProperty(option) ? systemNames[option] : option]; });
   } else if (filterName === "osVersion") {
     var osName = os === null ? "" : (systemNames.hasOwnProperty(os) ? systemNames[os] : os);
