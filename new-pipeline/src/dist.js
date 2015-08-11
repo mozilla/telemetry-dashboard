@@ -500,6 +500,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
 }
 
 function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative, trimLeft, trimRight, maxPercentage) {
+  $(axes).empty(); // Remove tables if they are present
+
   // No histograms available
   if (histograms.length === 0) {
     MG.data_graphic({
@@ -539,7 +541,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
     return;
   }
-  $(axes).empty(); // Remove tables if they are present
   
   var distributionSamples = countsList.map(function(counts, i) {
     return counts.map(function(count, j) { return {value: j, count: (count / histograms[i].count) * 100}; });
