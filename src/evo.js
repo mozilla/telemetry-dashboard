@@ -425,12 +425,12 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
-    var dataset = line.values.map(function(point) { return {date: moment(point.x).add(timezoneOffsetMinutes, "minutes").toDate(), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: new Date(moment.utc(point.x).format("YYYY/MM/DD")), value: point.y}; });
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
   var submissionLineData = submissionLines.map(function (line) {
-    var dataset = line.values.map(function(point) { return {date: moment(point.x).add(timezoneOffsetMinutes, "minutes").toDate(), value: point.y}; });
+    var dataset = line.values.map(function(point) { return {date: new Date(moment.utc(point.x).format("YYYY/MM/DD")), value: point.y}; });
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
