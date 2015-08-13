@@ -1,4 +1,4 @@
-$(document).ready(function() {  
+$(document).ready(function() {
   // Multiselect boxes
   $('.multiselect').each(function(i, select) {
     var $this = $(this);
@@ -16,7 +16,7 @@ $(document).ready(function() {
         setTimeout(function() { $(event.currentTarget).find(".filter input").focus(); }, 0);
       },
     };
-    
+
     // Horrible hacks to make some very specific functionality work
     if ($this.attr("id") === "measure") { // Measure should search as if spaces were underscores
       options.filterBehavior = "custom";
@@ -65,19 +65,19 @@ $(document).ready(function() {
           .map(function(option) { return option[1]; }).join(", ");
       }
     }
-    
+
     if ($this.attr("title") !== undefined) {
       options.nonSelectedText = $this.attr("title");
     }
     $this.multiselect(options);
-    
+
     // Workaround for bug where the first radio button is always checked
     $this.next().find("input[type=radio]").attr("checked", false);
-    
+
     // Align the control so that the baseline matches surrounding text
     $this.next().css("margin-top", "-0.25em");
   });
-  
+
   // Date range pickers
   $(".date-range").daterangepicker();
   $(".daterangepicker input[name=daterangepicker_start], .daterangepicker input[name=daterangepicker_end]").keydown(function(event){
@@ -89,7 +89,7 @@ $(document).ready(function() {
       return false;
     }
   });
-  
+
   // Permalink control
   $(".permalink-control").append(
     '<div class="input-group">' +
@@ -129,7 +129,7 @@ function loadStateFromUrlAndCookie() {
   if (index > -1) { url = decodeURI(window.location.href.substring(index + 1)); }
   if (url[0] == "!") { url = url.slice(1); }
   var pageState = {};
-  
+
   // Load from cookie if URL does not have state
   if (url.indexOf("measure=") < 0) {
     var name = "stateFromUrl=";
@@ -140,7 +140,7 @@ function loadStateFromUrlAndCookie() {
       }
     });
   }
-  
+
   // No state or invalid/corrupted state, restore to default settings
   if (url.indexOf("measure=") < 0) {
     pageState.aggregates = ["median"];
@@ -211,9 +211,9 @@ function loadStateFromUrlAndCookie() {
     typeof pageState.compare === "string" &&
     ["", "os", "osVersion", "architecture", "e10sEnabled", "child"].indexOf(pageState.compare) >= 0
   ) ? pageState.compare : "";
-  
+
   pageState.keys = typeof pageState.keys === "string" ? pageState.keys.split("!") : [];
-  
+
   // Versions are on two different channels, change the min version to be the
   // smallest version in the max version's channel
   var channelsDiffer = pageState.min_channel_version !== null &&
@@ -226,7 +226,7 @@ function loadStateFromUrlAndCookie() {
     });
     pageState.min_channel_version = channelVersions[Math.max(0, channelVersions.length - 4)];
   }
-  
+
   pageState.use_submission_date = (
     pageState.use_submission_date === "0" || pageState.use_submission_date === "1"
   ) ? parseInt(pageState.use_submission_date) : 0;
@@ -276,7 +276,7 @@ function getFilterSetsMapping(filters, comparisonName) {
       }
     }
   }
-  
+
   function copy(obj) {
     var result = {};
     for (var key in obj) {
@@ -310,7 +310,7 @@ function getFilterSetsMapping(filters, comparisonName) {
     }
     return filterSets;
   }
-  
+
   // Add a new filter set collection for each comparison option, or just one if not comparing
   var filterSetsMapping = {};
   if (comparisonName === null) {
@@ -391,12 +391,12 @@ function getHumanReadableOptions(filterName, options) {
         value: option,
       };
     });
-    
+
     var osEntryMapping = {}; entries.forEach(function(entry) {
       if (!osEntryMapping.hasOwnProperty(entry.os)) { osEntryMapping[entry.os] = []; }
       osEntryMapping[entry.os].push(entry);
     });
-    
+
     // Apply custom sort order for Windows
     if (osEntryMapping.hasOwnProperty("Windows_NT")) {
       osEntryMapping["Windows_NT"].sort(function(a, b) {
@@ -411,7 +411,7 @@ function getHumanReadableOptions(filterName, options) {
         return ((a < b) ? -1 : ((a > b) ? 1 : 0));
       });
     }
-    
+
     // Apply custom version names for OS versions, grouped by OS alphabetically
     var result = [];
     return [].concat.apply([], Object.keys(osEntryMapping).sort(function(a, b) {
@@ -465,7 +465,7 @@ function getHumanReadableOptions(filterName, options) {
         latestNightlyVersion = parseInt(parts[1]);
       }
     });
-    
+
     // Sort the options in the specified order and set aside the bad ones
     var badOptions = [], goodOptions = [];
     options.sort(function(a, b) {
@@ -495,7 +495,7 @@ function getHumanReadableOptions(filterName, options) {
         badOptions.push(option);
       }
     });
-    
+
     // Move the latest version of each channel into their own section
     var latest = {};
     goodOptions.forEach(function(option) {
@@ -513,7 +513,7 @@ function getHumanReadableOptions(filterName, options) {
       }
       return true;
     });
-    
+
     options = [];
     var previousChannel = null;
     goodOptions.forEach(function(option, i) {
@@ -522,9 +522,9 @@ function getHumanReadableOptions(filterName, options) {
       previousChannel = channel;
       options.push(option);
     });
-    
+
     options = latestOptions.concat([null]).concat(options);
-    
+
     if (badOptions.length > 0) {
       options = options.concat([null]).concat(badOptions);
     }
@@ -567,22 +567,22 @@ function deduplicate(values) {
 // otherwise be selected, then the specified values will be selected
 function multiselectSetOptions(element, options, defaultSelected) {
   defaultSelected = defaultSelected || null;
-  
+
   if (options.length === 0) { element.empty().multiselect("rebuild"); return; }
   var valuesMap = {}; options.forEach(function(option) {
     if (option) { valuesMap[option[0]] = true; }
   });
   var selected = element.val() || [];
-  
+
   // For single selects, the value is not wrapped in an array
   if (!$.isArray(selected)) { selected = [selected]; }
-  
+
   // Check if all options are selected, in which case all options should be selected afterward as well
   var allSelected = selected.length > 0 && selected.length === element.find("option").length;
-  
+
   // A list of options that are currently selected that will still be available in the new options
   selected = selected.filter(function(value) { return valuesMap.hasOwnProperty(value); });
-  
+
   // Process default selection
   if (defaultSelected !== null) {
     defaultSelected.forEach(function(option) {
@@ -592,7 +592,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
       selected = $.isArray(defaultSelected) ? defaultSelected : [defaultSelected];
     }
   }
-  
+
   var useGroups = options[0].length === 3;
   if (useGroups) { // Build option elements categorized by options group
     options.forEach(function(option) {
@@ -626,7 +626,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
       ) { return; }
       throw "Bad options value: must be array of arrays, either each with two strings or each with three strings.";
     });
-    
+
     element.empty().append(options.map(function(option) {
       if (option === null) {
         return '<option disabled>&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;</option>';
@@ -637,7 +637,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
 
   // Workaround for bug where the first radio button is always checked
   element.multiselect("deselectAll", false).next().find("input[type=radio]").attr("checked", false);
-  
+
   // Select elements in the new multiselect control
   if (allSelected) {
     // Previously, everything was selected, so select everything here as well
@@ -646,16 +646,16 @@ function multiselectSetOptions(element, options, defaultSelected) {
     // Some elements were selected before, select them again where applicable
     element.multiselect("select", selected);
   }
-  
+
   // Make the group labels sticky to the top and bottom of the selector
   if (useGroups) {
     var selector = element.next().find(".multiselect-container");
     var groupHeadings = selector.find(".multiselect-group-clickable").toArray();
-    
+
     // We have to open it temporarily in order to get an accurate outer height
     var wasOpen = selector.parent().hasClass("open");
     selector.parent().addClass("open");
-    
+
     // Calculate sticky offsets
     var topOffset = selector.find(".filter").outerHeight() + 10;
     var bottomOffset = groupHeadings.reduce(function(height, heading) {
@@ -667,10 +667,10 @@ function multiselectSetOptions(element, options, defaultSelected) {
         .css("bottom", bottomOffset).css("top", topOffset).css("background", "white");
       topOffset += $(heading).outerHeight();
     });
-    
+
     if (!wasOpen) { selector.parent().removeClass("open"); }
   }
-  
+
   // Cause Enter to select the first visible item
   $(".multiselect-container input.multiselect-search").keydown(function(event){
     if(event.keyCode == 13) {
@@ -688,7 +688,7 @@ var indicate = (function() {
   var indicatorTimeout = null;
   return function indicate(message) {
     message = message || null;
-    
+
     if (indicatorTimeout !== null) { clearTimeout(indicatorTimeout); }
     if (message !== null) {
       indicatorTimeout = setTimeout(function() {
@@ -756,7 +756,7 @@ function updateOSs() {
     optionsMap[option[0]] = option[1];
   });
   var optionGroupLabels = selector.find(".multiselect-group-clickable");
-  
+
   // Update CSS classes for labels marking whether they are all selected
   allSelectedOSList.forEach(function(os) {
     var optionGroupLabel = optionGroupLabels.filter(function() {

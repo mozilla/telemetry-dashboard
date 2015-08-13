@@ -26,7 +26,7 @@ Telemetry.Histogram = (function() {
     assert(typeof measure === "string", "`measure` must be a string");
     this.buckets = buckets;
     this.values = values;
-    
+
     this.count = this.values.reduce(function(previous, count) { return previous + count; }, 0);
     this.kind = kind;
     this.submissions = submissions;
@@ -34,7 +34,7 @@ Telemetry.Histogram = (function() {
     this.description = description;
     this.measure = measure;
   }
-  
+
   Histogram.prototype.lastBucketUpper = function() {
     assert(this.buckets.length > 0, "Histogram buckets cannot be empty");
     if (this.buckets.length == 1) return this.buckets[0] + 1;
@@ -44,7 +44,7 @@ Telemetry.Histogram = (function() {
       return this.buckets[this.buckets.length - 1] * this.buckets[this.buckets.length - 1] / this.buckets[this.buckets.length - 2];
     }
   };
-  
+
   Histogram.prototype.mean = function() {
     var buckets = this.buckets.concat([this.lastBucketUpper(this.buckets, this.kind)]);
     var totalHits = 0, bucketHits = 0;
@@ -58,14 +58,14 @@ Telemetry.Histogram = (function() {
     });
     return bucketHits / totalHits;
   }
-  
+
   Histogram.prototype.percentile = function(percentile) {
     assert(typeof percentile === "number", "`percentile` must be a number");
     assert(0 <= percentile && percentile <= 100, "`percentile` must be between 0 and 100 inclusive");
     var buckets = this.buckets.concat([this.lastBucketUpper()]);
     var linearTerm = buckets[buckets.length - 1] - buckets[buckets.length - 2];
     var exponentialFactor = buckets[buckets.length - 1] / buckets[buckets.length - 2];
-    
+
     var hitsAtPercentileInBar = this.values.reduce(function(previous, count) { return previous + count; }, 0) * (percentile / 100);
     var percentileBucketIndex = 0;
     while (hitsAtPercentileInBar >= 0) { hitsAtPercentileInBar -= this.values[percentileBucketIndex]; percentileBucketIndex ++; }
@@ -77,7 +77,7 @@ Telemetry.Histogram = (function() {
       return buckets[percentileBucketIndex] * Math.pow(exponentialFactor, ratioInBar); // geometric interpolation within bar
     }
   };
-  
+
   Histogram.prototype.map = function(callback) {
     var buckets = this.buckets.concat([this.lastBucketUpper()]);
     var histogram = this;
@@ -85,7 +85,7 @@ Telemetry.Histogram = (function() {
       return callback.call(histogram, count, buckets[i], buckets[i + 1], i);
     });
   }
-  
+
   return Histogram;
 })();
 
@@ -102,7 +102,7 @@ Telemetry.Evolution = (function() {
     this.description = description;
     this.measure = measure;
   }
-  
+
   Evolution.prototype.dates = function() {
     return this.data.map(function(entry) {
       assert(entry.date.length === 8, "Invalid date string");
@@ -140,7 +140,7 @@ Telemetry.Evolution = (function() {
     });
     return new Telemetry.Evolution(this.buckets, data, this.kind, this.description, this.measure);
   };
-  
+
   Evolution.prototype.sanitized = function() {
     var maxSubmissions = 0;
     this.data.forEach(function(entry) {
@@ -158,7 +158,7 @@ Telemetry.Evolution = (function() {
     if (data.length === 0) { return null; }
     return new Telemetry.Evolution(this.buckets, data, this.kind, this.description, this.measure);
   }
-  
+
   Evolution.prototype.dateRange = function(startDate, endDate) {
     assert(startDate.getTime, "`startDate` must be a date");
     assert(endDate.getTime, "`endDate` must be a date");
@@ -171,7 +171,7 @@ Telemetry.Evolution = (function() {
     if (data.length === 0) { return null; }
     return new Telemetry.Evolution(this.buckets, data, this.kind, this.description, this.measure);
   };
-  
+
   Evolution.prototype.histogram = function() {
     var submissions = this.data.reduce(function(submissions, entry) { return submissions + entry.count; }, 0);
     var sum = this.data.reduce(function(sum, entry) { return sum + entry.sum; }, 0);
@@ -179,36 +179,36 @@ Telemetry.Evolution = (function() {
       entry.histogram.forEach(function(count, i) { values[i] = (values[i] || 0) + count; });
       return values;
     }, []);
-    
+
     return new Telemetry.Histogram(this.buckets, values, this.kind, submissions, sum, this.description, this.measure);
   };
-  
+
   Evolution.prototype.map = function(callback) {
     var evolution = this;
     return this.data.sort(function(a, b) { return parseInt(a.date) - parseInt(b.date); })
       .map(function(entry, i) {
       var histogram = new Telemetry.Histogram(evolution.buckets, entry.histogram, evolution.kind, entry.count, entry.sum, evolution.description, evolution.measure);
-      
+
       assert(entry.date.length === 8, "Invalid date string");
       var YYYY = entry.date.substring(0, 4), MM = entry.date.substring(4, 6), DD = entry.date.substring(6, 8);
       var date = new Date(YYYY + "-" + MM + "-" + DD);
-      
+
       return callback.call(evolution, histogram, i, date);
     });
   };
-  
+
   Evolution.prototype.means = function() {
     return this.map(function(histogram, i) { return histogram.mean(); });
   };
-  
+
   Evolution.prototype.percentiles = function(percentile) {
     return this.map(function(histogram, i) { return histogram.percentile(percentile); });
   };
-  
+
   Evolution.prototype.submissions = function() {
     return this.map(function(histogram, i) { return histogram.submissions; });
   };
-  
+
   return Evolution;
 })();
 
@@ -276,7 +276,7 @@ Telemetry.init = function Telemetry_init(callback) {
         loadedChannels ++; // Loaded another channel's dates
         if (loadedChannels == expectedChannels) { callback(); } // This is the last channel that needs to be loaded
       });
-      
+
       var versionDates = Telemetry.CHANNEL_VERSION_DATES[channel] = {};
       Telemetry.getJSON(Telemetry.BASE_URL + "aggregates_by/submission_date/channels/" + channel + "/dates/", function(dateEntries) {
         dateEntries.forEach(function(entry) {

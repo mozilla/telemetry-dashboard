@@ -15,14 +15,14 @@ Telemetry.init(function() {
     "arch":       $("#filter-arch"),
   };
   gInitialPageState = loadStateFromUrlAndCookie();
-  
+
   // Set up settings selectors
   $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   multiselectSetOptions(
     $("#min-channel-version, #max-channel-version"),
     getHumanReadableOptions("channelVersion", Telemetry.versions())
   );
-  
+
   // Select previously selected channel versions, or the latest nightlies if not possible
   var nightlyVersions = Telemetry.versions().filter(function(channelVersion) {
     return channelVersion.startsWith("nightly/");
@@ -41,7 +41,7 @@ Telemetry.init(function() {
     $("#max-channel-version").next().find("input[type=radio]").attr("checked", false);
     $("#max-channel-version").multiselect("select", gInitialPageState.max_channel_version);
   }
-  
+
   var fromVersion = $("#min-channel-version").val();
   var toVersion = $("#max-channel-version").val();
   var versions = Telemetry.versions().filter(function(v) {
@@ -51,21 +51,21 @@ Telemetry.init(function() {
     // Invalid range selected, move min version selector
     $("#min-channel-version").multiselect("select", toVersion);
   }
-  
+
   $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !== 0 ? 1 : 0) + "]")
     .prop("checked", true).trigger("change");
   $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !== 0 ? 1 : 0) + "]")
     .prop("checked", true).trigger("change");
-  
+
   // If advanced settings are not at their defaults, expand the settings pane on load
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !== 1) {
     $("#advanced-settings-toggle").click();
   }
-  
+
   updateMeasuresList(function() {
     calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
       refreshFilters(filterList, filterOptionsList);
-      
+
       // Set the initial selection for the selectors
       if (gInitialPageState.product !== null) {
         $("#filter-product").multiselect("select", gInitialPageState.product);
@@ -77,24 +77,24 @@ Telemetry.init(function() {
       } else {
         $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText");
       }
-      
+
       // We accept values such as "WINNT", as well as "WINNT,6.1"
       if (gInitialPageState.os !== null) {
         $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
       } else {
         $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText");
       }
-      
+
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
-        
+
         // Only apply the select all change to the product and OS selector
         if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) {
           var selected = selector.val() || [], options = selector.find("option");
           gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
         }
       }
-      
+
       $("#min-channel-version, #max-channel-version").change(function(e) {
         var fromVersion = $("#min-channel-version").val();
         var toVersion = $("#max-channel-version").val();
@@ -108,13 +108,13 @@ Telemetry.init(function() {
             $("#min-channel-version").multiselect("select", toVersion);
           }
         }
-        
+
         // Two versions are on different channels, move the other one into the right channel
         if (fromVersion.split("/")[0] !== toVersion.split("/")[0]) {
           // Min version changed, change max version to be the largest version in the current channel
           if (e.target.id === "min-channel-version") {
             var channel = fromVersion.split("/")[0];
-            
+
             // Dirty hack to get the valid channel versions (by excluding those versions that are too high)
             var latestNightlyVersion = 0;
             var channelVersions = Telemetry.versions();
@@ -158,7 +158,7 @@ Telemetry.init(function() {
         var measureEntry = gMeasureMap[measure];
         $("#measure-description").text(measureEntry.description + " (" + measure + ")");
         $("#submissions-title").text(measure + " submissions");
-        
+
         // Figure out which aggregates actually apply to this measure
         var options = [];
         if (measureEntry.kind == "linear" || measureEntry.kind == "exponential") {
@@ -175,7 +175,7 @@ Telemetry.init(function() {
             ["mean", "Mean"]
           ];
         }
-        
+
         // Set available aggregates, selecting the first one if none will be selected otherwise
         var aggregatesFilter = $("#aggregates");
         var oldAggregates = gInitialPageState.aggregates.filter(function(aggregate) {
@@ -200,7 +200,7 @@ Telemetry.init(function() {
         "#filter-os"
       ].join(",")).change(function(e) {
         var $this = $(this);
-        
+
         // Debounce the changes to prevent rapid filter changes from causing too many updates
         if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
         gFilterChangeTimeout = setTimeout(function() {
@@ -218,10 +218,10 @@ Telemetry.init(function() {
             }
             gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length;
           }
-        
+
           calculateHistogramEvolutions(function(filterList, filterOptionsList, lines, submissionLines) {
             refreshFilters(filterList, filterOptionsList);
-            
+
             displayEvolutions(
               lines, submissionLines,
               null, null,
@@ -231,7 +231,7 @@ Telemetry.init(function() {
           });
         }, 0);
       });
-      
+
       // Perform a full display refresh
       $("#measure").trigger("change");
     });
@@ -255,7 +255,7 @@ function updateMeasuresList(callback) {
     if (callback !== undefined) { callback(); }
     return
   }
-  
+
   indicate("Updating measures... 0%");
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     Telemetry.measures(channelVersion, function(measures) {
@@ -288,7 +288,7 @@ function refreshFilters(filterList, filterOptionsList) {
       return true;
     });
   });
-  
+
   // Sort the OS versions list by OS name
   var newOSList = [];
   var systemOrder = {"WINNT": 1, "Darwin": 2};
@@ -310,7 +310,7 @@ function refreshFilters(filterList, filterOptionsList) {
 
   multiselectSetOptions($("#filter-product"), optionsList[1]);
   multiselectSetOptions($("#filter-arch"), optionsList[4]);
-  
+
   var selectedOSs = compressOSs();
   multiselectSetOptions($("#filter-os"), newOSList);
   $("#filter-os").multiselect("select", expandOSs(selectedOSs));
@@ -325,7 +325,7 @@ function calculateHistogramEvolutions(callback) {
   var aggregates = $("#aggregates").val() || [];
   var evolutionLoader = $("input[name=build-time-toggle]:checked").val() !== "0" ?
     Telemetry.loadEvolutionOverTime : Telemetry.loadEvolutionOverBuilds;
-  
+
   // Obtain a mapping from filter names to filter options
   var filters = {};
   for (var filterName in gFilters) {
@@ -335,7 +335,7 @@ function calculateHistogramEvolutions(callback) {
       filters[filterName] = selection;
     }
   }
-  
+
   // Handle the special case for the OS selector
   if (filters.os_version !== undefined) {
     filters.os = deduplicate(filters.os_version.map(function(version) {
@@ -345,7 +345,7 @@ function calculateHistogramEvolutions(callback) {
       return version.split(",")[1]
     });
   }
-  
+
   var filterList = [
     ["saved_session"],                                                   // "reason" filter
     filters.hasOwnProperty("product") ? filters["product"] : null,       // "product" filter
@@ -353,7 +353,7 @@ function calculateHistogramEvolutions(callback) {
     filters.hasOwnProperty("os_version") ? filters["os_version"] : null, // "os_version" filter
     filters.hasOwnProperty("arch") ? filters["arch"] : null,             // "arch" filter
   ];
-  
+
   // Remove unnecessary filters - trailing null entries in the filter list
   for (var i = filterList.length - 1; i >= 0; i --) {
     if (filterList[i] !== null) { break; }
@@ -361,14 +361,14 @@ function calculateHistogramEvolutions(callback) {
   }
 
   var versions = Telemetry.versions().filter(function(v) { return fromVersion <= v && v <= toVersion; });
-  
+
   // Exclude those versions that don't actually have the measure - a measure may be selectable
   // but nonexistant if it exists in some other version, so we just ignore this version if
   // it doesn't have that measure
   versions = versions.filter(function(channelVersion) {
     return gVersionMeasureMap[channelVersion][measure] !== undefined;
   });
-  
+
   var lines = [];
   var submissionLines = [];
   var expectedCount = versions.length * aggregates.length;
@@ -377,7 +377,7 @@ function calculateHistogramEvolutions(callback) {
   versions.forEach(function(version) {
     evolutionLoader(version, measure, function(histogramEvolution) {
       indicate("Updating evolutions... " + Math.round(100 * lines.length / expectedCount) + "%");
-    
+
       // Update filter options
       var versionOptionsList = getOptions(filterList, histogramEvolution);
       while (filterOptionsList.length < versionOptionsList.length) {
@@ -386,7 +386,7 @@ function calculateHistogramEvolutions(callback) {
       filterOptionsList = filterOptionsList.map(function(options, i) {
         return options.concat(versionOptionsList[i]);
       });
-      
+
       var newLines = getHistogramEvolutionLines(
         version, measure, histogramEvolution,
         aggregates, filterList,
@@ -436,7 +436,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
         var entry = firstHistogram._dataset[0];
         firstFilterId = entry[entry.length + Telemetry.DataOffsets.FILTER_ID];
       }
-      
+
       // The precomputeAggregateQuantity method will perform the actual filtering for us,
       // and then we set the filter ID manually
       var timestamp = date.getTime();
@@ -450,7 +450,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
       }
     });
   });
-  
+
   // Generate histograms for each date and generate points for the desired aggregates for each one
   var aggregateValue = {
     "mean":            function(histogram) { return histogram.mean(); },
@@ -466,21 +466,21 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
   aggregates.forEach(function(aggregate) {
     aggregatePoints[aggregate] = [];
   });
-  
+
   // Cut off all dates past one year in the future
   var timeCutoff = moment().add(1, "years").toDate().getTime();
   var maxSubmissions = 0, submissionCounts = [];
   Object.keys(dateDatasets).sort().forEach(function(timestamp) {
     timestamp = parseInt(timestamp);
     if (timestamp > timeCutoff) { return; }
-    
+
     // Create a histogram that has no filters and contains the combined dataset
     var dataset = dateDatasets[timestamp];
     var histogram = new Telemetry.Histogram(
       measure, histogramEvolution._filter_path, firstHistogram._buckets,
       dataset, histogramEvolution._filter_tree, firstHistogram._spec
     );
-    
+
     // Obtain the aggregate values from the histogram
     aggregates.forEach(function(aggregate) {
       var pointValue = aggregateValue[aggregate](histogram);
@@ -488,7 +488,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
         aggregatePoints[aggregate].push({x: timestamp, y: pointValue});
       }
     });
-    
+
     // Process submission points
     var submissions = histogram.submissions();
     submissionPoints.push({x: timestamp, y: submissions});
@@ -497,7 +497,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
       submissionCounts.push(submissions);
     }
   });
-  
+
   // Filter out those points corresponding to histograms where the number of submissions is too low
   var submissionsCutoff = 0;
   if (sanitize) {
@@ -511,7 +511,7 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
       return submissionCounts[i] >= submissionsCutoff;
     });
   }
-  
+
   // Generate lines from the points for each aggregate
   var lines = [];
   for (aggregate in aggregatePoints) {
@@ -519,10 +519,10 @@ function getHistogramEvolutionLines(version, measure, histogramEvolution, aggreg
     newLine.histogramEvolution = histogramEvolution;
     lines.push(newLine);
   }
-  
+
   var submissionLine = new Line(measure, version, "submissions", submissionPoints);
   submissionLine.histogramEvolution = histogramEvolution;
-  
+
   return {lines: lines, submissionLine: submissionLine};
 }
 
@@ -532,9 +532,9 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
   // Filter out empty lines
   lines = lines.filter(function(line) { return line.values.length > 0; });
   submissionLines = submissionLines.filter(function(line) { return line.values.length > 0; });
-  
+
   var timezoneOffsetMinutes = (new Date).getTimezoneOffset();
-  
+
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
     var dataset = line.values.map(function(point) {
@@ -543,7 +543,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
         value: point.y,
       };
     });
-    
+
     // Duplicate the last point to work around a metricsgraphics drawing bug when
     // there are multiple datasets where one or more datasets only have one point
     dataset.push(dataset[dataset.length - 1]);
@@ -556,14 +556,14 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
         value: point.y,
       };
     });
-    
+
     // Duplicate the last point to work around a metricsgraphics drawing bug when
     // there are multiple datasets where one or more datasets only have one point
     dataset.push(dataset[dataset.length - 1]);
     return dataset;
   });
   var aggregateLabels = lines.map(function(line) { return line.aggregate; });
-  
+
   var aggregateMap = {};
   lines.forEach(function(line) { aggregateMap[line.aggregate] = true; });
   var variableLabel = useSubmissionDate ?
@@ -571,7 +571,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
     "Build ID (click to use Submission Date)";
   var valueLabel = Object.keys(aggregateMap).sort().join(", ") + " " +
     (lines.length > 0 ? lines[0].measure : "");
-  
+
   var markers = [], usedDates = {};
   lines.forEach(function(line) {
     var minDate = Math.min.apply(Math, line.values.map(function(point) { return point.x; }));
@@ -639,14 +639,14 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
           y: (lineIndex * lineHeight) + "em",
         }).text("\u2014 ").style({"font-weight": "bold", "stroke": line.color});
       });
-      
+
       // Reposition element
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
       if (x + bbox.width + 50 > $("#evolutions svg").width()) x -= bbox.width + 40;
       d3.select("#evolutions .mg-active-datapoint-container")
         .attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
-      
+
       // Add background
       var padding = 10;
       d3.select("#evolutions .active-datapoint-background").remove(); // Remove old background
@@ -707,14 +707,14 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
           y: (lineIndex * lineHeight) + "em",
         }).text("\u2014 ").style({"font-weight": "bold", "stroke": line.color});
       });
-      
+
       // Reposition element
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
       var bbox = legend[0][0].getBBox();
       if (x + bbox.width + 50 > $("#submissions svg").width()) x -= bbox.width + 40;
       d3.select("#submissions .mg-active-datapoint-container")
         .attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
-      
+
       // Add background
       var padding = 10;
       d3.select("#submissions .active-datapoint-background").remove(); // Remove old background
@@ -728,7 +728,7 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
       d3.select("#submissions .active-datapoint-background").remove(); // Remove old background
     },
   });
-  
+
   // Set the line colors
   lines.forEach(function(line, i) {
     var lineIndex = i + 1;
@@ -744,13 +744,13 @@ function displayEvolutions(lines, submissionLines, minDate, maxDate, useSubmissi
       .css("fill", line.color).css("stroke", line.color);
     $("#submissions .mg-line" + lineIndex + "-legend-color").css("fill", line.color);
   });
-  
+
   // Reposition and resize text
   $(".mg-x-axis .mg-year-marker text").attr("dy", "5");
   $(".mg-x-axis .label").attr("dy", "20");
   $(".mg-y-axis .label").attr("y", "10").attr("dy", "0");
   $(".mg-marker-text").attr("text-anchor", "start").attr("dy", "18").attr("dx", "5");
-  
+
   // X axis label should also be build time toggle
   $(".mg-x-axis .label").attr("text-decoration", "underline").click(function() {
     var newUseSubmissionDate = $("input[name=build-time-toggle]:checked").val() !== "0" ? 0 : 1;
@@ -773,12 +773,12 @@ var Line = (function(){
     if (typeof channelVersion !== "string") { throw "Bad channelVersion value: must be string"; }
     if (typeof aggregate !== "string") { throw "Bad aggregate value: must be string"; }
     if (!$.isArray(values)) { throw "Bad values value: must be array"; }
-  
+
     this.measure = measure;
     this.channelVersion = channelVersion;
     this.aggregate = aggregate;
     this.values = values || [];
-    
+
     // Assign a color to the line
     var stateString = this.getStateString();
     if (!lineColors.hasOwnProperty(stateString)) {
@@ -803,7 +803,7 @@ var Line = (function(){
   Line.prototype.getStateString = function Line_getTitleString() {
     return this.aggregate + "/" + this.measure + "/" + this.channelVersion;
   };
-  
+
   return Line;
 })();
 
@@ -822,14 +822,14 @@ function saveStateToUrlAndCookie() {
     use_submission_date: $("input[name=build-time-toggle]:checked").val() !== "0" ? 1 : 0,
     sanitize: $("input[name=sanitize-toggle]:checked").val() !== "0" ? 1 : 0,
   };
-  
+
   // Save a few unused properties that are used in the distribution dashboard,
   // since state is shared between the two dashboards
   if (endDate !== undefined) { gInitialPageState.end_date = endDate; }
   if (startDate !== undefined) { gInitialPageState.start_date = startDate; }
   if (cumulative !== undefined) { gInitialPageState.cumulative = cumulative; }
   if (trim !== undefined) { gInitialPageState.trim = trim; }
-  
+
   // Only store these in the state if they are not all selected
   var selected = $("#filter-product").val() || [];
   if (selected.length !== $("#filter-product option").size()) {
@@ -843,13 +843,13 @@ function saveStateToUrlAndCookie() {
   if (selected.length !== $("#filter-arch option").size()) {
     gInitialPageState.arch = selected;
   }
-  
+
   var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
     var value = gInitialPageState[key];
     if ($.isArray(value)) { value = value.join("!"); }
     return encodeURIComponent(key) + "=" + encodeURIComponent(value);
   }).join("&");
-  
+
   // Save to the URL hash if it changed
   var url = "";
   var index = window.location.href.indexOf("#");
@@ -861,25 +861,25 @@ function saveStateToUrlAndCookie() {
     );
     $(".permalink-control input").hide(); // Hide the permalink box again since the URL changed
   }
-  
+
   // Save the state in a cookie that expires in 3 days
   var expiry = new Date();
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
-  
+
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin +
     window.location.pathname.replace(/evo\.html$/, "dist.html") +
     window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
-  
+
   // If advanced settings are not at their defaults, display a notice in the panel header
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !== 1) {
     $("#advanced-settings-toggle").find("span").text(" (modified)");
   } else {
     $("#advanced-settings-toggle").find("span").text("");
   }
-  
+
   // Reload Disqus comments for the new page state
   var identifier = "evo@" + gInitialPageState.measure;
   if (identifier !== gPreviousDisqusIdentifier) {

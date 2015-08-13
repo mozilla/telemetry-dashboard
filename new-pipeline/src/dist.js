@@ -30,7 +30,7 @@ $(function() { Telemetry.init(function() {
     $("#selected-key4"),
   ]
   gInitialPageState = loadStateFromUrlAndCookie();
-  
+
   // Set up settings selectors
   var channelVersions = getHumanReadableOptions("channelVersion", Telemetry.getVersions());
   multiselectSetOptions($("#channel-version"), channelVersions);
@@ -48,7 +48,7 @@ $(function() { Telemetry.init(function() {
   if (gInitialPageState.compare !== undefined) {
     $("#compare").multiselect("select", gInitialPageState.compare);
   }
-  
+
   // Initialize setting values from the page state
   $("#sort-keys").val(gInitialPageState.sort_keys);
   $("input[name=table-toggle][value=" + (gInitialPageState.table !== 0 ? 1 : 0) + "]")
@@ -61,15 +61,15 @@ $(function() { Telemetry.init(function() {
     .prop("checked", true).trigger("change");
   $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !== 0 ? 1 : 0) + "]")
     .prop("checked", true).trigger("change");
-  
+
   updateOptions(function() {
     if (gInitialPageState.product !== null) {
-      $("#filter-product").multiselect("select", gInitialPageState.product); 
+      $("#filter-product").multiselect("select", gInitialPageState.product);
     } else {
       $("#filter-product").multiselect("selectAll", false).multiselect("updateButtonText");
     }
     if (gInitialPageState.arch !== null) {
-      $("#filter-arch").multiselect("select", gInitialPageState.arch); 
+      $("#filter-arch").multiselect("select", gInitialPageState.arch);
     } else {
       $("#filter-arch").multiselect("selectAll", false).multiselect("updateButtonText");
     }
@@ -83,13 +83,13 @@ $(function() { Telemetry.init(function() {
     } else {
       $("#filter-process-type").multiselect("selectAll", false).multiselect("updateButtonText");
     }
-    
+
     if (gInitialPageState.os !== null) { // We accept values such as "WINNT", as well as "WINNT,6.1"
       $("#filter-os").multiselect("select", expandOSs(gInitialPageState.os));
     } else {
       $("#filter-os").multiselect("selectAll", false).multiselect("updateButtonText");
     }
-    
+
     for (var filterName in gFilters) {
       var selector = gFilters[filterName];
       // Only apply the select all change to the product and OS selector
@@ -98,7 +98,7 @@ $(function() { Telemetry.init(function() {
         gPreviousFilterAllSelected[selector.attr("id")] = selected.length === options.length;
       }
     }
-    
+
     $("#channel-version").change(function() {
       updateOptions(function() { $("#measure").trigger("change"); });
     });
@@ -129,7 +129,7 @@ $(function() { Telemetry.init(function() {
           gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length;
         }
         updateOSs();
-        
+
         calculateHistograms(function(histogramsMap, evolutionsMap) {
           // histogramsMap is a mapping from keyed histogram keys
           // (or "" if not a keyed histogram) to lists of histograms
@@ -195,18 +195,18 @@ $(function() { Telemetry.init(function() {
           }).sort(function(entry1, entry2) { // Sort by the desired aggregate
             return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
           });
-          
+
           gAxesSelectors.forEach(function(selector, i) {
             var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
             var options = getHumanReadableOptions("key", keys);
             multiselectSetOptions(selector, options);
-            
+
             // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
             if ($this.attr("id") === "sort-keys") {
               gInitialPageState.keys = options.map(function(option) { return option[0] })
                 .filter(function(value, i) { return i < 4; });
             }
-            
+
             // Select i-th key if not possible
             if (i < options.length) { selector.multiselect("select", options[i][0]); }
           });
@@ -223,12 +223,12 @@ $(function() { Telemetry.init(function() {
               }
             });
           }
-          
+
           $("#selected-key1").trigger("change");
         }, $("input[name=sanitize-toggle]:checked").val() !== "0");
       }, 0);
     });
-    
+
     $([
       "#selected-key1", "#selected-key2", "#selected-key3", "#selected-key4",
       "input[name=table-toggle]", "input[name=cumulative-toggle]", "input[name=trim-toggle]"
@@ -257,7 +257,7 @@ $(function() { Telemetry.init(function() {
     // Perform a full display refresh
     $("#measure").trigger("change");
   });
-  
+
   // Automatically resize range bar
   $(window).resize(function() {
     var dateControls = $("#date-range-controls");
@@ -266,7 +266,7 @@ $(function() { Telemetry.init(function() {
   $("#advanced-settings").on("shown.bs.collapse", function () {
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-    
+
     // Scroll the advanced settings into view when opened
     $(this).get(0).scrollIntoView({behavior: "smooth"});
   });
@@ -319,10 +319,10 @@ function calculateHistograms(callback, sanitize) {
   var channelVersion = $("#channel-version").val();
   var measure = $("#measure").val();
   var comparisonName = $("#compare").val();
-  
+
   // Mapping from option values to lists of filter sets
   var filterSetsMapping = getFilterSetsMapping(gFilters, comparisonName !== "" ? comparisonName : null);
-  
+
   var totalFilters = 0;
   for (var option in filterSetsMapping) { totalFilters += filterSetsMapping[option].length; }
 
@@ -334,17 +334,17 @@ function calculateHistograms(callback, sanitize) {
     }, [], false);
     return;
   }
-  
+
   var useSubmissionDate = $("input[name=build-time-toggle]:checked").val() !== "0";
-  
+
   // Mapping from labels (the keys in keyed histograms) to lists of combined filtered evolutions
   // (one per comparison option, combined from all filter sets in that option)
   var fullEvolutionsMap = {};
-  
+
   // Map from labels to lists of options in the order that they were done being processed,
   // rather than the order they appeared in
   var optionValues = {};
-  
+
   // Go through each option being compared by
   var filterSetsCount = 0, totalFiltersCount = 0;
   var filterSetsMappingOptions = Object.keys(filterSetsMapping);
@@ -359,7 +359,7 @@ function calculateHistograms(callback, sanitize) {
         function(evolutionMap) {
           totalFiltersCount ++; filtersCount ++;
           indicate("Updating histograms... " + Math.round(100 * totalFiltersCount / totalFilters) + "%");
-          
+
           for (var label in evolutionMap) {
             if (fullEvolutionMap.hasOwnProperty(label)) {
               fullEvolutionMap[label] = fullEvolutionMap[label].combine(evolutionMap[label]);
@@ -367,11 +367,11 @@ function calculateHistograms(callback, sanitize) {
               fullEvolutionMap[label] = evolutionMap[label];
             }
           }
-          
+
           // Check if we have loaded all the needed filters in the current filter set
           if (filtersCount === filterSets.length) {
             filterSetsCount ++;
-            
+
             // Make a list of evolutions and option labels for each label in the evolution
             for (var label in fullEvolutionMap) {
               if (sanitize) { fullEvolutionMap[label] = fullEvolutionMap[label].sanitized(); }
@@ -380,15 +380,15 @@ function calculateHistograms(callback, sanitize) {
                 fullEvolutionsMap[label].push(fullEvolutionMap[label]);
               }
               if (!optionValues.hasOwnProperty(label)) { optionValues[label] = []; }
-              
+
               // Add the current option value being compared by
               optionValues[label].push(filterSetsMappingOption);
             }
-            
+
             // Check if we have loaded all the filter set collections
             if (filterSetsCount === filterSetsMappingOptions.length) {
               indicate();
-              
+
               processHistograms(fullEvolutionsMap, optionValues, comparisonName, callback)
             }
           }
@@ -456,7 +456,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true : shouldUpdateRangebar;
 
   gCurrentDateRangeUpdateCallback = callback || function() {};
-  
+
   if (dates.length === 0) {
     $("#date-range").prop("disabled", true);
     $("#range-bar").hide();
@@ -465,7 +465,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   }
   $("#date-range").prop("disabled", false);
   $("#range-bar").show();
-  
+
   var timeCutoff = moment.utc().add(1, "years").toDate().getTime();
   if (dates[dates.length - 1] > timeCutoff) {
     dates = dates.filter(function(date) { return date < timeCutoff });
@@ -495,7 +495,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   }, function(chosenStartMoment, chosenEndMoment, label) {
     updateDateRange(gCurrentDateRangeUpdateCallback, dates, true);
   });
-  
+
   // First load, update the date picker from the page state
   var shouldLoadDateRange = !gLoadedDateRangeFromState &&
     gInitialPageState.start_date !== null &&
@@ -510,7 +510,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
       gPreviousMinMoment = minMoment;
       gPreviousMaxMoment = maxMoment;
     }
-    
+
     // If advanced settings are not at their defaults, expand the settings pane on load
     var advancedSettingsModified = gInitialPageState.use_submission_date !== 0 ||
       gInitialPageState.table !== 0 ||
@@ -522,7 +522,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
       $("#advanced-settings-toggle").click();
     }
   }
-  
+
   // If the selected date range is now out of bounds, or the bounds were updated
   // programmatically and changed, select the entire range
   var pickerStartDate = picker.startDate.format("YYYY-MM-DD");
@@ -538,7 +538,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
     pickerStartDate = minMoment; pickerEndDate = maxMoment;
   }
   gPreviousMinMoment = minMoment; gPreviousMaxMoment = maxMoment;
-  
+
   // Rebuild rangebar if it was changed by something other than the user
   if (shouldUpdateRangebar) {
     var rangeBarControl = RangeBar({
@@ -568,10 +568,10 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
       moment(pickerEndDate).add(1, "days").toDate(),
     ]]);
   }
-  
+
   var min = moment.utc(pickerStartDate).toDate(), max = moment.utc(pickerEndDate).toDate();
   var filteredDates = dates.filter(function(date) { return min <= date && date <= max; });
-  
+
   if (filteredDates.length == 0) {
     if (dates.length === 0) {
       $("#date-range").prop("disabled", true);
@@ -643,8 +643,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       if (trimRight < minTrimRight) { minTrimRight = trimRight; }
     });
   }
-  
-  
+
   if (histogramsList.length <= 1) { // Only one histograms set
     // Only show one set of axes
     if (histogramsList.length === 1 && histogramsList[0].histograms.length === 1) {
@@ -669,18 +668,18 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
         $(".scalar-only").hide();
       }
       $("#summary").show();
-      
+
     } else {
       $("#summary").hide();
     }
-    
+
     $("#plots").removeClass("col-md-11").addClass("col-md-9");
     gAxesList.forEach(function(axes) { $(axes).parent().parent().hide(); });
     $(gAxesList[0]).show();
     var axesContainer = $(gAxesList[0]).parent().parent();
     axesContainer.removeClass("col-md-6").addClass("col-md-12").show();
     axesContainer.find("h3").hide(); // Hide the graph title as it doesn't need one
-    
+
     if (histogramsList.length > 0) {
       displaySingleHistogramSet(
         $("#distribution1").get(0), useTable,
@@ -732,7 +731,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     $(axes).find(".mg-missing-pane").remove();
     return;
   }
-  
+
   // All histograms must have the same buckets and be of the same kind
   var starts = histograms[0].map(function(count, start, end, i) { return start; });
   var ends = histograms[0].map(function(count, start, end, i) { return end; });
@@ -740,7 +739,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   var countsList = histograms.map(function(histogram) {
     return histogram.map(function(count, start, end, i) { return count; });
   });
-  
+
   // Show cumulative histogram by adding up all the previous data points
   if (cumulative) {
     countsList = countsList.map(function(counts) {
@@ -748,7 +747,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       return counts.map(function(count) { return total += count; });
     });
   }
-  
+
   // Trim buckets according to the trim values
   while (trimLeft) {
     starts.shift(); ends.shift();
@@ -766,13 +765,13 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
     return;
   }
-  
+
   var distributionSamples = countsList.map(function(counts, i) {
     return counts.map(function(count, j) {
       return {value: j, count: (count / histograms[i].count) * 100};
     });
   });
-  
+
   // Plot the data using MetricsGraphics
   if (histograms.length === 1) { // One histogram available, display as histogram
     var histogram = histograms[0];
@@ -805,7 +804,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var barWidth = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
         var x = parseFloat(offset.replace(/^translate\(([-\d\.]+).*$/, "$1"));
         offset = "translate(" + x + ",60)";
-        
+
         var legend = d3.select(axes).select(".mg-active-datapoint")
           .text(label).attr("transform", offset)
           .attr("x", barWidth / 2).attr("y", "0").attr("text-anchor", "middle")
@@ -813,7 +812,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         legend.append("tspan").attr({x: barWidth / 2, y: "1.1em"})
           .text(histogram.measure + ": " + count + " samples (" + percentage + ")")
           .attr("text-anchor", "middle");
-        
+
         var bbox = legend[0][0].getBBox();
         if (x - bbox.width / 2 < 0) {
           offset = "translate(" + (bbox.width / 2 + 10) + ",60)";
@@ -823,7 +822,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
           offset = "translate(" + ($(axes).find("svg").width() - bbox.width / 2 - 10) + ",60)";
           legend.attr("transform", offset);
         }
-        
+
         // Add background
         var padding = 5;
         d3.select(axes).select(".active-datapoint-background").remove(); // Remove old background
@@ -837,7 +836,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         d3.select(axes).select(".active-datapoint-background").remove(); // Remove old background
       },
     });
-    
+
     // Extend the Y axis ticks to cover the last bucket
     var barWidth = parseFloat($(axes).find(".mg-rollover-rects:last-child rect").attr("width"))
     $(axes).find(".mg-extended-y-ticks").each(function(i, yTick) {
@@ -908,14 +907,14 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
             y: (lineIndex * lineHeight) + "em"
           }).text("\u2014 ").style({"font-weight": "bold", "stroke": entry.color});
         });
-        
+
         // Reposition element
         var x = parseInt(rolloverCircle.getAttribute("cx")) + 20, y = 40;
         var bbox = legend[0][0].getBBox();
         if (x + bbox.width + 50 > $(axes).find("svg").width()) x -= bbox.width + 40;
         d3.select(axes).select(".mg-active-datapoint-container")
           .attr("transform", "translate(" + (x + bbox.width) + "," + (y + 15) + ")");
-        
+
         // Add background
         var padding = 10;
         d3.select(axes).select(".active-datapoint-background").remove(); // Remove old background
@@ -937,7 +936,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       $(axes).find(".mg-line" + lineIndex + "-legend-color").css("fill", colors[i]);
     });
   }
-  
+
   // Reposition and resize text
   $(axes).find(".mg-x-axis .label").attr("dy", "1.2em");
   $(axes).find(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
@@ -945,7 +944,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     if ($(text).text() === "NaN") {
       text.parentNode.removeChild(text);
     }
-    
+
     // Move the labels to the right side of the ticks to make it clearer which bar they label
     $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");
   });
@@ -1009,13 +1008,13 @@ function saveStateToUrlAndCookie() {
     start_date: moment(picker.startDate).format("YYYY-MM-DD"),
     end_date: moment(picker.endDate).format("YYYY-MM-DD"),
   };
-  
+
   // Save a few unused properties that are used in the evolution dashboard,
   // since state is shared between the two dashboards
   if (minChannelVersion !== undefined) {
     gInitialPageState.min_channel_version = minChannelVersion;
   }
-  
+
   var selected = $("#compare").val();
   if (selected !== "") { gInitialPageState.compare = selected; }
   var selected = gAxesSelectors.map(function(selector) { return selector.val(); })
@@ -1043,13 +1042,13 @@ function saveStateToUrlAndCookie() {
   if (selected.length !== $("#filter-process-type option").size()) {
     gInitialPageState.processType = selected;
   }
-  
+
   var stateString = Object.keys(gInitialPageState).sort().map(function(key) {
     var value = gInitialPageState[key];
     if ($.isArray(value)) { value = value.join("!"); }
     return encodeURIComponent(key) + "=" + encodeURIComponent(value);
   }).join("&");
-  
+
   // Save to the URL hash if it changed
   var url = "";
   var index = window.location.href.indexOf("#");
@@ -1066,13 +1065,13 @@ function saveStateToUrlAndCookie() {
   var expiry = new Date();
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
-  
+
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin +
     window.location.pathname.replace(/dist\.html$/, "evo.html") +
     window.location.hash;
   $("#switch-views").attr("href", dashboardURL);
-  
+
   // Update export links with the new histogram
   if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].histograms.length === 1) {
     if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
@@ -1103,7 +1102,7 @@ function saveStateToUrlAndCookie() {
   } else {
     $("#export-csv, #export-json").hide();
   }
-  
+
   // If advanced settings are not at their defaults, display a notice in the panel header
   var start = gInitialPageState.start_date, end = gInitialPageState.end_date;
   if (gCurrentMinDate !== null) {
@@ -1111,7 +1110,7 @@ function saveStateToUrlAndCookie() {
   } else {
     var minMoment = start, maxMoment = end;
   }
-  
+
   var advancedSettingsModified = gInitialPageState.use_submission_date !== 0 ||
     gInitialPageState.table !== 0 ||
     gInitialPageState.cumulative !== 0 ||
@@ -1123,7 +1122,7 @@ function saveStateToUrlAndCookie() {
   } else {
     $("#advanced-settings-toggle").find("span").text("");
   }
-  
+
   // Reload Disqus comments for the new page state
   var identifier = "dist@" + gInitialPageState.measure;
   if (identifier !== gPreviousDisqusIdentifier) {
