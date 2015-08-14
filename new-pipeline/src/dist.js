@@ -614,11 +614,27 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   } else { // Multiple histograms available, display as overlaid lines
     var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
     var colors = countsList.map(function(counts, i) { return goodColors[i % goodColors.length]; });
+    
+    // Add median markers
+    var markers = [];
+    histograms.forEach(function(histogram) {
+      var median = histogram.percentile(50);
+      var index = 0;
+      while (index < starts.length && starts[index] < median) { index ++; }
+      index --;
+      index += (median - starts[index]) / (ends[index] - starts[index]); // Linear interpolation within bucket
+      markers.push({value: index, label: ""});
+    });
+    
+    distributionSamples.forEach(function(entries) {
+      entries.forEach(function(entry) { entry.value += 0.5; });
+    });
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
       full_width: true, height: $(axes).width() * 0.6,
       left: 70,
+      markers: markers,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
@@ -633,22 +649,22 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var rolloverCircle, entries;
         var start, end;
         if (d.values) {
-          start = starts[d.values[0].value]; end = ends[d.values[0].value];
+          start = starts[d.values[0].value - 0.5]; end = ends[d.values[0].value - 0.5];
           rolloverCircle = $(axes).find(".mg-line-rollover-circle.mg-area" + d.values[0].line_id + "-color").get(0);
           entries = d.values.map(function(datum) {
             return {
               measure: histograms[datum.line_id - 1].measure,
-              count: formatNumber(countsList[datum.line_id - 1][datum.value]),
+              count: formatNumber(countsList[datum.line_id - 1][datum.value - 0.5]),
               percentage: Math.round(datum.count * 100) / 100 + "%",
               color: colors[datum.line_id - 1],
             };
           });
         } else {
-          start = starts[d.value]; end = ends[d.value];
+          start = starts[d.value - 0.5]; end = ends[d.value - 0.5];
           rolloverCircle = $(axes).find(".mg-line-rollover-circle.mg-area" + d.line_id + "-color").get(0);
           entries = [{
             measure: histograms[d.line_id - 1].measure,
-            count: formatNumber(countsList[d.line_id - 1][d.value]),
+            count: formatNumber(countsList[d.line_id - 1][d.value - 0.5]),
             percentage: Math.round(d.count * 100) / 100 + "%",
             color: colors[d.line_id - 1],
           }];
@@ -691,6 +707,9 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       $(axes).find(".mg-main-line.mg-line" + lineIndex + "-color").css("stroke", colors[i]);
       $(axes).find(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", colors[i]).css("stroke", colors[i]);
       $(axes).find(".mg-line" + lineIndex + "-legend-color").css("fill", colors[i]);
+    });
+    $(axes).find(".mg-markers line").each(function(i, marker) {
+      $(marker).css("stroke", colors[i]);
     });
   }
   
