@@ -2,6 +2,16 @@ var gInitialPageState = null;
 var gFilterChangeTimeout = null;
 var gFilters = null, gPreviousFilterAllSelected = {};
 
+var gDefaultAggregates = [
+  ["median",          "Median",          function(evolution) { return evolution.means(); }],
+  ["mean",            "Mean",            function(evolution) { return evolution.percentiles(5); }],
+  ["5th-percentile",  "5th percentile",  function(evolution) { return evolution.percentiles(25); }],
+  ["25th-percentile", "25th percentile", function(evolution) { return evolution.percentiles(50); }],
+  ["75th-percentile", "75th percentile", function(evolution) { return evolution.percentiles(75); }],
+  ["95th-percentile", "95th percentile", function(evolution) { return evolution.percentiles(95); }],
+  ["submissions",     "Submissions",     function(evolution) { return evolution.submissions(); }],
+];
+
 indicate("Initializing Telemetry...");
 
 $(function() { Telemetry.init(function() {
@@ -118,16 +128,7 @@ $(function() { Telemetry.init(function() {
       updateOptions(function() { $("#aggregates").trigger("change"); });
     });
     $("#measure").change(function(e) {
-      var parts = $("#max-channel-version").val().split("/");
-      Telemetry.getHistogramInfo(parts[0], parts[1], $("#measure").val(), false, function(kind, description, buckets, dates) {
-        if (kind === "boolean" || kind === "flag") { // Boolean or flag histogram selected
-          var aggregates = $("#aggregates").val() || [];
-          if (aggregates.length === 0 || aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
-            $("#aggregates").multiselect("deselectAll", false).multiselect("updateButtonText").multiselect("select", ["mean"]);
-          }
-        }
-        $("#aggregates").trigger("change");
-      });
+      updateAggregates(function() { $("#aggregates").trigger("change"); });
     });
     $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function(e) {
       var $this = $(this);
@@ -162,6 +163,45 @@ $(function() { Telemetry.init(function() {
     $(this).get(0).scrollIntoView({behavior: "smooth"}); // Scroll the advanced settings into view when opened
   });
 }); });
+
+function updateAggregates(callback) {
+  var channelVersions = Telemetry.getVersions($("#min-channel-version").val(), $("#max-channel-version").val());
+  var realKind = null, realBuckets = null;
+  var versionCount = 0;
+  channelVersions.forEach(function(channelVersion) {
+    var parts = channelVersion.split("/");
+    Telemetry.getHistogramInfo(parts[0], parts[1], $("#measure").val(), null, function(kind, description, buckets, dates) {
+      versionCount ++;
+      realKind = realKind || kind; realBuckets = realBuckets || buckets;
+      
+      if (versionCount == channelVersions.length) {
+        assert (typeof realKind === "string", "Kind must be specified");
+        assert ($.isArray(realBuckets), "Buckets must be specified");
+        histogramInfoRetrieved = true;
+
+        // Update the aggregate selector with the individual histogram buckets
+        var bucketPercentageOptions = getHumanReadableOptions("buckets", realBuckets);
+        var aggregates = gDefaultAggregates.map(function(entry) { return [entry[0], entry[1]]; })
+          .concat([null]).concat(bucketPercentageOptions);
+        multiselectSetOptions($("#aggregates"), aggregates);
+        
+        var aggregates = $("#aggregates").val() || [];
+        if (realKind === "boolean" || realKind === "flag") { // Boolean or flag histogram selected
+          if (aggregates.length === 0 || aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
+            $("#aggregates").multiselect("deselectAll", false).multiselect("updateButtonText").multiselect("select", ["mean"]);
+          }
+        } else if (realKind === "enumerated") {
+          var option = bucketPercentageOptions[0][0];
+          if (aggregates.length === 0 || aggregates.indexOf(option) < 0) { // Mean not selected, select just the mean
+            $("#aggregates").multiselect("deselectAll", false).multiselect("updateButtonText").multiselect("select", [option]);
+          }
+        }
+        
+        callback();
+      }
+    });
+  });
+}
 
 function updateOptions(callback) {
   var fromVersion = $("#min-channel-version").val(), toVersion = $("#max-channel-version").val();
@@ -231,16 +271,6 @@ function calculateEvolutions(callback) {
 }
 
 function getHistogramEvolutionLines(channel, version, measure, aggregates, filterSets, sanitize, useSubmissionDate, callback) {
-  var aggregateSelector = {
-    "mean":            function(evolution) { return evolution.means(); },
-    "5th-percentile":  function(evolution) { return evolution.percentiles(5); },
-    "25th-percentile": function(evolution) { return evolution.percentiles(25); },
-    "median":          function(evolution) { return evolution.percentiles(50); },
-    "75th-percentile": function(evolution) { return evolution.percentiles(75); },
-    "95th-percentile": function(evolution) { return evolution.percentiles(95); },
-    "submissions":     function(evolution) { return evolution.submissions(); },
-  };
-
   var filtersCount = 0;
   var lines = [];
   var finalEvolution = null;
@@ -263,8 +293,26 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
           return;
         }
         
+        // Get aggregator names and selectors
+        var aggregateSelector = {};
+        gDefaultAggregates.forEach(function(entry) { aggregateSelector[entry[0]] = entry[2]; });
+        finalEvolution.buckets.forEach(function(start, bucketIndex) {
+          var option = getHumanReadableOptions("buckets", [start])[0][0];
+          aggregateSelector[option] = function(evolution) {
+            return evolution.map(function(histogram) {
+              return 100 * histogram.values[bucketIndex] / histogram.count;
+            });
+          }
+        });
+        var aggregateNames = {};
+        gDefaultAggregates.forEach(function(entry) { aggregateNames[entry[0]] = entry[1]; });
+        getHumanReadableOptions("buckets", finalEvolution.buckets).forEach(function(entry) {
+          aggregateNames[entry[0]] = entry[1];
+        });
+        
         // Obtain the X and Y values of points
         var aggregateValues = aggregates.map(function(aggregate) {
+          assert (aggregateSelector.hasOwnProperty(aggregate), "Aggregate " + aggregate + " is not valid");
           return aggregateSelector[aggregate](finalEvolution);
         });
         var submissionValues = finalEvolution.submissions();
@@ -277,9 +325,11 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
         
         // Create line objects
         var aggregateLines = finalAggregateValues.map(function(values, i) {
-          return new Line(measure, channel + "/" + version, aggregates[i], values);
+          assert (aggregateNames.hasOwnProperty(aggregates[i]), "Aggregate " + aggregates[i] + " is invalid");
+          return new Line(measure, channel + "/" + version, aggregateNames[aggregates[i]], values);
         });
-        var submissionLines = [new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues)];
+        assert (aggregateNames.hasOwnProperty("submissions"), "Aggregate submissions is invalid");
+        var submissionLines = [new Line(measure, channel + "/" + version, aggregateNames["submissions"], finalSubmissionValues)];
         
         callback(aggregateLines, submissionLines, finalEvolution !== null ? finalEvolution.description : null, finalEvolution !== null ? finalEvolution.kind : null);
       }
