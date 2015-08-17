@@ -576,19 +576,22 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var offset = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
         var barWidth = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
         var x = parseFloat(offset.replace(/^translate\(([-\d\.]+).*$/, "$1"));
-        offset = "translate(" + x + ",60)";
+        offset = "translate(" + x + ",30)";
         
         var legend = d3.select(axes).select(".mg-active-datapoint").text(label).attr("transform", offset)
           .attr("x", barWidth / 2).attr("y", "0").attr("text-anchor", "middle").style("fill", "white");
         legend.append("tspan").attr({x: barWidth / 2, y: "1.1em"}).text(histogram.measure + ": " + count + " samples (" + percentage + ")").attr("text-anchor", "middle");
         
         var bbox = legend[0][0].getBBox();
+        var barWidth = parseFloat($(axes).find(".mg-rollover-rects:last-child rect").attr("width"))
         if (x - bbox.width / 2 < 0) {
-          offset = "translate(" + (bbox.width / 2 + 10) + ",60)";
+          offset = "translate(" + (bbox.width / 2 - barWidth / 2 + 5) + ",30)";
           legend.attr("transform", offset);
         }
-        if (x + bbox.width / 2 > $(axes).find("svg").width()) {
-          offset = "translate(" + ($(axes).find("svg").width() - bbox.width / 2 - 10) + ",60)";
+        var width = $(axes).find("svg").width();
+        if (x + bbox.width / 2 + barWidth > width) {
+          offset = "translate(" + (width - bbox.width / 2 - barWidth / 2 - 5) + ",30)";
+          console.log(offset)
           legend.attr("transform", offset);
         }
         
