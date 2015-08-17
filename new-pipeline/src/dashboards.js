@@ -273,7 +273,7 @@ function getFilterSetsMapping(filters, comparisonName) {
 function getHumanReadableOptions(filterName, options) {
   var channelVersionOrder = {"nightly": 0, "aurora": 1, "beta": 2, "release": 3};
   var productNames = {"Firefox": "Firefox Desktop", "Fennec": "Firefox Mobile"};
-  var productOrder = {"Firefox": 0, "Fennec": 1, "Thunderbird": 2};
+  var productOrder = {"Firefox": 0, "Fennec": 1, "Thunderbird": 2, "B2G": 3};
   var systemNames = {"Windows_NT": "Windows", "Darwin": "OS X"};
   var systemOrder = {"Windows_NT": 1, "Darwin": 2};
   var windowsVersionNames = {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"};
@@ -287,7 +287,8 @@ function getHumanReadableOptions(filterName, options) {
   var e10sNames = {"false": "no e10s", "true": "e10s"};
   var processTypeNames = {"false": "main process", "true": "child process"};
   if (filterName === "application") {
-    return options.sort(function(a, b) {
+    var knownProducts = [], unknownProducts = [];
+    options.sort(function(a, b) {
       // Sort by explicit product order if available
       if (productOrder.hasOwnProperty(a) && productOrder.hasOwnProperty(b)) {
         return productOrder[a] - productOrder[b];
@@ -297,9 +298,14 @@ function getHumanReadableOptions(filterName, options) {
         return 1;
       }
       return ((a < b) ? -1 : ((a > b) ? 1 : 0));
-    }).map(function(option) {
-      return [option, productNames.hasOwnProperty(option) ? productNames[option] : option];
+    }).forEach(function(option) {
+      if (productOrder.hasOwnProperty(option)) {
+        knownProducts.push([option, productNames.hasOwnProperty(option) ? productNames[option] : option]);
+      } else {
+        unknownProducts.push([option, productNames.hasOwnProperty(option) ? productNames[option] : option]);
+      }
     });
+    return knownProducts.concat([null]).concat(unknownProducts);
   } else if (filterName === "os" || filterName === "osVersion") {
     var entries = options.map(function(option) {
       var parts = option.split(",");
