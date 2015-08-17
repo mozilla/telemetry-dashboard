@@ -5,9 +5,7 @@ $(document).ready(function() {
     var options = {
       enableFiltering: true,
       enableCaseInsensitiveFiltering: true,
-      filterBehavior: "text",
-      enableHTML: true, // Allow HTML in the selects, used by the measure selector - be careful to avoid XSS from this
-      includeSelectAllOption: true,
+      filterBehavior: "both", // Filter by both the value and the text of the option
       allSelectedText: $this.data("all-selected") !== undefined ? $this.data("all-selected") : "Any",
       enableClickableOptGroups: true,
       maxHeight: 500,
@@ -19,6 +17,10 @@ $(document).ready(function() {
     };
     
     // Horrible hacks to make some very specific functionality work
+    if (["aggregates", "filter-os"].indexOf($this.attr("id")) >= 0) {
+      // Add the Select All option to some of the selectors
+      options.includeSelectAllOption = true;
+    }
     if ($this.attr("id") === "measure") { // Measure should search as if spaces were underscores
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {

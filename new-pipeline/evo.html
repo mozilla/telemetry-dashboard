@@ -19,13 +19,14 @@
 <body>
     <div class="container-fluid">
         <header>
-            <form class="navbar-form" style="float: right; margin: 0">
+            <form class="navbar-form inline pull-right">
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
                 <a href="./dist.html" class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</a>
                 <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
                 <a href="./tutorial.html#EvolutionDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
                 <span class="permalink-control"></span>
             </form>
-            <h1>Evolution Dashboard V4 <span class="label label-warning" style="font-size: 12px">DRAFT</span></h1>
+            <h1>Evolution Dashboard V4</h1>
         </header>
         <div class="row">
             <div class="col-md-12">
@@ -56,6 +57,7 @@
                     <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type" multiple></select>
                 </h2>
                 <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
+                <h2 style="font-size: 18px; margin-bottom: 0">Showing graphs for <select id="selected-key" class="multiselect" title="Selected key"></select></h3>
                 <figure class="col-md-12">
                     <div class="col-md-12" id="evolutions"></div>
                 </figure>

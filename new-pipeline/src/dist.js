@@ -120,9 +120,9 @@ $(function() { Telemetry.init(function() {
             return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
           });
           
+          var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
+          var options = getHumanReadableOptions("key", keys);
           gAxesSelectors.forEach(function(selector, i) {
-            var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
-            var options = getHumanReadableOptions("key", keys);
             multiselectSetOptions(selector, options);
             
             // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
@@ -476,7 +476,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var axesContainer = $(gAxesList[0]).parent().parent();
     axesContainer.removeClass("col-md-6").addClass("col-md-12").show();
     axesContainer.find("h3").hide(); // Hide the graph title as it doesn't need one
-    
+    $("#sort-keys-option").hide();
+
     if (histogramsList.length > 0) {
       displaySingleHistogramSet($("#distribution1").get(0), useTable, histogramsList[0].histograms, histogramsList[0].title, cumulative, minTrimLeft, minTrimRight, maxPercentage);
     } else {
@@ -489,6 +490,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       var axesContainer = $(axes).parent().parent().show();
       axesContainer.removeClass("col-md-12").addClass("col-md-6").show();
       axesContainer.find("h3").show(); // Show the graph title to allow key selection
+      $("#sort-keys-option").show();
+
       var entry = histogramsList[i] || null;
       if (entry !== null) { // Histogram for this entry actually exists, so draw it
         displaySingleHistogramSet(axes, useTable, entry.histograms, entry.title, cumulative, minTrimLeft, minTrimRight, maxPercentage);
