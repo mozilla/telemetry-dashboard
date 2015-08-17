@@ -1,7 +1,7 @@
 var gInitialPageState = null;
 var gFilterChangeTimeout = null;
 var gFilters = null, gPreviousFilterAllSelected = {};
-var gCurrentLinesMap, gCurrentSubmissionLinesMap;
+var gCurrentLinesMap, gCurrentSubmissionLinesMap, gCurrentKind;
 
 var gDefaultAggregates = [
   ["median",          "Median",          function(evolution) { return evolution.means(); }],
@@ -25,8 +25,6 @@ $(function() { Telemetry.init(function() {
   };
   gInitialPageState = loadStateFromUrlAndCookie();
 
-  // Set up settings selectors
-  $("#aggregates").multiselect("select", gInitialPageState.aggregates);
   multiselectSetOptions($("#min-channel-version, #max-channel-version"), getHumanReadableOptions("channelVersion", Telemetry.getVersions()));
   
   // Select previously selected channel versions, or the latest nightlies if not possible
@@ -177,7 +175,7 @@ $(function() { Telemetry.init(function() {
     $("#selected-key").change(function(e) {
       var key = $("#selected-key").val();
       var lines = gCurrentLinesMap[key], submissionLines = gCurrentSubmissionLinesMap[key];
-      displayEvolutions(lines, submissionLines, $("input[name=build-time-toggle]:checked").val() !== "0");
+      displayEvolutions(lines, submissionLines, $("input[name=build-time-toggle]:checked").val() !== "0", gCurrentKind === "enumerated");
       saveStateToUrlAndCookie();
     });
     
@@ -190,6 +188,7 @@ $(function() { Telemetry.init(function() {
   });
 }); });
 
+var gLoadedAggregatesFromState = false;
 function updateAggregates(callback) {
   var channelVersions = Telemetry.getVersions($("#min-channel-version").val(), $("#max-channel-version").val());
   var realKind = null, realBuckets = null;
@@ -203,24 +202,28 @@ function updateAggregates(callback) {
       if (versionCount == channelVersions.length) {
         assert (typeof realKind === "string", "Kind must be specified");
         assert ($.isArray(realBuckets), "Buckets must be specified");
-        histogramInfoRetrieved = true;
-
-        // Update the aggregate selector with the individual histogram buckets
-        var bucketPercentageOptions = getHumanReadableOptions("buckets", realBuckets);
-        var aggregates = gDefaultAggregates.map(function(entry) { return [entry[0], entry[1]]; })
-          .concat([null]).concat(bucketPercentageOptions);
-        multiselectSetOptions($("#aggregates"), aggregates);
+        gCurrentKind = realKind;
         
         var aggregates = $("#aggregates").val() || [];
-        if (realKind === "boolean" || realKind === "flag") { // Boolean or flag histogram selected
-          if (aggregates.length === 0 || aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
-            $("#aggregates").multiselect("deselectAll", false).multiselect("updateButtonText").multiselect("select", ["mean"]);
+        if (realKind === "enumerated") {
+          var newAggregates = getHumanReadableOptions("buckets", realBuckets);
+          multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+        } else {
+          var newAggregates = gDefaultAggregates.map(function(entry) { return [entry[0], entry[1]]; });
+          if (realKind === "boolean" || realKind === "flag") { // Boolean or flag histogram selected
+            multiselectSetOptions($("#aggregates"), newAggregates, ["mean"]);
+            if (aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
+              $("#aggregates").multiselect("deselectAll", false).multiselect("select", ["mean"]);
+            }
+          } else { // Any other type of histogram
+            multiselectSetOptions($("#aggregates"), newAggregates, ["median"]);
           }
-        } else if (realKind === "enumerated") {
-          var option = bucketPercentageOptions[0][0];
-          if (aggregates.length === 0 || aggregates.indexOf(option) < 0) { // Mean not selected, select just the mean
-            $("#aggregates").multiselect("deselectAll", false).multiselect("updateButtonText").multiselect("select", [option]);
-          }
+        }
+        
+        // Load aggregates from state on first load
+        if (!gLoadedAggregatesFromState) {
+          gLoadedAggregatesFromState = true;
+          $("#aggregates").multiselect("deselectAll", false).multiselect("select", gInitialPageState.aggregates);
         }
         
         callback();
@@ -365,9 +368,9 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
           
           // Create line objects
           aggregateLinesMap[key] = finalAggregateValues.map(function(values, i) {
-            return new Line(measure, channel + "/" + version, aggregates[i], values);
+            return new Line(measure, channel + "/" + version, aggregateNames[aggregates[i]], values);
           });
-          submissionLinesMap[key] = [new Line(measure, channel + "/" + version, "submissions", finalSubmissionValues)];
+          submissionLinesMap[key] = [new Line(measure, channel + "/" + version, aggregateNames["submissions"], finalSubmissionValues)];
         }
         
         callback(aggregateLinesMap, submissionLinesMap, description, kind);
@@ -379,7 +382,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
   }
 }
 
-function displayEvolutions(lines, submissionLines, useSubmissionDate) {
+function displayEvolutions(lines, submissionLines, useSubmissionDate, usePercentages) {
   indicate("Rendering evolutions...");
   
   // filter out empty lines
@@ -431,6 +434,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate) {
     x_label: variableLabel, y_label: valueLabel,
     transition_on_update: false,
     interpolate: "linear",
+    yax_format: usePercentages ? function(y) { return y + "%"; } : function(y) { return y; },
     markers: markers, legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
@@ -455,7 +459,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate) {
       var lineHeight = 1.1;
       lineList.forEach(function(line, i) {
         var lineIndex = i + 1;
-        var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]));
+        var label = legend.append("tspan").attr({x: 0, y: (lineIndex * lineHeight) + "em"}).text(line.getDescriptionString() + ": " + formatNumber(values[i]) + (usePercentages ? "%" : ""));
         legend.append("tspan").attr({x: -label.node().getComputedTextLength(), y: (lineIndex * lineHeight) + "em"})
           .text("\u2014 ").style({"font-weight": "bold", "stroke": line.color});
       });

@@ -149,7 +149,7 @@ function loadStateFromUrlAndCookie() {
 
   // Process the saved state value
   if (typeof pageState.aggregates === "string") {
-    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0; });
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0 || v.startsWith("bucket-"); });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
     else { pageState.aggregates = ["median"]; }
   } else { pageState.aggregates = ["median"]; }
