@@ -68,6 +68,8 @@
     color: white;
 }
 
+#plots h3 { margin-bottom: 0; }
+
 /* MetricsGraphics style overrides */
 .mg-x-axis .label:hover { cursor: pointer; }
 .mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint { font-size: 12px !important; }
