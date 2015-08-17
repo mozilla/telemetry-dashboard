@@ -591,7 +591,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var width = $(axes).find("svg").width();
         if (x + bbox.width / 2 + barWidth > width) {
           offset = "translate(" + (width - bbox.width / 2 - barWidth / 2 - 5) + ",30)";
-          console.log(offset)
           legend.attr("transform", offset);
         }
         
