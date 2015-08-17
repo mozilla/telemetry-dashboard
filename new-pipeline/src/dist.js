@@ -41,7 +41,7 @@ $(function() { Telemetry.init(function() {
   if (gInitialPageState.compare !== undefined) { $("#compare").multiselect("select", gInitialPageState.compare); }
   
   // Initialize setting values from the page state
-  $("#sort-keys").val(gInitialPageState.sort_keys);
+  $("#sort-keys").multiselect("select", gInitialPageState.sort_keys);
   $("input[name=table-toggle][value=" + (gInitialPageState.table !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
