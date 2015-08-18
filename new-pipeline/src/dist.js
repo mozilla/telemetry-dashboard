@@ -531,6 +531,48 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   var countsList = histograms.map(function(histogram) {
     return histogram.map(function(count, start, end, i) { return count; });
   });
+  
+  // For single boolean and flag histograms, display a pie chart instead of a histogram
+  if (histograms.length === 1 && (histograms[0].kind === "boolean" || histograms[0].kind === "flag")) {
+    new d3pie(axes, {
+      size: {canvasHeight: 600, canvasWidth: $(axes).parent().width()},
+      data: {
+        content: countsList[0].map(function(count, i) {
+          var label;
+          if (ends[i] === Infinity) {
+           label = "sample value \u2265 " + formatNumber(starts[i]);
+          } else {
+           label = formatNumber(starts[i]) + " \u2264 sample value < " + formatNumber(ends[i]);
+          }
+          return {label: label, value: count};
+        }).filter(function(entry) { return entry.value > 0; }),
+      },
+      labels: {
+        mainLabel: {
+          color: "black",
+          fontSize: 18,
+        },
+        percentage: {
+          color: "white",
+          fontSize: 18,
+          decimalPlaces: 2,
+        },
+      },
+      effects: {
+        load: {effect: "none"},
+        pullOutSegmentOnClick: {effect: "none"},
+      },
+      tooltips: {
+        enabled: true,
+        string: "{value} ({percentage}%)",
+        placeholderParser: function(index, data) {
+          data.value = formatNumber(data.value) + " samples";
+        },
+      },
+    });
+    return;
+  }
+  
   if (cumulative) { // Show cumulative histogram by adding up all the previous data points
     countsList = countsList.map(function(counts) {
       var total = 0;
