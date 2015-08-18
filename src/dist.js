@@ -92,15 +92,17 @@ Telemetry.init(function() {
     saveStateToUrlAndCookie();
   });
 
-  // Automatically resize range bar
+  var resizeUpdateTimeout = null;
   $(window).resize(function() {
+    // Automatically resize range bar
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-  });
-  $("#advanced-settings").on("shown.bs.collapse", function () {
-    var dateControls = $("#date-range-controls");
-    $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
-    $(this).get(0).scrollIntoView({behavior: "smooth"}); // Scroll the advanced settings into view when opened
+    
+    // Resize the main plot (MetricsGraphics has a full_width option, but that breaks zooming for plots)
+    if (resizeUpdateTimeout !== null) { clearTimeout(resizeUpdateTimeout); }
+    resizeUpdateTimeout = setTimeout(function() {
+      $("input[name=table-toggle]").trigger("change");
+    }, 50);
   });
 });
 
@@ -419,7 +421,8 @@ function displayHistogram(histogram, dates, useTable, cumulative, trim) {
     data: distributionSamples,
     binned: true,
     chart_type: "histogram",
-    full_width: true, height: 600,
+    width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+    height: 600,
     left: 150, right: $(axes).width() / (distributionSamples.length + 1),
     transition_on_update: false,
     target: "#distribution",

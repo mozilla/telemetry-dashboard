@@ -120,9 +120,9 @@ $(function() { Telemetry.init(function() {
             return getAggregate(entry2.histograms) - getAggregate(entry1.histograms);
           });
           
+          var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
+          var options = getHumanReadableOptions("key", keys);
           gAxesSelectors.forEach(function(selector, i) {
-            var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
-            var options = getHumanReadableOptions("key", keys);
             multiselectSetOptions(selector, options);
             
             // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
@@ -168,10 +168,17 @@ $(function() { Telemetry.init(function() {
     $("#measure").trigger("change");
   });
   
-  // Automatically resize range bar
+  var resizeUpdateTimeout = null;
   $(window).resize(function() {
+    // Automatically resize range bar
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
+    
+    // Resize the main plot (MetricsGraphics has a full_width option, but that breaks zooming for plots)
+    if (resizeUpdateTimeout !== null) { clearTimeout(resizeUpdateTimeout); }
+    resizeUpdateTimeout = setTimeout(function() {
+      $("#selected-key1").trigger("change");
+    }, 50);
   });
   $("#advanced-settings").on("shown.bs.collapse", function () {
     var dateControls = $("#date-range-controls");
@@ -476,7 +483,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var axesContainer = $(gAxesList[0]).parent().parent();
     axesContainer.removeClass("col-md-6").addClass("col-md-12").show();
     axesContainer.find("h3").hide(); // Hide the graph title as it doesn't need one
-    
+    $("#sort-keys-option").hide();
+
     if (histogramsList.length > 0) {
       displaySingleHistogramSet($("#distribution1").get(0), useTable, histogramsList[0].histograms, histogramsList[0].title, cumulative, minTrimLeft, minTrimRight, maxPercentage);
     } else {
@@ -489,6 +497,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       var axesContainer = $(axes).parent().parent().show();
       axesContainer.removeClass("col-md-12").addClass("col-md-6").show();
       axesContainer.find("h3").show(); // Show the graph title to allow key selection
+      $("#sort-keys-option").show();
+
       var entry = histogramsList[i] || null;
       if (entry !== null) { // Histogram for this entry actually exists, so draw it
         displaySingleHistogramSet(axes, useTable, entry.histograms, entry.title, cumulative, minTrimLeft, minTrimRight, maxPercentage);
@@ -506,7 +516,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   if (histograms.length === 0) {
     MG.data_graphic({
       chart_type: "missing-data",
-      full_width: true, height: $(axes).width() * 0.6,
+      width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
       target: axes,
     });
     $(axes).find(".mg-missing-pane").remove();
@@ -520,6 +531,48 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   var countsList = histograms.map(function(histogram) {
     return histogram.map(function(count, start, end, i) { return count; });
   });
+  
+  // For single boolean and flag histograms, display a pie chart instead of a histogram
+  if (histograms.length === 1 && (histograms[0].kind === "boolean" || histograms[0].kind === "flag")) {
+    new d3pie(axes, {
+      size: {canvasHeight: 600, canvasWidth: $(axes).parent().width()},
+      data: {
+        content: countsList[0].map(function(count, i) {
+          var label;
+          if (ends[i] === Infinity) {
+           label = "sample value \u2265 " + formatNumber(starts[i]);
+          } else {
+           label = formatNumber(starts[i]) + " \u2264 sample value < " + formatNumber(ends[i]);
+          }
+          return {label: label, value: count};
+        }).filter(function(entry) { return entry.value > 0; }),
+      },
+      labels: {
+        mainLabel: {
+          color: "black",
+          fontSize: 18,
+        },
+        percentage: {
+          color: "white",
+          fontSize: 18,
+          decimalPlaces: 2,
+        },
+      },
+      effects: {
+        load: {effect: "none"},
+        pullOutSegmentOnClick: {effect: "none"},
+      },
+      tooltips: {
+        enabled: true,
+        string: "{value} ({percentage}%)",
+        placeholderParser: function(index, data) {
+          data.value = formatNumber(data.value) + " samples";
+        },
+      },
+    });
+    return;
+  }
+  
   if (cumulative) { // Show cumulative histogram by adding up all the previous data points
     countsList = countsList.map(function(counts) {
       var total = 0;
@@ -553,7 +606,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       data: distributionSamples[0],
       binned: true,
       chart_type: "histogram",
-      full_width: true, height: $(axes).width() * 0.6,
+      width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
       top: 0, left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
       max_y: maxPercentage,
       transition_on_update: false,
@@ -634,7 +688,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
-      full_width: true, height: $(axes).width() * 0.6,
+      width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
       left: 70,
       markers: markers,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves

@@ -20,7 +20,8 @@
 <body>
     <div class="container-fluid">
         <header>
-            <form class="navbar-form inline" style="float: right; margin: 0">
+            <form class="navbar-form inline pull-right">
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
                 <a href="./evo.html" class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</a>
                 <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
                 <a href="./tutorial.html#HistogramDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
@@ -56,31 +57,32 @@
                 </h2>
                 <figure class="col-md-12">
                     <div class="col-md-9" id="plots">
-                        <div class="col-md-6" style="text-align: center">
-                            <h3><select id="selected-key1" class="multiselect" title="Selected keys"></select></h3>
-                            <div style="margin-bottom: 20px; z-index: -1">
-                                <div id="distribution1"></div>
+                        <div class="row">
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key1" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution1"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key2" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution2"></div>
+                                </div>
                             </div>
                         </div>
-                        <div style="clear: right;"></div> <!-- clearfix hack to fix bootstrap issue -->
-                        <div class="col-md-6" style="text-align: center">
-                            <h3><select id="selected-key2" class="multiselect" title="Selected key"></select></h3>
-                            <div style="margin-bottom: 20px; z-index: -1">
-                                <div id="distribution2"></div>
+                        <div class="row">
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key3" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution3"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div style="clear: right;"></div> <!-- clearfix hack to fix bootstrap issue -->
-                        <div class="col-md-6" style="text-align: center">
-                            <h3><select id="selected-key3" class="multiselect" title="Selected key"></select></h3>
-                            <div style="margin-bottom: 20px; z-index: -1">
-                                <div id="distribution3"></div>
-                            </div>
-                        </div>
-                        <div style="clear: right;"></div> <!-- clearfix hack to fix bootstrap issue -->
-                        <div class="col-md-6" style="text-align: center">
-                            <h3><select id="selected-key4" class="multiselect" title="Selected key"></select></h3>
-                            <div style="margin-bottom: 20px; z-index: -1">
-                                <div id="distribution4"></div>
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key4" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution4"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -123,7 +125,7 @@
                     <div id="advanced-settings" class="panel-collapse collapse">
                         <div class="panel-body">
                             <form class="form-horizontal">
-                                <div>
+                                <div id="sort-keys-option">
                                     <b>Key sorting:</b> sort the key names in the graph titles by
                                     <select id="sort-keys" class="multiselect" title="sorting criteria">
                                         <option value="submissions">total submissions</option>
@@ -210,6 +212,7 @@
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="lib/metricsgraphics.js"></script>
+    <script src="lib/d3pie.min.js"></script>
     
     <script src="/v2/telemetry.js"></script>
     <script src="src/dashboards.js"></script>
