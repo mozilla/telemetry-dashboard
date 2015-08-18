@@ -532,8 +532,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     return histogram.map(function(count, start, end, i) { return count; });
   });
   
-  // For single boolean and flag histograms, display a pie chart instead of a histogram
-  if (histograms.length === 1 && (histograms[0].kind === "boolean" || histograms[0].kind === "flag")) {
+  // For single boolean and flag charts, display a pie chart instead of a histogram
+  if (histograms.length === 1 && (histograms[0].kind === "boolean" || histograms[0].kind === "flag") && !useTable) {
     new d3pie(axes, {
       size: {canvasHeight: 600, canvasWidth: $(axes).parent().width()},
       data: {
