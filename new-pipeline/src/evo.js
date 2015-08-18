@@ -174,7 +174,14 @@ $(function() { Telemetry.init(function() {
     
     $("#selected-key").change(function(e) {
       var key = $("#selected-key").val();
-      var lines = gCurrentLinesMap[key], submissionLines = gCurrentSubmissionLinesMap[key];
+      var lines, submissionLines;
+      if (key === null) {
+        lines = [];
+        submissionLines = [];
+      } else {
+        lines = gCurrentLinesMap[key];
+        submissionLines = gCurrentSubmissionLinesMap[key];
+      }
       displayEvolutions(lines, submissionLines, $("input[name=build-time-toggle]:checked").val() !== "0", gCurrentKind === "enumerated");
       saveStateToUrlAndCookie();
     });
@@ -227,11 +234,15 @@ function updateAggregates(callback) {
             multiselectSetOptions($("#aggregates"), newAggregates, ["median"]);
           }
         }
-        
+
         // Load aggregates from state on first load
-        if (!gLoadedAggregatesFromState) {
+        newAggregates = newAggregates.map(function(entry) { return entry[0]; })
+        aggregates = gInitialPageState.aggregates.filter(function(aggregate) {
+          return newAggregates.indexOf(aggregate) >= 0;
+        });
+        if (!gLoadedAggregatesFromState && aggregates.length > 0) {
           gLoadedAggregatesFromState = true;
-          $("#aggregates").multiselect("deselectAll", false).multiselect("select", gInitialPageState.aggregates);
+          $("#aggregates").multiselect("deselectAll", false).multiselect("select", aggregates);
         }
         
         callback();
@@ -289,7 +300,7 @@ function calculateEvolutions(callback) {
   // Obtain a mapping from filter names to filter options
   var filterSets = getFilterSetsMapping(gFilters)["*"];
 
-  var linesMap = [], submissionLinesMap = [];
+  var linesMap = {}, submissionLinesMap = {};
   var versionCount = 0;
   var evolutionDescription = null;
   channelVersions.forEach(function(channelVersion) {
