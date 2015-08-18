@@ -85,27 +85,29 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3" id="summary" style="padding-top: 7em">
-                        <dl class="dl-horizontal" style="margin-top: 1em">
-                            <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
-                            <dt title="Total number of Telemetry pings shown">Metric Count</dt><dd id="prop-submissions"></dd>
-                            <dt title="Total number of measurements shown">Sample Count</dt><dd id="prop-count"></dd>
-                            <dt title="Sum of all sample values inserted into the histogram">Sample Sum</dt><dd id="prop-sum"></dd>
-                            <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
-                            <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
-                        </dl>
-                        <div class="scalar-only" style="margin-top: 50px">
-                            <dl class="dl-horizontal">
-                                <dt>5th Percentile</dt><dd id="prop-p5"></dd>
-                                <dt>25th Percentile</dt><dd id="prop-p25"></dd>
-                                <dt>Median</dt><dd id="prop-p50"></dd>
-                                <dt>75th Percentile</dt><dd id="prop-p75"></dd>
-                                <dt>95th Percentile</dt><dd id="prop-p95"></dd>
-                                <br>
-                                <div style="font-size: 80%; margin: 0 20%">
-                                    <strong>Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
-                                </div>
+                    <div class="col-md-3" style="padding-top: 7em">
+                        <div id="summary">
+                            <dl class="dl-horizontal" style="margin-top: 1em">
+                                <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
+                                <dt title="Total number of Telemetry pings shown">Metric Count</dt><dd id="prop-submissions"></dd>
+                                <dt title="Total number of measurements shown">Sample Count</dt><dd id="prop-count"></dd>
+                                <dt title="Sum of all sample values inserted into the histogram">Sample Sum</dt><dd id="prop-sum"></dd>
+                                <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
+                                <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
                             </dl>
+                            <div class="scalar-only" style="margin-top: 50px">
+                                <dl class="dl-horizontal">
+                                    <dt>5th Percentile</dt><dd id="prop-p5"></dd>
+                                    <dt>25th Percentile</dt><dd id="prop-p25"></dd>
+                                    <dt>Median</dt><dd id="prop-p50"></dd>
+                                    <dt>75th Percentile</dt><dd id="prop-p75"></dd>
+                                    <dt>95th Percentile</dt><dd id="prop-p95"></dd>
+                                    <br>
+                                    <div style="font-size: 80%; margin: 0 20%">
+                                        <strong>Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
                         <div style="text-align: center">
                             <a class="btn btn-default btn-sm" id="export-csv" title="Export the current histogram to CSV">Export CSV</a>
