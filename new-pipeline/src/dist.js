@@ -168,10 +168,17 @@ $(function() { Telemetry.init(function() {
     $("#measure").trigger("change");
   });
   
-  // Automatically resize range bar
+  var resizeUpdateTimeout = null;
   $(window).resize(function() {
+    // Automatically resize range bar
     var dateControls = $("#date-range-controls");
     $("#range-bar").outerWidth(dateControls.parent().width() - dateControls.outerWidth() - 10);
+    
+    // Resize the main plot (MetricsGraphics has a full_width option, but that breaks zooming for plots)
+    if (resizeUpdateTimeout !== null) { clearTimeout(resizeUpdateTimeout); }
+    resizeUpdateTimeout = setTimeout(function() {
+      $("#selected-key1").trigger("change");
+    }, 50);
   });
   $("#advanced-settings").on("shown.bs.collapse", function () {
     var dateControls = $("#date-range-controls");
@@ -509,7 +516,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   if (histograms.length === 0) {
     MG.data_graphic({
       chart_type: "missing-data",
-      full_width: true, height: $(axes).width() * 0.6,
+      width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
       target: axes,
     });
     $(axes).find(".mg-missing-pane").remove();
@@ -556,7 +564,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       data: distributionSamples[0],
       binned: true,
       chart_type: "histogram",
-      full_width: true, height: $(axes).width() * 0.6,
+      width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
       top: 0, left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
       max_y: maxPercentage,
       transition_on_update: false,
@@ -620,7 +629,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
-      full_width: true, height: $(axes).width() * 0.6,
+      width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
       left: 70,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,

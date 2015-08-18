@@ -183,7 +183,15 @@ $(function() { Telemetry.init(function() {
     // Perform a full display refresh
     $("#measure").trigger("change");
   });
-  
+
+  var resizeUpdateTimeout = null;
+  $(window).resize(function() {
+    // Resize the main plot (MetricsGraphics has a full_width option, but that breaks zooming for plots)
+    if (resizeUpdateTimeout !== null) { clearTimeout(resizeUpdateTimeout); }
+    resizeUpdateTimeout = setTimeout(function() {
+      $("#selected-key").trigger("change");
+    }, 50);
+  });
   $("#advanced-settings").on("shown.bs.collapse", function () {
     $(this).get(0).scrollIntoView({behavior: "smooth"}); // Scroll the advanced settings into view when opened
   });
@@ -368,7 +376,8 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate) {
   MG.data_graphic({
     data: lineData,
     chart_type: lineData.length == 0 || lineData[0].length === 0 ? "missing-data" : "line",
-    full_width: true, height: 600,
+    width: $("#evolutions").parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+    height: 600,
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#evolutions",
     x_extended_ticks: true,
@@ -426,7 +435,8 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate) {
   MG.data_graphic({
     data: submissionLineData,
     chart_type: submissionLineData.length === 0 || submissionLineData[0].length === 0 ? "missing-data" : "line",
-    full_width: true, height: 300,
+    width: $("#submissions").parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+    height: 300,
     right: 100, bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
     x_extended_ticks: true,
