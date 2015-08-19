@@ -396,7 +396,12 @@ function displayHistogram(histogram, dates, useTable, cumulative, trim) {
   var ends = histogram.map(function(count, start, end, i) { return end; });
   ends[ends.length - 1] = Infinity;
   var totalCount = histogram.count();
-  
+
+  if (useTable) { // Display the histogram as a table rather than a chart
+    displayHistogramTable(starts, ends, counts, histogram);
+    return;
+  }
+
   if (trim) { // Trim buckets on both ends in the histogram if their counts are too low
     // Histograms need at least 3 buckets to render properly, so make sure not to trim off too much
     var countCutoff = totalCount * 0.0001; // Set the samples cutoff to 0.01% of the total samples
@@ -406,11 +411,6 @@ function displayHistogram(histogram, dates, useTable, cumulative, trim) {
     while (counts[counts.length - 1] < countCutoff && counts.length > 3) {
       counts.pop(); starts.pop(); ends.pop();
     }
-  }
-  
-  if (useTable) { // Display the histogram as a table rather than a chart
-    displayHistogramTable(starts, ends, counts, histogram);
-    return;
   }
   
   var distributionSamples = counts.map(function(count, i) { return {value: i, count: (count / totalCount) * 100}; });

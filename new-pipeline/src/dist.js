@@ -574,6 +574,13 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       return counts.map(function(count) { return total += count; });
     });
   }
+
+  if (useTable) { // Display the histogram as a table rather than a chart
+    displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
+    return;
+  }
+
+  // Apply bucket trimming
   while (trimLeft) {
     starts.shift(); ends.shift();
     countsList.forEach(function(counts) { counts.shift(); });
@@ -583,11 +590,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     starts.pop(); ends.pop();
     countsList.forEach(function(counts) { counts.pop(); });
     trimRight --;
-  }
-
-  if (useTable) { // Display the histogram as a table rather than a chart
-    displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
-    return;
   }
   
   var distributionSamples = countsList.map(function(counts, i) {
