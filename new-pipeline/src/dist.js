@@ -262,8 +262,8 @@ function calculateHistograms(callback, sanitize) {
           filterSetsCount ++;
           for (var label in fullEvolutionMap) { // Make a list of evolutions and option labels for each label in the evolution
             if (sanitize) { fullEvolutionMap[label] = fullEvolutionMap[label].sanitized(); }
+            if (!fullEvolutionsMap.hasOwnProperty(label)) { fullEvolutionsMap[label] = []; }
             if (fullEvolutionMap[label] !== null) {
-              if (!fullEvolutionsMap.hasOwnProperty(label)) { fullEvolutionsMap[label] = []; }
               fullEvolutionsMap[label].push(fullEvolutionMap[label]);
             }
             if (!optionValues.hasOwnProperty(label)) { optionValues[label] = []; }
@@ -275,7 +275,9 @@ function calculateHistograms(callback, sanitize) {
             // Get the set union of all the dates in all the evolutions
             var datesMap = {};
             for (var label in fullEvolutionsMap) {
-              fullEvolutionsMap[label][0].dates().forEach(function(date) { datesMap[date.getTime()] = true; });
+              if (fullEvolutionsMap[label].length > 0) {
+                fullEvolutionsMap[label][0].dates().forEach(function(date) { datesMap[date.getTime()] = true; });
+              }
             }
             var dates = Object.keys(datesMap).map(function(dateString) {
               return new Date(parseInt(dateString));
