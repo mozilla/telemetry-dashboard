@@ -5,6 +5,7 @@ var gCurrentMinDate = null, gCurrentMaxDate = null;
 var gFilters, gPreviousFilterAllSelected = {};
 var gAxesList;
 var gAxesSelectors;
+var gNoneKey = "__none__";
 
 indicate("Initializing Telemetry...");
 
@@ -123,22 +124,28 @@ $(function() { Telemetry.init(function() {
           var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
           var options = getHumanReadableOptions("key", keys);
           gAxesSelectors.forEach(function(selector, i) {
-            multiselectSetOptions(selector, options);
+            multiselectSetOptions(selector, options.concat([[gNoneKey, "(none)"]]));
             
             // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
             if ($this.attr("id") === "sort-keys") {
               gInitialPageState.keys = options.map(function(option) { return option[0] }).filter(function(value, i) { return i < 4; });
             }
             
-            // Select i-th key if not possible
-            if (i < options.length) { selector.multiselect("select", options[i][0]); }
+            // Select i-th key if possible, otherwise none
+            if (i < options.length) {
+              selector.multiselect("select", options[i][0]);
+            } else {
+              selector.multiselect("select", gNoneKey);
+            }
           });
           if (gInitialPageState.keys) { // Reselect previously selected keys
             gInitialPageState.keys.forEach(function(key, i) {
-              // Check to make sure the key can actually still be selected
-              if (gAxesSelectors[i].find("option").filter(function(i, option) { return $(option).val() === key; }).length > 0) {
-                gAxesSelectors[i].next().find("input[type=radio]").attr("checked", false);
-                gAxesSelectors[i].multiselect("select", key);
+              if (key !== gNoneKey) {
+                // Check to make sure the key can actually still be selected
+                if (gAxesSelectors[i].find("option").filter(function(i, option) { return $(option).val() === key; }).length > 0) {
+                  gAxesSelectors[i].next().find("input[type=radio]").attr("checked", false);
+                  gAxesSelectors[i].multiselect("select", key);
+                }
               }
             });
           }
@@ -151,11 +158,15 @@ $(function() { Telemetry.init(function() {
     $("#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle]").change(function(e) {
       if (gCurrentHistogramsList.length > 1) { // Keyed histogram with multiple keys, find the selected keys
         var histogramsList = [];
-        var keys = $("#selected-key1, #selected-key2, #selected-key3, #selected-key4").each(function(i, selector) {
+        var keys = gAxesSelectors.forEach(function(selector, i) {
           var key = $(selector).val();
-          gCurrentHistogramsList.forEach(function(entry) {
-            if (entry.title === key) { histogramsList.push(entry); }
-          });
+          if (key === gNoneKey) {
+            histogramsList.push({title: "", histograms: []});
+          } else {
+            gCurrentHistogramsList.forEach(function(entry) {
+              if (entry.title === key) { histogramsList.push(entry); }
+            });
+          }
         });
       } else { // Non-keyed histogram or a keyed histogram with only one key
         var histogramsList = gCurrentHistogramsList;
@@ -433,6 +444,9 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     // Histograms must have at least 3 buckets to render properly, so ensure that we don't trim them too much
     minTrimLeft = Infinity; minTrimRight = Infinity;
     histogramsList.forEach(function(entry) {
+      if (entry.histograms.length === 0) { // No histograms, don't consider it in the trimming calculation
+        return;
+      }
       var trimLeft = 0, trimRight = 0;
       var countsList = entry.histograms.map(function(histogram) {
         return histogram.map(function(count, start, end, i) { return count; });
