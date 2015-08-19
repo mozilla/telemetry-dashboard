@@ -904,30 +904,39 @@ function saveStateToUrlAndCookie() {
   $("#switch-views").attr("href", dashboardURL);
   
   // Update export links with the new histogram
-  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].histograms.length === 1) { // wip: remove this
+  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].histograms.length > 0) {
     if (gPreviousCSVBlobUrl !== null) { URL.revokeObjectURL(gPreviousCSVBlobUrl); }
     if (gPreviousJSONBlobUrl !== null) { URL.revokeObjectURL(gPreviousJSONBlobUrl); }
-    var histogram = gCurrentHistogramsList[0].histograms[0];
-    var jsonHistogram;
+    var histograms = gCurrentHistogramsList[0].histograms;
+    var countsList = histograms.map(function(histogram) {
+      return histogram.map(function(count, start, end, i) { return count; });
+    });
     if ($("input[name=cumulative-toggle]:checked").val() !== "0") {
-      var total = 0;
-      jsonHistogram = histogram.map(function(count, start, end, i) {
-        total += count;
-        return {start: start, count: total, percentage: 100 * total / histogram.count};
-      });
-    } else {
-      jsonHistogram = histogram.map(function(count, start, end, i) {
-        return {start: start, count: count, percentage: 100 * count / histogram.count}
+      // Apply cumulative option
+      countsList = countsList.map(function(counts) {
+        var total = 0;
+        return counts.map(function(count) { return total += count; });
       });
     }
-    var csvValue = "start,\tcount,\tpercentage\n" + jsonHistogram.map(function (entry) {
-      return entry.start + ",\t" + entry.count + ",\t" + entry.percentage;
-    }).join("\n");
-    var jsonValue = JSON.stringify(jsonHistogram, null, 2);
+    var jsonValue = JSON.stringify(histograms[0].map(function(count, start, end, i) {
+      var entry = {start: start};
+      histograms.forEach(function(histogram, j) {
+        entry[histogram.measure] = countsList[j][i];
+      });
+      return entry;
+    }), null, 2);
+    var csvValue = "start,\t" +
+      histograms.map(function(histogram) { return histogram.measure; }).join(",\t") + "\n" +
+      histograms[0].map(
+        function(count, start, end, i) {
+          return start + ",\t" + countsList.map(function(counts) { return counts[i]; }).join(",\t");
+        }
+      ).join("\n");
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
-    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", histogram.measure + ".csv").show();
-    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", histogram.measure + ".json").show();
+    var name = histograms.map(function(histogram) { return histogram.measure; }).join(", ");
+    $("#export-csv").attr("href", gPreviousCSVBlobUrl).attr("download", name + ".csv").show();
+    $("#export-json").attr("href", gPreviousJSONBlobUrl).attr("download", name + ".json").show();
   } else {
     $("#export-csv, #export-json").hide();
   }
