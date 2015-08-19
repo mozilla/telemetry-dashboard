@@ -638,9 +638,11 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var count = formatNumber(countsList[0][d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
         var label;
         if (ends[d.x] === Infinity) {
-         label = "sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
+          label = "sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
+        } else if (histogram.kind === "enumerated") {
+          label = "sample value" + (cumulative ? " \u2264 " : " is ") + formatNumber(starts[d.x]);
         } else {
-         label = formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
+          label = formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
         }
 
         var offset = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
@@ -742,11 +744,14 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
             color: colors[d.line_id - 1],
           }];
         }
-        var labelValue = (
-          end === Infinity ?
-          "sample value \u2265 " + formatNumber(cumulative ? 0 : start) :
-          formatNumber(cumulative ? 0 : start) + " \u2264 sample value < " + formatNumber(end)
-        ) + ":";
+        var labelValue;
+        if (end === Infinity) {
+          labelValue = "sample value \u2265 " + formatNumber(cumulative ? 0 : start) + ":";
+        } else if (histograms[0].kind === "enumerated") {
+          labelValue = "sample value" + (cumulative ? " \u2264 " : " is ") + formatNumber(start) + ":";
+        } else {
+          labelValue = formatNumber(cumulative ? 0 : start) + " \u2264 sample value < " + formatNumber(end) + ":";
+        }
         var legend = d3.select(axes).select(".mg-active-datapoint").text(labelValue).style("fill", "white");
         var lineHeight = 1.1;
         entries.forEach(function(entry, i) {
