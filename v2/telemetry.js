@@ -290,16 +290,15 @@ Telemetry.init = function Telemetry_init(callback) {
   });
 }
 
-Telemetry.getHistogramInfo = function Telemetry_getHistogramInfo(channel, version, metric, useSubmissionDate, callback) {
+Telemetry.getHistogramInfo = function Telemetry_getHistogramInfo(channel, version, metric, _, callback) {
   assert(Telemetry.CHANNEL_VERSION_DATES !== null && Telemetry.CHANNEL_VERSION_BUILDIDS !== null, "Telemetry.js must be initialized before use");
   assert(typeof channel === "string", "`channel` must be a string");
   assert(typeof version === "string", "`version` must be a string");
   assert(typeof metric === "string", "`metric` must be a string");
   assert(typeof callback === "function", "`callback` must be a function");
-  var dates = (useSubmissionDate ? Telemetry.CHANNEL_VERSION_DATES : Telemetry.CHANNEL_VERSION_BUILDIDS)[channel][version];
-  var buildDate = dates[0];
-  var url = Telemetry.BASE_URL + "aggregates_by/" + (useSubmissionDate ? "submission_date" : "build_id") +
-    "/channels/" + encodeURIComponent(channel) + "/?version=" + encodeURIComponent(version) + "&dates=" + buildDate +
+  var dates = Telemetry.CHANNEL_VERSION_DATES[channel][version].join(",");
+  var url = Telemetry.BASE_URL + "aggregates_by/submission_date" +
+    "/channels/" + encodeURIComponent(channel) + "/?version=" + encodeURIComponent(version) + "&dates=" + dates +
     "&metric=" + encodeURIComponent(metric);
   Telemetry.getJSON(url, function(histograms, status) {
     if (histograms === null) {

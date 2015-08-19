@@ -41,7 +41,7 @@ $(function() { Telemetry.init(function() {
   if (gInitialPageState.compare !== undefined) { $("#compare").multiselect("select", gInitialPageState.compare); }
   
   // Initialize setting values from the page state
-  $("#sort-keys").val(gInitialPageState.sort_keys);
+  $("#sort-keys").multiselect("select", gInitialPageState.sort_keys);
   $("input[name=table-toggle][value=" + (gInitialPageState.table !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
   $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ? 1 : 0) + "]").prop("checked", true).trigger("change");
@@ -625,19 +625,21 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var offset = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
         var barWidth = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ") rect").get(0).getAttribute("width");
         var x = parseFloat(offset.replace(/^translate\(([-\d\.]+).*$/, "$1"));
-        offset = "translate(" + x + ",60)";
+        offset = "translate(" + x + ",30)";
         
         var legend = d3.select(axes).select(".mg-active-datapoint").text(label).attr("transform", offset)
           .attr("x", barWidth / 2).attr("y", "0").attr("text-anchor", "middle").style("fill", "white");
         legend.append("tspan").attr({x: barWidth / 2, y: "1.1em"}).text(histogram.measure + ": " + count + " samples (" + percentage + ")").attr("text-anchor", "middle");
         
         var bbox = legend[0][0].getBBox();
+        var barWidth = parseFloat($(axes).find(".mg-rollover-rects:last-child rect").attr("width"))
         if (x - bbox.width / 2 < 0) {
-          offset = "translate(" + (bbox.width / 2 + 10) + ",60)";
+          offset = "translate(" + (bbox.width / 2 - barWidth / 2 + 5) + ",30)";
           legend.attr("transform", offset);
         }
-        if (x + bbox.width / 2 > $(axes).find("svg").width()) {
-          offset = "translate(" + ($(axes).find("svg").width() - bbox.width / 2 - 10) + ",60)";
+        var width = $(axes).find("svg").width();
+        if (x + bbox.width / 2 + barWidth > width) {
+          offset = "translate(" + (width - bbox.width / 2 - barWidth / 2 - 5) + ",30)";
           legend.attr("transform", offset);
         }
         
@@ -663,12 +665,28 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   } else { // Multiple histograms available, display as overlaid lines
     var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
     var colors = countsList.map(function(counts, i) { return goodColors[i % goodColors.length]; });
+    
+    // Add median markers
+    var markers = [];
+    histograms.forEach(function(histogram) {
+      var median = histogram.percentile(50);
+      var index = 0;
+      while (index < starts.length && starts[index] < median) { index ++; }
+      index --;
+      index += (median - starts[index]) / (ends[index] - starts[index]); // Linear interpolation within bucket
+      markers.push({value: index, label: ""});
+    });
+    
+    distributionSamples.forEach(function(entries) {
+      entries.forEach(function(entry) { entry.value += 0.5; });
+    });
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
       width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       left: 70,
+      markers: markers,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
@@ -683,22 +701,22 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var rolloverCircle, entries;
         var start, end;
         if (d.values) {
-          start = starts[d.values[0].value]; end = ends[d.values[0].value];
+          start = starts[d.values[0].value - 0.5]; end = ends[d.values[0].value - 0.5];
           rolloverCircle = $(axes).find(".mg-line-rollover-circle.mg-area" + d.values[0].line_id + "-color").get(0);
           entries = d.values.map(function(datum) {
             return {
               measure: histograms[datum.line_id - 1].measure,
-              count: formatNumber(countsList[datum.line_id - 1][datum.value]),
+              count: formatNumber(countsList[datum.line_id - 1][datum.value - 0.5]),
               percentage: Math.round(datum.count * 100) / 100 + "%",
               color: colors[datum.line_id - 1],
             };
           });
         } else {
-          start = starts[d.value]; end = ends[d.value];
+          start = starts[d.value - 0.5]; end = ends[d.value - 0.5];
           rolloverCircle = $(axes).find(".mg-line-rollover-circle.mg-area" + d.line_id + "-color").get(0);
           entries = [{
             measure: histograms[d.line_id - 1].measure,
-            count: formatNumber(countsList[d.line_id - 1][d.value]),
+            count: formatNumber(countsList[d.line_id - 1][d.value - 0.5]),
             percentage: Math.round(d.count * 100) / 100 + "%",
             color: colors[d.line_id - 1],
           }];
@@ -741,6 +759,9 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       $(axes).find(".mg-main-line.mg-line" + lineIndex + "-color").css("stroke", colors[i]);
       $(axes).find(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", colors[i]).css("stroke", colors[i]);
       $(axes).find(".mg-line" + lineIndex + "-legend-color").css("fill", colors[i]);
+    });
+    $(axes).find(".mg-markers line").each(function(i, marker) {
+      $(marker).css("stroke", colors[i]);
     });
   }
   

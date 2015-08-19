@@ -22,6 +22,8 @@
 .multiselect-container input[type="radio"] { display: none; }
 .multiselect-container label.radio { padding-left: 10px; }
 .multiselect-container .filter .input-group-addon { display: none; }
+.multiselect-container > .disabled { background: gray; height: 1px; margin: 5px 0; }
+.multiselect-container > .disabled a { display: none; }
 
 .panel-title, .panel-title:hover, .panel-title:focus {
     display: block;

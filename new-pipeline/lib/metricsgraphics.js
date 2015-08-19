@@ -7,7 +7,7 @@
     root.MG = factory(root.d3, root.jQuery);
   }
 }(this, function(d3, $) {
-window.MG = {version: '2.5.0'};
+window.MG = {version: '2.6.0'};
 
 function register(chartType, descriptor, defaults) {
     MG.charts[chartType] = {
@@ -96,41 +96,43 @@ MG.charts = {};
 MG.data_graphic = function(args) {
     'use strict';
     var defaults = {
-        missing_is_zero: false,       // if true, missing values will be treated as zeros
-        missing_is_hidden: false,     // if true, missing values will appear as broken segments
-        legend: '' ,                  // an array identifying the labels for a chart's lines
-        legend_target: '',            // if set, the specified element is populated with a legend
-        error: '',                    // if set, a graph will show an error icon and log the error to the console
-        animate_on_load: false,       // animate lines on load
-        top: 40,                      // the size of the top margin
-        bottom: 30,                   // the size of the bottom margin
-        right: 10,                    // size of the right margin
-        left: 50,                     // size of the left margin
-        buffer: 8,                    // the buffer between the actual chart area and the margins
-        width: 350,                   // the width of the entire graphic
-        height: 220,                  // the height of the entire graphic
-        full_width: false,            // sets the graphic width to be the width of the parent element and resizes dynamically
-        full_height: false,           // sets the graphic width to be the width of the parent element and resizes dynamically
-        small_height_threshold: 120,  // the height threshold for when smaller text appears
-        small_width_threshold: 160,   // the width  threshold for when smaller text appears
-        small_text: false,            // coerces small text regardless of graphic size
-        xax_count: 6,                 // number of x axis ticks
-        xax_tick_length: 5,           // x axis tick length
+        missing_is_zero: false,                // if true, missing values will be treated as zeros
+        missing_is_hidden: false,              // if true, missing values will appear as broken segments
+        missing_is_hidden_accessor: null, // the accessor that determines the boolean value for missing data points
+        legend: '' ,                           // an array identifying the labels for a chart's lines
+        legend_target: '',                     // if set, the specified element is populated with a legend
+        error: '',                             // if set, a graph will show an error icon and log the error to the console
+        animate_on_load: false,                // animate lines on load
+        top: 40,                               // the size of the top margin
+        bottom: 30,                            // the size of the bottom margin
+        right: 10,                             // size of the right margin
+        left: 50,                              // size of the left margin
+        buffer: 8,                             // the buffer between the actual chart area and the margins
+        width: 350,                            // the width of the entire graphic
+        height: 220,                           // the height of the entire graphic
+        full_width: false,                     // sets the graphic width to be the width of the parent element and resizes dynamically
+        full_height: false,                    // sets the graphic width to be the width of the parent element and resizes dynamically
+        small_height_threshold: 120,           // the height threshold for when smaller text appears
+        small_width_threshold: 160,            // the width  threshold for when smaller text appears
+        small_text: false,                     // coerces small text regardless of graphic size
+        xax_count: 6,                          // number of x axis ticks
+        xax_tick_length: 5,                    // x axis tick length
         xax_start_at_min: false,
-        yax_count: 5,                 // number of y axis ticks
-        yax_tick_length: 5,           // y axis tick length
-        x_extended_ticks: false,      // extends x axis ticks across chart - useful for tall charts
-        y_extended_ticks: false,      // extends y axis ticks across chart - useful for long charts
+        yax_count: 5,                          // number of y axis ticks
+        yax_tick_length: 5,                    // y axis tick length
+        x_extended_ticks: false,               // extends x axis ticks across chart - useful for tall charts
+        y_extended_ticks: false,               // extends y axis ticks across chart - useful for long charts
         y_scale_type: 'linear',
         max_x: null,
         max_y: null,
         min_x: null,
-        min_y: null,                  // if set, y axis starts at an arbitrary value
-        min_y_from_data: false,       // if set, y axis will start at minimum value rather than at 0
-        point_size: 2.5,              // the size of the dot that appears on a line on mouse-over
+        min_y: null,                           // if set, y axis starts at an arbitrary value
+        min_y_from_data: false,                // if set, y axis will start at minimum value rather than at 0
+        point_size: 2.5,                       // the size of the dot that appears on a line on mouse-over
         x_accessor: 'date',
         xax_units: '',
         x_label: '',
+        x_sort: true,
         x_axis: true,
         y_axis: true,
         y_accessor: 'value',
@@ -141,30 +143,30 @@ MG.data_graphic = function(args) {
         transition_on_update: true,
         mouseover: null,
         show_rollover_text: true,
-        show_confidence_band: null,   // given [l, u] shows a confidence at each point from l to u
-        xax_format: null,             // xax_format is a function that formats the labels for the x axis.
+        show_confidence_band: null,            // given [l, u] shows a confidence at each point from l to u
+        xax_format: null,                      // xax_format is a function that formats the labels for the x axis.
         area: true,
         chart_type: 'line',
         data: [],
-        decimals: 2,                  // the number of decimals in any rollover
-        format: 'count',              // format = {count, percentage}
-        inflator: 10/9,               // for setting y axis max
-        linked: false,                // links together all other graphs with linked:true, so rollovers in one trigger rollovers in the others
-        linked_format: '%Y-%m-%d',    // What granularity to link on for graphs. Default is at day
+        decimals: 2,                           // the number of decimals in any rollover
+        format: 'count',                       // format = {count, percentage}
+        inflator: 10/9,                        // for setting y axis max
+        linked: false,                         // links together all other graphs with linked:true, so rollovers in one trigger rollovers in the others
+        linked_format: '%Y-%m-%d',             // What granularity to link on for graphs. Default is at day
         list: false,
-        baselines: null,              // sets the baseline lines
-        markers: null,                // sets the marker lines
+        baselines: null,                       // sets the baseline lines
+        markers: null,                         // sets the marker lines
         scalefns: {},
         scales: {},
         show_year_markers: false,
         show_secondary_x_label: true,
         target: '#viz',
-        interpolate: 'cardinal',       // interpolation method to use when rendering lines
-        interpolate_tension: 0.7,      // its range is from 0 to 1; increase if your data is irregular and you notice artifacts
-        custom_line_color_map: [],     // allows arbitrary mapping of lines to colors, e.g. [2,3] will map line 1 to color 2 and line 2 to color 3
-        max_data_size: null,           // explicitly specify the the max number of line series, for use with custom_line_color_map
-        aggregate_rollover: false,     // links the lines in a multi-line chart
-        show_tooltips: true            // if enabled, a chart's description will appear in a tooltip (requires jquery)
+        interpolate: 'cardinal',               // interpolation method to use when rendering lines
+        interpolate_tension: 0.7,              // its range is from 0 to 1; increase if your data is irregular and you notice artifacts
+        custom_line_color_map: [],             // allows arbitrary mapping of lines to colors, e.g. [2,3] will map line 1 to color 2 and line 2 to color 3
+        max_data_size: null,                   // explicitly specify the the max number of line series, for use with custom_line_color_map
+        aggregate_rollover: false,             // links the lines in a multi-line chart
+        show_tooltips: true                    // if enabled, a chart's description will appear in a tooltip (requires jquery)
     };
 
     MG.call_hook('global.defaults', defaults);
@@ -241,7 +243,7 @@ if (typeof jQuery !== 'undefined') {
 
     +function ($) {
       'use strict';
-      
+
       if(typeof $().tooltip == 'function')
         return true;
 
@@ -725,7 +727,7 @@ if (typeof jQuery !== 'undefined') {
 
       if(typeof $().popover == 'function')
         return true;
-          
+
       // POPOVER PUBLIC CLASS DEFINITION
       // ===============================
 
@@ -932,11 +934,6 @@ function y_axis(args) {
         max_y;
 
     args.scalefns.yf = function(di) {
-        //since we want to show actual zeros when missing_is_hidden is on
-        if(args.missing_is_hidden && di['missing']) {
-            return args.scales.Y(di[args.y_accessor]) + 42.1234;
-        }
-
         return args.scales.Y(di[args.y_accessor]);
     };
 
@@ -1132,13 +1129,23 @@ function y_axis(args) {
         });
     }
 
-    var last_i = scale_ticks.length - 1;
-    if (!args.x_extended_ticks && !args.y_extended_ticks) {
+    //add the y-axis line; if we have 0s hide the line
+    var tick_length = scale_ticks.length;
+    if (!args.x_extended_ticks && !args.y_extended_ticks && tick_length) {
+        var y1scale, y2scale;
+        if (tick_length) {
+            y1scale = args.scales.Y(scale_ticks[0]).toFixed(2);
+            y2scale = args.scales.Y(scale_ticks[tick_length - 1]).toFixed(2);
+        } else {
+            y1scale = 0;
+            y2scale = 0;
+        }
+
         g.append('line')
             .attr('x1', args.left)
             .attr('x2', args.left)
-            .attr('y1', args.scales.Y(scale_ticks[0]).toFixed(2))
-            .attr('y2', args.scales.Y(scale_ticks[last_i]).toFixed(2));
+            .attr('y1', y1scale)
+            .attr('y2', y2scale);
     }
 
     //add y ticks
@@ -1374,22 +1381,22 @@ function x_axis_categorical(args) {
         .attr('text-anchor', 'middle')
         .text(String);
 
-    if (args.rotate_x_labels) {
-        labels.attr({
-            dy: 0,
-            'text-anchor': 'end',
-            transform: function() {
-                var elem = d3.select(this);
-                return 'rotate('+args.rotate_x_labels+' '+elem.attr('x')+','+elem.attr('y')+')';
-            }
-        });
-    }
-
     if (args.truncate_x_labels) {
         labels.each(function(d, idx) {
             var elem = this,
                 width = args.scales.X.rangeBand();
             truncate_text(elem, d, width);
+        });
+    }
+
+    if (args.rotate_x_labels) {
+        labels.attr({
+            dy: 0,
+            'text-anchor': (args.rotate_x_labels + 360) % 360 > 180 ? 'end' : 'start',
+            transform: function() {
+                var elem = d3.select(this);
+                return 'rotate('+args.rotate_x_labels+' '+elem.attr('x')+','+elem.attr('y')+')';
+            }
         });
     }
 
@@ -1517,6 +1524,33 @@ function mg_default_bar_xax_format(args) {
     };
 }
 
+function mg_get_time_frame(diff){
+    // diff should be (max_x - min_x) / 1000, in other words, the difference in seconds.
+    if (diff < 60) {
+        time_frame = 'seconds';
+    } else if (diff / (60 * 60) <= 24) {
+        time_frame = 'less-than-a-day';
+    } else if (diff / (60 * 60) <= 24 * 4) {
+        time_frame = 'four-days';
+    } else {
+        time_frame = 'default';
+    }
+    return time_frame;
+}
+
+function mg_get_time_format(diff){
+    if (diff < 60) {
+        main_time_format = d3.time.format('%M:%S');
+    } else if (diff / (60 * 60) <= 24) {
+        main_time_format = d3.time.format('%H:%M');
+    } else if (diff / (60 * 60) <= 24 * 4) {
+        main_time_format = d3.time.format('%H:%M');
+    } else {
+        main_time_format = d3.time.format('%b %d');
+    }
+    return main_time_format;
+}
+
 function mg_default_xax_format(args) {
     if (args.xax_format) {
         return args.xax_format;
@@ -1531,19 +1565,8 @@ function mg_default_xax_format(args) {
         if (args.time_series) {
             diff = (args.processed.max_x - args.processed.min_x) / 1000;
 
-            if (diff < 60) {
-                main_time_format = d3.time.format('%M:%S');
-                time_frame = 'seconds';
-            } else if (diff / (60 * 60) <= 24) {
-                main_time_format = d3.time.format('%H:%M');
-                time_frame = 'less-than-a-day';
-            } else if (diff / (60 * 60) <= 24 * 4) {
-                main_time_format = d3.time.format('%H:%M');
-                time_frame = 'four-days';
-            } else {
-                main_time_format = d3.time.format('%b %d');
-                time_frame = 'default';
-            }
+            time_frame = mg_get_time_frame(diff);
+            main_time_format = mg_get_time_format(diff);
         }
 
         args.processed.main_x_time_format = main_time_format;
@@ -1812,7 +1835,6 @@ function init(args) {
     args = arguments[0];
     if (!args) { args = {}; }
     args = merge_with_defaults(args, defaults);
-
     if (d3.select(args.target).empty()) {
         console.warn('The specified target element "' + args.target + '" could not be found in the page. The chart will not be rendered.');
         return;
@@ -1874,7 +1896,7 @@ function init(args) {
     args.width = svg_width;
     args.height = svg_height;
 
-    // add clip path element to svg
+    //add clip path element to svg
     svg.selectAll('.mg-clip-path').remove();
 
     svg.append('defs')
@@ -1896,17 +1918,17 @@ function init(args) {
         svg.attr('height', svg_height);
     }
 
-    // @todo need to reconsider how we handle automatic scaling
+    //we need to reconsider how we handle automatic scaling
     svg.attr('viewBox', '0 0 ' + svg_width + ' ' + svg_height);
 
     if (args.full_width || args.full_height) {
         svg.attr('preserveAspectRatio', 'xMinYMin meet');
     }
 
-    // remove missing class
+    //remove missing class
     svg.classed('mg-missing', false);
 
-    // remove missing text
+    //remove missing text
     svg.selectAll('.mg-missing-text').remove();
     svg.selectAll('.mg-missing-pane').remove();
 
@@ -2003,7 +2025,6 @@ function markers(args) {
         preventHorizontalOverlap(gm.selectAll('.mg-marker-text')[0], args);
     }
 
-    
     function xPosition(d) {
         return args.scales.X(d[args.x_accessor]);
     }
@@ -2054,11 +2075,11 @@ function markers(args) {
 MG.markers = markers;
 
 function mg_window_listeners(args){
-	mg_if_aspect_ratio_resize_svg(args);
+    mg_if_aspect_ratio_resize_svg(args);
 }
 
 function mg_if_aspect_ratio_resize_svg(args){
-	// If we've asked the svg to fill a div, resize with div.
+    //have we asked the svg to fill a div, if so resize with div
     if (args.full_width || args.full_height){
         window.addEventListener('resize', function(){
             var svg = d3.select(args.target).select('svg');
@@ -2261,7 +2282,7 @@ MG.button_layout = function(target) {
 
     this._strip_punctuation = function(s) {
         var punctuationless = s.replace(/[^a-zA-Z0-9 _]+/g, '');
-        var finalString = punctuationless.replace(/ +?/g, "");
+        var finalString = punctuationless.replace(/ +?/g, '');
         return finalString;
     };
 
@@ -2392,7 +2413,9 @@ MG.button_layout = function(target) {
             }
 
             raw_data_transformation(args);
+
             process_line(args);
+
             init(args);
             x_axis(args);
             y_axis(args);
@@ -2426,8 +2449,39 @@ MG.button_layout = function(target) {
                 return d[args.y_accessor];
             };
 
+            //main line
+            var line = d3.svg.line()
+                .x(args.scalefns.xf)
+                .y(args.scalefns.yf)
+                .interpolate(args.interpolate)
+                .tension(args.interpolate_tension);
+
+            //if missing_is_zero is not set, then hide data points that fall in missing
+            //data ranges or that have been explicitly identified as missing in the
+            //data source
+            if(!args.missing_is_zero) {
+                //a line is defined if the _missing attrib is not set to true
+                //and the y-accessor is not null
+                line = line.defined(function(d) {
+                    return (d['_missing'] == undefined || d['_missing'] != true)
+                        && d[args.y_accessor] != null;
+                })
+            }
+
+            //for animating line on first load
+            var flat_line = d3.svg.line()
+                .defined(function(d) {
+                    return (d['_missing'] == undefined || d['_missing'] != true)
+                        && d[args.y_accessor] != null;
+                })
+                .x(args.scalefns.xf)
+                .y(function() { return args.scales.Y(data_median); })
+                .interpolate(args.interpolate)
+                .tension(args.interpolate_tension);
+
             //main area
             var area = d3.svg.area()
+                .defined(line.defined())
                 .x(args.scalefns.xf)
                 .y0(args.scales.Y.range()[0])
                 .y1(args.scalefns.yf)
@@ -2440,6 +2494,7 @@ MG.button_layout = function(target) {
 
             if (args.show_confidence_band) {
                 confidence_area = d3.svg.area()
+                    .defined(line.defined())
                     .x(args.scalefns.xf)
                     .y0(function(d) {
                         var l = args.show_confidence_band[0];
@@ -2452,20 +2507,6 @@ MG.button_layout = function(target) {
                     .interpolate(args.interpolate)
                     .tension(args.interpolate_tension);
             }
-
-            //main line
-            var line = d3.svg.line()
-                .x(args.scalefns.xf)
-                .y(args.scalefns.yf)
-                .interpolate(args.interpolate)
-                .tension(args.interpolate_tension);
-
-            //for animating line on first load
-            var flat_line = d3.svg.line()
-                .x(args.scalefns.xf)
-                .y(function() { return args.scales.Y(data_median); })
-                .interpolate(args.interpolate)
-                .tension(args.interpolate_tension);
 
             //for building the optional legend
             var legend = '';
@@ -2567,64 +2608,6 @@ MG.button_layout = function(target) {
                                 .attr('class', 'mg-main-line ' + 'mg-line' + (line_id) + '-color')
                                 .attr('d', line(args.data[i]))
                                 .attr('clip-path', 'url(#mg-plot-window-' + mg_target_ref(args.target) + ')');
-                        }
-                    }
-
-                    var the_line = svg.select('.mg-line' + (line_id) + '-color');
-                    if (args.missing_is_hidden && the_line.attr('d') !== null) {
-                        var bits = the_line.attr('d').split('L');
-                        var zero = args.scales.Y(0) + 42.1234;
-                        var dasharray = [];
-                        var singleton_point_length = 2;
-
-                        var x_y,
-                            x_y_plus_1,
-                            x,
-                            y,
-                            x_plus_1,
-                            y_plus_1,
-                            segment_length,
-                            cumulative_segment_length = 0;
-
-                        bits[0] = bits[0].replace('M', '');
-                        bits[bits.length - 1] = bits[bits.length - 1].replace('Z', '');
-
-                        //if we have a min_x, turn the line off first
-                        if (args.min_x) {
-                            dasharray.push(0);
-                        }
-
-                        //build the stroke-dasharray pattern
-                        for (var j = 0; j < bits.length - 1; j++) {
-                            x_y = bits[j].split(',');
-                            x_y_plus_1 = bits[j + 1].split(',');
-                            x = Number(x_y[0]);
-                            y = Number(x_y[1]);
-                            x_plus_1 = Number(x_y_plus_1[0]);
-                            y_plus_1 = Number(x_y_plus_1[1]);
-
-                            segment_length = Math.sqrt(Math.pow(x - x_plus_1, 2) + Math.pow(y - y_plus_1, 2));
-
-                            //do we need to either cover or clear the current stroke
-                            if (y_plus_1 == zero && y != zero) {
-                                dasharray.push(cumulative_segment_length || singleton_point_length);
-                                cumulative_segment_length = (cumulative_segment_length)
-                                    ? segment_length
-                                    : segment_length - singleton_point_length;
-                            } else if (y_plus_1 != zero && y == zero) { //switching on line
-                                dasharray.push(cumulative_segment_length += segment_length);
-                                cumulative_segment_length = 0;
-                            } else {
-                                cumulative_segment_length += segment_length;
-                            }
-                        }
-
-                        //fear not, end bit of line, ye too shall be covered
-                        if (dasharray.length > 0) {
-                            dasharray.push(the_line.node().getTotalLength() - dasharray[dasharray.length - 1]);
-
-                            svg.select('.mg-line' + (line_id) + '-color')
-                                .attr('stroke-dasharray', dasharray.join());
                         }
                     }
 
@@ -2789,14 +2772,14 @@ MG.button_layout = function(target) {
                     .key(function(d) { return d[args.x_accessor]; })
                     .entries(d3.merge(args.data))
                     .sort(function(a, b) { return new Date(a.key) - new Date(b.key); });
-                
+
                 // Undo the keys getting coerced to strings, by setting the keys from the values
                 // This is necessary for when we have X axis keys that are things like 
                 data_nested.forEach(function(entry) {
                     var datum = entry.values[0];
                     entry.key = datum[args.x_accessor];
                 });
-                
+
                 xf = data_nested.map(function(di) {
                     return args.scales.X(di.key);
                 });
@@ -2996,19 +2979,20 @@ MG.button_layout = function(target) {
                             .style('opacity', 1);
                       }
                     });
-                } else if (args.missing_is_hidden
-                            && d[args.y_accessor] == 0
-                            && d['missing']) {
+                } else if ((args.missing_is_hidden && d['_missing'])
+                        || d[args.y_accessor] == null
+                    ) {
                     //disable rollovers for hidden parts of the line
+                    //recall that hidden parts are missing data ranges and possibly also
+                    //data points that have been explicitly identified as missing
                     return;
                 } else {
-
                     //show circle on mouse-overed rect
                     if (d[args.x_accessor] >= args.processed.min_x &&
                         d[args.x_accessor] <= args.processed.max_x &&
                         d[args.y_accessor] >= args.processed.min_y &&
                         d[args.y_accessor] <= args.processed.max_y
-                    ){
+                    ) {
                         svg.selectAll('circle.mg-line-rollover-circle.mg-area' + d.line_id + '-color')
                             .attr('class', "")
                             .attr('class', 'mg-area' + d.line_id + '-color')
@@ -3028,7 +3012,7 @@ MG.button_layout = function(target) {
                 if (args.linked && !MG.globals.link) {
                     MG.globals.link = true;
 
-                    if (!args.aggregate_rollover || d.value || d.values.length > 0) {
+                    if (!args.aggregate_rollover || d.value !== undefined || d.values.length > 0) {
                         var datum = d.values ? d.values[0] : d;
                         var formatter = d3.time.format(args.linked_format);
                         var v = datum[args.x_accessor];
@@ -3161,8 +3145,8 @@ MG.button_layout = function(target) {
 
                         //trigger mouseout on matching line in .linked charts
                         d3.selectAll('.roll_' + id)
-                            .each(function(d, i) {
-                                    d3.select(this).on('mouseout')(d);
+                            .each(function(d) {
+                                d3.select(this).on('mouseout')(d);
                             });
                     });
                 }
@@ -4091,8 +4075,8 @@ MG.button_layout = function(target) {
         left: 70,
         truncate_x_labels: true,
         truncate_y_labels: true,
-        x_label_rotation: 0,
-        y_label_rotation: 0
+        rotate_x_labels: 0,
+        rotate_y_labels: 0
     };
 
     MG.register('bar', barChart, defaults);
@@ -4124,7 +4108,7 @@ MG.data_table = function(args) {
 
     this._strip_punctuation = function(s) {
         var punctuationless = s.replace(/[^a-zA-Z0-9 _]+/g, '');
-        var finalString = punctuationless.replace(/ +?/g, "");
+        var finalString = punctuationless.replace(/ +?/g, '');
         return finalString;
     };
 
@@ -4356,7 +4340,7 @@ MG.data_table = function(args) {
                 svg.attr('height', svg_height);
             }
 
-            // @todo need to reconsider how we handle automatic scaling
+            //we need to reconsider how we handle automatic scaling
             svg.attr('viewBox', '0 0 ' + svg_width + ' ' + svg_height);
 
             // delete child elements
@@ -4517,7 +4501,7 @@ function raw_data_transformation(args) {
     }
 
     //sort x-axis data
-    if (args.chart_type === 'line') {
+    if (args.chart_type === 'line' && args.x_sort === true) {
         for (var i = 0; i < args.data.length; i++) {
             args.data[i].sort(function(a, b) {
                 return a[args.x_accessor] - b[args.x_accessor];
@@ -4533,6 +4517,7 @@ MG.raw_data_transformation = raw_data_transformation;
 function process_line(args) {
     'use strict';
     var is_time_series;
+    var time_frame;
 
     //do we have a time-series?
     var is_time_series = d3.sum(args.data.map(function(series) {
@@ -4570,36 +4555,56 @@ function process_line(args) {
             //if we've set a max_x, add data points up to there
             var from = (args.min_x) ? args.min_x : start_date;
             var upto = (args.max_x) ? args.max_x : last[args.x_accessor];
-            for (var d = new Date(from); d <= upto; d.setDate(d.getDate() + 1)) {
-                var o = {};
-                d.setHours(0, 0, 0, 0);
 
-                //add the first date item (judge me not, world)
-                //we'll be starting from the day after our first date
-                if (Date.parse(d) === Date.parse(new Date(start_date))) {
-                    processed_data.push(MG.clone(args.data[i][0]));
-                }
+            time_frame = mg_get_time_frame((upto-from)/1000);
 
-                //check to see if we already have this date in our data object
-                var existing_o = null;
-                args.data[i].forEach(function(val, i) {
-                    if (Date.parse(val[args.x_accessor]) === Date.parse(new Date(d))) {
-                        existing_o = val;
+            if (time_frame == 'default' && args.missing_is_hidden_accessor == null) {
+                for (var d = new Date(from); d <= upto; d.setDate(d.getDate() + 1)) {
+                    var o = {};
+                    d.setHours(0, 0, 0, 0);
 
-                        return false;
+                    //add the first date item
+                    //we'll be starting from the day after our first date
+                    if (Date.parse(d) === Date.parse(new Date(start_date))) {
+                        processed_data.push(MG.clone(args.data[i][0]));
                     }
-                });
 
-                //if we don't have this date in our data object, add it and set it to zero
-                if (!existing_o) {
-                    o[args.x_accessor] = new Date(d);
-                    o[args.y_accessor] = 0;
-                    o['missing'] = true; //we want to distinguish between zero-value and missing observations
-                    processed_data.push(o);
+                    //check to see if we already have this date in our data object
+                    var existing_o = null;
+                    args.data[i].forEach(function(val, i) {
+                        if (Date.parse(val[args.x_accessor]) === Date.parse(new Date(d))) {
+                            existing_o = val;
+
+                            return false;
+                        }
+                    });
+
+                    //if we don't have this date in our data object, add it and set it to zero
+                    if (!existing_o) {
+                        o[args.x_accessor] = new Date(d);
+                        o[args.y_accessor] = 0;
+                        o['_missing'] = true; //we want to distinguish between zero-value and missing observations
+                        processed_data.push(o);
+                    }
+                    //if the data point has, say, a 'missing' attribute set or if its
+                    //y-value is null identify it internally as missing
+                    else if (existing_o[args.missing_is_hidden_accessor]
+                            || existing_o[args.y_accessor] == null
+                        ) {
+                        existing_o['_missing'] = true;
+                        processed_data.push(existing_o);
+                    }
+                    //otherwise, use the existing object for that date
+                    else {
+                        processed_data.push(existing_o);
+                    }
                 }
-                //otherwise, use the existing object for that date
-                else {
-                    processed_data.push(existing_o);
+            }
+            else {
+                for (var j = 0; j < args.data[i].length; j += 1) {
+                    o = MG.clone(args.data[i][j]);
+                    o['_missing'] = args.data[i][j][args.missing_is_hidden_accessor];
+                    processed_data.push(o);
                 }
             }
 
@@ -4933,7 +4938,7 @@ function _weighted_beta(wxy, xbar, ybar) {
     }));
 
     var denom = d3.sum(wxy.map(function(wxyi) {
-        return Math.pow(wxyi.w, 2) * (Math.pow(wxyi.x - xbar), 2);
+        return Math.pow(wxyi.w, 2) * Math.pow(wxyi.x - xbar, 2);
     }));
 
     return num / denom;
@@ -5276,6 +5281,7 @@ function isNumeric(n) {
 
 var each = function(obj, iterator, context) {
     // yanked out of underscore
+    var breaker = {};
     if (obj === null) return obj;
     if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
       obj.forEach(iterator, context);
