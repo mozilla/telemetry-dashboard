@@ -625,7 +625,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       top: 0, left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
-      max_y: maxPercentage,
+      max_y: maxPercentage + 2, // Add some extra space to account for the top label
       transition_on_update: false,
       target: axes,
       x_label: histogram.description, y_label: "Percentage of Samples",
