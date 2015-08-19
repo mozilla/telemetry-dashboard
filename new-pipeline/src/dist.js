@@ -290,6 +290,9 @@ function calculateHistograms(callback, sanitize) {
                         histogram.measure = humanReadableOption;
                       }
                       return histogram;
+                    }).sort(function(histogram1, histogram2) {
+                      return histogram1.measure < histogram2.measure ?
+                        -1 : (histogram1.measure > histogram2.measure ? 1 : 0);
                     });
                   }
                 }
