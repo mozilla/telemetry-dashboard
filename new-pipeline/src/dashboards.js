@@ -152,7 +152,7 @@ function loadStateFromUrlAndCookie() {
 
   // Process the saved state value
   if (typeof pageState.aggregates === "string") {
-    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0; });
+    var aggregates = pageState.aggregates.split("!").filter(function(v) { return ["5th-percentile", "25th-percentile", "median", "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0 || v.startsWith("bucket-"); });
     if (aggregates.length > 0) { pageState.aggregates = aggregates; }
     else { pageState.aggregates = ["median"]; }
   } else { pageState.aggregates = ["median"]; }
@@ -450,6 +450,10 @@ function getHumanReadableOptions(filterName, options) {
     
     if (badOptions.length > 0) { options = options.concat([null]).concat(badOptions); }
     return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
+  } else if (filterName === "buckets") {
+    return options.map(function(start) {
+      return ["bucket-" + start, start + " bucket percentage"];
+    });
   }
   return options.map(function(option) { return [option, option] });
 }
@@ -475,6 +479,11 @@ function deduplicate(values) {
     seen[option] = true;
     return true;
   });
+}
+
+function assert(condition, message) {
+  if (!condition) { throw message === undefined ? "Assertion failed" : message; }
+  return condition;
 }
 
 // Sets the options of a multiselect to a list of pairs where the first element is the value, and the second is the text
@@ -527,7 +536,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
     });
     
     element.empty().append(options.map(function(option) {
-      if (option === null) { return '<option disabled>&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;&#9473;</option>'; }
+      if (option === null) { return '<option disabled>&nbsp;</option>'; }
       return '<option value="' + option[0] + '">' + option[1] + '</option>';
     }).join()).multiselect("rebuild");
   }
