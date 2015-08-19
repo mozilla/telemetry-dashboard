@@ -693,6 +693,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     
     // Add median markers
     var markers = [];
+    /* // Median markers
     histograms.forEach(function(histogram) {
       var median = histogram.percentile(50);
       var index = 0;
@@ -701,6 +702,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       index += (median - starts[index]) / (ends[index] - starts[index]); // Linear interpolation within bucket
       markers.push({value: index, label: ""});
     });
+    */
     
     distributionSamples.forEach(function(entries) {
       entries.forEach(function(entry) { entry.value += 0.5; });
