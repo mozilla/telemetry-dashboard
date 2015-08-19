@@ -826,8 +826,9 @@ function displaySingleHistogramTableSet(axes, starts, ends, countsList, histogra
                 $("<td></td>").text(formatNumber(starts[i])),
                 $("<td></td>").text(formatNumber(ends[i])),
               ].concat(
-                countsList.map(function(counts) {
-                  return $("<td></td>").text(formatNumber(counts[i]));
+                countsList.map(function(counts, j) {
+                  var percentage = Math.round(10000 * counts[i] / histograms[j].count) / 100;
+                  return $("<td></td>").text(formatNumber(counts[i]) + " (" + percentage + "%)");
                 })
               )
             )
