@@ -132,6 +132,8 @@ $(function() { Telemetry.init(function() {
             }
             
             // Select i-th key if possible, otherwise none
+            selector.multiselect("deselectAll", false).next()
+              .find("input[type=radio]").attr("checked", false);
             if (i < options.length) {
               selector.multiselect("select", options[i][0]);
             } else {
