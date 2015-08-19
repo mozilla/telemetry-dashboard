@@ -70,6 +70,16 @@ Telemetry.init(function() {
 });
 ```
 
+Getting the available keys in the keyed histogram JS_TELEMETRY_ADDON_EXCEPTIONS on nightly 42:
+
+```javascript
+Telemetry.init(function() {
+    Telemetry.getEvolution("nightly", "42", "JS_TELEMETRY_ADDON_EXCEPTIONS", {}, true, function(evolutionMap) {
+        console.log("JS_TELEMETRY_ADDON_EXCEPTIONS keys:\n" + Object.keys(evolutionMap).sort().join("\n"));
+    });
+});
+```
+
 API Reference
 -------------
 

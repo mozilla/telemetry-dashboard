@@ -5,6 +5,7 @@ var gCurrentMinDate = null, gCurrentMaxDate = null;
 var gFilters, gPreviousFilterAllSelected = {};
 var gAxesList;
 var gAxesSelectors;
+var gNoneKey = "__none__";
 
 indicate("Initializing Telemetry...");
 
@@ -123,22 +124,28 @@ $(function() { Telemetry.init(function() {
           var keys = gCurrentHistogramsList.map(function(entry) { return entry.title; });
           var options = getHumanReadableOptions("key", keys);
           gAxesSelectors.forEach(function(selector, i) {
-            multiselectSetOptions(selector, options);
+            multiselectSetOptions(selector, options.concat([[gNoneKey, "(none)"]]));
             
             // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
             if ($this.attr("id") === "sort-keys") {
               gInitialPageState.keys = options.map(function(option) { return option[0] }).filter(function(value, i) { return i < 4; });
             }
             
-            // Select i-th key if not possible
-            if (i < options.length) { selector.multiselect("select", options[i][0]); }
+            // Select i-th key if possible, otherwise none
+            if (i < options.length) {
+              selector.multiselect("select", options[i][0]);
+            } else {
+              selector.multiselect("select", gNoneKey);
+            }
           });
           if (gInitialPageState.keys) { // Reselect previously selected keys
             gInitialPageState.keys.forEach(function(key, i) {
-              // Check to make sure the key can actually still be selected
-              if (gAxesSelectors[i].find("option").filter(function(i, option) { return $(option).val() === key; }).length > 0) {
-                gAxesSelectors[i].next().find("input[type=radio]").attr("checked", false);
-                gAxesSelectors[i].multiselect("select", key);
+              if (key !== gNoneKey) {
+                // Check to make sure the key can actually still be selected
+                if (gAxesSelectors[i].find("option").filter(function(i, option) { return $(option).val() === key; }).length > 0) {
+                  gAxesSelectors[i].next().find("input[type=radio]").attr("checked", false);
+                  gAxesSelectors[i].multiselect("select", key);
+                }
               }
             });
           }
@@ -151,11 +158,15 @@ $(function() { Telemetry.init(function() {
     $("#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle]").change(function(e) {
       if (gCurrentHistogramsList.length > 1) { // Keyed histogram with multiple keys, find the selected keys
         var histogramsList = [];
-        var keys = $("#selected-key1, #selected-key2, #selected-key3, #selected-key4").each(function(i, selector) {
+        var keys = gAxesSelectors.forEach(function(selector, i) {
           var key = $(selector).val();
-          gCurrentHistogramsList.forEach(function(entry) {
-            if (entry.title === key) { histogramsList.push(entry); }
-          });
+          if (key === gNoneKey) {
+            histogramsList.push({title: "", histograms: []});
+          } else {
+            gCurrentHistogramsList.forEach(function(entry) {
+              if (entry.title === key) { histogramsList.push(entry); }
+            });
+          }
         });
       } else { // Non-keyed histogram or a keyed histogram with only one key
         var histogramsList = gCurrentHistogramsList;
@@ -251,8 +262,8 @@ function calculateHistograms(callback, sanitize) {
           filterSetsCount ++;
           for (var label in fullEvolutionMap) { // Make a list of evolutions and option labels for each label in the evolution
             if (sanitize) { fullEvolutionMap[label] = fullEvolutionMap[label].sanitized(); }
+            if (!fullEvolutionsMap.hasOwnProperty(label)) { fullEvolutionsMap[label] = []; }
             if (fullEvolutionMap[label] !== null) {
-              if (!fullEvolutionsMap.hasOwnProperty(label)) { fullEvolutionsMap[label] = []; }
               fullEvolutionsMap[label].push(fullEvolutionMap[label]);
             }
             if (!optionValues.hasOwnProperty(label)) { optionValues[label] = []; }
@@ -264,7 +275,9 @@ function calculateHistograms(callback, sanitize) {
             // Get the set union of all the dates in all the evolutions
             var datesMap = {};
             for (var label in fullEvolutionsMap) {
-              fullEvolutionsMap[label][0].dates().forEach(function(date) { datesMap[date.getTime()] = true; });
+              if (fullEvolutionsMap[label].length > 0) {
+                fullEvolutionsMap[label][0].dates().forEach(function(date) { datesMap[date.getTime()] = true; });
+              }
             }
             var dates = Object.keys(datesMap).map(function(dateString) {
               return new Date(parseInt(dateString));
@@ -290,6 +303,9 @@ function calculateHistograms(callback, sanitize) {
                         histogram.measure = humanReadableOption;
                       }
                       return histogram;
+                    }).sort(function(histogram1, histogram2) {
+                      return histogram1.measure < histogram2.measure ?
+                        -1 : (histogram1.measure > histogram2.measure ? 1 : 0);
                     });
                   }
                 }
@@ -430,6 +446,9 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     // Histograms must have at least 3 buckets to render properly, so ensure that we don't trim them too much
     minTrimLeft = Infinity; minTrimRight = Infinity;
     histogramsList.forEach(function(entry) {
+      if (entry.histograms.length === 0) { // No histograms, don't consider it in the trimming calculation
+        return;
+      }
       var trimLeft = 0, trimRight = 0;
       var countsList = entry.histograms.map(function(histogram) {
         return histogram.map(function(count, start, end, i) { return count; });
@@ -574,6 +593,13 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       return counts.map(function(count) { return total += count; });
     });
   }
+
+  if (useTable) { // Display the histogram as a table rather than a chart
+    displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
+    return;
+  }
+
+  // Apply bucket trimming
   while (trimLeft) {
     starts.shift(); ends.shift();
     countsList.forEach(function(counts) { counts.shift(); });
@@ -583,11 +609,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     starts.pop(); ends.pop();
     countsList.forEach(function(counts) { counts.pop(); });
     trimRight --;
-  }
-
-  if (useTable) { // Display the histogram as a table rather than a chart
-    displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
-    return;
   }
   
   var distributionSamples = countsList.map(function(counts, i) {
@@ -617,9 +638,11 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
         var count = formatNumber(countsList[0][d.x]), percentage = Math.round(d.y * 100) / 100 + "%";
         var label;
         if (ends[d.x] === Infinity) {
-         label = "sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
+          label = "sample value \u2265 " + formatNumber(cumulative ? 0 : starts[d.x]);
+        } else if (histogram.kind === "enumerated") {
+          label = "sample value" + (cumulative ? " \u2264 " : " is ") + formatNumber(starts[d.x]);
         } else {
-         label = formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
+          label = formatNumber(cumulative ? 0 : starts[d.x]) + " \u2264 sample value < " + formatNumber(ends[d.x]);
         }
 
         var offset = $(axes).find(".mg-bar:nth-child(" + (i + 1) + ")").get(0).getAttribute("transform");
@@ -721,11 +744,14 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
             color: colors[d.line_id - 1],
           }];
         }
-        var labelValue = (
-          end === Infinity ?
-          "sample value \u2265 " + formatNumber(cumulative ? 0 : start) :
-          formatNumber(cumulative ? 0 : start) + " \u2264 sample value < " + formatNumber(end)
-        ) + ":";
+        var labelValue;
+        if (end === Infinity) {
+          labelValue = "sample value \u2265 " + formatNumber(cumulative ? 0 : start) + ":";
+        } else if (histograms[0].kind === "enumerated") {
+          labelValue = "sample value" + (cumulative ? " \u2264 " : " is ") + formatNumber(start) + ":";
+        } else {
+          labelValue = formatNumber(cumulative ? 0 : start) + " \u2264 sample value < " + formatNumber(end) + ":";
+        }
         var legend = d3.select(axes).select(".mg-active-datapoint").text(labelValue).style("fill", "white");
         var lineHeight = 1.1;
         entries.forEach(function(entry, i) {
@@ -800,8 +826,9 @@ function displaySingleHistogramTableSet(axes, starts, ends, countsList, histogra
                 $("<td></td>").text(formatNumber(starts[i])),
                 $("<td></td>").text(formatNumber(ends[i])),
               ].concat(
-                countsList.map(function(counts) {
-                  return $("<td></td>").text(formatNumber(counts[i]));
+                countsList.map(function(counts, j) {
+                  var percentage = Math.round(10000 * counts[i] / histograms[j].count) / 100;
+                  return $("<td></td>").text(formatNumber(counts[i]) + " (" + percentage + "%)");
                 })
               )
             )
