@@ -532,19 +532,14 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     return histogram.map(function(count, start, end, i) { return count; });
   });
   
-  // For single boolean and flag histograms, display a pie chart instead of a histogram
-  if (histograms.length === 1 && (histograms[0].kind === "boolean" || histograms[0].kind === "flag")) {
+  // For single boolean and flag charts, display a pie chart instead of a histogram
+  if (histograms.length === 1 && (histograms[0].kind === "boolean" || histograms[0].kind === "flag") && !useTable) {
     new d3pie(axes, {
       size: {canvasHeight: 600, canvasWidth: $(axes).parent().width()},
       data: {
         content: countsList[0].map(function(count, i) {
-          var label;
-          if (ends[i] === Infinity) {
-           label = "sample value \u2265 " + formatNumber(starts[i]);
-          } else {
-           label = formatNumber(starts[i]) + " \u2264 sample value < " + formatNumber(ends[i]);
-          }
-          return {label: label, value: count};
+          var bucketNames = ["True", "False", "Invalid values"];
+          return {label: bucketNames[i] || starts[i], value: count};
         }).filter(function(entry) { return entry.value > 0; }),
       },
       labels: {
