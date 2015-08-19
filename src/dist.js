@@ -398,9 +398,11 @@ function displayHistogram(histogram, dates, useTable, cumulative, trim) {
   var totalCount = histogram.count();
 
   if (useTable) { // Display the histogram as a table rather than a chart
+    $("#trim-option").hide(); // Trimming is not available in table view
     displayHistogramTable(starts, ends, counts, histogram);
     return;
   }
+  $("#trim-option").show(); // Show trim option for histogram view
 
   if (trim) { // Trim buckets on both ends in the histogram if their counts are too low
     // Histograms need at least 3 buckets to render properly, so make sure not to trim off too much

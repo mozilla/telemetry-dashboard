@@ -597,9 +597,11 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   }
 
   if (useTable) { // Display the histogram as a table rather than a chart
+    $("#trim-option").hide(); // Trimming is not available in table view
     displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
     return;
   }
+  $("#trim-option").show(); // Show trim option for histogram view
 
   // Apply bucket trimming
   while (trimLeft) {
