@@ -41,6 +41,8 @@
                     <dd>A summarizing, single numerical value for a histogram, such as the mean or median. Histograms have one of each aggregate, while evolutions can have many - one for each histogram they contain.</dd>
                     <dt>Measure/Metric</dt>
                     <dd>A value that can be measured via Telemetry, such as the number of milliseconds used in each garbage collection cycle in Firefox (GC_MS). Since there are a lot of these values, we generally only want to see their aggregates, such as their average.</dd>
+                    <dt>Keyed Measure</dt>
+                    <dd>A type of measure that associates keys (strings) to sub-measures, such as addon exceptions associated with the number of times those exceptions are thrown (JS_TELEMETRY_ADDON_EXCEPTIONS). Each sub-measure has their own aggregates and histograms.</dd>
                     <dt>Sample</dt>
                     <dd>A single reading for a measure. Generally, we only care about the number of these that fall within a certain range, not the sample values themselves.</dd>
                     <dt>Submission/Ping</dt>
