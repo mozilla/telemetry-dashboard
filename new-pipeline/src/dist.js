@@ -208,7 +208,13 @@ function updateOptions(callback) {
   var channelVersion = $("#channel-version").val();
   var parts = channelVersion.split("/"); //wip: clean this up
   indicate("Updating options...");
+
+  var operation = asyncOperationCheck("updateOptions");
   Telemetry.getFilterOptions(parts[0], parts[1], function(optionsMap) {
+    if (asyncOperationWasInterrupted("updateOptions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+      return;
+    }
+
     multiselectSetOptions($("#measure"), getHumanReadableOptions("measure", deduplicate(optionsMap.metric || [])));
     $("#measure").multiselect("select", gInitialPageState.measure);
 
@@ -249,15 +255,21 @@ function calculateHistograms(callback, sanitize) {
   var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0, totalFiltersCount = 0;
   var filterSetsMappingOptions = Object.keys(filterSetsMapping);
+
+  var operation = asyncOperationCheck("calculateHistograms");
   filterSetsMappingOptions.forEach(function(filterSetsMappingOption, i) { // For each option being compared by
     var filterSets = filterSetsMapping[filterSetsMappingOption];
     var filtersCount = 0, fullEvolutionMap = {};
-    indicate("Updating histograms... 0%");
+    indicate("Updating histograms...");
     filterSets.forEach(function(filterSet) {
       var parts = channelVersion.split("/");
       Telemetry.getEvolution(parts[0], parts[1], measure, filterSet, useSubmissionDate, function(evolutionMap) {
+        if (asyncOperationWasInterrupted("calculateHistograms", operation)) { // Don't call callback if this isn't the latest invocation of the function
+          return;
+        }
+        
         totalFiltersCount ++; filtersCount ++;
-        indicate("Updating histograms... " + Math.round(100 * totalFiltersCount / totalFilters) + "%");
+        indicate("Updating histograms... ", 100 * totalFiltersCount / totalFilters);
         
         for (var label in evolutionMap) {
           if (fullEvolutionMap.hasOwnProperty(label)) { fullEvolutionMap[label] = fullEvolutionMap[label].combine(evolutionMap[label]); }
@@ -327,7 +339,7 @@ function calculateHistograms(callback, sanitize) {
 
 var gLastTimeoutID = null;
 var gLoadedDateRangeFromState = false;
-var gCurrentDateRangeUpdateCallback = null;
+var gCurrentDateRangeUpdateCallback = null; // This is used by the date range slider so we dispatch the correct callback even if we aren't updating the date range
 var gPreviousMinMoment = null, gPreviousMaxMoment = null;
 function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) { // dates is null for when there are no evolutions
   shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true : shouldUpdateRangebar;

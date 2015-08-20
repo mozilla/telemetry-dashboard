@@ -139,7 +139,13 @@ function updateMeasuresList(callback) {
   var channelVersion = $("#channel-version").val();
   gMeasureMap = {};
   indicate("Updating measures...");
+
+  var operation = asyncOperationCheck("updateMeasuresList");
   Telemetry.measures(channelVersion, function(measures) {
+    if (asyncOperationWasInterrupted("updateMeasuresList", operation)) { // Don't call callback if this isn't the latest invocation of the function
+      return;
+    }
+
     indicate();
     var measuresList = Object.keys(measures).sort().filter(function(measure) {
       return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
@@ -188,7 +194,13 @@ function calculateHistogram(callback) {
   }
 
   indicate("Updating histogram...");
+
+  var operation = asyncOperationCheck("calculateHistogram");
   evolutionLoader(channelVersion, measure, function(histogramEvolution) {
+    if (asyncOperationWasInterrupted("calculateHistogram", operation)) { // Don't call callback if this isn't the latest invocation of the function
+      return;
+    }
+
     indicate();
     updateDateRange(function(dates) {
       var filterOptionsList = getOptions(filterList, histogramEvolution); // Update filter options

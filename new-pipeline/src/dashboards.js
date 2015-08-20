@@ -592,21 +592,26 @@ function multiselectSetOptions(element, options, defaultSelected) {
 
 // =========== Histogram/Evolution Dashboard-specific common code
 
-var indicate = (function() {
-  var indicatorTimeout = null;
-  return function indicate(message) {
-    message = message || null;
-    
-    if (indicatorTimeout !== null) { clearTimeout(indicatorTimeout); }
-    if (message !== null) {
-      indicatorTimeout = setTimeout(function() {
-        $(".busy-indicator").show().find(".busy-indicator-message").text(message);
-      }, 200);
-    } else {
-      $(".busy-indicator").hide();
-    }
+// These are used for functions that only call their callback for their latest invocation
+var gLatestAsyncHandlerMap = {};
+function asyncOperationCheck(id) {
+  gLatestAsyncHandlerMap[id] = (gLatestAsyncHandlerMap[id] || 0) + 1;
+  return gLatestAsyncHandlerMap[id];
+}
+function asyncOperationWasInterrupted(id, index) {
+  return gLatestAsyncHandlerMap[id] !== index;
+}
+
+function indicate(message, percentage) {
+  message = message || null;
+  percentage = percentage || 0;
+  if (message !== null) {
+    $(".busy-indicator").show().find(".busy-indicator-message").text(message);
+    $(".busy-indicator .busy-indicator-progress").css("width", percentage + "%");
+  } else {
+    $(".busy-indicator").hide();
   }
-})();
+}
 
 function compressOSs() {
   var selected = $("#filter-os").val() || [];

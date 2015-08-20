@@ -80,20 +80,22 @@
     height: 100%;
 }
 
+/* Busy indicator */
 .busy-indicator {
-    z-index: 999;
-    display: table;
+    z-index: 1001;
     position: fixed;
-    top: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.busy-indicator > div {
-    display: table-cell;
-    vertical-align: middle;
-    vertical-align: center;
-    text-align: center;
+    bottom: 0;
+    width: 100%; height: 50px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
     color: white;
+}
+.busy-indicator .busy-indicator-progress {
+    z-index: -1;
+    background: rgba(255, 255, 255, 0.5);
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 100%;
 }
 
 /* MetricsGraphics style overrides */

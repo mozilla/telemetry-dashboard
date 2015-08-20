@@ -215,9 +215,15 @@ function updateAggregates(callback) {
   var channelVersions = Telemetry.getVersions($("#min-channel-version").val(), $("#max-channel-version").val());
   var realKind = null, realBuckets = null;
   var versionCount = 0;
+  
+  var operation = asyncOperationCheck("updateAggregates");
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/");
     Telemetry.getHistogramInfo(parts[0], parts[1], $("#measure").val(), null, function(kind, description, buckets, dates) {
+      if (asyncOperationWasInterrupted("updateAggregates", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       versionCount ++;
       realKind = realKind || kind; realBuckets = realBuckets || buckets;
       
@@ -263,9 +269,15 @@ function updateOptions(callback) {
   var versions = Telemetry.getVersions(fromVersion, toVersion);
   var versionCount = 0;
   var optionsMap = {};
+
+  var operation = asyncOperationCheck("updateOptions");
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     var parts = channelVersion.split("/"); //wip: clean this up
     Telemetry.getFilterOptions(parts[0], parts[1], function(filterOptions) {
+      if (asyncOperationWasInterrupted("updateOptions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       // Combine options
       for (var filterName in filterOptions) {
         if (!optionsMap.hasOwnProperty(filterName)) { optionsMap[filterName] = []; }
@@ -310,9 +322,15 @@ function calculateEvolutions(callback) {
   var linesMap = {}, submissionLinesMap = {};
   var versionCount = 0;
   var evolutionDescription = null;
+
+  var operation = asyncOperationCheck("calculateEvolutions");
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
     getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("input[name=sanitize-toggle]:checked").val() !== "0", $("input[name=build-time-toggle]:checked").val() !== "0", function(newLinesMap, newSubmissionLinesMap, newDescription) {
+      if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       for (var key in newLinesMap) {
         linesMap[key] = linesMap.hasOwnProperty(key) ? linesMap[key].concat(newLinesMap[key]) : newLinesMap[key];
         submissionLinesMap[key] = submissionLinesMap.hasOwnProperty(key) ? submissionLinesMap[key].concat(newSubmissionLinesMap[key]) : newSubmissionLinesMap[key];
@@ -331,11 +349,12 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
   var filtersCount = 0;
   var lines = [];
   var finalEvolutionMap = {};
-  indicate("Updating evolution for " + channel + " " + version + "... 0%");
+  indicate("Updating evolution for " + channel + " " + version + "...");
+
   filterSets.forEach(function(filterSet) {
     Telemetry.getEvolution(channel, version, measure, filterSet, useSubmissionDate, function(evolutionMap) {
       filtersCount ++;
-      indicate("Updating evolution for " + channel + " " + version + "... " + Math.round(100 * filtersCount / filterSets.length) + "%");
+      indicate("Updating evolution for " + channel + " " + version + "... ", 100 * filtersCount / filterSets.length);
       
       for (var key in evolutionMap) {
         if (finalEvolutionMap[key] === undefined) { finalEvolutionMap[key] = evolutionMap[key]; }
