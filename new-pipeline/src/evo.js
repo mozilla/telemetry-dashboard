@@ -146,7 +146,7 @@ $(function() { Telemetry.init(function() {
           if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
             var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
               .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
-            $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+            $this.multiselect("deselectAll", true).multiselect("updateButtonText").multiselect("select", nonSelectedOptions);
           }
           gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
         }
