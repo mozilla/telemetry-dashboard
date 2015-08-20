@@ -124,10 +124,17 @@ $(function() { Telemetry.init(function() {
       }
 
       indicate("Updating versions...");
-      updateOptions(function() { $("#aggregates").trigger("change"); });
+      updateOptions(function() {
+        indicate();
+        $("#aggregates").trigger("change");
+      });
     });
     $("#measure").change(function(e) {
-      updateAggregates(function() { $("#aggregates").trigger("change"); });
+      indicate("Updating aggregates...");
+      updateAggregates(function() {
+        indicate();
+        $("#aggregates").trigger("change");
+      });
     });
     $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function(e) {
       var $this = $(this);
