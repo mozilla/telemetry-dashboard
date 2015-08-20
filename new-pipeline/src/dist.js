@@ -703,6 +703,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
+      interpolate: "linear",
       width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       left: 70,
