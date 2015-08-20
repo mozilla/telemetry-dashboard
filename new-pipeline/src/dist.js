@@ -126,14 +126,18 @@ $(function() { Telemetry.init(function() {
           gAxesSelectors.forEach(function(selector, i) {
             multiselectSetOptions(selector, options.concat([[gNoneKey, "(none)"]]));
             
-            // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
+            // If the recalculation was done as a result of resorting keys, reset the keys to the top 4
             if ($this.attr("id") === "sort-keys") {
               gInitialPageState.keys = options.map(function(option) { return option[0] }).filter(function(value, i) { return i < 4; });
             }
             
-            // Select i-th key if possible, otherwise none
+            // There is a bug in bootstrap-multiselect where, upon selection when existing items are selected,
+            // the existing item's radio button does not become deselected - we work around this by manually clearing
+            // all the buttons, which works pretty well
             selector.multiselect("deselectAll", false).next()
               .find("input[type=radio]").attr("checked", false);
+
+            // Select i-th key if possible, otherwise none
             if (i < options.length) {
               selector.multiselect("select", options[i][0]);
             } else {
