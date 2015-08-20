@@ -228,18 +228,15 @@ function updateAggregates(callback) {
         
         var aggregates = $("#aggregates").val() || [];
         if (realKind === "enumerated") {
-          var newAggregates = getHumanReadableOptions("buckets", realBuckets);
+          var newAggregates = getHumanReadableBucketOptions(realKind, realBuckets);
           multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+        } else if (realKind === "boolean" || realKind === "flag") {
+          var newAggregates = getHumanReadableBucketOptions(realKind, realBuckets);
+          multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+          $("#aggregates").multiselect("selectAll", false).multiselect("updateButtonText");
         } else {
           var newAggregates = gDefaultAggregates.map(function(entry) { return [entry[0], entry[1]]; });
-          if (realKind === "boolean" || realKind === "flag") { // Boolean or flag histogram selected
-            multiselectSetOptions($("#aggregates"), newAggregates, ["mean"]);
-            if (aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
-              $("#aggregates").multiselect("deselectAll", false).multiselect("select", ["mean"]);
-            }
-          } else { // Any other type of histogram
-            multiselectSetOptions($("#aggregates"), newAggregates, ["median"]);
-          }
+          multiselectSetOptions($("#aggregates"), newAggregates, ["median"]);
         }
 
         // Load aggregates from state on first load
@@ -357,7 +354,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
 
           gDefaultAggregates.forEach(function(entry) { aggregateSelector[entry[0]] = entry[2]; });
           evolution.buckets.forEach(function(start, bucketIndex) {
-            var option = getHumanReadableOptions("buckets", [start])[0][0];
+            var option = getHumanReadableBucketOptions(evolution.kind, [start])[0][0];
             aggregateSelector[option] = function(evolution) {
               return evolution.map(function(histogram) {
                 return 100 * histogram.values[bucketIndex] / histogram.count;
@@ -365,7 +362,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
             }
           });
           gDefaultAggregates.forEach(function(entry) { aggregateNames[entry[0]] = entry[1]; });
-          getHumanReadableOptions("buckets", evolution.buckets).forEach(function(entry) {
+          getHumanReadableBucketOptions(evolution.kind, evolution.buckets).forEach(function(entry) {
             aggregateNames[entry[0]] = entry[1];
           });
           description = evolution.description;

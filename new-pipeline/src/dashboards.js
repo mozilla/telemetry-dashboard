@@ -453,12 +453,23 @@ function getHumanReadableOptions(filterName, options) {
     
     if (badOptions.length > 0) { options = options.concat([null]).concat(badOptions); }
     return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
-  } else if (filterName === "buckets") {
-    return options.map(function(start) {
-      return ["bucket-" + start, start + " bucket percentage"];
-    });
   }
   return options.map(function(option) { return [option, option] });
+}
+
+function getHumanReadableBucketOptions(kind, buckets) {
+  if (kind === "boolean" || kind === "flag") {
+    return buckets.map(function(start) {
+      return [
+        "bucket-" + start,
+        (start === 0 ? "False" : start === 1 ? "True" : "Invalid value") + " percentage"
+      ];
+    });
+  }
+
+  return buckets.map(function(start) {
+    return ["bucket-" + start, start + " bucket percentage"];
+  });
 }
 
 function formatNumber(number) {
