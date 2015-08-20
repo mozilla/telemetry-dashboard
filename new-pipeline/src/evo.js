@@ -654,6 +654,7 @@ function saveStateToUrlAndCookie() {
   if (trim !== undefined) { gInitialPageState.trim = trim; }
   if (sortKeys !== undefined) { gInitialPageState.sort_keys = sortKeys; }
 
+  // We are guaranteed that selectedKeys is defined by loadStateFromUrlAndCookie
   selectedKeys[0] = $("#selected-key").val();
   gInitialPageState.keys = selectedKeys;
   

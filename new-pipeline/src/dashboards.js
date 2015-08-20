@@ -130,9 +130,12 @@ function loadStateFromUrlAndCookie() {
   if (url.indexOf("measure=") < 0) { // No state or invalid/corrupted state, restore to default settings
     pageState.aggregates = ["median"];
     pageState.measure = ["GC_MS"];
-    pageState.min_channel_version = null; pageState.max_channel_version = null;
+    pageState.min_channel_version = null;
+    pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
     pageState.os = pageState.arch = pageState.e10s = pageState.processType = null;
+    pageState.compare = "";
+    pageState.keys = [];
     pageState.use_submission_date = 0;
     pageState.sanitize = 1;
     pageState.sort_keys = "submissions";
