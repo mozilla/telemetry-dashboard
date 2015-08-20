@@ -24,6 +24,14 @@
 .multiselect-container .filter .input-group-addon { display: none; }
 .multiselect-container > .disabled { background: gray; height: 1px; margin: 5px 0; }
 .multiselect-container > .disabled a { display: none; }
+.multiselect-container li label {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Make the measure selector fixed in width */
+#measure + * .multiselect-container { width: 600px; }
 
 .panel-title, .panel-title:hover, .panel-title:focus {
     display: block;
