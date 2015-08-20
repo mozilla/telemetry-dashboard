@@ -225,7 +225,8 @@ function updateAggregates(callback) {
         assert (typeof realKind === "string", "Kind must be specified");
         assert ($.isArray(realBuckets), "Buckets must be specified");
         gCurrentKind = realKind;
-        
+
+        // Set up the aggregate list depending on the kind of histogram
         var aggregates = $("#aggregates").val() || [];
         if (realKind === "enumerated") {
           var newAggregates = getHumanReadableBucketOptions(realKind, realBuckets);
@@ -233,6 +234,8 @@ function updateAggregates(callback) {
         } else if (realKind === "boolean" || realKind === "flag") {
           var newAggregates = getHumanReadableBucketOptions(realKind, realBuckets);
           multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+          
+          // Boolean histograms should always start off with all options selected
           $("#aggregates").multiselect("selectAll", false).multiselect("updateButtonText");
         } else {
           var newAggregates = gDefaultAggregates.map(function(entry) { return [entry[0], entry[1]]; });
