@@ -785,7 +785,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   }
   
   // Reposition and resize text
-  $(axes).find(".mg-x-axis .label").attr("dy", "1.2em");
+  $(axes).find(".mg-x-axis .label").attr("dy", "12");
   $(axes).find(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
     $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");
