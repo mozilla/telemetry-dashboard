@@ -557,7 +557,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       size: {canvasHeight: 600, canvasWidth: $(axes).parent().width()},
       data: {
         content: countsList[0].map(function(count, i) {
-          var bucketNames = ["True", "False", "Invalid values"];
+          var bucketNames = ["False", "True", "Invalid values"];
           return {label: bucketNames[i] || starts[i], value: count};
         }).filter(function(entry) { return entry.value > 0; }),
       },
