@@ -1,4 +1,33 @@
-/* dropdown style overrides */
+/* Landing page styles */
+.dashboard-list .list-group-item { font-size: 18px; }
+.dashboard-list .list-group-item .dashboard-description { font-size: 12px; }
+.dashboard-list .list-group-item .pipeline-label { font-size: 12px; float: right; }
+.big-dashboard-list .list-group-item {
+  font-size: 36px;
+  background: #337AB7;
+  color: white;
+}
+.big-dashboard-list .list-group-item:focus {
+  font-size: 36px;
+  background: #337AB7;
+  color: white;
+}
+.big-dashboard-list .list-group-item:hover {
+  background: #326AA7;
+  color: white;
+}
+.big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
+.scrollable-dashboard-list {
+  height: 600px;
+  overflow-y: auto;
+}
+.scrollable-dashboard-list .list-group-item {
+  border: none;
+  border-top: 1px solid #ddd;
+}
+.scrollable-dashboard-list .list-group-item:first-child { border-top: none; }
+
+/* Dropdown style overrides */
 .multiselect {
     border: transparent !important;
     padding: 6px 3px !important;
@@ -30,9 +59,7 @@
     white-space: nowrap;
 }
 
-/* Make the measure selector fixed in width */
-#measure + * .multiselect-container { width: 600px; }
-
+/* Advanced settings panel styles */
 .panel-title, .panel-title:hover, .panel-title:focus {
     display: block;
     margin: -10px -15px;
@@ -78,12 +105,14 @@
     width: 0; height: 100%;
 }
 
+/* Make the measure selector fixed in width */
+#measure + * .multiselect-container { width: 600px; }
+
+/* Make sure plots don't have any extra space at the bottom */
 #plots h3 { margin-bottom: 0; }
 
 /* MetricsGraphics style overrides */
-.mg-x-axis .label, .mg-y-axis .label {
-    text-transform: none !important;
-}
+.mg-x-axis .label, .mg-y-axis .label { text-transform: none !important; }
 .mg-x-axis .label:hover { cursor: pointer; }
 .mg-x-axis text, .mg-y-axis text, .mg-histogram .axis text, .mg-baselines text, .mg-active-datapoint { font-size: 12px !important; }
 .mg-line-legend text { font-size: 12px !important; }
