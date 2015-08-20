@@ -692,20 +692,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   } else { // Multiple histograms available, display as overlaid lines
     var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
     var colors = countsList.map(function(counts, i) { return goodColors[i % goodColors.length]; });
-    
-    // Add median markers
-    var markers = [];
-    /* // Median markers
-    histograms.forEach(function(histogram) {
-      var median = histogram.percentile(50);
-      var index = 0;
-      while (index < starts.length && starts[index] < median) { index ++; }
-      index --;
-      index += (median - starts[index]) / (ends[index] - starts[index]); // Linear interpolation within bucket
-      markers.push({value: index, label: ""});
-    });
-    */
-    
+
     distributionSamples.forEach(function(entries) {
       entries.forEach(function(entry) { entry.value += 0.5; });
     });
@@ -715,7 +702,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       left: 70,
-      markers: markers,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
@@ -791,9 +777,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       $(axes).find(".mg-main-line.mg-line" + lineIndex + "-color").css("stroke", colors[i]);
       $(axes).find(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", colors[i]).css("stroke", colors[i]);
       $(axes).find(".mg-line" + lineIndex + "-legend-color").css("fill", colors[i]);
-    });
-    $(axes).find(".mg-markers line").each(function(i, marker) {
-      $(marker).css("stroke", colors[i]);
     });
   }
   
