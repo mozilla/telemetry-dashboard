@@ -7,7 +7,7 @@ function assert(condition, message) {
 }
 
 var Telemetry = {
-  BASE_URL: 'http://aggregates.telemetry.mozilla.org/',
+  BASE_URL: 'https://aggregates.telemetry.mozilla.org/',
   CHANNEL_VERSION_DATES: null,
   CHANNEL_VERSION_BUILDIDS: null,
   CACHE: {}, CACHE_LAST_UPDATED: {}, CACHE_TIMEOUT: 4 * 60 * 60 * 1000,
