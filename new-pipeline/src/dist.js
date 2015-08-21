@@ -126,11 +126,17 @@ $(function() { Telemetry.init(function() {
           gAxesSelectors.forEach(function(selector, i) {
             multiselectSetOptions(selector, options.concat([[gNoneKey, "(none)"]]));
             
-            // if the recalculation was done as a result of resorting keys, reset the keys to the top 4
+            // If the recalculation was done as a result of resorting keys, reset the keys to the top 4
             if ($this.attr("id") === "sort-keys") {
               gInitialPageState.keys = options.map(function(option) { return option[0] }).filter(function(value, i) { return i < 4; });
             }
             
+            // There is a bug in bootstrap-multiselect where, upon selection when existing items are selected,
+            // the existing item's radio button does not become deselected - we work around this by manually clearing
+            // all the buttons, which works pretty well
+            selector.multiselect("deselectAll", false).next()
+              .find("input[type=radio]").attr("checked", false);
+
             // Select i-th key if possible, otherwise none
             if (i < options.length) {
               selector.multiselect("select", options[i][0]);
@@ -202,7 +208,13 @@ function updateOptions(callback) {
   var channelVersion = $("#channel-version").val();
   var parts = channelVersion.split("/"); //wip: clean this up
   indicate("Updating options...");
+
+  var operation = asyncOperationCheck("updateOptions");
   Telemetry.getFilterOptions(parts[0], parts[1], function(optionsMap) {
+    if (asyncOperationWasInterrupted("updateOptions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+      return;
+    }
+
     multiselectSetOptions($("#measure"), getHumanReadableOptions("measure", deduplicate(optionsMap.metric || [])));
     $("#measure").multiselect("select", gInitialPageState.measure);
 
@@ -243,15 +255,21 @@ function calculateHistograms(callback, sanitize) {
   var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0, totalFiltersCount = 0;
   var filterSetsMappingOptions = Object.keys(filterSetsMapping);
+
+  var operation = asyncOperationCheck("calculateHistograms");
   filterSetsMappingOptions.forEach(function(filterSetsMappingOption, i) { // For each option being compared by
     var filterSets = filterSetsMapping[filterSetsMappingOption];
     var filtersCount = 0, fullEvolutionMap = {};
-    indicate("Updating histograms... 0%");
+    indicate("Updating histograms...");
     filterSets.forEach(function(filterSet) {
       var parts = channelVersion.split("/");
       Telemetry.getEvolution(parts[0], parts[1], measure, filterSet, useSubmissionDate, function(evolutionMap) {
+        if (asyncOperationWasInterrupted("calculateHistograms", operation)) { // Don't call callback if this isn't the latest invocation of the function
+          return;
+        }
+        
         totalFiltersCount ++; filtersCount ++;
-        indicate("Updating histograms... " + Math.round(100 * totalFiltersCount / totalFilters) + "%");
+        indicate("Updating histograms... ", 100 * totalFiltersCount / totalFilters);
         
         for (var label in evolutionMap) {
           if (fullEvolutionMap.hasOwnProperty(label)) { fullEvolutionMap[label] = fullEvolutionMap[label].combine(evolutionMap[label]); }
@@ -321,7 +339,7 @@ function calculateHistograms(callback, sanitize) {
 
 var gLastTimeoutID = null;
 var gLoadedDateRangeFromState = false;
-var gCurrentDateRangeUpdateCallback = null;
+var gCurrentDateRangeUpdateCallback = null; // This is used by the date range slider so we dispatch the correct callback even if we aren't updating the date range
 var gPreviousMinMoment = null, gPreviousMaxMoment = null;
 function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) { // dates is null for when there are no evolutions
   shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true : shouldUpdateRangebar;
@@ -595,9 +613,11 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   }
 
   if (useTable) { // Display the histogram as a table rather than a chart
+    $("#trim-option").hide(); // Trimming is not available in table view
     displaySingleHistogramTableSet(axes, starts, ends, countsList, histograms);
     return;
   }
+  $("#trim-option").show(); // Show trim option for histogram view
 
   // Apply bucket trimming
   while (trimLeft) {
@@ -625,7 +645,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       top: 0, left: 70, right: $(axes).width() / (distributionSamples[0].length + 1),
-      max_y: maxPercentage,
+      max_y: maxPercentage + 2, // Add some extra space to account for the top label
       transition_on_update: false,
       target: axes,
       x_label: histogram.description, y_label: "Percentage of Samples",
@@ -688,28 +708,17 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
   } else { // Multiple histograms available, display as overlaid lines
     var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown", "cyan", "darkgreen", "darkorange", "darkred", "navy"];
     var colors = countsList.map(function(counts, i) { return goodColors[i % goodColors.length]; });
-    
-    // Add median markers
-    var markers = [];
-    histograms.forEach(function(histogram) {
-      var median = histogram.percentile(50);
-      var index = 0;
-      while (index < starts.length && starts[index] < median) { index ++; }
-      index --;
-      index += (median - starts[index]) / (ends[index] - starts[index]); // Linear interpolation within bucket
-      markers.push({value: index, label: ""});
-    });
-    
+
     distributionSamples.forEach(function(entries) {
       entries.forEach(function(entry) { entry.value += 0.5; });
     });
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
+      interpolate: "linear",
       width: $(axes).parent().width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       left: 70,
-      markers: markers,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
@@ -786,13 +795,10 @@ function displaySingleHistogramSet(axes, useTable, histograms, title, cumulative
       $(axes).find(".mg-area" + lineIndex + "-color, .mg-hover-line" + lineIndex + "-color").css("fill", colors[i]).css("stroke", colors[i]);
       $(axes).find(".mg-line" + lineIndex + "-legend-color").css("fill", colors[i]);
     });
-    $(axes).find(".mg-markers line").each(function(i, marker) {
-      $(marker).css("stroke", colors[i]);
-    });
   }
   
   // Reposition and resize text
-  $(axes).find(".mg-x-axis .label").attr("dy", "1.2em");
+  $(axes).find(".mg-x-axis .label").attr("dy", "12");
   $(axes).find(".mg-x-axis text:not(.label)").each(function(i, text) { // Axis tick labels
     if ($(text).text() === "NaN") { text.parentNode.removeChild(text); } // Remove "NaN" labels resulting from interpolation in histogram labels
     $(text).attr("dx", "0.3em").attr("dy", "0").attr("text-anchor", "start");

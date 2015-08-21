@@ -103,7 +103,7 @@
                                     <label><input name="build-time-toggle" type="radio" value="0"> Build Date</label>
                                     <label><input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
                                 </div>
-                                <div>
+                                <div id="trim-option">
                                     Trim small buckets: hide buckets on both sides that don't have enough samples:
                                     <label><input name="trim-toggle" type="radio" value="0"> Don't Trim Buckets</label>
                                     <label><input name="trim-toggle" type="radio" value="1"> Trim Buckets</label>
@@ -141,10 +141,9 @@
         </div>
     </div>
     <div class="busy-indicator">
-        <div>
-            <i style="font-size: 15em" class="fa fa-cog fa-spin"></i>
-            <div class="busy-indicator-message">Loading page...</div>
-        </div>
+        <div class="busy-indicator-progress"></div>
+        <i style="margin: 0 5px" class="fa fa-cog fa-spin"></i>
+        <span class="busy-indicator-message">Loading page...</span>
     </div>
     
     <!-- Bootstrap and supporting libraries -->

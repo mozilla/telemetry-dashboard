@@ -139,7 +139,13 @@ function updateMeasuresList(callback) {
   var channelVersion = $("#channel-version").val();
   gMeasureMap = {};
   indicate("Updating measures...");
+
+  var operation = asyncOperationCheck("updateMeasuresList");
   Telemetry.measures(channelVersion, function(measures) {
+    if (asyncOperationWasInterrupted("updateMeasuresList", operation)) { // Don't call callback if this isn't the latest invocation of the function
+      return;
+    }
+
     indicate();
     var measuresList = Object.keys(measures).sort().filter(function(measure) {
       return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
@@ -188,7 +194,13 @@ function calculateHistogram(callback) {
   }
 
   indicate("Updating histogram...");
+
+  var operation = asyncOperationCheck("calculateHistogram");
   evolutionLoader(channelVersion, measure, function(histogramEvolution) {
+    if (asyncOperationWasInterrupted("calculateHistogram", operation)) { // Don't call callback if this isn't the latest invocation of the function
+      return;
+    }
+
     indicate();
     updateDateRange(function(dates) {
       var filterOptionsList = getOptions(filterList, histogramEvolution); // Update filter options
@@ -398,9 +410,11 @@ function displayHistogram(histogram, dates, useTable, cumulative, trim) {
   var totalCount = histogram.count();
 
   if (useTable) { // Display the histogram as a table rather than a chart
+    $("#trim-option").hide(); // Trimming is not available in table view
     displayHistogramTable(starts, ends, counts, histogram);
     return;
   }
+  $("#trim-option").show(); // Show trim option for histogram view
 
   if (trim) { // Trim buckets on both ends in the histogram if their counts are too low
     // Histograms need at least 3 buckets to render properly, so make sure not to trim off too much

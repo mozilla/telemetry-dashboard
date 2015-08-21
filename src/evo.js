@@ -188,11 +188,17 @@ function updateMeasuresList(callback) {
     return
   }
   
-  indicate("Updating measures... 0%");
+  indicate("Updating measures...");
+
+  var operation = asyncOperationCheck("updateMeasuresList");
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     Telemetry.measures(channelVersion, function(measures) {
+      if (asyncOperationWasInterrupted("updateMeasuresList", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       versionCount ++;
-      indicate("Updating measures... " + Math.round(100 * versionCount / versions.length) + "%");
+      indicate("Updating measures... ", 100 * versionCount / versions.length);
       Object.keys(measures).filter(function(measure) {
         return !measure.startsWith("STARTUP_"); // Ignore STARTUP_* histograms since nobody ever uses them
       }).forEach(function(measure) {
@@ -293,10 +299,17 @@ function calculateHistogramEvolutions(callback) {
   var submissionLines = [];
   var expectedCount = versions.length * aggregates.length;
   var filterOptionsList = []; // Each entry is an array of options for a particular filter
-  indicate("Updating evolutions... 0%");
+
+  indicate("Updating evolutions...");
+
+  var operation = asyncOperationCheck("calculateHistogramEvolutions");
   versions.forEach(function(version) {
     evolutionLoader(version, measure, function(histogramEvolution) {
-      indicate("Updating evolutions... " + Math.round(100 * lines.length / expectedCount) + "%");
+      if (asyncOperationWasInterrupted("calculateHistogramEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
+      indicate("Updating evolutions... ", 100 * lines.length / expectedCount);
     
       // Update filter options
       var versionOptionsList = getOptions(filterList, histogramEvolution);

@@ -124,22 +124,29 @@ $(function() { Telemetry.init(function() {
       }
 
       indicate("Updating versions...");
-      updateOptions(function() { $("#aggregates").trigger("change"); });
+      updateOptions(function() {
+        indicate();
+        $("#aggregates").trigger("change");
+      });
     });
     $("#measure").change(function(e) {
-      updateAggregates(function() { $("#aggregates").trigger("change"); });
+      indicate("Updating aggregates...");
+      updateAggregates(function() {
+        indicate();
+        $("#aggregates").trigger("change");
+      });
     });
     $("input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type").change(function(e) {
       var $this = $(this);
       if (gFilterChangeTimeout !== null) { clearTimeout(gFilterChangeTimeout); }
       gFilterChangeTimeout = setTimeout(function() { // Debounce the changes to prevent rapid filter changes from causing too many updates
-        if (["filter-product", "filter-os"].indexOf(selector.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
+        if (["filter-product", "filter-os"].indexOf($this.attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
           // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
           var selected = $this.val() || [], options = $this.find("option");
           if (selected.length !== options.length && selected.length > 0 && gPreviousFilterAllSelected[$this.attr("id")]) {
             var nonSelectedOptions = options.map(function(i, option) { return option.getAttribute("value"); }).toArray()
               .filter(function(filterOption) { return selected.indexOf(filterOption) < 0; });
-            $this.multiselect("deselectAll").multiselect("select", nonSelectedOptions);
+            $this.multiselect("deselectAll", true).multiselect("updateButtonText").multiselect("select", nonSelectedOptions);
           }
           gPreviousFilterAllSelected[$this.attr("id")] = selected.length === options.length; // Store state
         }
@@ -208,9 +215,15 @@ function updateAggregates(callback) {
   var channelVersions = Telemetry.getVersions($("#min-channel-version").val(), $("#max-channel-version").val());
   var realKind = null, realBuckets = null;
   var versionCount = 0;
+  
+  var operation = asyncOperationCheck("updateAggregates");
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/");
     Telemetry.getHistogramInfo(parts[0], parts[1], $("#measure").val(), null, function(kind, description, buckets, dates) {
+      if (asyncOperationWasInterrupted("updateAggregates", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       versionCount ++;
       realKind = realKind || kind; realBuckets = realBuckets || buckets;
       
@@ -218,21 +231,21 @@ function updateAggregates(callback) {
         assert (typeof realKind === "string", "Kind must be specified");
         assert ($.isArray(realBuckets), "Buckets must be specified");
         gCurrentKind = realKind;
-        
+
+        // Set up the aggregate list depending on the kind of histogram
         var aggregates = $("#aggregates").val() || [];
         if (realKind === "enumerated") {
-          var newAggregates = getHumanReadableOptions("buckets", realBuckets);
+          var newAggregates = getHumanReadableBucketOptions(realKind, realBuckets);
           multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+        } else if (realKind === "boolean" || realKind === "flag") {
+          var newAggregates = getHumanReadableBucketOptions(realKind, realBuckets);
+          multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+          
+          // Boolean histograms should always start off with all options selected
+          $("#aggregates").multiselect("selectAll", false).multiselect("updateButtonText");
         } else {
           var newAggregates = gDefaultAggregates.map(function(entry) { return [entry[0], entry[1]]; });
-          if (realKind === "boolean" || realKind === "flag") { // Boolean or flag histogram selected
-            multiselectSetOptions($("#aggregates"), newAggregates, ["mean"]);
-            if (aggregates.indexOf("mean") < 0) { // Mean not selected, select just the mean
-              $("#aggregates").multiselect("deselectAll", false).multiselect("select", ["mean"]);
-            }
-          } else { // Any other type of histogram
-            multiselectSetOptions($("#aggregates"), newAggregates, ["median"]);
-          }
+          multiselectSetOptions($("#aggregates"), newAggregates, ["median"]);
         }
 
         // Load aggregates from state on first load
@@ -256,9 +269,15 @@ function updateOptions(callback) {
   var versions = Telemetry.getVersions(fromVersion, toVersion);
   var versionCount = 0;
   var optionsMap = {};
+
+  var operation = asyncOperationCheck("updateOptions");
   versions.forEach(function(channelVersion) { // Load combined measures for all the versions
     var parts = channelVersion.split("/"); //wip: clean this up
     Telemetry.getFilterOptions(parts[0], parts[1], function(filterOptions) {
+      if (asyncOperationWasInterrupted("updateOptions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       // Combine options
       for (var filterName in filterOptions) {
         if (!optionsMap.hasOwnProperty(filterName)) { optionsMap[filterName] = []; }
@@ -303,9 +322,15 @@ function calculateEvolutions(callback) {
   var linesMap = {}, submissionLinesMap = {};
   var versionCount = 0;
   var evolutionDescription = null;
+
+  var operation = asyncOperationCheck("calculateEvolutions");
   channelVersions.forEach(function(channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
     getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates, filterSets, $("input[name=sanitize-toggle]:checked").val() !== "0", $("input[name=build-time-toggle]:checked").val() !== "0", function(newLinesMap, newSubmissionLinesMap, newDescription) {
+      if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
+        return;
+      }
+
       for (var key in newLinesMap) {
         linesMap[key] = linesMap.hasOwnProperty(key) ? linesMap[key].concat(newLinesMap[key]) : newLinesMap[key];
         submissionLinesMap[key] = submissionLinesMap.hasOwnProperty(key) ? submissionLinesMap[key].concat(newSubmissionLinesMap[key]) : newSubmissionLinesMap[key];
@@ -324,11 +349,12 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
   var filtersCount = 0;
   var lines = [];
   var finalEvolutionMap = {};
-  indicate("Updating evolution for " + channel + " " + version + "... 0%");
+  indicate("Updating evolution for " + channel + " " + version + "...");
+
   filterSets.forEach(function(filterSet) {
     Telemetry.getEvolution(channel, version, measure, filterSet, useSubmissionDate, function(evolutionMap) {
       filtersCount ++;
-      indicate("Updating evolution for " + channel + " " + version + "... " + Math.round(100 * filtersCount / filterSets.length) + "%");
+      indicate("Updating evolution for " + channel + " " + version + "... ", 100 * filtersCount / filterSets.length);
       
       for (var key in evolutionMap) {
         if (finalEvolutionMap[key] === undefined) { finalEvolutionMap[key] = evolutionMap[key]; }
@@ -350,7 +376,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
 
           gDefaultAggregates.forEach(function(entry) { aggregateSelector[entry[0]] = entry[2]; });
           evolution.buckets.forEach(function(start, bucketIndex) {
-            var option = getHumanReadableOptions("buckets", [start])[0][0];
+            var option = getHumanReadableBucketOptions(evolution.kind, [start])[0][0];
             aggregateSelector[option] = function(evolution) {
               return evolution.map(function(histogram) {
                 return 100 * histogram.values[bucketIndex] / histogram.count;
@@ -358,7 +384,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates, filte
             }
           });
           gDefaultAggregates.forEach(function(entry) { aggregateNames[entry[0]] = entry[1]; });
-          getHumanReadableOptions("buckets", evolution.buckets).forEach(function(entry) {
+          getHumanReadableBucketOptions(evolution.kind, evolution.buckets).forEach(function(entry) {
             aggregateNames[entry[0]] = entry[1];
           });
           description = evolution.description;
@@ -654,6 +680,7 @@ function saveStateToUrlAndCookie() {
   if (trim !== undefined) { gInitialPageState.trim = trim; }
   if (sortKeys !== undefined) { gInitialPageState.sort_keys = sortKeys; }
 
+  // We are guaranteed that selectedKeys is defined by loadStateFromUrlAndCookie
   selectedKeys[0] = $("#selected-key").val();
   gInitialPageState.keys = selectedKeys;
   

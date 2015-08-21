@@ -130,9 +130,12 @@ function loadStateFromUrlAndCookie() {
   if (url.indexOf("measure=") < 0) { // No state or invalid/corrupted state, restore to default settings
     pageState.aggregates = ["median"];
     pageState.measure = ["GC_MS"];
-    pageState.min_channel_version = null; pageState.max_channel_version = null;
+    pageState.min_channel_version = null;
+    pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
     pageState.os = pageState.arch = pageState.e10s = pageState.processType = null;
+    pageState.compare = "";
+    pageState.keys = [];
     pageState.use_submission_date = 0;
     pageState.sanitize = 1;
     pageState.sort_keys = "submissions";
@@ -450,12 +453,23 @@ function getHumanReadableOptions(filterName, options) {
     
     if (badOptions.length > 0) { options = options.concat([null]).concat(badOptions); }
     return options.map(function(option) { return option !== null ? [option, option.replace("/", " ")] : null; });
-  } else if (filterName === "buckets") {
-    return options.map(function(start) {
-      return ["bucket-" + start, start + " bucket percentage"];
-    });
   }
   return options.map(function(option) { return [option, option] });
+}
+
+function getHumanReadableBucketOptions(kind, buckets) {
+  if (kind === "boolean" || kind === "flag") {
+    return buckets.map(function(start) {
+      return [
+        "bucket-" + start,
+        (start === 0 ? "False" : start === 1 ? "True" : "Invalid value") + " percentage"
+      ];
+    });
+  }
+
+  return buckets.map(function(start) {
+    return ["bucket-" + start, start + " bucket percentage"];
+  });
 }
 
 function formatNumber(number) {
@@ -578,21 +592,26 @@ function multiselectSetOptions(element, options, defaultSelected) {
 
 // =========== Histogram/Evolution Dashboard-specific common code
 
-var indicate = (function() {
-  var indicatorTimeout = null;
-  return function indicate(message) {
-    message = message || null;
-    
-    if (indicatorTimeout !== null) { clearTimeout(indicatorTimeout); }
-    if (message !== null) {
-      indicatorTimeout = setTimeout(function() {
-        $(".busy-indicator").show().find(".busy-indicator-message").text(message);
-      }, 200);
-    } else {
-      $(".busy-indicator").hide();
-    }
+// These are used for functions that only call their callback for their latest invocation
+var gLatestAsyncHandlerMap = {};
+function asyncOperationCheck(id) {
+  gLatestAsyncHandlerMap[id] = (gLatestAsyncHandlerMap[id] || 0) + 1;
+  return gLatestAsyncHandlerMap[id];
+}
+function asyncOperationWasInterrupted(id, index) {
+  return gLatestAsyncHandlerMap[id] !== index;
+}
+
+function indicate(message, percentage) {
+  message = message || null;
+  percentage = percentage || 0;
+  if (message !== null) {
+    $(".busy-indicator").show().find(".busy-indicator-message").text(message);
+    $(".busy-indicator .busy-indicator-progress").css("width", percentage + "%");
+  } else {
+    $(".busy-indicator").hide();
   }
-})();
+}
 
 function compressOSs() {
   var selected = $("#filter-os").val() || [];
