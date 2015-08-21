@@ -25,7 +25,7 @@ $(document).ready(function() {
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
         var currentOption = $(element).find("label").text().toLowerCase(); // Get the value of the current option being filtered
-        query = query.toLowerCase();
+        query = query.toLowerCase().trim();
         return currentOption.indexOf(query) >= 0 || currentOption.replace(/_/g, " ").indexOf(query) >= 0 || currentOption.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
