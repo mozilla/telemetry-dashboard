@@ -1002,6 +1002,18 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     $(axes)
       .find(".mg-missing-pane")
       .remove();
+    var y = 180;
+    var text = d3.select(axes).select(".mg-missing-text").attr("x", 30).attr("y", y).text("");
+    text.append("tspan").attr("y", y).attr("text-anchor", "start").text("No data matches these filters and settings.");
+    text.append("tspan").attr("y", y + 50).attr("text-anchor", "start").text("Possible reasons:");
+    text.append("tspan").attr("y", y + 80).attr("text-anchor", "start").text("1) The Telemetry submissions haven't been aggregated for the dashboard yet (it takes a couple of days)");
+    text.append("tspan").attr("y", y + 110).attr("text-anchor", "start").text("2) Too few submissions were received & are being filtered out in the dash. Turn off \"Sanitize data\" in Advanced Settings panel?");
+    text.append("tspan").attr("y", y + 140).attr("text-anchor", "start").text("3) The data was sent to Telemetry before the unified Telemetry pipeline came online (July 2015)");
+    $(axes).find("tspan").each(function(i, element) { d3.select(element).attr("x", 0); });
+    var width = text[0][0].getBBox().width;
+    $(axes).find("tspan").each(function(i, element) {
+      d3.select(element).attr("x", ($(axes).width() - width) / 2);
+    });
     return;
   }
 
