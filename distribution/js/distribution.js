@@ -11,7 +11,7 @@ Array.prototype.chunk = function(chunkSize) {
 }
 
 function loadData() {
-  $.ajax("https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/distribution/data/distribution.csv").done(function(input) {
+  $.ajax("https://s3-us-west-2.amazonaws.com/telemetry-public-analysis/Population%20Segmentation/data/distribution.csv").done(function(input) {
     input = input.split("\n");
 
     for(var i = 0; i < input.length; i++) {
