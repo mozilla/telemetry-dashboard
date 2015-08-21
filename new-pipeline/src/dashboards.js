@@ -11,8 +11,10 @@ $(document).ready(function() {
       maxHeight: 500,
       disableIfEmpty: true,
       nSelectedText: $this.data("n-selected") !== undefined ? $this.data("n-selected") : "selected",
-      onDropdownShow: function(event) { // Focus the search box whenever the dropdown is opened
-        setTimeout(function() { $(event.currentTarget).find(".filter input").focus(); }, 0);
+      onDropdownShow: function(event) { // Focus and clear the search box whenever the dropdown is opened
+        setTimeout(function() {
+          $(event.currentTarget).find(".filter input").val("").trigger("input").focus();
+        }, 0);
       },
     };
     
