@@ -706,10 +706,11 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
     }
 
     // If advanced settings are not at their defaults, expand the settings pane on load
+    var isKeyedHistogram = $("#sort-keys-option").css("display") !== "none";
     if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !==
       0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
-      gInitialPageState.sort_keys !== "submissions" || startMoment !==
-      minMoment || endMoment !== maxMoment) {
+      (isKeyedHistogram && gInitialPageState.sort_keys !== "submissions") ||
+      startMoment !== minMoment || endMoment !== maxMoment) {
       $("#advanced-settings-toggle")
         .click();
     }
@@ -1689,10 +1690,11 @@ function saveStateToUrlAndCookie() {
       maxMoment = end;
   }
 
+  var isKeyedHistogram = $("#sort-keys-option").css("display") !== "none";
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !==
     0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
-    gInitialPageState.sort_keys !== "submissions" || start !== minMoment || end !==
-    maxMoment) {
+    (isKeyedHistogram && gInitialPageState.sort_keys !== "submissions") ||
+    start !== minMoment || end !== maxMoment) {
     $("#advanced-settings-toggle")
       .find("span")
       .text(" (modified)");
