@@ -11,8 +11,10 @@ $(document).ready(function() {
       maxHeight: 500,
       disableIfEmpty: true,
       nSelectedText: $this.data("n-selected") !== undefined ? $this.data("n-selected") : "selected",
-      onDropdownShow: function(event) { // Focus the search box whenever the dropdown is opened
-        setTimeout(function() { $(event.currentTarget).find(".filter input").focus(); }, 0);
+      onDropdownShow: function(event) { // Focus and clear the search box whenever the dropdown is opened
+        setTimeout(function() {
+          $(event.currentTarget).find(".filter input").val("").trigger("input").focus();
+        }, 0);
       },
     };
     
@@ -25,7 +27,7 @@ $(document).ready(function() {
       options.filterBehavior = "custom";
       options.filterCallback = function(element, query) {
         var currentOption = $(element).find("label").text().toLowerCase(); // Get the value of the current option being filtered
-        query = query.toLowerCase();
+        query = query.toLowerCase().trim();
         return currentOption.indexOf(query) >= 0 || currentOption.replace(/_/g, " ").indexOf(query) >= 0 || currentOption.indexOf(query.replace(/[ _]/g, "")) >= 0;
       };
     }
