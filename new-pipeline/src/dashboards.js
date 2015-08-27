@@ -25,8 +25,10 @@ $(document)
               container.focus();
 
               // Scroll the previously selected item into view
-              var position = selectedItem.position().top + container.scrollTop();
-              container.scrollTop(Math.max(position - 100, 0));
+              setTimeout(function() {
+                var position = selectedItem.position().top + container.scrollTop();
+                container.scrollTop(Math.max(position - 100, 0));
+              }, 350); // The multiselect filter timeout is 300, so make sure to scroll only after the filter is applied
             }, 0);
           },
         };
