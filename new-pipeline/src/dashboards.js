@@ -21,8 +21,7 @@ $(document)
               var selectedItem = container.find(".active");
 
               // Clear the search box and focus it
-              container.find(".filter input").val("").trigger("input");
-              container.focus();
+              container.find(".filter input").val("").trigger("input").focus();
 
               // Scroll the previously selected item into view
               setTimeout(function() {
