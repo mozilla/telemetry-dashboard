@@ -17,11 +17,17 @@ $(document)
             "n-selected") : "selected",
           onDropdownShow: function (event) { // Focus and clear the search box whenever the dropdown is opened
             setTimeout(function () {
-              $(event.currentTarget)
-                .find(".filter input")
-                .val("")
-                .trigger("input")
-                .focus();
+              var container = $(event.currentTarget).find(".multiselect-container");
+              var selectedItem = container.find(".active");
+
+              // Clear the search box and focus it
+              container.find(".filter input").val("").trigger("input").focus();
+
+              // Scroll the previously selected item into view
+              setTimeout(function() {
+                var position = selectedItem.position().top + container.scrollTop();
+                container.scrollTop(Math.max(position - 100, 0));
+              }, 350); // The multiselect filter timeout is 300, so make sure to scroll only after the filter is applied
             }, 0);
           },
         };
@@ -794,7 +800,7 @@ function multiselectSetOptions(element, options, defaultSelected) {
     }
   }
 
-  var useGroups = options[0].length === 3;
+  var useGroups = options[0] !== null && options[0].length === 3;
   if (useGroups) { // Build option elements categorized by options group
     options.forEach(function (option) {
       if (!$.isArray(option) || option.length !== 3 || typeof option[0] !==
