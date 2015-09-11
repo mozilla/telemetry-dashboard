@@ -53,7 +53,7 @@ Getting the dates for which there are submissions for GC_MS on nightly 42 on Win
 ```javascript
 Telemetry.init(function() {
     Telemetry.getEvolution("nightly", "42", "GC_MS", {os: "Windows_NT"}, true, function(evolutionMap) {
-        console.log("Available dates:\n" + evolutionMap[""].dates().join("\n"));
+        console.log("Available dates:\n" + evolutionMap.dates().join("\n"));
     });
 });
 ```
@@ -63,7 +63,7 @@ Getting the overall median value of GC_MS on nightly 42 on Windows from July 19,
 ```javascript
 Telemetry.init(function() {
     Telemetry.getEvolution("nightly", "42", "GC_MS", {os: "Windows_NT"}, true, function(evolutionMap) {
-        var evolution = evolutionMap[""].dateRange(new Date("2015-07-19"), new Date("2015-08-01"));
+        var evolution = evolutionMap.dateRange(new Date("2015-07-19"), new Date("2015-08-01"));
         var histogram = evolution.histogram();
         console.log("Median GC_MS: " + histogram.percentile(50));
     });

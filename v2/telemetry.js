@@ -482,6 +482,10 @@
             entriesMap[label], histograms.kind, histograms.description,
             metric);
         };
+        // Detect un-keyed histograms and return the unwrapped evolution
+        if (Object.keys(entriesMap).length === 1 && entriesMap[0] === void 0) {
+            evolutionMap = evolutionMap[""];
+        }
         callback(evolutionMap);
       }
     });
