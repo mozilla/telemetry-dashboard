@@ -483,7 +483,7 @@
             metric);
         };
         // Detect un-keyed histograms and return the unwrapped evolution
-        if (Object.keys(entriesMap).length === 1 && entriesMap[0] === void 0) {
+        if (Object.keys(entriesMap).length === 1 && typeof entriesMap[0] === 'undefined') {
             evolutionMap = evolutionMap[""];
         }
         callback(evolutionMap);
