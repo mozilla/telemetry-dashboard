@@ -205,7 +205,7 @@ function update() {
   }
 
   var histogram = new Telemetry.Histogram(gCurrentBuckets, gCurrentBuckets,
-    kind, values.length, "Test Histogram");
+    kind, values.length, 0, "Test Histogram", "TEST_MEASURE");
   var counts = histogram.map(function (count, start, end, i) {
     var hitCount = 0;
     if (i === gCurrentBuckets.length - 1) { // Last bucket, no upper bound
