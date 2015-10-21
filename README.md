@@ -5,7 +5,7 @@ This repository contains the **source code for [telemetry.mozilla.org](https://t
 
 The main dashboards on [telemetry.mozilla.org](https://telemetry.mozilla.org) consume data from Telemetry's v2 and v4 backends using Telemetry.js. For an overview of how all these systems fit together, see [Telemetry Demystified](https://anthony-zhang.me/blog/telemetry-demystified/).
 
-The dashboards that do not use Telemetry.js generally use [scheduled analysis jobs](https://telemetry-dash.mozilla.org/) that regularly publish data on S3. The source code for these can be found in their respective repositories.
+The dashboards that do not use Telemetry.js generally use [scheduled analysis jobs](https://analysis.telemetry.mozilla.org/) that regularly publish data on S3. The source code for these can be found in their respective repositories.
 
 This repository also contains the **source code for Telemetry.js** (all versions). The specific files can be found under the `v1/` and `v2/` directories.
 
@@ -14,11 +14,9 @@ We currently have two versions of the Histogram Dashboard and Evolution Dashboar
 Deploying Telemetry Dashboard
 -----------------------------
 
-The [telemetry.mozilla.org](https://telemetry.mozilla.org) site is hosted on S3, in the [telemetry.mozilla.org bucket](https://console.aws.amazon.com/s3/home#&bucket=telemetry.mozilla.org). In front of S3, there is also the CloudFront CDN (managed by :mostlygeek).
+The [telemetry.mozilla.org](https://telemetry.mozilla.org) site is hosted in [Github Pages](https://pages.github.com/), so it may also be accessed via [mozilla.github.io/telemetry-dashboard](https://mozilla.github.io/telemetry-dashboard/). In front of Github Pages, there is also the CloudFront CDN (managed by :whd).
 
-The contents of this bucket are uploaded from the telemetry dashboard master node instance on AWS. The currently active dashboard master node is `ec2-54-202-211-22.us-west-2.compute.amazonaws.com`. On the node, there is a script `~/update-telemetry.mozilla.org.sh`, run by cron every day, that pulls the latest master for telemetry-dashboard from the GitHub repository and uploads it to the S3 bucket using the `aws s3 sync . s3://telemetry.mozilla.org/ --delete --region us-east-1 --exclude ".*"` command.
-
-In effect, [telemetry.mozilla.org](https://telemetry.mozilla.org) is updated daily from the Git repository. To do a manual deploy (useful if there's a change that needs to be pushed out quickly), SSH into `ubuntu@ec2-54-202-211-22.us-west-2.compute.amazonaws.com` and manually run `~/update-telemetry.mozilla.org.sh` - the changes will go live almost immediately.
+Updates to the `gh-pages` branch (also the default branch) will be reflected on [telemetry.mozilla.org](https://telemetry.mozilla.org) after a few moments.
 
 Using Telemetry.js
 ------------------
@@ -31,7 +29,7 @@ Check out the documentation!
 Adding Telemetry Probes
 -----------------------
 
-See this [MDN article], which outlines the process and details for adding new Telemetry probes to Firefox which can be used with the dashboards.
+See this [MDN article](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe), which outlines the process and details for adding new Telemetry probes to Firefox which can be used with the dashboards.
 
 For setting histogram properties, make sure to check out the [histogram simulator](https://telemetry.mozilla.org/histogram-simulator/), which might help with designing histograms that fit the expected data well.
 
