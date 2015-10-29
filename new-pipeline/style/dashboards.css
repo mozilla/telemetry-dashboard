@@ -118,3 +118,39 @@
 .mg-line-legend text { font-size: 12px !important; }
 .mg-marker-text { font-size: 12px !important; }
 .mg-markers line { stroke-width: 2px !important; }
+
+.bare .dashboard-header,
+.bare .query-string,
+.bare .figure-info,
+.bare .advanced-settings-section,
+.bare .comments-footer {
+  display: none;
+}
+
+.bare .col-md-12 {
+  padding: 0;
+}
+
+.query-string {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.bare .distribution {
+  height: 100vh; /* so that it takes window height when embedded */
+  overflow: hidden;
+}
+
+.bare #evolutions {
+  height: 100vh;
+}
+
+.bare {
+  overflow: hidden;
+}
+
+.bare #measure-description,
+.bare #submissions-title,
+.bare #submissions {
+  display: none;
+}

@@ -787,6 +787,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
       .parent()
       .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
     height: 600,
+    full_height: gInitialPageState.bare,
     right: 100,
     bottom: 50, // Extra space on the right and bottom for labels
     target: "#evolutions",
@@ -898,6 +899,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
       .parent()
       .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
     height: 300,
+    full_height: gInitialPageState.bare,
     right: 100,
     bottom: 50, // Extra space on the right and bottom for labels
     target: "#submissions",
@@ -1142,6 +1144,11 @@ function saveStateToUrlAndCookie() {
   }
   if (sortKeys !== undefined) {
     gInitialPageState.sort_keys = sortKeys;
+  }
+
+  // Save `bare` only if it is true
+  if (document.body.classList.contains('bare')) {
+    gInitialPageState.bare = true;
   }
 
   // We are guaranteed that selectedKeys is defined by loadStateFromUrlAndCookie

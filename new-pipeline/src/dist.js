@@ -928,13 +928,11 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     gAxesList.forEach(function (axes) {
       $(axes)
         .parent()
-        .parent()
         .hide();
     });
     $(gAxesList[0])
       .show();
     var axesContainer = $(gAxesList[0])
-      .parent()
       .parent();
     axesContainer.removeClass("col-md-6")
       .addClass("col-md-12")
@@ -961,7 +959,6 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       .addClass("col-md-11");
     gAxesList.forEach(function (axes, i) {
       var axesContainer = $(axes)
-        .parent()
         .parent()
         .show();
       axesContainer.removeClass("col-md-12")
@@ -995,8 +992,10 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       chart_type: "missing-data",
       width: $(axes)
         .parent()
+        .parent()
         .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
+      full_height: gInitialPageState.bare,
       target: axes,
     });
     $(axes)
@@ -1038,6 +1037,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       size: {
         canvasHeight: 600,
         canvasWidth: $(axes)
+          .parent()
           .parent()
           .width()
       },
@@ -1137,8 +1137,10 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       chart_type: "histogram",
       width: $(axes)
         .parent()
+        .parent()
         .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
+      full_height: gInitialPageState.bare,
       top: 0,
       left: 70,
       right: $(axes)
@@ -1273,8 +1275,10 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       interpolate: "linear",
       width: $(axes)
         .parent()
+        .parent()
         .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
+      full_height: gInitialPageState.bare,
       left: 70,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
@@ -1535,6 +1539,11 @@ function saveStateToUrlAndCookie() {
   // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
   if (minChannelVersion !== undefined) {
     gInitialPageState.min_channel_version = minChannelVersion;
+  }
+
+  // save `bare` only if it is true
+  if (document.body.classList.contains('bare')) {
+    gInitialPageState.bare = true;
   }
 
   var selected = $("#compare")
