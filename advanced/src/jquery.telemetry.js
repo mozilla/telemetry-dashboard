@@ -33,14 +33,14 @@ function _encodeStateFragments(fragments) {
  * to be filter, thus, no loading will be involved.
  */
 $.widget("telemetry.histogramfilter", {
-  
+
   /** Default options */
   options: {
     /** Bool: lock or unlock measure and filters */
     locked:                        false,
-    
+
     /** Class use to style <select> elements */
-   
+
     selectorClass:                  "histogram-filter",
 
     /** Initial state of histogram filter */
@@ -58,7 +58,7 @@ $.widget("telemetry.histogramfilter", {
      */
     defaultMeasure:                 null,
 
-    /** 
+    /**
      * Attempt to auto restore low level filters when a high level filter is
      * changed, e.g. restore measure and other filters, when version is changed.
      */
@@ -79,8 +79,8 @@ $.widget("telemetry.histogramfilter", {
 
     /** Prefix for state() if synchronizeStateWithHash is true */
     windowHashPrefix:               "",
-    
-    
+
+
     /**
      * Load histogram evolution over "Builds" or "Time".
      *
@@ -91,8 +91,8 @@ $.widget("telemetry.histogramfilter", {
      * information.
      */
     evolutionOver:                  "Builds",
-    
-    
+
+
 
     /**
      * Constructor for type to use for selectors. The default constructor
@@ -217,7 +217,7 @@ $.widget("telemetry.histogramfilter", {
     if (this.options.locked) {
       this._measureSelector.enable(false);
     }
-   
+
     this._versionSelector.options(Telemetry.versions());
     this._versionSelector.element().addClass(this.options.selectorClass);
     this._measureSelector.element().addClass(this.options.selectorClass);
@@ -263,7 +263,7 @@ $.widget("telemetry.histogramfilter", {
     if (state === null) {
       throw new Error("Invalid state");
     }
-    
+
     // Restore state if provided
     if (state !== undefined) {
       // Just set the state as we're restoring it
@@ -284,7 +284,7 @@ $.widget("telemetry.histogramfilter", {
     return this.options.state;
   },
 
-  /** 
+  /**
    * Get current histogram, returns an instance of Telemetry.HistogramEvolution
    * or null if currently loading.
    */
@@ -305,7 +305,7 @@ $.widget("telemetry.histogramfilter", {
 
       // Get histogram
       histogram = filter.histogram;
-      
+
       // Get selected option
       var option = (typeof filter.select.val === "function") ?
                    filter.select.val() : filter.select;
@@ -314,7 +314,7 @@ $.widget("telemetry.histogramfilter", {
       // If selected option isn't the default option and the option is available
       if (option != this._getStarName(histogram.filterName()) &&
           histogram.filterOptions().indexOf(option) !== -1) {
-        
+
         // Filter the histogram
         histogram = histogram.filter(option);
       }
@@ -328,7 +328,7 @@ $.widget("telemetry.histogramfilter", {
     var prettyNames = {"appName": "Any App", "osVersion": "Any Version", "arch": "Any Build"};
     return prettyNames.hasOwnProperty(filterName) ? prettyNames[filterName] : "Any " + filterName;
   },
-  
+
   _systemNames: {"WINNT": "Windows", "Darwin": "OS X"},
   _windowsVersionNames: {"5.0": "2000", "5.1": "XP", "5.2": "XP Pro x64", "6.0": "Vista", "6.1": "7", "6.2": "8", "6.3": "8.1", "6.4": "10 (Tech Preview)", "10.0": "10"},
   _windowsVersionOrder: {"5.0": 0, "5.1": 1, "5.2": 2, "6.0": 3, "6.1": 4, "6.2": 5, "6.3": 6, "6.4": 7, "10.0": 8},
@@ -390,7 +390,7 @@ $.widget("telemetry.histogramfilter", {
     }
     return options;
   },
-  
+
   _getHumanReadableOptionRealValue: function histogramfilter__getHumanReadableOptionRealValue(filterName, humanReadableOption) {
     if (filterName == "OS") {
       for (var key in this._systemNames) {
@@ -405,7 +405,7 @@ $.widget("telemetry.histogramfilter", {
           return key;
         }
       }
-      
+
       // check for Darwin/OS X names
       if (humanReadableOption.indexOf(" (") >= 0 && humanReadableOption[humanReadableOption.length - 1] === ")") {
         return humanReadableOption.split(" ")[0];
@@ -419,17 +419,17 @@ $.widget("telemetry.histogramfilter", {
     }
     return humanReadableOption;
   },
-  
+
   formatOption: function histogramfilter_formatOption(filterName, option, os) {
     return this._getHumanReadableOptions(filterName, [option], os)[0];
   },
-  
+
   /** Set option */
   _setOption: function histogramfilter__setOption(option, value) {
     if (option == "state") {
       // Set state option using state setter
       this.state(value);
-    
+
     } else if (option == "evolutionOver") {
       // Change what we load evolution over
       this.options.evolutionOver = value;
@@ -610,7 +610,7 @@ $.widget("telemetry.histogramfilter", {
     }, this));
   },
 
-  /** 
+  /**
    * Attempt to restore remaining filters from histogram and state fragments.
    * This method assumes filters for which options are listed in fragments have
    * already been cleared, and that first option of fragments to be applied to
@@ -633,7 +633,7 @@ $.widget("telemetry.histogramfilter", {
 
       var fixedOptions = {"reason": "saved_session"};
       var preferredOptions = {"appName": "Firefox"};
-      
+
       // Restore option
       var option = fragments.shift();
 
@@ -649,7 +649,7 @@ $.widget("telemetry.histogramfilter", {
         }
         if (index < 0) { fragments = []; }
       }
-      
+
       // Add filtering selectors
       if (fixedOptions.hasOwnProperty(filterName)) {
         // Create a fixed filter entry for the _filterList
@@ -668,18 +668,18 @@ $.widget("telemetry.histogramfilter", {
         if (this.options.locked) {
           filter.select.enable(false);
         }
-        
+
         // Set filter options
         var os = filter.histogram._filter_path[3] || null;
         filter.select.options(this._getHumanReadableOptions(filterName, options, os));
         filter.select.element().addClass(this.options.selectorClass);
-        
+
         // Set option, listen for changes, and append to root element
         var humanReadableOption = this._getHumanReadableOptions(filterName, [option], os)[0];
         filter.select.val(humanReadableOption);
         filter.select.change(this._filterChanged);
         this.element.append(filter.select.element());
-        
+
         this._filterList.push(filter);
       }
 
@@ -718,7 +718,7 @@ $.widget("telemetry.histogramfilter", {
     return version;
   },
 
-  /** 
+  /**
    * Select default measure given values as provided by Telemetry.measures(),
    * note, you shouldn't have to overwrite this method. The same functionality
    * is exposed through options.defaultMeasure which can also be specified as
@@ -728,7 +728,7 @@ $.widget("telemetry.histogramfilter", {
               function histogramfilter__defaultMeasure(measures) {
     // Get default measure
     var measure = this.options.defaultMeasure;
-    
+
     // If function, use it to choose a measure
     if (measure instanceof Function) {
       measure = measure.call(this.element, measures);
@@ -739,7 +739,7 @@ $.widget("telemetry.histogramfilter", {
       // Now resort to choose the first measure available
       measure = Object.keys(measures).sort()[0]
     }
-    
+
     return measure;
   },
 
@@ -753,13 +753,13 @@ $.widget("telemetry.histogramfilter", {
 
     // Get selected version
     var version = this._versionSelector.val();
-    
+
     // Get selected measure, so we can restore it
     var measure = this._measureSelector.val();
-    
+
     // Clear applied filters
     var clearedFilters = this._clearFilterList();
-    
+
     // If we're not supposed to restore from them measure and clear filtered
     // forget them
     if(!this.options.attemptFilterAutoRestore) {
@@ -782,10 +782,10 @@ $.widget("telemetry.histogramfilter", {
 
     // Get selected measure
     var measure = this._measureSelector.val();
-    
+
     // Clear applied filters
     var clearedFilters = this._clearFilterList();
-    
+
     // If we're not supposed to restore from cleared filters we forget them
     if(!this.options.attemptFilterAutoRestore) {
       clearedFilters = [];
@@ -827,7 +827,7 @@ $.widget("telemetry.histogramfilter", {
     }
 
     option = this._getHumanReadableOptionRealValue(filter.histogram.filterName(), option);
-    
+
     // If we haven't chosen the default option, restore filters, or at least
     // create next filter and trigger change event
     if(this._getStarName(filter.histogram.filterName()) !== option) {
@@ -928,7 +928,7 @@ $.widget("telemetry.histogramfilter", {
 
       // If selected option isn't the default option and the option is available
       if (option != this._getStarName(filterName) && histogram.filterOptions().indexOf(option) != -1) {
-        
+
         // Filter the histogram
         histogram = histogram.filter(option);
 
@@ -966,7 +966,7 @@ $.widget("telemetry.histogramfilter", {
     // Destroy widget base class
     $.Widget.prototype.destroy.call(this);
   },
-  
+
 });
 
 })(jQuery);
