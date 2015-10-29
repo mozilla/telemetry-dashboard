@@ -11,13 +11,13 @@ Telemetry.init(function () {
   $(window).bind("hashchange", function() {
     $("#permalink-value").hide();
   });
-  
+
   // Set up the build selectors
   var versions = Telemetry.versions();
   $("#min-channel-version, #max-channel-version, #line-channel-version").empty().append(versions.map(function(option) {
     return '<option value="' + option + '">' + option.replace("/", " ") + '</option>';
   }).join()).trigger("change");
-  
+
   // Select the contents of the permalink text box on focus
   $("#permalink-value").hide().focus(function() {
     var $this = $(this);
@@ -29,7 +29,7 @@ Telemetry.init(function () {
       return false;
     });
   });
-  
+
   // Shortened permalink button
   $('#permalink').click(function() {
     event('click', 'tinyUrl', 'generatedTinyUrl');
@@ -48,7 +48,7 @@ Telemetry.init(function () {
     };
     $.ajax(request);
   });
-  
+
   // Add series from either currently selected line, or a default line
   $("#add-evolution-line").click(function() {
     var newLine;
@@ -61,7 +61,7 @@ Telemetry.init(function () {
     addEvolutionLine(newLine);
     saveStateToUrlAndCookie();
   });
-  
+
   // Export as CSV button
   var previousCSVBlob = null;
   $('#export-csv').click(function () {
@@ -72,9 +72,9 @@ Telemetry.init(function () {
       URL.revokeObjectURL(previousCSVBlob);
       previousCSVBlob = null;
     }
-    
+
     var histogram = gSelectedEvolutionLine.histogramEvolution.range();
-    
+
     // Generate CSV output
     var csv = "start,\tend,\tcount\n";
     csv += histogram.map(function (count, start, end, index) {
@@ -86,7 +86,7 @@ Telemetry.init(function () {
     $('#export-csv')[0].download = histogram.measure() + ".csv";
     event('click', 'download csv', 'download csv');
   });
-  
+
   // Export as JSON button
   var previousJSONBlob = null
   $('#export-json').click(function () {
@@ -97,9 +97,9 @@ Telemetry.init(function () {
       URL.revokeObjectURL(previousJSONBlob);
       previousJSONBlob = null;
     }
-    
+
     var histogram = gSelectedEvolutionLine.histogramEvolution.range();
-    
+
     // Generate JSON output
     var result = JSON.stringify(histogram.map(function (count, start, end, index) {
       return {"start": start, "end": end, "count": count};
@@ -110,7 +110,7 @@ Telemetry.init(function () {
     $('#export-json')[0].download = histogram.measure() + ".json";
     event('click', 'download json', 'download json');
   });
-  
+
   // Callbacks for selection changed
   var filterMapping = {
     "#line-filter-OS": "OS",
@@ -133,10 +133,10 @@ Telemetry.init(function () {
       };
     })($this, filterName));
   }
-  
+
   $("#spinner").hide();
   $(".container, .container-fluid").show();
-  
+
   loadStateFromUrlAndCookie();
 });
 
@@ -151,7 +151,7 @@ function displayHistogramEvolutionLineHistogram(line) {
     return label;
   });
   var data = histogram.map(function (count, start, end, index) { return count; });
-  
+
   // Plot the data using Chartjs
   var ctx = document.getElementById("histogram").getContext("2d");
   if (gCurrentHistogramPlot !== null) {
@@ -173,13 +173,13 @@ function displayHistogramEvolutionLineHistogram(line) {
     tooltipFontSize: 10,
     tooltipTemplate: function(valuesObject) { return tooltipLabels[valuesObject.label] || valuesObject.label; },
   });
-  
+
   // Assign random colors to make it easy to differentiate between bars
   gCurrentHistogramPlot.datasets[0].bars.forEach(function(bar) {
     bar.fillColor = "hsla(" + Math.floor(Math.random() * 256) + ", 80%, 70%, 0.8)";
   });
   gCurrentHistogramPlot.update();
-  
+
   // Update summary for the first histogram evolution
   var dates = line.histogramEvolution.dates();
   $("#prop-kind").text(histogram.kind());
@@ -212,7 +212,7 @@ function displayHistogramEvolutionLineHistogram(line) {
 function displayHistogramEvolutions(lines) {
   //wip: get minDate and maxDate
   var minDate = 0, maxDate = Infinity;
-  
+
   // Filter out the points that are outside of the time range
   var filteredDatasets = lines.map(function (line) {
     return {
@@ -221,7 +221,7 @@ function displayHistogramEvolutions(lines) {
       data: line.values.filter(function(point) { return point.x >= minDate && point.x <= maxDate; }),
     };
   });
-  
+
   // Plot the data using Chartjs
   var ctx = document.getElementById("evolutions").getContext("2d");
   if (gCurrentHistogramEvolutionsPlot !== null) {
@@ -259,7 +259,7 @@ function Line(measure, channelVersion, aggregate, dateRange, filters, values) {
   this.dateRange = dateRange || null;
   this.filters = filters || {};
   this.values = values || [];
-  
+
   // Assign a color to the line
   var stateString = this.getStateString();
   if (!lineColors.hasOwnProperty(stateString)) {
@@ -282,7 +282,7 @@ Line.prototype.getStateString = function Line_getStateString() {
   var filters = this.filters;
   var filterState = filterSortOrder.map(function(filterName) {
     if (!(filterName in filters)) { return ""; }
-  
+
     // Sort the selected options of each filter
     return filters[filterName].sort().join("|");
   }).join("/");
@@ -305,7 +305,7 @@ Line.prototype.setStateString = function Line_setStateString(stateString) {
       throw new Error("Unknown filter option " + filter);
     }
   });
-  
+
   if (!lineColors.hasOwnProperty(stateString)) {
     goodColorIndex = (goodColorIndex + 1) % goodColors.length;
     lineColors[stateString] = goodColors[goodColorIndex];
@@ -324,7 +324,7 @@ function clearEvolutionLines() {
 function addEvolutionLine(line) {
   gCurrentEvolutionLines.push(line);
   refreshEvolutionLines();
-  
+
   // Add the new line element
   var lineElement = $(
     '<a class="evolution-line list-group-item">' +
@@ -366,19 +366,19 @@ function refreshEvolutionLines() {
 function refreshEvolutionLine(evolutionLineIndex) {
   refreshEvolutionLines();
   var line = gCurrentEvolutionLines[evolutionLineIndex];
-  
+
   // Set the line label
   var label = line.getTitleString();
   var lineElement = $($("#evolution-line-list .evolution-line").get(evolutionLineIndex));
   lineElement.attr("title", label);
   lineElement.contents().filter(function() { return this.nodeType == 3; }).each(function() { this.textContent = line.getTitleString(); });
-  
+
   // Set the line filters label
   lineElement.find(".evolution-line-description span").text(line.getFilterString());
-  
+
   // Set the line color
   lineElement.find(".legend-color").css("background-color", line.color);
-  
+
   Telemetry.loadEvolutionOverTime(line.channelVersion, line.measure, function(histogramEvolution) {
     line.histogramEvolution = histogramEvolution;
     var filteredHistogramEvolution = line.histogramEvolution; //wip: filter the histogram properly
@@ -393,7 +393,7 @@ function refreshEvolutionLine(evolutionLineIndex) {
       return {x: date, y: value};
     });
     displayHistogramEvolutions(gCurrentEvolutionLines);
-    
+
     // Refresh the histogram display if the current line is the selected one
     if (compareEvolutionLines(gSelectedEvolutionLine, line)) { displayHistogramEvolutionLineHistogram(line); }
   });
@@ -414,7 +414,7 @@ function selectEvolutionLine(evolutionLineIndex) {
     $("#line-measure").empty().trigger("change");
     return;
   }
-  
+
   var line = gCurrentEvolutionLines[evolutionLineIndex];
   gSelectedEvolutionLine = line;
 
@@ -422,7 +422,7 @@ function selectEvolutionLine(evolutionLineIndex) {
   var lineElements = $("#evolution-line-list .evolution-line");
   lineElements.filter(".active").removeClass("active");
   $(lineElements.get(evolutionLineIndex)).addClass("active");
-  
+
   // Load measure, channel version, and aggregate
   Telemetry.measures(line.channelVersion, function(measures) {
     var options = Object.keys(measures).sort();
@@ -436,7 +436,7 @@ function selectEvolutionLine(evolutionLineIndex) {
   });
   $("#line-channel-version").val(line.channelVersion).trigger("change");
   $("#line-aggregate").val(line.aggregate).trigger("change");
-  
+
   // Load filters
   var filterMapping = {
     "OS": $("#line-filter-OS"),
@@ -495,7 +495,7 @@ function loadStateFromUrlAndCookie() {
   var url = window.location.hash;
   if (url.length === 0) { return; }
   url = url[0] === "#" ? url.slice(1) : url;
-  
+
   // Load from cookie if URL does not have state, and give up if still no state available
   if (url.indexOf("&") < 0) {
     var name = "stateFromUrl=";
@@ -507,7 +507,7 @@ function loadStateFromUrlAndCookie() {
     });
   }
   if (url.indexOf("&") < 0) { return; }
-  
+
   // Load the options
   var pageState = {};
   url.split("&").forEach(function(fragment, i) {
@@ -523,7 +523,7 @@ function loadStateFromUrlAndCookie() {
       var line = (new Line()).setStateString(stateString);
       addEvolutionLine(line);
     });
-    
+
     // Load the line selection if specified
     if (pageState.selectedLineIndex !== undefined && pageState.selectedLineIndex >= 0) {
       selectEvolutionLine(pageState.selectedLineIndex);
@@ -545,12 +545,12 @@ function saveStateToUrlAndCookie() {
     fragments.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
   });
   var stateString = fragments.join("&");
-  
+
   // Save to the URL hash if it changed
   var url = window.location.hash;
   url = url[0] === "#" ? url.slice(1) : url;
   if (url !== stateString) { window.location.hash = "#" + stateString; }
-  
+
   // Save the state in a cookie that expires in 3 days
   var expiry = new Date();
   expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -591,11 +591,11 @@ function updateRendering(hgramEvo, lines, start, end) {
     picker.setEndDate(endMoment);
   }
   var minDate = picker.startDate.toDate().getTime(), maxDate = picker.endDate.toDate().getTime();
-  
+
   var hgram;
   hgram = hgramEvo.range(new Date(minDate), new Date(maxDate));
   gCurrentHistogram = hgram;
-  
+
   // Schedule redraw of histogram for the first histogram evolution
   if (gDrawTimer) {
     clearTimeout(gDrawTimer);
@@ -609,7 +609,7 @@ function updateRendering(hgramEvo, lines, start, end) {
       renderHistogramGraph(hgram);
     }
   }, 100);
-  
+
   // Update summary for the first histogram evolution
   var dates = hgramEvo.dates();
   $('#prop-kind').text(hgram.kind());
@@ -676,7 +676,7 @@ function update(hgramEvos) {
           end = point.x;
         }
       });
-      
+
       // Add extra fields to the lines such as their cached color
       if (gLineColors[state + "\n" + entry.key] === undefined) {
         gGoodColorIndex = (gGoodColorIndex + 1) % gGoodColors.length;
@@ -727,7 +727,7 @@ function update(hgramEvos) {
   $("#content").removeClass('show-linear show-exponential');
   $("#content").removeClass('show-flag show-boolean show-enumerated');
   $("#content").addClass('show-' + hgramEvo.kind());
-  
+
   setAggregateSelectorOptions(labels, function() {
     updateDisabledAggregates();
     updateRendering(hgramEvo, lines, start, end);
