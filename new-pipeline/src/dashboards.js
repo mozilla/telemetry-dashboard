@@ -470,6 +470,7 @@ function getHumanReadableOptions(filterName, options) {
     "12.": "Mountain Lion",
     "13.": "Mavericks",
     "14.": "Yosemite",
+    "15.": "El Capitan",
   };
   var archNames = {
     "x86": "32-bit",

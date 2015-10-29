@@ -743,6 +743,7 @@ function formatOption(filterName, option) {
     "1.2.": "Kodiak", "1.3.": "Cheetah", "1.4.": "Puma", "6.": "Jaguar",
     "7.": "Panther", "8.": "Tiger", "9.": "Leopard", "10.": "Snow Leopard",
     "11.": "Lion", "12.": "Mountain Lion", "13.": "Mavericks", "14.": "Yosemite",
+    "15.": "El Capitan",
   };
   var _archNames = {"x86": "32-bit", "x86-64": "64-bit"};
   if (filterName === "OS") {
