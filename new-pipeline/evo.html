@@ -18,7 +18,7 @@
 </head>
 <body>
     <div class="container-fluid">
-        <header>
+        <header class="dashboard-header">
             <form class="navbar-form inline pull-right">
                 <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
                 <a href="./dist.html" class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</a>
@@ -28,9 +28,9 @@
             </form>
             <h1>Evolution Dashboard V4</h1>
         </header>
-        <div class="row">
+        <div class="evolution-container row">
             <div class="col-md-12">
-                <h2 style="font-size: 18px; margin-bottom: 0">
+                <h2 class="query-string">
                     <span style="font-weight: bold">
                         <select id="aggregates" class="multiselect" title="Aggregate type" data-all-selected="All aggregates of" multiple>
                             <option value="median">Median</option>
@@ -67,7 +67,7 @@
                 </figure>
             </div>
         </div>
-        <div class="row">
+        <div class="advanced-settings-section row">
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-heading" role="tab">
@@ -92,7 +92,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="comments-footer row">
             <div class="col-md-12">
                 <p class="bg-primary" style="padding: 1em">Make sure to <b>post a permalink</b> if referencing a particular configuration! Comments are associated with the selected measure.</p>
                 <div id="disqus_thread"></div>

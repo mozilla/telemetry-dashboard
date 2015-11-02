@@ -19,7 +19,7 @@
 </head>
 <body>
     <div class="container-fluid">
-        <header>
+        <header class="dashboard-header">
             <form class="navbar-form inline pull-right">
                 <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
                 <a href="./evo.html" class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</a>
@@ -31,7 +31,7 @@
         </header>
         <div class="row">
             <div class="col-md-12">
-                <h2 style="font-size: 18px; margin-bottom: 0">
+                <h2 class="query-string">
                     <span style="font-weight: bold">
                         <select id="measure" class="multiselect" title="Value being measured"></select>
                         distribution for
@@ -60,33 +60,25 @@
                         <div class="row">
                             <div class="col-md-6" style="text-align: center">
                                 <h3><select id="selected-key1" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution1"></div>
-                                </div>
+                                <div class="distribution" id="distribution1"></div>
                             </div>
                             <div class="col-md-6" style="text-align: center">
                                 <h3><select id="selected-key2" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution2"></div>
-                                </div>
+                                <div class="distribution" id="distribution2"></div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6" style="text-align: center">
                                 <h3><select id="selected-key3" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution3"></div>
-                                </div>
+                                <div class="distribution" id="distribution3"></div>
                             </div>
                             <div class="col-md-6" style="text-align: center">
                                 <h3><select id="selected-key4" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution4"></div>
-                                </div>
+                                <div class="distribution" id="distribution4"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3" style="padding-top: 7em">
+                    <div class="figure-info col-md-3" style="padding-top: 7em">
                         <div id="summary">
                             <dl class="dl-horizontal" style="margin-top: 1em">
                                 <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
@@ -118,7 +110,7 @@
                 </figure>
             </div>
         </div>
-        <div class="row">
+        <div class="advanced-settings-section row">
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-heading" role="tab">
@@ -177,7 +169,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="comments-footer row">
             <div class="col-md-12">
                 <p class="bg-primary" style="padding: 1em">Make sure to <b>post a permalink</b> if referencing a particular configuration! Comments are associated with the selected measure.</p>
                 <div id="disqus_thread"></div>

@@ -314,6 +314,10 @@ function loadStateFromUrlAndCookie() {
     null;
   pageState.end_date = typeof pageState.end_date === "string" &&
     /\d{4}-\d{2}-\d{2}/.test(pageState.end_date) ? pageState.end_date : null;
+
+  if (pageState.bare) {
+    document.body.classList.add('bare');
+  }
   return pageState;
 }
 
