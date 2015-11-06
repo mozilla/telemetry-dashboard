@@ -1,0 +1,300 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.graph-container {
+  width: 500px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.graph-title {
+  font-family: sans-serif;
+  font-size: 18px;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.graph {
+  position: relative;
+  flex-grow: 1;
+}
+
+.graph-legend {
+  position: absolute;
+  right: 0;
+  font-size: 12px;
+}
+
+svg {
+  cursor: default;
+  -moz-user-select: none;
+}
+
+/* MG overrides
+ * Be sure to include this.css _after_ mg's css for this to have a chance
+ * Designed largely to increase data concentrations for a given size of MG
+ */
+.mg-x-axis text,
+.mg-y-axis text,
+.mg-x-axis .label,
+.mg-y-axis .label {
+  font-family: sans-serif;
+  font-size: 12px;
+  line-height: 12px;
+  text-transform: none;
+}
+
+/* adjust breathing space for the axes labels */
+.mg-y-axis .label {
+  transform: translateX(-1em) rotate(-90deg);
+}
+
+.mg-x-axis .label {
+  transform: translateY(0.5em);
+}
+
+/* We're using the svg tooltip in evos, so move it below the legend */
+.mg-active-datapoint {
+  transform: translateY(1em);
+}
+
+/* MG overrides for a color-blind-friendly palette */
+/* Palette taken from http://mkweb.bcgsc.ca/biovis2012/
+ * rgb(0, 0, 0)       rgb(73, 0, 146)     rgb(146, 0, 0)
+ * rgb(0, 73, 73)     rgb(0, 109, 219)    rgb(146, 73, 0)
+ * rgb(0, 146, 146)   rgb(182, 109, 255)  rgb(219, 209, 0)
+ * rgb(255, 109, 182) rgb(109, 182, 255)  rgb(36, 255, 36)
+ * rgb(255, 182, 119) rgb(182, 219, 255)  rgb(255, 255, 109)
+ */
+
+/* we're going to take these out of order to improve contrast
+ * in the normal vision case for the first 6.
+ * 2, 4, 6, 11, 13, 14
+ * then 3, 5, 7, 8, 9, 10, 12, 15, 1
+ */
+.mg-line1-color {
+  stroke: rgb(0, 73, 73);
+}
+.mg-area1-color {
+  fill: rgb(0, 73, 73);
+}
+.mg-hover-line1-color {
+  stroke: rgb(0, 73, 73);
+  fill: rgb(0, 73, 73);
+}
+.mg-line1-legend-color {
+  color: rgb(0, 73, 73);
+  fill: rgb(0, 73, 73);
+}
+
+.mg-line2-color {
+  stroke: rgb(255, 109, 182);
+}
+.mg-area2-color {
+  fill: rgb(255, 109, 182);
+}
+.mg-hover-line2-color {
+  stroke: rgb(255, 109, 182);
+  fill: rgb(255, 109, 182);
+}
+.mg-line2-legend-color {
+  color: rgb(255, 109, 182);
+  fill: rgb(255, 109, 182);
+}
+
+.mg-line3-color {
+  stroke: rgb(73, 0, 146);
+}
+.mg-area3-color {
+  fill: rgb(73, 0, 146);
+}
+.mg-hover-line3-color {
+  stroke: rgb(73, 0, 146);
+  fill: rgb(73, 0, 146);
+}
+.mg-line3-legend-color {
+  color: rgb(73, 0, 146);
+  fill: rgb(73, 0, 146);
+}
+
+.mg-line4-color {
+  stroke: rgb(146, 0, 0);
+}
+.mg-area4-color {
+  fill: rgb(146, 0, 0);
+}
+.mg-hover-line4-color {
+  stroke: rgb(146, 0, 0);
+  fill: rgb(146, 0, 0);
+}
+.mg-line4-legend-color {
+  color: rgb(146, 0, 0);
+  fill: rgb(146, 0, 0);
+}
+
+.mg-line5-color {
+  stroke: rgb(219, 209, 0);
+}
+.mg-area5-color {
+  fill: rgb(219, 209, 0);
+}
+.mg-hover-line5-color {
+  stroke: rgb(219, 209, 0);
+  fill: rgb(219, 209, 0);
+}
+.mg-line5-legend-color {
+  color: rgb(219, 209, 0);
+  fill: rgb(219, 209, 0);
+}
+
+.mg-line6-color {
+  stroke: rgb(36, 255, 36);
+}
+.mg-area6-color {
+  fill: rgb(36, 255, 36);
+}
+.mg-hover-line6-color {
+  stroke: rgb(36, 255, 36);
+  fill: rgb(36, 255, 36);
+}
+.mg-line6-legend-color {
+  color: rgb(36, 255, 36);
+  fill: rgb(36, 255, 36);
+}
+
+.mg-line7-color {
+  stroke: rgb(0, 146, 146);
+}
+.mg-area7-color {
+  fill: rgb(0, 146, 146);
+}
+.mg-hover-line7-color {
+  stroke: rgb(0, 146, 146);
+  fill: rgb(0, 146, 146);
+}
+.mg-line7-legend-color {
+  color: rgb(0, 146, 146);
+  fill: rgb(0, 146, 146);
+}
+
+.mg-line8-color {
+  stroke: rgb(255, 182, 219);
+}
+.mg-area8-color {
+  fill: rgb(255, 182, 219);
+}
+.mg-hover-line8-color {
+  stroke: rgb(255, 182, 219);
+  fill: rgb(255, 182, 219);
+}
+.mg-line8-legend-color {
+  color: rgb(255, 182, 219);
+  fill: rgb(255, 182, 219);
+}
+
+.mg-line9-color {
+  stroke: rgb(0, 109, 219);
+}
+.mg-area9-color {
+  fill: rgb(0, 109, 219);
+}
+.mg-hover-line9-color {
+  stroke: rgb(0, 109, 219);
+  fill: rgb(0, 109, 219);
+}
+.mg-line9-legend-color {
+  color: rgb(0, 109, 219);
+  fill: rgb(0, 109, 219);
+}
+
+.mg-line10-color {
+  stroke: rgb(182, 109, 255);
+}
+.mg-area10-color {
+  fill: rgb(182, 109, 255);
+}
+.mg-hover-line10-color {
+  stroke: rgb(182, 109, 255);
+  fill: rgb(182, 109, 255);
+}
+.mg-line10-legend-color {
+  color: rgb(182, 109, 255);
+  fill: rgb(182, 109, 255);
+}
+
+.mg-line11-color {
+  stroke: rgb(109, 182, 255);
+}
+.mg-area11-color {
+  fill: rgb(109, 182, 255);
+}
+.mg-hover-line11-color {
+  stroke: rgb(109, 182, 255);
+  fill: rgb(109, 182, 255);
+}
+.mg-line11-legend-color {
+  color: rgb(109, 182, 255);
+  fill: rgb(109, 182, 255);
+}
+
+.mg-line12-color {
+  stroke: rgb(182, 219, 255);
+}
+.mg-area12-color {
+  fill: rgb(182, 219, 255);
+}
+.mg-hover-line12-color {
+  stroke: rgb(182, 219, 255);
+  fill: rgb(182, 219, 255);
+}
+.mg-line12-legend-color {
+  color: rgb(182, 219, 255);
+  fill: rgb(182, 219, 255);
+}
+
+.mg-line13-color {
+  stroke: rgb(146, 73, 0);
+}
+.mg-area13-color {
+  fill: rgb(146, 73, 0);
+}
+.mg-hover-line13-color {
+  stroke: rgb(146, 73, 0);
+  fill: rgb(146, 73, 0);
+}
+.mg-line13-legend-color {
+  color: rgb(146, 73, 0);
+  fill: rgb(146, 73, 0);
+}
+
+.mg-line14-color {
+  stroke: rgb(255, 255, 109);
+}
+.mg-area14-color {
+  fill: rgb(255, 255, 109);
+}
+.mg-hover-line14-color {
+  stroke: rgb(255, 255, 109);
+  fill: rgb(255, 255, 109);
+}
+.mg-line14-legend-color {
+  color: rgb(255, 255, 109);
+  fill: rgb(255, 255, 109);
+}
+
+.mg-line15-color {
+  stroke: rgb(0, 0, 0);
+}
+.mg-area15-color {
+  fill: rgb(0, 0, 0);
+}
+.mg-hover-line15-color {
+  stroke: rgb(0, 0, 0);
+  fill: rgb(0, 0, 0);
+}
+.mg-line15-legend-color {
+  color: rgb(0, 0, 0);
+  fill: rgb(0, 0, 0);
+}
