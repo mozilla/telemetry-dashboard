@@ -284,7 +284,6 @@ window.TelemetryWrapper.go = function (params, element) {
       legend: legendLabels,
       legend_target: graphEl.querySelector('.graph-legend'),
       aggregate_rollover: true,
-      linked: true,
     });
   }
 
