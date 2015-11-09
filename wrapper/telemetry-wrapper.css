@@ -57,7 +57,7 @@ svg {
 
 /* We're using the svg tooltip in evos, so move it below the legend */
 .mg-active-datapoint {
-  transform: translateY(1em);
+  transform: translateY(2em);
 }
 
 /* MG overrides for a color-blind-friendly palette */
