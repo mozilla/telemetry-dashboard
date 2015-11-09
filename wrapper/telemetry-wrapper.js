@@ -23,6 +23,19 @@ window.TelemetryWrapper.go = function (params, element) {
   Telemetry.init(function () {
     setDefaultParams(params);
 
+    var graphContainerEl = document.createElement('div');
+    graphContainerEl.className = 'graph-container';
+    var graphTitleEl = document.createElement('h2');
+    graphTitleEl.className = 'graph-title';
+    graphContainerEl.appendChild(graphTitleEl);
+    var graphEl = document.createElement('div');
+    graphEl.className = 'graph';
+    var graphLegendEl = document.createElement('div');
+    graphLegendEl.className = 'graph-legend';
+    graphEl.appendChild(graphLegendEl);
+    graphContainerEl.appendChild(graphEl);
+    element.appendChild(graphContainerEl);
+
     var evolutionsPromise;
     if (params.evoVersions > 0) {
       // if we're composing an evolution over many versions, we need to mux over the versions
@@ -133,11 +146,8 @@ window.TelemetryWrapper.go = function (params, element) {
             .map(evo => evo.sanitized())
             .filter(evo => !!evo);
         }
-        // need some place to put this
-        var graphContainerEl = document.createElement('div');
-        graphContainerEl.className = 'graph-container';
-        var graphTitleEl = document.createElement('h2');
-        graphTitleEl.className = 'graph-title';
+
+        // Describe the graph, briefly
         var graphTitle = evolutions[0].measure;
         if (key) {
           graphTitle += ' : ' + key;
@@ -146,14 +156,6 @@ window.TelemetryWrapper.go = function (params, element) {
           graphTitle += ' - with varying ' + params.compare
         }
         graphTitleEl.textContent = graphTitle;
-        graphContainerEl.appendChild(graphTitleEl);
-        var graphEl = document.createElement('div');
-        graphEl.className = 'graph';
-        var graphLegendEl = document.createElement('div');
-        graphLegendEl.className = 'graph-legend';
-        graphEl.appendChild(graphLegendEl);
-        graphContainerEl.appendChild(graphEl);
-        document.body.appendChild(graphContainerEl); // TODO: put this somewhere else?
 
         if (params.evoVersions > 0) {
           // This is where we leave the common path and divert to evo-only code
