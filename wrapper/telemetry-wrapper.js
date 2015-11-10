@@ -10,7 +10,7 @@ window.TelemetryWrapper = window.TelemetryWrapper || {};
  *  - channel as per Telemetry.getEvolution
  *  - version as per Telemetry.getEvolution
  *  - metric as per Telemetry.getEvolution
- *  - filters as per Telemetry.getEvolution, but a JSON string
+ *  - filters as per Telemetry.getEvolution, as a JSON string or object
  *  - useSubmissionDate as per Telemetry.getEvolution
  *  - sanitize:bool - operate on sanitized data? (see someEvolutionInstance.sanitized())
  *  - trim:bool for whether or not to trim buckets with insufficient data
@@ -576,7 +576,11 @@ window.TelemetryWrapper.go = function (params, element) {
       params.version = params.version || latestVer;
     }
     params.metric = params.metric || 'GC_MS';
-    params.filters = params.filters ? JSON.parse(params.filters) : {};
+    if (typeof params.filters == 'string') {
+      params.filters = JSON.parse(params.filters);
+    } else if (!params.filters) {
+      params.filters = {};
+    }
     params.useSubmissionDate = params.useSubmissionDate || false;
     params.sanitize = params.sanitize != 'false';
     params.trim = params.trim != 'false';
