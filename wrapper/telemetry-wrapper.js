@@ -204,11 +204,7 @@ window.TelemetryWrapper.go = function (params, element) {
 
         // If asked for, trim low-count outer buckets from all data
         if (params.trim) {
-          // Now could be a good time to ensure data integrity:
-          // assert(datas.forEach(data => data.length == starts.length == ends.length));
           var [trimLeft, trimRight] = getTrims(evolutions);
-          starts = starts.slice(trimLeft, starts.length - trimRight);
-          ends = ends.slice(trimLeft, ends.length - trimRight);
           for (var i = 0; i < datas.length; ++i) {
             datas[i] = datas[i].slice(trimLeft, datas[i].length - trimRight);
           }
@@ -222,14 +218,16 @@ window.TelemetryWrapper.go = function (params, element) {
             starts,
             ends,
             datas[0],
-            hists[0]);
+            hists[0],
+            trimLeft);
         } else {
           drawAsLines(
             graphEl,
             starts,
             ends,
             datas,
-            hists);
+            hists,
+            trimLeft);
         }
       });
     });
@@ -287,7 +285,7 @@ window.TelemetryWrapper.go = function (params, element) {
     });
   }
 
-  function drawAsLines(graphEl, starts, ends, datas, hists) {
+  function drawAsLines(graphEl, starts, ends, datas, hists, trimLeft) {
     // taken from dist.js. Why do we have to do this?
     // maybe so the line is in the middle of the buckets?
     datas.forEach(data => data.forEach(datum => datum.date += 0.5));
@@ -319,6 +317,8 @@ window.TelemetryWrapper.go = function (params, element) {
       },
       yax_format: value => value + '%',
       mouseover: (datum, index) => {
+        index += trimLeft;
+
         // disable the svg tooltip text
         emptyEl(graphEl.querySelector('.mg-active-datapoint'));
 
@@ -357,7 +357,7 @@ window.TelemetryWrapper.go = function (params, element) {
     });
   }
 
-  function drawAsHistogram(graphEl, starts, ends, data, hist) {
+  function drawAsHistogram(graphEl, starts, ends, data, hist, trimLeft) {
     MG.data_graphic({
       data: data,
       binned: true,
@@ -384,6 +384,8 @@ window.TelemetryWrapper.go = function (params, element) {
       },
       yax_format: value => value + '%',
       mouseover: (datum, index) => {
+        index += trimLeft;
+
         // disable the svg tooltip text
         emptyEl(graphEl.querySelector('.mg-active-datapoint'));
 
