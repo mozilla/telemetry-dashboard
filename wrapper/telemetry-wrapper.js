@@ -16,6 +16,7 @@ window.TelemetryWrapper = window.TelemetryWrapper || {};
  *  - trim:bool for whether or not to trim buckets with insufficient data
  *  - compare - a filter name over which we'll enumerate the values and graph
  *  - sensibleCompare - default true. Sensibly only compare a subset of values instead of trying to graph them all
+ *  - keyLimit - a positive integer limiting the number of keyed histograms' data to show, sorted by number of data submissions, default 4
  *  - evoVersions:int - show evolutions of values over the past `evoVersions` versions in `channel` starting at `version` instead of histograms
 */
 window.TelemetryWrapper.go = function (params, element) {
@@ -134,6 +135,26 @@ window.TelemetryWrapper.go = function (params, element) {
       //  content: [<e10s-hist>, <no-e10s-hist>],
       //  plugin: [<e10s-hist, <no-e10s-hist>],
       // ...}
+
+      // If this is a keyed histogram, limit to the top `params.keyLimit` keys by submission volume
+      if (Object.keys(evolutionsByKey).length > params.keyLimit) {
+        var bestKeys = Object.keys(evolutionsByKey)
+          .map(key => {
+            return {
+              key: key,
+              count: evolutionsByKey[key].reduce((prev, curr) =>
+                prev + curr.histogram().count, 0),
+            };
+          })
+          .sort((a, b) => a.count - b.count)
+          .reverse();
+        bestKeys.length = params.keyLimit;
+
+        var oldEvolutionsByKey = evolutionsByKey;
+        evolutionsByKey = {};
+        bestKeys.forEach(keycount =>
+          evolutionsByKey[keycount.key] = oldEvolutionsByKey[keycount.key]);
+      }
 
       Object.keys(evolutionsByKey).forEach(key => {
         var evolutions = evolutionsByKey[key];
@@ -588,6 +609,7 @@ window.TelemetryWrapper.go = function (params, element) {
     params.trim = params.trim != 'false';
     params.compare = params.compare; // default undefined
     params.sensibleCompare = params.sensibleCompare != 'false';
+    params.keyLimit = window.parseInt(params.keyLimit) || 4;
     params.evoVersions = params.evoVersions; // default undefined
   }
 
