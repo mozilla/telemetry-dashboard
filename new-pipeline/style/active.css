@@ -1,0 +1,23 @@
+.view-section {
+  display: inline-block;
+  padding: 1em;
+  vertical-align: top;
+}
+
+.view-section h3 {
+  text-align: center;
+}
+
+.view-section table {
+  text-align: right;
+}
+
+.view-section td {
+  font-family: monospace;
+}
+
+.view-section th {
+    text-align: right;
+    padding-right: 1em;
+    font-weight: bold;
+}
