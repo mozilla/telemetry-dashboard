@@ -16,25 +16,13 @@ window.TelemetryWrapper = window.TelemetryWrapper || {};
  *  - trim:bool for whether or not to trim buckets with insufficient data
  *  - compare - a filter name over which we'll enumerate the values and graph
  *  - sensibleCompare - default true. Sensibly only compare a subset of values instead of trying to graph them all
+ *  - keyLimit - a positive integer limiting the number of keyed histograms' data to show, sorted by number of data submissions, default 4
  *  - evoVersions:int - show evolutions of values over the past `evoVersions` versions in `channel` starting at `version` instead of histograms
 */
 window.TelemetryWrapper.go = function (params, element) {
 
   Telemetry.init(function () {
     setDefaultParams(params);
-
-    var graphContainerEl = document.createElement('div');
-    graphContainerEl.className = 'graph-container';
-    var graphTitleEl = document.createElement('h2');
-    graphTitleEl.className = 'graph-title';
-    graphContainerEl.appendChild(graphTitleEl);
-    var graphEl = document.createElement('div');
-    graphEl.className = 'graph';
-    var graphLegendEl = document.createElement('div');
-    graphLegendEl.className = 'graph-legend';
-    graphEl.appendChild(graphLegendEl);
-    graphContainerEl.appendChild(graphEl);
-    element.appendChild(graphContainerEl);
 
     var evolutionsPromise;
     if (params.evoVersions > 0) {
@@ -135,6 +123,26 @@ window.TelemetryWrapper.go = function (params, element) {
       //  plugin: [<e10s-hist, <no-e10s-hist>],
       // ...}
 
+      // If this is a keyed histogram, limit to the top `params.keyLimit` keys by submission volume
+      if (Object.keys(evolutionsByKey).length > params.keyLimit) {
+        var bestKeys = Object.keys(evolutionsByKey)
+          .map(key => {
+            return {
+              key: key,
+              count: evolutionsByKey[key].reduce((prev, curr) =>
+                prev + curr.histogram().count, 0),
+            };
+          })
+          .sort((a, b) => a.count - b.count)
+          .reverse();
+        bestKeys.length = params.keyLimit;
+
+        var oldEvolutionsByKey = evolutionsByKey;
+        evolutionsByKey = {};
+        bestKeys.forEach(keycount =>
+          evolutionsByKey[keycount.key] = oldEvolutionsByKey[keycount.key]);
+      }
+
       Object.keys(evolutionsByKey).forEach(key => {
         var evolutions = evolutionsByKey[key];
         if (!evolutions.length) {
@@ -146,6 +154,20 @@ window.TelemetryWrapper.go = function (params, element) {
             .map(evo => evo.sanitized())
             .filter(evo => !!evo);
         }
+
+        // Construct the graph elements and add them to `element`
+        var graphContainerEl = document.createElement('div');
+        graphContainerEl.className = 'graph-container';
+        var graphTitleEl = document.createElement('h2');
+        graphTitleEl.className = 'graph-title';
+        graphContainerEl.appendChild(graphTitleEl);
+        var graphEl = document.createElement('div');
+        graphEl.className = 'graph';
+        var graphLegendEl = document.createElement('div');
+        graphLegendEl.className = 'graph-legend';
+        graphEl.appendChild(graphLegendEl);
+        graphContainerEl.appendChild(graphEl);
+        element.appendChild(graphContainerEl);
 
         // Describe the graph, briefly
         var graphTitle = evolutions[0].measure;
@@ -588,6 +610,7 @@ window.TelemetryWrapper.go = function (params, element) {
     params.trim = params.trim != 'false';
     params.compare = params.compare; // default undefined
     params.sensibleCompare = params.sensibleCompare != 'false';
+    params.keyLimit = window.parseInt(params.keyLimit) || 4;
     params.evoVersions = params.evoVersions; // default undefined
   }
 
