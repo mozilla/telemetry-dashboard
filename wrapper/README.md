@@ -31,8 +31,8 @@ Where `parentEl` is:
 <html>
 <head>
 <title>Simple Example</title>
-<link href="https://telemetry.mozilla.org/new-pipeline/style/metricgraphics.css"/>
-<link href="https://telemetry.mozilla.org/wrapper/telemetry-wrapper.css"/>
+<link rel="stylesheet" href="https://telemetry.mozilla.org/new-pipeline/style/metricsgraphics.css"/>
+<link rel="stylesheet" href="https://telemetry.mozilla.org/wrapper/telemetry-wrapper.css"/>
 </head>
 <body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
