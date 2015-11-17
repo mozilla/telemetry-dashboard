@@ -368,8 +368,24 @@
     xhr.send();
   }
 
+  var _init;
+  var _initCompletedCallbacks;
   Telemetry.init = function Telemetry_init(callback) {
     assert(typeof callback === "function", "`callback` must be a function");
+
+    if (_init) {
+      callback();
+      return;
+    }
+    if (_initCompletedCallbacks) {
+      _initCompletedCallbacks.push(callback);
+      return;
+    }
+    _initCompletedCallbacks = [
+      function () { _init = true; },
+      callback,
+    ];
+
     Telemetry.getJSON(Telemetry.BASE_URL +
       "aggregates_by/build_id/channels/",
       function (channels) {
@@ -392,7 +408,9 @@
               })
               loadedChannels++; // Loaded another channel's dates
               if (loadedChannels == expectedChannels) {
-                callback();
+                _initCompletedCallbacks.forEach(function (callback) {
+                  callback();
+                });
               } // This is the last channel that needs to be loaded
             });
 
@@ -409,7 +427,9 @@
               })
               loadedChannels++; // Loaded another channel's dates
               if (loadedChannels == expectedChannels) {
-                callback();
+                _initCompletedCallbacks.forEach(function (callback) {
+                  callback();
+                });
               } // This is the last channel that needs to be loaded
             });
         });
