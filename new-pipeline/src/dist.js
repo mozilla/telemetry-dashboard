@@ -1648,30 +1648,81 @@ function saveStateToUrlAndCookie() {
         });
       });
     }
-    var jsonValue = JSON.stringify(histograms[0].map(function (count, start,
-      end, i) {
-      var entry = {
-        start: start
-      };
-      histograms.forEach(function (histogram, j) {
-        entry[histogram.measure] = countsList[j][i];
-      });
-      return entry;
-    }), null, 2);
-    var csvValue = "start,\t" +
-      histograms.map(function (histogram) {
-        return histogram.measure;
-      })
-      .join(",\t") + "\n" +
-      histograms[0].map(
-        function (count, start, end, i) {
-          return start + ",\t" + countsList.map(function (counts) {
-              return counts[i];
-            })
-            .join(",\t");
-        }
-      )
-      .join("\n");
+    var jsonValue;
+    var csvValue;
+    if (gCurrentHistogramsList.length == 1) {
+      jsonValue = JSON.stringify(histograms[0].map(function (count, start,
+        end, i) {
+        var entry = {
+          start: start
+        };
+        histograms.forEach(function (histogram, j) {
+          entry[histogram.measure] = countsList[j][i];
+        });
+        return entry;
+      }), null, 2);
+      csvValue = "start,\t" +
+        histograms.map(function (histogram) {
+          return histogram.measure;
+        })
+        .join(",\t") + "\n" +
+        histograms[0].map(
+          function (count, start, end, i) {
+            return start + ",\t" + countsList.map(function (counts) {
+                return counts[i];
+              })
+              .join(",\t");
+          }
+        )
+        .join("\n");
+    } else {
+      // keyed histogram: need to output keyed on key
+      var shownKeys = gAxesSelectors.map(jqMulti => jqMulti.val());
+      // JSON
+      var outputObj = {};
+      gCurrentHistogramsList
+        .filter(titleHistogramsPair =>
+          shownKeys.indexOf(titleHistogramsPair.title) != -1)
+        .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
+        .forEach(titleHistogramsPair => {
+          outputObj[titleHistogramsPair.title] = [];
+          titleHistogramsPair.histograms[0].buckets.forEach((bucket, i) => {
+            var record = {
+              start: bucket,
+            };
+            titleHistogramsPair.histograms.forEach(hist =>
+              record[hist.measure] = hist.values[i]);
+            outputObj[titleHistogramsPair.title].push(record);
+          })
+        });
+      jsonValue = JSON.stringify(outputObj, ' ', 2);
+
+      // CSV
+      var outputArr = [];
+      var titles = [
+        'key',
+        'start',
+        ];
+      histograms.forEach(hist => titles.push(hist.measure));
+      outputArr.push(titles);
+      gCurrentHistogramsList
+        .filter(titleHistogramsPair =>
+          shownKeys.indexOf(titleHistogramsPair.title) != -1)
+        .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
+        .forEach(titleHistogramsPair => {
+          var record;
+          for (var i = 0; i < histograms[0].buckets.length; i++) {
+            record = [
+              titleHistogramsPair.title,
+              titleHistogramsPair.histograms[0].buckets[i],
+            ];
+            titleHistogramsPair.histograms.forEach(hist =>
+              record.push(hist.values[i]));
+            outputArr.push(record);
+          }
+        });
+      csvValue = outputArr.map(record => record.join(',\t')).join('\n');
+    }
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
     var name = histograms.map(function (histogram) {
