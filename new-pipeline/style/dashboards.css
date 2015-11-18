@@ -118,3 +118,9 @@
 .mg-line-legend text { font-size: 12px !important; }
 .mg-marker-text { font-size: 12px !important; }
 .mg-markers line { stroke-width: 2px !important; }
+
+#dist-caption {
+  font-size: 1.5em;
+  text-align: center;
+  margin: 0.1em;
+}

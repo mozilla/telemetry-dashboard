@@ -989,6 +989,8 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
   $(axes)
     .empty(); // Remove tables if they are present
 
+  $('#dist-caption').text(histograms[0].description);
+
   // No histograms available
   if (histograms.length === 0) {
     MG.data_graphic({
