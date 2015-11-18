@@ -64,7 +64,7 @@ gWorker.addEventListener("message",
 
 $(document).ready(function() {
   indicate("Fetching data...");
-  gWorker.postMessage(["fetch", "20151017"]);
+  gWorker.postMessage(["fetch", "20151111"]);
   d3.selectAll('.view-selector > tfoot')
     .append('tr').append('th').append('input')
     .attr('type', 'checkbox').classed('view-selectall', true).property('checked', true);
