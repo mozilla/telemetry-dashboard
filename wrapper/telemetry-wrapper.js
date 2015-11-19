@@ -143,6 +143,12 @@ window.TelemetryWrapper.go = function (params, element) {
           evolutionsByKey[keycount.key] = oldEvolutionsByKey[keycount.key]);
       }
 
+      if (!Object.keys(evolutionsByKey).length) {
+        // Uh-oh, there's no data for the provided params. Bail!
+        showError('No data to graph', params, element);
+        return;
+      }
+
       Object.keys(evolutionsByKey).forEach(key => {
         var evolutions = evolutionsByKey[key];
         if (!evolutions.length) {
@@ -560,6 +566,13 @@ window.TelemetryWrapper.go = function (params, element) {
       };
     }
     return filterOptions;
+  }
+
+  function showError(msg, params, element) {
+    var msgEl = document.createElement('pre');
+    msgEl.className = 'graph-container error';
+    msgEl.textContent = msg + '\n' + JSON.stringify(params, ' ', 2);
+    element.appendChild(msgEl);
   }
 
   function formatNumber(number) {
