@@ -46,6 +46,7 @@
 
 .view-value {
   padding-right: 1em;
+  display: none;
 }
 
 tr.excluded > .view-pct {
