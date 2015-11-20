@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Crash Rate Summary</title>
+
+    <!-- Bootstrap and supporting libraries -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
+    <link rel="stylesheet" type="text/css" href="style/elessar.css" />
+    <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+
+    <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
+    <link rel="stylesheet" type="text/css" href="style/active.css" />
+
+<body>
+    <div class="container-fluid">
+        <header>
+            <form class="navbar-form inline pull-right">
+                <a href="mailto:bsmedberg@mozilla.com" class="btn btn-success" title="Report a bug" target="_blank">Dashboard owner: bsmedberg</a>
+                <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+            </form>
+        </header>
+        <div class="page-header">
+            <h1>Crash/Error Rate Summary</h1>
+        </div>
+        <p>
+            Data notes:
+            <ul>
+                <li>
+                    This dashboard requires gecko/Firefox because of ES6 features it currently uses.
+                </li>
+                <li>
+                    This report is based on the data collected with <a href="https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/">unified telemetry</a>.
+                </li>
+                <li>
+                    Total time is inconsistent across OSes. On Windows,
+                    total time includes sleep time. All other OSes
+                    total time does not include sleep time.
+                </li>
+                <li>Dashboard status: ALPHA. Contact bsmedberg with questions.</li>
+            </ul>
+        </p>
+
+        <h2>Nightly Channel - by BuildID</h2>
+
+        <div class="row">
+            <div class="col-sm-3">
+                <h3>Usage Hours</h3>
+                <div id="hours-nightly"></div>
+            </div>
+            <div class="col-sm-3">
+                <h3>main-process crashes</h3>
+                <div id="maincrashes-nightly"></div>
+                <div id="maincrashrate-nightly"></div>
+                <div id="maincrashdetect-nightly"></div>
+                <div id="maincrashsubmit-nightly"></div>
+            </div>
+            <div class="col-sm-3">
+                <h3>plugin crashes</h3>
+            </div>
+            <div class="col-sm-3">
+                <h3>content crashes</h3>
+            </div>
+        </div>
+    </div>
+    <div class="busy-indicator">
+        <div class="busy-indicator-progress"></div>
+        <i style="margin: 0 5px" class="fa fa-cog fa-spin"></i>
+        <span class="busy-indicator-message">Loading page...</span>
+    </div>
+
+    <!-- Bootstrap and supporting libraries -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <script src="lib/elessar.min.js"></script>
+    <script src="lib/crossfilter.min.js"></script>
+
+    <!-- MetricsGraphics libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <script src="lib/metricsgraphics.js"></script>
+    <script src="lib/d3pie.min.js"></script>
+
+    <script src="src/dashboards.js"></script>
+    <script src="src/crash-summary.js"></script>
