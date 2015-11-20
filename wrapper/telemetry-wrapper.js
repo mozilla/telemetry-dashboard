@@ -24,6 +24,9 @@ window.TelemetryWrapper.go = function (params, element) {
   Telemetry.init(function () {
     setDefaultParams(params);
 
+    var [graphContainerEl, graphTitleEl, graphEl, graphLegendEl] = createGraphEls();
+    element.appendChild(graphContainerEl);
+
     var evolutionsPromise;
     if (params.evoVersions > 0) {
       // if we're composing an evolution over many versions, we need to mux over the versions
@@ -145,10 +148,11 @@ window.TelemetryWrapper.go = function (params, element) {
 
       if (!Object.keys(evolutionsByKey).length) {
         // Uh-oh, there's no data for the provided params. Bail!
-        showError('No data to graph', params, element);
+        showError('No data to graph', params, graphContainerEl);
         return;
       }
 
+      var oldGraphContainerEl;
       Object.keys(evolutionsByKey).forEach(key => {
         var evolutions = evolutionsByKey[key];
         if (!evolutions.length) {
@@ -161,19 +165,15 @@ window.TelemetryWrapper.go = function (params, element) {
             .filter(evo => !!evo);
         }
 
-        // Construct the graph elements and add them to `element`
-        var graphContainerEl = document.createElement('div');
-        graphContainerEl.className = 'graph-container';
-        var graphTitleEl = document.createElement('h2');
-        graphTitleEl.className = 'graph-title';
-        graphContainerEl.appendChild(graphTitleEl);
-        var graphEl = document.createElement('div');
-        graphEl.className = 'graph';
-        var graphLegendEl = document.createElement('div');
-        graphLegendEl.className = 'graph-legend';
-        graphEl.appendChild(graphLegendEl);
-        graphContainerEl.appendChild(graphEl);
-        element.appendChild(graphContainerEl);
+        // Multiple keys need multiple DOM nodes, in order, in the same place.
+        if (oldGraphContainerEl) {
+          [ graphContainerEl,
+            graphTitleEl,
+            graphEl,
+            graphLegendEl] = createGraphEls();
+          element.insertBefore(graphContainerEl, oldGraphContainerEl.nextSibling);
+        }
+        oldGraphContainerEl = graphContainerEl;
 
         // Describe the graph, briefly
         var graphTitle = evolutions[0].measure;
@@ -568,11 +568,27 @@ window.TelemetryWrapper.go = function (params, element) {
     return filterOptions;
   }
 
-  function showError(msg, params, element) {
+  function showError(msg, params, container) {
     var msgEl = document.createElement('pre');
-    msgEl.className = 'graph-container error';
+    msgEl.className = 'error';
+    emptyEl(container);
     msgEl.textContent = msg + '\n' + JSON.stringify(params, ' ', 2);
-    element.appendChild(msgEl);
+    container.appendChild(msgEl);
+  }
+
+  function createGraphEls() {
+    var graphContainerEl = document.createElement('div');
+    graphContainerEl.className = 'graph-container';
+    var graphTitleEl = document.createElement('h2');
+    graphTitleEl.className = 'graph-title';
+    graphContainerEl.appendChild(graphTitleEl);
+    var graphEl = document.createElement('div');
+    graphEl.className = 'graph';
+    var graphLegendEl = document.createElement('div');
+    graphLegendEl.className = 'graph-legend';
+    graphEl.appendChild(graphLegendEl);
+    graphContainerEl.appendChild(graphEl);
+    return [graphContainerEl, graphTitleEl, graphEl, graphLegendEl];
   }
 
   function formatNumber(number) {
