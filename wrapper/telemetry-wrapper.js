@@ -24,7 +24,11 @@ window.TelemetryWrapper.go = function (params, element) {
   Telemetry.init(function () {
     setDefaultParams(params);
 
-    var [graphContainerEl, graphTitleEl, graphEl, graphLegendEl] = createGraphEls();
+    var [graphContainerEl,
+      graphTitleEl,
+      graphSubtitleEl,
+      graphEl,
+      graphLegendEl] = createGraphEls();
     element.appendChild(graphContainerEl);
 
     var evolutionsPromise;
@@ -169,6 +173,7 @@ window.TelemetryWrapper.go = function (params, element) {
         if (oldGraphContainerEl) {
           [ graphContainerEl,
             graphTitleEl,
+            graphSubtitleEl,
             graphEl,
             graphLegendEl] = createGraphEls();
           element.insertBefore(graphContainerEl, oldGraphContainerEl.nextSibling);
@@ -176,14 +181,24 @@ window.TelemetryWrapper.go = function (params, element) {
         oldGraphContainerEl = graphContainerEl;
 
         // Describe the graph, briefly
-        var graphTitle = evolutions[0].measure;
+        graphTitleEl.textContent = evolutions[0].measure;
+        var graphSubtitle = '';
         if (key) {
-          graphTitle += ' : ' + key;
+          graphSubtitle += ' key: ' + key;
         }
         if (params.compare) {
-          graphTitle += ' - with varying ' + params.compare
+          graphSubtitle += ' compare: ' + params.compare
         }
-        graphTitleEl.textContent = graphTitle;
+        if (Object.keys(params.filters).length) {
+          graphSubtitle += ' filters: ';
+          for (var filterName in params.filters) {
+            graphSubtitle += ` ${filterName}=${params.filters[filterName]}`;
+          }
+        }
+        if (params.sanitize) {
+          graphSubtitle += ' (sanitized)';
+        }
+        graphSubtitleEl.textContent = graphSubtitle;
 
         if (params.evoVersions > 0) {
           // This is where we leave the common path and divert to evo-only code
@@ -582,13 +597,16 @@ window.TelemetryWrapper.go = function (params, element) {
     var graphTitleEl = document.createElement('h2');
     graphTitleEl.className = 'graph-title';
     graphContainerEl.appendChild(graphTitleEl);
+    var graphSubtitleEl = document.createElement('div');
+    graphSubtitleEl.className = 'graph-subtitle';
+    graphContainerEl.appendChild(graphSubtitleEl);
     var graphEl = document.createElement('div');
     graphEl.className = 'graph';
     var graphLegendEl = document.createElement('div');
     graphLegendEl.className = 'graph-legend';
     graphEl.appendChild(graphLegendEl);
     graphContainerEl.appendChild(graphEl);
-    return [graphContainerEl, graphTitleEl, graphEl, graphLegendEl];
+    return [graphContainerEl, graphTitleEl, graphSubtitleEl, graphEl, graphLegendEl];
   }
 
   function formatNumber(number) {
@@ -638,7 +656,7 @@ window.TelemetryWrapper.go = function (params, element) {
     params.sanitize = params.sanitize != 'false';
     params.trim = params.trim != 'false';
     params.compare = params.compare; // default undefined
-    if (params.compare && filters[params.compare]) {
+    if (params.compare && params.filters[params.compare]) {
       // If we're filtering to a particular value, we can't then compare by it.
       delete params.compare;
     }
