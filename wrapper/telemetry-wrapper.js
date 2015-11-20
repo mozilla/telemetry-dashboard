@@ -622,6 +622,10 @@ window.TelemetryWrapper.go = function (params, element) {
     params.sanitize = params.sanitize != 'false';
     params.trim = params.trim != 'false';
     params.compare = params.compare; // default undefined
+    if (params.compare && filters[params.compare]) {
+      // If we're filtering to a particular value, we can't then compare by it.
+      delete params.compare;
+    }
     params.sensibleCompare = params.sensibleCompare != 'false';
     params.keyLimit = window.parseInt(params.keyLimit) || 4;
     params.evoVersions = params.evoVersions; // default undefined
