@@ -52,3 +52,7 @@
 tr.excluded > .view-pct {
   visibility: hidden;
 }
+
+.chart-container h3 {
+  text-align: center;
+}

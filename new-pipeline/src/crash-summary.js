@@ -117,6 +117,33 @@ function BuildData(d) {
     this.crashsubmitattemptmain / this.crashesdetectedmain;
   this.main_crash_submit_error_rate =
     (this.crashsubmitattemptmain - this.crashsubmitsuccessmain) / this.crashsubmitattemptmain;
+
+  this.npapi_aborts_per_khour =
+    this.abortsplugin / this.subsessionlengths * 1000;
+  this.gmp_aborts_per_khour =
+    this.abortsgmplugin / this.subsessionlengths * 1000;
+  this.npapi_crashes_per_khour =
+    this.crashesdetectedplugin / this.subsessionlengths * 1000;
+  this.gmp_crashes_per_khour =
+    this.crashesdetectedgmplugin / this.subsessionlengths * 1000;
+  this.npapi_hangs_per_khour =
+    this.pluginhangs / this.subsessionlengths * 1000;
+
+  this.npapi_crash_detect_rate =
+    (this.crashesdetectedplugin + this.pluginhangs) / this.abortsplugin || 0;
+  this.gmp_crash_detect_rate =
+    this.crashesdetectedgmplugin / this.abortsgmplugin || 0;
+  this.plugin_crash_submit_rate =
+    this.crashsubmitattemptplugin / (this.crashesdetectedplugin + this.pluginhangs + this.crashesdetectedgmplugin) || 0;
+
+  this.content_aborts_per_khour =
+    this.abortscontent / this.subsessionlengths * 1000;
+  this.content_crashes_per_khour =
+    this.crashesdetectedcontent / this.subsessionlengths * 1000;
+  this.content_crash_detect_rate =
+    this.crashesdetectedcontent / this.abortscontent;
+  this.content_crash_submit_rate =
+    this.crashsubmitattemptcontent / this.crashesdetectedcontent;
 }
 
 var gGraphData;
@@ -130,9 +157,11 @@ function graph_it() {
   let data = raw.map(BuildData).filter((d) => (d.subsessionlengths > 500000));
   gGraphData = data;
 
+  // HOURS
+
   MG.data_graphic({
     title: "Usage Hours",
-    description: "Total usage hours for each nightly build.",
+    description: "Total usage hours.",
     data: data,
     full_width: true,
     height: 200,
@@ -147,11 +176,14 @@ function graph_it() {
     },
     interpolate: 'step',
     linked: true,
+    aggregate_rollover: true,
   });
+
+  // MAIN CRASHES
 
   MG.data_graphic({
     title: "Crash counts",
-    description: "Total counts of aborted sessions and detected crashes for each nightly build.",
+    description: "Total counts of aborted sessions and detected crashes.",
     data: data,
     full_width: true,
     height: 200,
@@ -171,6 +203,7 @@ function graph_it() {
     legend: ['aborted-sessions', 'crashreporter'],
     interpolate: 'step',
     linked: true,
+    aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -195,6 +228,7 @@ function graph_it() {
     interpolate: 'step',
     legend: ['aborted-sessions', 'crashreporter'],
     right: 85,
+    aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -219,6 +253,8 @@ function graph_it() {
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
+    format: 'percentage',
+    aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -243,6 +279,223 @@ function graph_it() {
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
+    format: 'percentage',
+    aggregate_rollover: true,
+  });
+
+  // PLUGIN CRASHES
+
+  MG.data_graphic({
+    title: "Crash counts",
+    description: "Total counts of plugin aborts and detected crashes. This includes both NPAPI plugins and Gecko Media Plugins (GMP).",
+    data: data,
+    full_width: true,
+    height: 325,
+    target: '#plugincrashes-nightly',
+    x_accessor: 'date',
+    y_accessor: ['abortsplugin', 'abortsgmplugin', 'crashesdetectedplugin', 'crashesdetectedgmplugin', 'pluginhangs'],
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*
+    mouseover: function(d) {
+      d3.select('#plugincrashes-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " Aborted sessions: " + d.abortedsessioncount +
+        " Crashes detected: " + d.crashesdetectedmain);
+    },*/
+    right: 85,
+    legend: ['NPAPI aborts', 'GMP aborts', 'NPAPI crashes', 'GMP crashes', 'NPAPI hangs'],
+    interpolate: 'step',
+    linked: true,
+    aggregate_rollover: true,
+  });
+
+  MG.data_graphic({
+    title: "Plugin crash rate (per 1000 hours)",
+    description: "The number of aborted plugins and detected crashes per 1,000 hours of usage.",
+    data: data,
+    full_width: true,
+    height: 325,
+    target: '#plugincrashrate-nightly',
+    x_accessor: 'date',
+    y_accessor: ['npapi_aborts_per_khour', 'gmp_aborts_per_khour',
+                 'npapi_crashes_per_khour', 'gmp_crashes_per_khour',
+                 'npapi_hangs_per_khour'],
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*mouseover: function(d) {
+      d3.select('#plugincrashrate-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " aborted-session rate: " + k2Format(d.main_aborts_per_khour) +
+        " crashreporter rate: " + k2Format(d.main_crashes_per_khour));
+    },*/
+    linked: true,
+    interpolate: 'step',
+    legend: ['NPAPI aborts', 'GMP aborts',
+             'NPAPI crashes', 'GMP crashes',
+             'NPAPI hangs'],
+    right: 85,
+    aggregate_rollover: true,
+  });
+
+  MG.data_graphic({
+    title: "Crash Detection Rate",
+    description: "What percent of plugin aborts triggered the crashreporter? (NPAPI and GMP separately)",
+    data: data,
+    full_width: true,
+    height: 200,
+    target: '#plugincrashdetect-nightly',
+    x_accessor: 'date',
+    y_accessor: ['npapi_crash_detect_rate', 'gmp_crash_detect_rate'],
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*mouseover: function(d) {
+      d3.select('#maincrashdetect-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " Detection rate: " + d3.format('%')(d.main_crash_submit_rate));
+    },*/
+    linked: true,
+    interpolate: 'step',
+    max_y: 1,
+    yax_format: d3.format('%'),
+    yax_count: 5,
+    legend: ['NPAPI', 'GMP'],
+    format: 'percentage',
+    aggregate_rollover: true,
+  });
+
+  MG.data_graphic({
+    title: "Submission rate",
+    description: "What percent of detected plugins crashes are submitted via the crashreporter? (NPAPI and GMP combined)",
+    data: data,
+    full_width: true,
+    height: 200,
+    target: '#plugincrashsubmit-nightly',
+    x_accessor: 'date',
+    y_accessor: 'plugin_crash_submit_rate',
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*mouseover: function(d) {
+      d3.select('#maincrashsubmit-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " Submission rate: " + d3.format('.1%')(d.main_crash_submit_rate));
+    },*/
+    linked: true,
+    interpolate: 'step',
+    max_y: 1,
+    yax_format: d3.format('%'),
+    yax_count: 5,
+    format: 'percentage',
+    aggregate_rollover: true,
+  });
+
+  // CONTENT CRASHES
+
+  MG.data_graphic({
+    title: "Crash counts",
+    description: "Total counts of content aborts and detected crashes.",
+    data: data,
+    full_width: true,
+    height: 325,
+    target: '#contentcrashes-nightly',
+    x_accessor: 'date',
+    y_accessor: ['abortscontent', 'crashesdetectedcontent'],
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*
+    mouseover: function(d) {
+      d3.select('#plugincrashes-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " Aborted sessions: " + d.abortedsessioncount +
+        " Crashes detected: " + d.crashesdetectedmain);
+    },*/
+    right: 85,
+    legend: ['aborts', 'crashes'],
+    interpolate: 'step',
+    linked: true,
+    aggregate_rollover: true,
+  });
+
+  MG.data_graphic({
+    title: "Content crash rate (per 1000 hours)",
+    description: "The number of content aborts and detected crashes per 1,000 hours of usage.",
+    data: data,
+    full_width: true,
+    height: 325,
+    target: '#contentcrashrate-nightly',
+    x_accessor: 'date',
+    y_accessor: ['content_aborts_per_khour', 'content_crashes_per_khour'],
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*mouseover: function(d) {
+      d3.select('#plugincrashrate-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " aborted-session rate: " + k2Format(d.main_aborts_per_khour) +
+        " crashreporter rate: " + k2Format(d.main_crashes_per_khour));
+    },*/
+    linked: true,
+    interpolate: 'step',
+    legend: ['aborts', 'crashes'],
+    right: 85,
+    aggregate_rollover: true,
+  });
+
+  MG.data_graphic({
+    title: "Crash Detection Rate",
+    description: "What percent of content aborts triggered the crashreporter?",
+    data: data,
+    full_width: true,
+    height: 200,
+    target: '#contentcrashdetect-nightly',
+    x_accessor: 'date',
+    y_accessor: 'content_crash_detect_rate',
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*mouseover: function(d) {
+      d3.select('#maincrashdetect-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " Detection rate: " + d3.format('%')(d.main_crash_submit_rate));
+    },*/
+    linked: true,
+    interpolate: 'step',
+    // max_y: 1,
+    yax_format: d3.format('%'),
+    yax_count: 5,
+    // format: 'percentage',
+    aggregate_rollover: true,
+  });
+
+  MG.data_graphic({
+    title: "Submission rate",
+    description: "What percent of detected content crashes are submitted via the crashreporter?",
+    data: data,
+    full_width: true,
+    height: 200,
+    target: '#contentcrashsubmit-nightly',
+    x_accessor: 'date',
+    y_accessor: 'content_crash_submit_rate',
+    max_x: new Date(),
+    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    utc_time: true,
+    /*mouseover: function(d) {
+      d3.select('#maincrashsubmit-nightly .mg-active-datapoint').text(
+        "BuildID: " + d.buildid +
+        " Submission rate: " + d3.format('.1%')(d.main_crash_submit_rate));
+    },*/
+    linked: true,
+    interpolate: 'step',
+    max_y: 1,
+    yax_format: d3.format('%'),
+    yax_count: 5,
+    format: 'percentage',
+    aggregate_rollover: true,
   });
 }
 
@@ -254,3 +507,8 @@ $(function() {
   }
 });
 
+$(window).resize(function() {
+  if (gPending == 0) {
+    graph_it();
+  }
+});
