@@ -246,7 +246,7 @@ function graph_it() {
     mouseover: function(d) {
       d3.select('#maincrashdetect-nightly .mg-active-datapoint').text(
         "BuildID: " + d.buildid +
-        " Detection rate: " + d3.format('%')(d.main_crash_submit_rate));
+        " Detection rate: " + d3.format('%')(d.main_crash_detect_rate));
     },
     linked: true,
     interpolate: 'step',
