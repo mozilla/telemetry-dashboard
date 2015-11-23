@@ -33,6 +33,12 @@
 .hidden {
   display: none;
 }
+.invisible {
+  visibility: invisible;
+}
+.ib {
+  display: inline-block;
+}
 
 .view-selector > tbody > tr:hover {
   background-color: #CCC;
@@ -55,4 +61,39 @@ tr.excluded > .view-pct {
 
 .chart-container h3 {
   text-align: center;
+}
+
+#hover-details {
+  position: absolute;
+  border: 1px solid #b3b2b2;
+  padding: 5px;
+  width: 22em;
+  background-color: white;
+  z-index: 1;
+}
+
+#hover-details > h3 {
+  font-size: 100%;
+  font-weight: bold;
+  color: #90C3D4;
+  clear: left;
+  text-align: center;
+  margin: 8px 0px;
+}
+#hover-details > dl {
+  margin: 0;
+}
+
+#hover-details > dl > dt {
+  float: left;
+  clear: left;
+  width: 11em;
+  text-align: right;
+  font-weight: bold;
+  color: darkgray;
+  padding-right: 5px;
+}
+#hover-details > dl > dd {
+  margin: 0;
+  padding: 0;
 }

@@ -8,6 +8,7 @@ var kBuildIDFormat = d3.time.format.utc('%Y%m%d%H%M%S');
 var kYYYYMMDDFormat = d3.time.format.utc('%Y%m%d');
 var kCommaFormat = d3.format(",f");
 var k2Format = d3.format(",.2f");
+var kPctFormat = d3.format("%");
 
 var gMinDate = new Date();
 
@@ -146,6 +147,57 @@ function BuildData(d) {
     this.crashsubmitattemptcontent / this.crashesdetectedcontent;
 }
 
+var gLastEvent;
+
+function do_mouseover(d) {
+  d3.select("#detail-buildid").text(d.buildid);
+  d3.select("#detail-hours").text(kCommaFormat(d.subsessionlengths));
+  d3.select("#detail-mainaborts").text(kCommaFormat(d.abortedsessioncount));
+  d3.select("#detail-mainaborts-rate").text(k2Format(d.main_aborts_per_khour));
+  d3.select("#detail-maincrashes").text(kCommaFormat(d.crashesdetectedmain));
+  d3.select("#detail-maincrashes-rate").text(k2Format(d.main_crashes_per_khour));
+  d3.select("#detail-main-detection-rate").text(kPctFormat(d.main_crash_detect_rate));
+  d3.select("#detail-main-submission-rate").text(kPctFormat(d.main_crash_submit_rate));
+  d3.select("#detail-pluginaborts").text(kCommaFormat(d.abortsplugin));
+  d3.select("#detail-pluginaborts-rate").text(k2Format(d.npapi_aborts_per_khour));
+  d3.select("#detail-plugincrashes").text(kCommaFormat(d.crashesdetectedplugin));
+  d3.select("#detail-plugincrash-rate").text(k2Format(d.npapi_crashes_per_khour));
+  d3.select("#detail-plugin-detection-rate").text(kPctFormat(d.npapi_crash_detect_rate));
+  d3.select("#detail-pluginhangs").text(kCommaFormat(d.pluginhangs));
+  d3.select("#detail-pluginhang-rate").text(k2Format(d.npapi_hangs_per_khour));
+  d3.select("#detail-gmpluginaborts").text(kCommaFormat(d.abortsgmplugin));
+  d3.select("#detail-gmpluginaborts-rate").text(k2Format(d.gmp_aborts_per_khour));
+  d3.select("#detail-gmpluginaborts").text(kCommaFormat(d.abortscontent));
+  d3.select("#detail-gmplugincrashes").text(kCommaFormat(d.crashesdetectedcontent));
+  d3.select("#detail-gmpluginaborts-rate").text(k2Format(d.content_aborts_per_khour));
+  d3.select("#detail-gmplugincrash-rate").text(k2Format(d.content_crashes_per_khour));
+  d3.select("#detail-plugin-submission-rate").text(kPctFormat(d.plugin_crash_submit_rate));
+
+  d3.select("#detail-contentaborts").text(kCommaFormat(d.abortscontent));
+  d3.select("#detail-contentcrashes").text(kCommaFormat(d.crashesdetectedcontent));
+  d3.select("#detail-contentaborts-rate").text(k2Format(d.content_aborts_per_khour));
+  d3.select("#detail-contentcrashes-rate").text(k2Format(d.content_crashes_per_khour));
+  d3.select("#detail-content-detection-rate").text(kPctFormat(d.content_crash_detect_rate));
+  d3.select("#detail-content-submission-rate").text(kPctFormat(d.content_crash_submit_rate));
+
+  let details = $("#hover-details");
+  let width = parseInt(details.css("width"));
+  let height = parseInt(details.css("height"));
+
+  let [x, y] = d3.mouse(document.documentElement);
+  let position = { left: x - width - 5, top: y - height - 5 };
+  if (position.left < 5) {
+    position.left = x + 5;
+  }
+  if (position.top < 5) {
+    position.top = y + 5;
+  }
+  details.offset(position).toggleClass("invisible", false);
+}
+function do_mouseout() {
+  d3.select("#hover-details").classed("invisible", true);
+}
+
 var gGraphData;
 
 function graph_it() {
@@ -171,12 +223,13 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    mouseover: function(d) {
-      d3.select('#hours-nightly .mg-active-datapoint').text("BuildID: " + d.buildid + " Hours: " + kCommaFormat(d.subsessionlengths));
-    },
+    mouseover: do_mouseover,
+    mouseout: do_mouseout,
     interpolate: 'step',
     linked: true,
-    aggregate_rollover: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
   });
 
   // MAIN CRASHES
@@ -193,17 +246,14 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    mouseover: function(d) {
-      d3.select('#maincrashes-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Aborted sessions: " + d.abortedsessioncount +
-        " Crashes detected: " + d.crashesdetectedmain);
-    },
     right: 85,
     legend: ['aborted-sessions', 'crashreporter'],
     interpolate: 'step',
     linked: true,
-    aggregate_rollover: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -218,17 +268,14 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    mouseover: function(d) {
-      d3.select('#maincrashrate-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " aborted-session rate: " + k2Format(d.main_aborts_per_khour) +
-        " crashreporter rate: " + k2Format(d.main_crashes_per_khour));
-    },
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     legend: ['aborted-sessions', 'crashreporter'],
     right: 85,
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -243,18 +290,16 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    mouseover: function(d) {
-      d3.select('#maincrashdetect-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Detection rate: " + d3.format('%')(d.main_crash_detect_rate));
-    },
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -269,18 +314,16 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    mouseover: function(d) {
-      d3.select('#maincrashsubmit-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Submission rate: " + d3.format('.1%')(d.main_crash_submit_rate));
-    },
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   // PLUGIN CRASHES
@@ -297,18 +340,14 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*
-    mouseover: function(d) {
-      d3.select('#plugincrashes-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Aborted sessions: " + d.abortedsessioncount +
-        " Crashes detected: " + d.crashesdetectedmain);
-    },*/
     right: 85,
     legend: ['NPAPI aborts', 'GMP aborts', 'NPAPI crashes', 'GMP crashes', 'NPAPI hangs'],
     interpolate: 'step',
     linked: true,
-    aggregate_rollover: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -325,19 +364,16 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*mouseover: function(d) {
-      d3.select('#plugincrashrate-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " aborted-session rate: " + k2Format(d.main_aborts_per_khour) +
-        " crashreporter rate: " + k2Format(d.main_crashes_per_khour));
-    },*/
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     legend: ['NPAPI aborts', 'GMP aborts',
              'NPAPI crashes', 'GMP crashes',
              'NPAPI hangs'],
     right: 85,
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -352,19 +388,17 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*mouseover: function(d) {
-      d3.select('#maincrashdetect-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Detection rate: " + d3.format('%')(d.main_crash_submit_rate));
-    },*/
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
     legend: ['NPAPI', 'GMP'],
     format: 'percentage',
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -379,18 +413,16 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*mouseover: function(d) {
-      d3.select('#maincrashsubmit-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Submission rate: " + d3.format('.1%')(d.main_crash_submit_rate));
-    },*/
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   // CONTENT CRASHES
@@ -407,18 +439,14 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*
-    mouseover: function(d) {
-      d3.select('#plugincrashes-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Aborted sessions: " + d.abortedsessioncount +
-        " Crashes detected: " + d.crashesdetectedmain);
-    },*/
     right: 85,
     legend: ['aborts', 'crashes'],
     interpolate: 'step',
     linked: true,
-    aggregate_rollover: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -433,17 +461,14 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*mouseover: function(d) {
-      d3.select('#plugincrashrate-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " aborted-session rate: " + k2Format(d.main_aborts_per_khour) +
-        " crashreporter rate: " + k2Format(d.main_crashes_per_khour));
-    },*/
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     legend: ['aborts', 'crashes'],
     right: 85,
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -458,18 +483,16 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*mouseover: function(d) {
-      d3.select('#maincrashdetect-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Detection rate: " + d3.format('%')(d.main_crash_submit_rate));
-    },*/
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     // max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
-    // format: 'percentage',
-    aggregate_rollover: true,
+    format: 'percentage',
+    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -484,18 +507,16 @@ function graph_it() {
     max_x: new Date(),
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
-    /*mouseover: function(d) {
-      d3.select('#maincrashsubmit-nightly .mg-active-datapoint').text(
-        "BuildID: " + d.buildid +
-        " Submission rate: " + d3.format('.1%')(d.main_crash_submit_rate));
-    },*/
     linked: true,
+    linked_format: '%Y%m%d%H%M%S',
+    show_rollover_text: false,
+    area: false,
     interpolate: 'step',
     max_y: 1,
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    aggregate_rollover: true,
+    // aggregate_rollover: true,
   });
 }
 

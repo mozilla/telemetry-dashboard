@@ -46,6 +46,81 @@
 
         <h2>Nightly Channel - by BuildID</h2>
 
+        <div id="hover-details" class="invisible">
+            <dl>
+                <dt>BuildID</dt>
+                <dd id="detail-buildid"></dd>
+                <dt>Hours</dt>
+                <dd id="detail-hours"></dd>
+            </dl>
+            <h3>Main Process</h3>
+            <dl>
+                <dt>Aborts</dt>
+                <dd><div class="ib">
+                    <span id="detail-mainaborts"></span><br>
+                    <span id="detail-mainaborts-rate"></span>/khour
+                </div></dd>
+                <dt>Crashes</dt>
+                <dd><div class="ib">
+                    <span id="detail-maincrashes"></span><br>
+                    <span id="detail-maincrashes-rate"></span>/khour<br>
+                    <span id="detail-main-detection-rate"> detection rate
+                </div></dd>
+                <dt>Submission Rate</dt>
+                <dd id="detail-main-submission-rate"></dd>
+            </dl>
+
+            <h3>Plugins</h3>
+            <dl>
+                <dt>NPAPI Aborts</dt>
+                <dd><div class="ib">
+                    <span id="detail-pluginaborts"></span><br>
+                    <span id="detail-pluginaborts-rate"></span>/khour
+                </div></dd>
+                <dt>NPAPI Crashes</dt>
+                <dd><div class="ib">
+                    <span id="detail-plugincrashes"></span><br>
+                    <span id="detail-plugincrash-rate"></span>/khour<br>
+                    <span id="detail-plugin-detection-rate"></span> detection rate
+                </div></dd>
+                <dt>NPAPI Hangs</dt>
+                <dd><div class="ib">
+                    <span id="detail-pluginhangs"></span><br>
+                    <span id="detail-pluginhang-rate"></span>/khour
+                </dd>
+                <dt>GMP Aborts</dt>
+                <dd><div class="ib">
+                    <span id="detail-gmpluginaborts"></span><br>
+                    <span id="detail-gmpluginaborts-rate"></span>/khour
+                </div></dd>
+                <dt>GMP Crashes</dt>
+                <dd><div class="ib">
+                    <span id="detail-gmplugincrashes"></span><br>
+                    <span id="detail-gmplugincrash-rate"></span>/khour<br>
+                    <span id="detail-gmplugin-detection-rate"></span> detection rate
+                </div></dd>
+                <dt>Submission Rate</dt>
+                <dd id="detail-plugin-submission-rate"></dd>
+            </dl>
+
+            <h3>Content Process</h3>
+            <dl>
+                <dt>Aborts</dt>
+                <dd><div class="ib">
+                    <span id="detail-contentaborts"></span><br>
+                    <span id="detail-contentaborts-rate"></span>/khour
+                </div></dd>
+                <dt>Crashes</dt>
+                <dd><div class="ib">
+                    <span id="detail-contentcrashes"></span><br>
+                    <span id="detail-contentcrashes-rate"></span>/khour<br>
+                    <span id="detail-content-detection-rate"> detection rate
+                </div></dd>
+                <dt>Submission Rate</dt>
+                <dd id="detail-content-submission-rate"></dd>
+            </dl>
+        </div>
+
         <div class="row chart-container">
             <div class="col-sm-6">
                 <h3>usage hours</h3>
@@ -95,4 +170,7 @@
     <script src="lib/d3pie.min.js"></script>
 
     <script src="src/dashboards.js"></script>
-    <script src="src/crash-summary.js"></script>
+
+    <script src="https://google.github.io/traceur-compiler/bin/traceur.js"></script>
+    <script src="https://google.github.io/traceur-compiler/src/bootstrap.js"></script>
+    <script src="src/crash-summary.js" type="module"></script>
