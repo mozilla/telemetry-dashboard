@@ -147,8 +147,6 @@ function BuildData(d) {
     this.crashsubmitattemptcontent / this.crashesdetectedcontent;
 }
 
-var gLastEvent;
-
 function do_mouseover(d) {
   d3.select("#detail-buildid").text(d.buildid);
   d3.select("#detail-hours").text(kCommaFormat(d.subsessionlengths));
@@ -171,7 +169,7 @@ function do_mouseover(d) {
   d3.select("#detail-gmplugincrashes").text(kCommaFormat(d.crashesdetectedcontent));
   d3.select("#detail-gmpluginaborts-rate").text(k2Format(d.content_aborts_per_khour));
   d3.select("#detail-gmplugincrash-rate").text(k2Format(d.content_crashes_per_khour));
-  d3.select("#detail-plugin-submission-rate").text(kPctFormat(d.plugin_crash_submit_rate));
+  d3.select("#detail-plugin-submission-rate").text(d3.format(".2%")(d.plugin_crash_submit_rate));
 
   d3.select("#detail-contentaborts").text(kCommaFormat(d.abortscontent));
   d3.select("#detail-contentcrashes").text(kCommaFormat(d.crashesdetectedcontent));
@@ -198,22 +196,23 @@ function do_mouseout() {
   d3.select("#hover-details").classed("invisible", true);
 }
 
-var gGraphData;
-
 function graph_it() {
-  gPending = false;
-  gChannelDimension.filter("nightly");
+  let channel = $("#channel-value").attr("data-channel");
+  gChannelDimension.filter(channel);
+
+  console.log("Graphing", channel);
+
   let raw = gBuildIDDimension.group().reduce(counts_add, counts_sub, counts_initial)
     .orderNatural().all();
 
   let data = raw.map(BuildData).filter((d) => (d.subsessionlengths > 500000));
-  gGraphData = data;
+  window.gGraphData = data;
 
   // HOURS
 
   MG.data_graphic({
     title: "Usage Hours",
-    description: "Total usage hours.",
+    description: "Total usage hours: sum of main-pings payload.subsessionlength converted to hours",
     data: data,
     full_width: true,
     height: 200,
@@ -236,7 +235,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Crash counts",
-    description: "Total counts of aborted sessions and detected crashes.",
+    description: "Aborts: main pings with payload.reason = 'aborted-session'. Crashes: counts crash pings, which should be equivalent to the crash reporter being triggered.",
     data: data,
     full_width: true,
     height: 200,
@@ -247,7 +246,7 @@ function graph_it() {
     min_x: new Date(Date.now() - MS_PER_DAY * 90),
     utc_time: true,
     right: 85,
-    legend: ['aborted-sessions', 'crashreporter'],
+    legend: ['aborts', 'crashes'],
     interpolate: 'step',
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -258,7 +257,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Main-process crash rate (per 1000 hours)",
-    description: "The number of aborted sessions (non-clean shutdowns) and crashes per 1,000 hours of usage.",
+    description: "A calculated ratio of crashes and aborts (above) over total usage hours (also above).",
     data: data,
     full_width: true,
     height: 200,
@@ -280,7 +279,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Crash Detection Rate",
-    description: "What percent of aborted sessions (non-clean shutdowns) triggered the crashreporter?",
+    description: "What percent of aborted sessions triggered the crashreporter? Calculated crashes (above) divided by aborts (above).",
     data: data,
     full_width: true,
     height: 200,
@@ -304,7 +303,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Submission rate",
-    description: "What percent of detected main-process crashes are submitted via the crashreporter?",
+    description: "What percent of detected main-process crashes (above) are submitted via the crashreporter? Calculated from the PROCESS_CRASH_SUBMIT_ATTEMPT histogram for type='main' over detected crashes (above)",
     data: data,
     full_width: true,
     height: 200,
@@ -330,7 +329,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Crash counts",
-    description: "Total counts of plugin aborts and detected crashes. This includes both NPAPI plugins and Gecko Media Plugins (GMP).",
+    description: "Total counts of plugin aborts and detected crashes. This includes both NPAPI plugins and Gecko Media Plugins (GMP). Calculated from the SUBPROCESS_ABRNORMAL_ABORT and SUBPROCESS_CRASHES_WITH_DUMP histograms.",
     data: data,
     full_width: true,
     height: 325,
@@ -352,7 +351,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Plugin crash rate (per 1000 hours)",
-    description: "The number of aborted plugins and detected crashes per 1,000 hours of usage.",
+    description: "A calculated ratio of aborts and crashes (above) per usage hour (above).",
     data: data,
     full_width: true,
     height: 325,
@@ -378,7 +377,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Crash Detection Rate",
-    description: "What percent of plugin aborts triggered the crashreporter? (NPAPI and GMP separately)",
+    description: "What percent of plugin aborts were counted as crashes that triggered the crashreporter? (NPAPI and GMP separately). Calculated ratio of the two metrics above.",
     data: data,
     full_width: true,
     height: 200,
@@ -403,7 +402,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Submission rate",
-    description: "What percent of detected plugins crashes are submitted via the crashreporter? (NPAPI and GMP combined)",
+    description: "What percent of detected plugins crashes are submitted via the crashreporter? (NPAPI and GMP combined.) Calculated PROCESS_CRASH_SUBMIT_ATTEMPT histogram divided by total detected crashes.",
     data: data,
     full_width: true,
     height: 200,
@@ -429,7 +428,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Crash counts",
-    description: "Total counts of content aborts and detected crashes.",
+    description: "Total counts of content aborts and detected crashes. Calculated from the SUBPROCESS_ABRNORMAL_ABORT and SUBPROCESS_CRASHES_WITH_DUMP histograms.",
     data: data,
     full_width: true,
     height: 325,
@@ -451,7 +450,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Content crash rate (per 1000 hours)",
-    description: "The number of content aborts and detected crashes per 1,000 hours of usage.",
+    description: "A calculated ratio of aborts and crashes (above) per usage hour (above).",
     data: data,
     full_width: true,
     height: 325,
@@ -473,7 +472,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Crash Detection Rate",
-    description: "What percent of content aborts triggered the crashreporter?",
+    description: "What percent of content aborts triggered the crashreporter? Calculated ratio of the two metrics above.",
     data: data,
     full_width: true,
     height: 200,
@@ -497,7 +496,7 @@ function graph_it() {
 
   MG.data_graphic({
     title: "Submission rate",
-    description: "What percent of detected content crashes are submitted via the crashreporter?",
+    description: "What percent of detected content crashes are submitted via the crashreporter? Calculated PROCESS_CRASH_SUBMIT_ATTEMPT histogram divided by total detected crashes.",
     data: data,
     full_width: true,
     height: 200,
@@ -533,3 +532,20 @@ $(window).resize(function() {
     graph_it();
   }
 });
+
+$("#channel-dropdown").on("click", "a", function() {
+  let channel = $(this).attr("data-channel");
+  $("#channel-value").attr("data-channel", channel).text($(this).text());
+  if (gPending == 0) {
+    graph_it();
+  }
+});
+
+$("#sort-dropdown").on("click", "a", function() {
+  let sort = $(this).attr("data-sort");
+  $("#sort-value").attr("data-sort", sort).text($(this).text());
+  if (gPending == 0) {
+    graph_it();
+  }
+});
+

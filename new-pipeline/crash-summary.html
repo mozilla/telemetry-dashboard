@@ -44,7 +44,34 @@
             </ul>
         </p>
 
-        <h2>Nightly Channel - by BuildID</h2>
+        <h2 id="view">
+            <span class="dropdown">
+                <a id="channel-selector" class="dropdown-toggle"
+                   data-toggle="dropdown" data-target="#"
+                   aria-haspopup="true" aria-expanded="false">
+                    Release Channel: <span id="channel-value" data-channel="aurora">aurora</span>
+                    <span class="caret"></span>
+                </a>
+                <ul id="channel-dropdown" class="dropdown-menu" aria-labelledby="channel-selector">
+                    <li><a href="#" data-channel="nightly">nightly</a></li>
+                    <li><a href="#" data-channel="aurora">developer edition (aurora)</a></li>
+                    <li><a href="#" data-channel="beta">beta</a></li>
+                    <li><a href="#" data-channel="release">release</a></li>
+                </ul>
+            </span>
+            <span class="dropdown">
+                <a id="sort-selector" class="dropdown-toggle"
+                   data-toggle="dropdown" data-target="#"
+                   aria-haspopup="true" aria-expanded="false">
+                    Sort by: <span id="sort-value" data-sort="buildid">Build ID</span>
+                    <span class="caret"></span>
+                </a>
+                <ul id="sort-dropdown" class="dropdown-menu" aria-labelledby="sort-selector">
+                    <li><a href="#" data-sort="buildid">Build ID</a></li>
+                    <li><a href="#" data-sort="date">Crash Date</a></li>
+                </ul>
+            </span>
+        </h2>
 
         <div id="hover-details" class="invisible">
             <dl>
@@ -156,7 +183,7 @@
     </div>
 
     <!-- Bootstrap and supporting libraries -->
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.3.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
