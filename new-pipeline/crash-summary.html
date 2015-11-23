@@ -49,7 +49,7 @@
                 <a id="channel-selector" class="dropdown-toggle"
                    data-toggle="dropdown" data-target="#"
                    aria-haspopup="true" aria-expanded="false">
-                    Release Channel: <span id="channel-value" data-channel="aurora">aurora</span>
+                    Release Channel: <span id="channel-value">nightly</span>
                     <span class="caret"></span>
                 </a>
                 <ul id="channel-dropdown" class="dropdown-menu" aria-labelledby="channel-selector">
@@ -68,15 +68,15 @@
                 </a>
                 <ul id="sort-dropdown" class="dropdown-menu" aria-labelledby="sort-selector">
                     <li><a href="#" data-sort="buildid">Build ID</a></li>
-                    <li><a href="#" data-sort="date">Crash Date</a></li>
+                    <li><a href="#" data-sort="date">Calendar Date</a></li>
                 </ul>
             </span>
         </h2>
 
         <div id="hover-details" class="invisible">
             <dl>
-                <dt>BuildID</dt>
-                <dd id="detail-buildid"></dd>
+                <dt id="detail-sort-label">_</dt>
+                <dd id="detail-sort-value"></dd>
                 <dt>Hours</dt>
                 <dd id="detail-hours"></dd>
             </dl>

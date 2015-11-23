@@ -10,22 +10,29 @@ var kCommaFormat = d3.format(",f");
 var k2Format = d3.format(",.2f");
 var kPctFormat = d3.format("%");
 
-var gMinDate = new Date();
-
 var gPending = 0;
 var gTotal = 0;
 
+var gChannel = "nightly";
+var gSort = "buildid";
+
 function update_status() {
   if (gPending) {
-    indicate("Loading...", gPending / gTotal);
+    indicate("Loading...", gPending / gTotal * 100);
   } else {
     indicate();
   }
 }
 
+var gMinDate = new Date();
+
 function load_date(date) {
   ++gPending; ++gTotal;
   update_status();
+
+  if (date < gMinDate) {
+    gMinDate = date;
+  }
 
   let date_str = d3.time.format('%Y%m%d')(date);
   let url = d3.time.format('http://analysis-output.telemetry.mozilla.org/stability-rollups/%Y/%Y%m%d-summary.json.gz')(date);
@@ -91,12 +98,17 @@ function counts_sub(c, d) {
   }
   return r;
 }
-function BuildData(d) {
+function BuildData(d, by_buildid) {
   if (!(this instanceof BuildData)) {
     return new BuildData(d);
   }
-  this.buildid = d.key;
-  this.date = kBuildIDFormat.parse(this.buildid);
+  if (by_buildid) {
+    this.buildid = d.key;
+    this.date = kBuildIDFormat.parse(this.buildid);
+  } else {
+    this.subsessiondate = d.key;
+    this.date = kYYYYMMDDFormat.parse(this.subsessiondate);
+  }
 
   for (let [prop, idfunc] of kProperties) {
     let v = d.value[prop];
@@ -113,11 +125,11 @@ function BuildData(d) {
   this.main_crashes_per_khour =
     this.crashesdetectedmain / this.subsessionlengths * 1000;
   this.main_crash_detect_rate =
-    this.crashesdetectedmain / this.abortedsessioncount;
+    this.crashesdetectedmain / this.abortedsessioncount || 0;
   this.main_crash_submit_rate =
-    this.crashsubmitattemptmain / this.crashesdetectedmain;
+    this.crashsubmitattemptmain / this.crashesdetectedmain || 0;
   this.main_crash_submit_error_rate =
-    (this.crashsubmitattemptmain - this.crashsubmitsuccessmain) / this.crashsubmitattemptmain;
+    (this.crashsubmitattemptmain - this.crashsubmitsuccessmain) / this.crashsubmitattemptmain || 0;
 
   this.npapi_aborts_per_khour =
     this.abortsplugin / this.subsessionlengths * 1000;
@@ -148,7 +160,13 @@ function BuildData(d) {
 }
 
 function do_mouseover(d) {
-  d3.select("#detail-buildid").text(d.buildid);
+  if (gSort == "buildid") {
+    d3.select("#detail-sort-label").text("Build ID");
+    d3.select("#detail-sort-value").text(d.buildid);
+  } else {
+    d3.select("#detail-sort-label").text("Date");
+    d3.select("#detail-sort-value").text(d3.time.format("%a %Y-%d-%m")(d.date));
+  }
   d3.select("#detail-hours").text(kCommaFormat(d.subsessionlengths));
   d3.select("#detail-mainaborts").text(kCommaFormat(d.abortedsessioncount));
   d3.select("#detail-mainaborts-rate").text(k2Format(d.main_aborts_per_khour));
@@ -197,18 +215,31 @@ function do_mouseout() {
 }
 
 function graph_it() {
-  let channel = $("#channel-value").attr("data-channel");
-  gChannelDimension.filter(channel);
+  gChannelDimension.filter(gChannel);
 
-  console.log("Graphing", channel);
+  let group;
+  switch (gSort) {
+  case "buildid":
+    group = gBuildIDDimension.group();
+    break;
+  case "date":
+    group = gDateDimension.group();
+    break;
+  default:
+    throw new Error("Unexpected gSort");
+  }
 
-  let raw = gBuildIDDimension.group().reduce(counts_add, counts_sub, counts_initial)
+  let raw = group.reduce(counts_add, counts_sub, counts_initial)
     .orderNatural().all();
 
-  let data = raw.map(BuildData).filter((d) => (d.subsessionlengths > 500000));
+  let data = raw
+    .map((d) => (new BuildData(d, gSort == "buildid")))
+    .filter((d) => (d.subsessionlengths > 500000));
   window.gGraphData = data;
 
   // HOURS
+
+  let max_x = new Date();
 
   MG.data_graphic({
     title: "Usage Hours",
@@ -219,8 +250,8 @@ function graph_it() {
     target: '#hours-nightly',
     x_accessor: 'date',
     y_accessor: 'subsessionlengths',
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     mouseover: do_mouseover,
     mouseout: do_mouseout,
@@ -242,8 +273,8 @@ function graph_it() {
     target: '#maincrashes-nightly',
     x_accessor: 'date',
     y_accessor: ['abortedsessioncount', 'crashesdetectedmain'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     right: 85,
     legend: ['aborts', 'crashes'],
@@ -264,8 +295,8 @@ function graph_it() {
     target: '#maincrashrate-nightly',
     x_accessor: 'date',
     y_accessor: ['main_aborts_per_khour', 'main_crashes_per_khour'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -286,8 +317,8 @@ function graph_it() {
     target: '#maincrashdetect-nightly',
     x_accessor: 'date',
     y_accessor: 'main_crash_detect_rate',
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -301,6 +332,12 @@ function graph_it() {
     // aggregate_rollover: true,
   });
 
+  data.forEach((d) => {
+    if (isNaN(d.main_crash_submit_rate)) {
+      console.log("Found bad submit rate", d);
+    }
+  });
+
   MG.data_graphic({
     title: "Submission rate",
     description: "What percent of detected main-process crashes (above) are submitted via the crashreporter? Calculated from the PROCESS_CRASH_SUBMIT_ATTEMPT histogram for type='main' over detected crashes (above)",
@@ -310,8 +347,8 @@ function graph_it() {
     target: '#maincrashsubmit-nightly',
     x_accessor: 'date',
     y_accessor: 'main_crash_submit_rate',
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -336,8 +373,8 @@ function graph_it() {
     target: '#plugincrashes-nightly',
     x_accessor: 'date',
     y_accessor: ['abortsplugin', 'abortsgmplugin', 'crashesdetectedplugin', 'crashesdetectedgmplugin', 'pluginhangs'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     right: 85,
     legend: ['NPAPI aborts', 'GMP aborts', 'NPAPI crashes', 'GMP crashes', 'NPAPI hangs'],
@@ -360,8 +397,8 @@ function graph_it() {
     y_accessor: ['npapi_aborts_per_khour', 'gmp_aborts_per_khour',
                  'npapi_crashes_per_khour', 'gmp_crashes_per_khour',
                  'npapi_hangs_per_khour'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -384,8 +421,8 @@ function graph_it() {
     target: '#plugincrashdetect-nightly',
     x_accessor: 'date',
     y_accessor: ['npapi_crash_detect_rate', 'gmp_crash_detect_rate'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -409,8 +446,8 @@ function graph_it() {
     target: '#plugincrashsubmit-nightly',
     x_accessor: 'date',
     y_accessor: 'plugin_crash_submit_rate',
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -435,8 +472,8 @@ function graph_it() {
     target: '#contentcrashes-nightly',
     x_accessor: 'date',
     y_accessor: ['abortscontent', 'crashesdetectedcontent'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     right: 85,
     legend: ['aborts', 'crashes'],
@@ -457,8 +494,8 @@ function graph_it() {
     target: '#contentcrashrate-nightly',
     x_accessor: 'date',
     y_accessor: ['content_aborts_per_khour', 'content_crashes_per_khour'],
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -479,8 +516,8 @@ function graph_it() {
     target: '#contentcrashdetect-nightly',
     x_accessor: 'date',
     y_accessor: 'content_crash_detect_rate',
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -503,8 +540,8 @@ function graph_it() {
     target: '#contentcrashsubmit-nightly',
     x_accessor: 'date',
     y_accessor: 'content_crash_submit_rate',
-    max_x: new Date(),
-    min_x: new Date(Date.now() - MS_PER_DAY * 90),
+    max_x: max_x,
+    min_x: gMinDate,
     utc_time: true,
     linked: true,
     linked_format: '%Y%m%d%H%M%S',
@@ -523,6 +560,9 @@ $(function() {
   let now = Date.now();
   for (let i = 0; i < 45; ++i) {
     let d = new Date(now - MS_PER_DAY * i);
+    if (d < kYYYYMMDDFormat.parse("20151011")) {
+      break;
+    }
     load_date(d);
   }
 });
@@ -534,18 +574,17 @@ $(window).resize(function() {
 });
 
 $("#channel-dropdown").on("click", "a", function() {
-  let channel = $(this).attr("data-channel");
-  $("#channel-value").attr("data-channel", channel).text($(this).text());
+  gChannel = $(this).attr("data-channel");
+  $("#channel-value").text($(this).text());
   if (gPending == 0) {
     graph_it();
   }
 });
 
 $("#sort-dropdown").on("click", "a", function() {
-  let sort = $(this).attr("data-sort");
-  $("#sort-value").attr("data-sort", sort).text($(this).text());
+  gSort = $(this).attr("data-sort");
+  $("#sort-value").text($(this).text());
   if (gPending == 0) {
     graph_it();
   }
 });
-
