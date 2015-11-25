@@ -234,7 +234,7 @@ function graph_it() {
 
   let data = raw
     .map((d) => (new BuildData(d, gSort == "buildid")))
-    .filter((d) => (d.subsessionlengths > 500000));
+    .filter((d) => (d.date != null && d.subsessionlengths > 500000));
   window.gGraphData = data;
 
   // HOURS
