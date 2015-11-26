@@ -68,6 +68,16 @@ svg {
   transform: translateY(2em);
 }
 
+/* for the rotates to look nice, should align text-anchor to start */
+.truths-chart .mg-x-axis text:not(.label) {
+  text-anchor: start;
+}
+
+/* There is no legend in truths-chart, so don't move it so far down */
+.truths-chart .mg-active-datapoint {
+  transform: translateY(1em);
+}
+
 /* MG overrides for a color-blind-friendly palette */
 /* Palette taken from http://mkweb.bcgsc.ca/biovis2012/
  * rgb(0, 0, 0)       rgb(73, 0, 146)     rgb(146, 0, 0)

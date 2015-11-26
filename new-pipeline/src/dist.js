@@ -1255,6 +1255,48 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         var x2 = parseFloat(yTick.attributes.x2.value) + barWidth;
         yTick.setAttribute("x2", x2);
       });
+  } else if (histograms[0].kind == 'boolean' || histograms[0].kind == 'flag') {
+    // grouped barcharts aren't supported by MG, so let's build our own
+    var truths = histograms.map((hist, i) => {
+      return {
+        xval: i,
+        yval: hist.values[1] / hist.count * 100,
+        label: hist.measure,
+      };
+    });
+
+    MG.data_graphic({
+      data: truths,
+      binned: true,
+      chart_type: 'histogram',
+      width: $(axes)
+        .parent()
+        .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+      height: 600,
+      left: 70,
+      right: 70,
+      bottom: 150,
+      transition_on_update: false,
+      target: axes,
+      //min_x: -0.5,
+      max_x: truths.length + 0.5,
+      x_label: histograms[0].description,
+      y_label: "Percentage True",
+      xax_count: truths.length,
+      y_extended_ticks: true,
+      x_accessor: 'xval',
+      y_accessor: 'yval',
+      xax_format: index => truths[index] ? truths[index].label : '',
+      yax_format: function (value) {
+        return value + "%";
+      },
+      mouseover: (d, i) => {
+        if (truths[d.x]) {
+          $('.mg-active-datapoint')
+            .text(truths[d.x].label + ' ' +  Math.round(d.y * 100) / 100 + '% True');
+        }
+      },
+    });
   } else { // Multiple histograms available, display as overlaid lines
     var goodColors = ["aqua", "blue", "green", "magenta", "lawngreen", "brown",
       "cyan", "darkgreen", "darkorange", "darkred", "navy"];
@@ -1430,6 +1472,10 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         .attr("dx", "0.3em")
         .attr("dy", "0")
         .attr("text-anchor", "start");
+      if (histograms[0].kind == 'boolean' || histograms[0].kind == 'flag') {
+        var jText = $(text);
+        jText.attr('transform', 'rotate(20 ' + jText.attr('x') + ' ' + jText.attr('y') + ')');
+      }
     });
   $(axes)
     .find(".mg-x-axis line")

@@ -269,6 +269,17 @@ window.TelemetryWrapper.go = function (params, element) {
             datas[0],
             hists[0],
             trimLeft);
+        } else if (hists[0].kind == 'boolean' || hists[0].kind == 'flag') {
+          // Showing a three-point line plot of bool values is... suboptimal.
+          // Munge into a grouped bar chart of truths.
+          var truths = datas.map((data, i) => {
+            return {
+              date: i,
+              value: data[1].value,
+              label: compares[i],
+            };
+          });
+          truthsChart(truths, graphEl, hists[0].description, 'Percentage True'); // i18n
         } else {
           drawAsLines(
             graphEl,
@@ -281,6 +292,48 @@ window.TelemetryWrapper.go = function (params, element) {
       });
     });
   });
+
+  function truthsChart(truths, graphEl, xlabel, ylabel) {
+    MG.data_graphic({
+      data: truths,
+      binned: true,
+      chart_type: 'histogram',
+      full_width: true,
+      full_height: true,
+      top: 0,
+      right: 0,
+      bottom: 90,
+      left: 70,
+      target: graphEl,
+      y_extended_ticks: true,
+      max_x: truths.length + 0.5,
+      xax_count: truths.length,
+      x_label: xlabel,
+      y_label: ylabel,
+      xax_count: truths.length,
+      xax_format: i => truths[i] ? truths[i].label : '',
+      yax_format: y => y + '%',
+      mouseover: (d, i) => {
+        if (!truths[d.x]) {
+          return;
+        }
+        document.querySelector('.mg-active-datapoint')
+          .textContent = `${truths[d.x].label} ${Math.round(d.y * 100) / 100}% True`;
+      },
+    });
+    // alrighty, time to adjust the presentation
+    graphEl.classList.add('truths-chart');
+
+    // sadly, CSS rotations of SVG text don't use transform-origin,
+    // so we have to do it with attributes
+    for (var xtick of graphEl.querySelectorAll('.mg-x-axis text:not(.label)')) {
+      var xtickX = xtick.getAttribute('x');
+      var xtickY = xtick.getAttribute('y');
+      xtick.setAttribute('transform', `rotate(20 ${xtickX} ${xtickY})`);
+      xtick.setAttribute('dx', '0.3em');
+      xtick.setAttribute('dy', '0');
+    }
+  }
 
   function evoTime(params, graphEl, key, evolutions, legendLabels) {
     var dateses = evolutions.map(evo => evo.dates());
