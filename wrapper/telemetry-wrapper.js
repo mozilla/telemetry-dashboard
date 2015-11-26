@@ -36,8 +36,8 @@ window.TelemetryWrapper.go = function (params, element) {
       // if we're composing an evolution over many versions, we need to mux over the versions
       var versionNumbers = Telemetry.getVersions()
         .filter(version => version.startsWith(params.channel))
-        .sort()
-        .map(versionString => versionString.split('/')[1]);
+        .map(versionString => versionString.split('/')[1])
+        .sort((a, b) => a - b); // numeric sort
       var anchorVersionIndex = versionNumbers.indexOf(params.version);
       versionNumbers = versionNumbers.slice(
         Math.max(0, anchorVersionIndex + 1 - params.evoVersions),
