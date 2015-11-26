@@ -23,13 +23,18 @@ window.addEventListener('load', function () {
   var _versions; // {channel: [versions (sorted)], ...}
   var _dash = []; // ordered list of plots for your dash
 
+  const VERSIONS_OFF_NIGHTLY = {
+    'nightly': 0,
+    'aurora': 1,
+    'beta': 2,
+    'release': 3,
+  };
+
   Telemetry.init(() => {
 
     // versions are static across the session, so stash 'em
     _versions = {};
     Telemetry.getVersions()
-      .sort()
-      .reverse()
       .map(versionString => {
         var [channel, version] = versionString.split('/');
         if (!_versions[channel]) {
@@ -38,6 +43,17 @@ window.addEventListener('load', function () {
           _versions[channel].push(version);
         }
       });
+    // aggregates.t.m.o doesn't sanitize its versions well
+    _versions['nightly'].sort((a, b) => b - a);
+    for (var channel in _versions) {
+      if (channel == 'nightly') {
+        continue;
+      }
+      var maxVer = _versions['nightly'][0] - VERSIONS_OFF_NIGHTLY[channel];
+      _versions[channel] = _versions[channel]
+        .filter(ver => ver <= maxVer)
+        .sort((a, b) => b - a);
+    }
 
     $('#channel').addEventListener('change', updateVersions);
     $('#version').addEventListener('change', updateMetricsAndComparesAndAppsAndOS);
