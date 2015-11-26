@@ -294,8 +294,8 @@ window.TelemetryWrapper.go = function (params, element) {
       ));
       valuesArePercent = true;
     } else {
-      yLabel = evolutions[0].description + ' - means()'; // i18n?
-      valueses = evolutions.map(evo => evo.means());
+      yLabel = evolutions[0].description + ' - medians'; // i18n?
+      valueses = evolutions.map(evo => evo.percentiles(50));
     }
     var datas = dateses.map((dates, i) => dates.map((date, j) => {
       return {
