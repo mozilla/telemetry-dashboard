@@ -630,6 +630,12 @@ window.TelemetryWrapper.go = function (params, element) {
     return Math.round(number * 100) / 100;
   }
 
+  var VERSIONS_OFF_NIGHTLY = {
+    'nightly': 0,
+    'aurora': 1,
+    'beta': 2,
+    'release': 3,
+  };
   function setDefaultParams(params) {
     if (params.evoVersions > 0) {
       // evoVersions is currently incompatible with compare and trim
@@ -637,15 +643,16 @@ window.TelemetryWrapper.go = function (params, element) {
       delete params.compare;
       delete params.sensibleCompare;
     }
-    if (!params.channel || !params.version) {
-      var [latestChan, latestVer] = Telemetry.getVersions()
-        .filter(version => version.startsWith((params.channel || 'nightly') + '/'))
+    params.channel = params.channel || 'nightly';
+    if (!params.version) {
+      var latestNightly = Telemetry.getVersions()
+        .filter(versionString => versionString.startsWith('nightly'))
         .sort()
         .pop()
-        .split('/');
-      params.channel = params.channel || latestChan;
-      params.version = params.version || latestVer;
+        .split('/')[1];
+      params.version = latestNightly - (VERSIONS_OFF_NIGHTLY[params.channel] || 0);
     }
+    params.version += ''; // coerce to string
     params.metric = params.metric || 'GC_MS';
     if (typeof params.filters == 'string') {
       try {
