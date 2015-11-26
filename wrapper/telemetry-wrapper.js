@@ -648,7 +648,12 @@ window.TelemetryWrapper.go = function (params, element) {
     }
     params.metric = params.metric || 'GC_MS';
     if (typeof params.filters == 'string') {
-      params.filters = JSON.parse(params.filters);
+      try {
+        params.filters = JSON.parse(params.filters);
+      } catch (e) {
+        console.warn('filters JSON.parse failed. Ignoring filters.');
+        params.filters = {};
+      }
     } else if (!params.filters) {
       params.filters = {};
     }
