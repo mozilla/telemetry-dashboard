@@ -6,16 +6,16 @@ var gCurrentLinesMap, gCurrentSubmissionLinesMap, gCurrentKind;
 
 var gDefaultAggregates = [
   ["median", "Median", function (evolution) {
-    return evolution.means();
+    return evolution.percentiles(50);
   }],
   ["mean", "Mean", function (evolution) {
-    return evolution.percentiles(5);
+    return evolution.means();
   }],
   ["5th-percentile", "5th percentile", function (evolution) {
-    return evolution.percentiles(25);
+    return evolution.percentiles(5);
   }],
   ["25th-percentile", "25th percentile", function (evolution) {
-    return evolution.percentiles(50);
+    return evolution.percentiles(25);
   }],
   ["75th-percentile", "75th percentile", function (evolution) {
     return evolution.percentiles(75);
