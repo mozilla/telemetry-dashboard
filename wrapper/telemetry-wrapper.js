@@ -158,6 +158,7 @@ window.TelemetryWrapper.go = function (params, element) {
 
       var oldGraphContainerEl;
       Object.keys(evolutionsByKey).forEach(key => {
+        var comparesForKey = compares.slice();
         var evolutions = evolutionsByKey[key];
         if (!evolutions.length) {
           console.warn('Whoops? No histogram for key:', key);
@@ -166,7 +167,12 @@ window.TelemetryWrapper.go = function (params, element) {
         if (params.sanitize) {
           evolutions = evolutions
             .map(evo => evo.sanitized())
-            .filter(evo => !!evo);
+            .filter((evo, i) => {
+              if (!evo) {
+                comparesForKey.splice(i, 1);
+              }
+              return !!evo;
+            });
         }
 
         // Multiple keys need multiple DOM nodes, in order, in the same place.
@@ -203,14 +209,14 @@ window.TelemetryWrapper.go = function (params, element) {
         if (params.evoVersions > 0) {
           // This is where we leave the common path and divert to evo-only code
           graphContainerEl.classList.add('evo-graph-container');
-          evoTime(params, graphEl, key, evolutions, compares);
+          evoTime(params, graphEl, key, evolutions, comparesForKey);
           return;
         }
 
         // from now on, we're going to need histograms
         var hists = evolutions.map((evo, i) => {
           var hist = evo.histogram();
-          hist.compareLabel = params.compare + '=' + compares[i]; // TODO: i18n
+          hist.compareLabel = params.compare + '=' + comparesForKey[i]; // TODO: i18n
           return hist;
         });
 
