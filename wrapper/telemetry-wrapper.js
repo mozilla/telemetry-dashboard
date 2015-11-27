@@ -561,6 +561,11 @@ window.TelemetryWrapper.go = function (params, element) {
       var OSes = {};
       filterOptions['os'].forEach(osVersion => {
         var osName = osVersion.split(',')[0];
+        if (osName == 'Windows_95' || osName == 'Windows_98') {
+          // there was a known bug in the Summer of 2015 where some builds
+          // submitted these old relics. Skip 'em.
+          return;
+        }
         OSes[osName] = true;
       });
       var outputFilterOptions = {
