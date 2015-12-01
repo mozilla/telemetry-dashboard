@@ -24,13 +24,20 @@ window.TelemetryWrapper.go = function (params, element) {
   Telemetry.init(function () {
     setDefaultParams(params);
 
+    var [graphContainerEl,
+      graphTitleEl,
+      graphSubtitleEl,
+      graphEl,
+      graphLegendEl] = createGraphEls();
+    element.appendChild(graphContainerEl);
+
     var evolutionsPromise;
     if (params.evoVersions > 0) {
       // if we're composing an evolution over many versions, we need to mux over the versions
       var versionNumbers = Telemetry.getVersions()
         .filter(version => version.startsWith(params.channel))
-        .sort()
-        .map(versionString => versionString.split('/')[1]);
+        .map(versionString => versionString.split('/')[1])
+        .sort((a, b) => a - b); // numeric sort
       var anchorVersionIndex = versionNumbers.indexOf(params.version);
       versionNumbers = versionNumbers.slice(
         Math.max(0, anchorVersionIndex + 1 - params.evoVersions),
@@ -143,7 +150,15 @@ window.TelemetryWrapper.go = function (params, element) {
           evolutionsByKey[keycount.key] = oldEvolutionsByKey[keycount.key]);
       }
 
+      if (!Object.keys(evolutionsByKey).length) {
+        // Uh-oh, there's no data for the provided params. Bail!
+        showError('No data to graph', params, graphContainerEl);
+        return;
+      }
+
+      var oldGraphContainerEl;
       Object.keys(evolutionsByKey).forEach(key => {
+        var comparesForKey = compares.slice();
         var evolutions = evolutionsByKey[key];
         if (!evolutions.length) {
           console.warn('Whoops? No histogram for key:', key);
@@ -152,44 +167,56 @@ window.TelemetryWrapper.go = function (params, element) {
         if (params.sanitize) {
           evolutions = evolutions
             .map(evo => evo.sanitized())
-            .filter(evo => !!evo);
+            .filter((evo, i) => {
+              if (!evo) {
+                comparesForKey.splice(i, 1);
+              }
+              return !!evo;
+            });
         }
 
-        // Construct the graph elements and add them to `element`
-        var graphContainerEl = document.createElement('div');
-        graphContainerEl.className = 'graph-container';
-        var graphTitleEl = document.createElement('h2');
-        graphTitleEl.className = 'graph-title';
-        graphContainerEl.appendChild(graphTitleEl);
-        var graphEl = document.createElement('div');
-        graphEl.className = 'graph';
-        var graphLegendEl = document.createElement('div');
-        graphLegendEl.className = 'graph-legend';
-        graphEl.appendChild(graphLegendEl);
-        graphContainerEl.appendChild(graphEl);
-        element.appendChild(graphContainerEl);
+        // Multiple keys need multiple DOM nodes, in order, in the same place.
+        if (oldGraphContainerEl) {
+          [ graphContainerEl,
+            graphTitleEl,
+            graphSubtitleEl,
+            graphEl,
+            graphLegendEl] = createGraphEls();
+          element.insertBefore(graphContainerEl, oldGraphContainerEl.nextSibling);
+        }
+        oldGraphContainerEl = graphContainerEl;
 
         // Describe the graph, briefly
-        var graphTitle = evolutions[0].measure;
+        graphTitleEl.textContent = evolutions[0].measure;
+        var graphSubtitle = '';
         if (key) {
-          graphTitle += ' : ' + key;
+          graphSubtitle += ' key: ' + key;
         }
         if (params.compare) {
-          graphTitle += ' - with varying ' + params.compare
+          graphSubtitle += ' compare: ' + params.compare
         }
-        graphTitleEl.textContent = graphTitle;
+        if (Object.keys(params.filters).length) {
+          graphSubtitle += ' filters: ';
+          for (var filterName in params.filters) {
+            graphSubtitle += ` ${filterName}=${params.filters[filterName]}`;
+          }
+        }
+        if (params.sanitize) {
+          graphSubtitle += ' (sanitized)';
+        }
+        graphSubtitleEl.textContent = graphSubtitle;
 
         if (params.evoVersions > 0) {
           // This is where we leave the common path and divert to evo-only code
           graphContainerEl.classList.add('evo-graph-container');
-          evoTime(params, graphEl, key, evolutions, compares);
+          evoTime(params, graphEl, key, evolutions, comparesForKey);
           return;
         }
 
         // from now on, we're going to need histograms
         var hists = evolutions.map((evo, i) => {
           var hist = evo.histogram();
-          hist.compareLabel = params.compare + '=' + compares[i]; // TODO: i18n
+          hist.compareLabel = params.compare + '=' + comparesForKey[i]; // TODO: i18n
           return hist;
         });
 
@@ -273,8 +300,8 @@ window.TelemetryWrapper.go = function (params, element) {
       ));
       valuesArePercent = true;
     } else {
-      yLabel = evolutions[0].description + ' - means()'; // i18n?
-      valueses = evolutions.map(evo => evo.means());
+      yLabel = evolutions[0].description + ' - medians'; // i18n?
+      valueses = evolutions.map(evo => evo.percentiles(50));
     }
     var datas = dateses.map((dates, i) => dates.map((date, j) => {
       return {
@@ -540,6 +567,11 @@ window.TelemetryWrapper.go = function (params, element) {
       var OSes = {};
       filterOptions['os'].forEach(osVersion => {
         var osName = osVersion.split(',')[0];
+        if (osName == 'Windows_95' || osName == 'Windows_98') {
+          // there was a known bug in the Summer of 2015 where some builds
+          // submitted these old relics. Skip 'em.
+          return;
+        }
         OSes[osName] = true;
       });
       var outputFilterOptions = {
@@ -560,6 +592,32 @@ window.TelemetryWrapper.go = function (params, element) {
       };
     }
     return filterOptions;
+  }
+
+  function showError(msg, params, container) {
+    var msgEl = document.createElement('pre');
+    msgEl.className = 'error';
+    emptyEl(container);
+    msgEl.textContent = msg + '\n' + JSON.stringify(params, ' ', 2);
+    container.appendChild(msgEl);
+  }
+
+  function createGraphEls() {
+    var graphContainerEl = document.createElement('div');
+    graphContainerEl.className = 'graph-container';
+    var graphTitleEl = document.createElement('h2');
+    graphTitleEl.className = 'graph-title';
+    graphContainerEl.appendChild(graphTitleEl);
+    var graphSubtitleEl = document.createElement('div');
+    graphSubtitleEl.className = 'graph-subtitle';
+    graphContainerEl.appendChild(graphSubtitleEl);
+    var graphEl = document.createElement('div');
+    graphEl.className = 'graph';
+    var graphLegendEl = document.createElement('div');
+    graphLegendEl.className = 'graph-legend';
+    graphEl.appendChild(graphLegendEl);
+    graphContainerEl.appendChild(graphEl);
+    return [graphContainerEl, graphTitleEl, graphSubtitleEl, graphEl, graphLegendEl];
   }
 
   function formatNumber(number) {
@@ -583,6 +641,12 @@ window.TelemetryWrapper.go = function (params, element) {
     return Math.round(number * 100) / 100;
   }
 
+  var VERSIONS_OFF_NIGHTLY = {
+    'nightly': 0,
+    'aurora': 1,
+    'beta': 2,
+    'release': 3,
+  };
   function setDefaultParams(params) {
     if (params.evoVersions > 0) {
       // evoVersions is currently incompatible with compare and trim
@@ -590,18 +654,24 @@ window.TelemetryWrapper.go = function (params, element) {
       delete params.compare;
       delete params.sensibleCompare;
     }
-    if (!params.channel || !params.version) {
-      var [latestChan, latestVer] = Telemetry.getVersions()
-        .filter(version => version.startsWith((params.channel || 'nightly') + '/'))
+    params.channel = params.channel || 'nightly';
+    if (!params.version) {
+      var latestNightly = Telemetry.getVersions()
+        .filter(versionString => versionString.startsWith('nightly'))
         .sort()
         .pop()
-        .split('/');
-      params.channel = params.channel || latestChan;
-      params.version = params.version || latestVer;
+        .split('/')[1];
+      params.version = latestNightly - (VERSIONS_OFF_NIGHTLY[params.channel] || 0);
     }
+    params.version += ''; // coerce to string
     params.metric = params.metric || 'GC_MS';
     if (typeof params.filters == 'string') {
-      params.filters = JSON.parse(params.filters);
+      try {
+        params.filters = JSON.parse(params.filters);
+      } catch (e) {
+        console.warn('filters JSON.parse failed. Ignoring filters.');
+        params.filters = {};
+      }
     } else if (!params.filters) {
       params.filters = {};
     }
@@ -609,6 +679,10 @@ window.TelemetryWrapper.go = function (params, element) {
     params.sanitize = params.sanitize != 'false';
     params.trim = params.trim != 'false';
     params.compare = params.compare; // default undefined
+    if (params.compare && params.filters[params.compare]) {
+      // If we're filtering to a particular value, we can't then compare by it.
+      delete params.compare;
+    }
     params.sensibleCompare = params.sensibleCompare != 'false';
     params.keyLimit = window.parseInt(params.keyLimit) || 4;
     params.evoVersions = params.evoVersions; // default undefined

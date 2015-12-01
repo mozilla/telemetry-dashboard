@@ -1,0 +1,110 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  font-family: sans-serif;
+}
+
+button {
+  display: block;
+  margin: 1ex 0;
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  display: block;
+  padding: 0.5ex;
+}
+
+#show-filters + .tab-label:before {
+  content: '\229E\00a0';
+}
+
+#show-filters:checked + .tab-label:before {
+  content: '\229F\00a0';
+}
+
+#show-filters:not(:checked) ~ .filter-tab {
+  display: none;
+}
+
+.help {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.tab-group {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.tab-group > input {
+  visibility: hidden;
+  height: 0;
+  width: 0;
+  -moz-appearance: none;
+}
+
+.tab-group input:checked + label {
+  background-color: #C13832;
+  color: white;
+}
+
+.tab-label {
+  -moz-user-select: none;
+  padding: 0.5ex;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1 0 100%;
+}
+
+#evo-radio:checked ~ .hist-tab {
+  display: none;
+}
+
+#hist-radio:checked ~ .evo-tab {
+  display: none;
+}
+
+#metric {
+  /* those hist names are long. Give lots of space so the datalist is useful */
+  max-width: 72ex;
+  width: 100%;
+}
+
+.dashboard-plots {
+  border: 1px solid black;
+}
+
+.dashboard-plots th {
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+  padding: 1ex;
+}
+
+.dashboard-plots th:last-child {
+  border-right: 0;
+}
+
+.dashboard-plots td {
+  /* some of those hist names are really long */
+  word-break: break-all;
+}
+
+.dashboard-plots tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.rm-button {
+  padding: 0;
+  margin: auto;
+}
