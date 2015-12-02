@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <title>Active Weekly User Statistics</title>
 
     <!-- Bootstrap and supporting libraries -->
@@ -32,9 +33,6 @@
                 <p>
                     Data notes:
                     <ul>
-                        <li>
-                            This dashboard requires gecko/Firefox because of ES6 features it currently uses.
-                        </li>
                         <li>
                             This report is based on the data collected with <a href="https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/">unified telemetry</a>.
                             Unified telemetry was deployed to 5% of the release population in Firefox 41 and 100% in Firefox 42. This report likely undercounts users who don't update promptly.
@@ -108,6 +106,7 @@
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <script src="lib/traceur-runtime.js"></script>
     <script src="lib/elessar.min.js"></script>
     <script src="lib/crossfilter.min.js"></script>
 
@@ -117,4 +116,4 @@
     <script src="lib/d3pie.min.js"></script>
 
     <script src="src/dashboards.js"></script>
-    <script src="src/active-weekly.js"></script>
+    <script src="src-transformed/active-weekly.js"></script>

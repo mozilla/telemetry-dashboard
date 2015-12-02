@@ -46,7 +46,7 @@ for (let [name, sort] of kDimensionList) {
   gFilters[name] = null;
 };
 
-var gWorker = new Worker("src/active-worker.js");
+var gWorker = new Worker("src-transformed/active-worker.js");
 gWorker.postMessage(["setup", kDimensionList]);
 gWorker.addEventListener("message",
   function(e) {

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <title>Crash Rate Summary</title>
 
     <!-- Bootstrap and supporting libraries -->
@@ -13,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
 
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
-    <link rel="stylesheet" type="text/css" href="style/active.css" />
+    <link rel="stylesheet" type="text/css" href="style/crash-summary.css" />
 
 <body>
     <div class="container-fluid">
@@ -30,9 +31,6 @@
             Data notes:
             <ul>
                 <li>
-                    This dashboard requires gecko/Firefox because of ES6 features it currently uses.
-                </li>
-                <li>
                     This report is based on the data collected with <a href="https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/">unified telemetry</a>.
                 </li>
                 <li>
@@ -40,7 +38,7 @@
                     total time includes sleep time. All other OSes
                     total time does not include sleep time.
                 </li>
-                <li>Dashboard status: ALPHA. Contact bsmedberg with questions.</li>
+                <li>Dashboard status: BETA. Contact bsmedberg with questions.</li>
             </ul>
         </p>
 
@@ -188,6 +186,7 @@
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <script src="lib/traceur-runtime.js"></script>
     <script src="lib/elessar.min.js"></script>
     <script src="lib/crossfilter.min.js"></script>
 
@@ -198,6 +197,4 @@
 
     <script src="src/dashboards.js"></script>
 
-    <script src="https://google.github.io/traceur-compiler/bin/traceur.js"></script>
-    <script src="https://google.github.io/traceur-compiler/src/bootstrap.js"></script>
-    <script src="src/crash-summary.js" type="module"></script>
+    <script src="src-transformed/crash-summary.js"></script>

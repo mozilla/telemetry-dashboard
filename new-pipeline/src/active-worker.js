@@ -1,5 +1,6 @@
 "use strict";
 
+self.importScripts("../lib/traceur-runtime.js");
 self.importScripts("../lib/papaparse.min.js");
 self.importScripts("../lib/crossfilter.min.js");
 
@@ -77,7 +78,7 @@ function fetchData(datestr) {
       console.error("CSV parsing error", err, file, inputElem, reason);
     },
     complete: function(csvdata) {
-      gData.add([new ActiveRow(d) for (d of csvdata.data)]);
+      gData.add([for (d of csvdata.data) new ActiveRow(d)]);
       if (csvdata.errors.length) {
         console.warn("Errors parsing CSV data", csvdata.errors);
       }
