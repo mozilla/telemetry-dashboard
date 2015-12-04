@@ -86,7 +86,7 @@ function fetch_data(key, cb) {
     $('#throbber').fadeIn(500);
     console.log("Fetching: " + key);
     var xhr = new XMLHttpRequest();
-    var url = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis-2/ChromeHangsWeekly/data/weekly_" + key + ".csv.gz";
+    var url = "https://analysis-output.telemetry.mozilla.org/ChromeHangsWeekly/data/weekly_" + key + ".csv.gz";
     //var url = "http://localhost:8000/weekly_" + key + ".csv";
     console.log("Fetching url: " + url);
     xhr.open("GET", url, true);
