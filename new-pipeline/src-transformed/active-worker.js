@@ -56,12 +56,12 @@ self.addEventListener("message", function(e) {
 }, false);
 function setup(dimensions) {
   gDimensionList = dimensions;
-  gDimensionList.forEach(function($__17) {
-    var $__19,
-        $__20;
-    var $__18 = $__17,
-        dimension = ($__19 = $__18[Symbol.iterator](), ($__20 = $__19.next()).done ? void 0 : $__20.value),
-        sort = ($__20 = $__19.next()).done ? void 0 : $__20.value;
+  gDimensionList.forEach(function($__15) {
+    var $__17,
+        $__18;
+    var $__16 = $__15,
+        dimension = ($__17 = $__16[Symbol.iterator](), ($__18 = $__17.next()).done ? void 0 : $__18.value),
+        sort = ($__18 = $__17.next()).done ? void 0 : $__18.value;
     gDimensions[dimension] = gData.dimension(function(d) {
       return d[dimension];
     });
@@ -77,34 +77,9 @@ function fetchData(datestr) {
       console.error("CSV parsing error", err, file, inputElem, reason);
     },
     complete: function(csvdata) {
-      gData.add((function() {
-        var $__1 = 0,
-            $__2 = [];
-        var $__6 = true;
-        var $__7 = false;
-        var $__8 = undefined;
-        try {
-          for (var $__4 = void 0,
-              $__3 = (csvdata.data)[Symbol.iterator](); !($__6 = ($__4 = $__3.next()).done); $__6 = true) {
-            var d = $__4.value;
-            $__2[$__1++] = new ActiveRow(d);
-          }
-        } catch ($__9) {
-          $__7 = true;
-          $__8 = $__9;
-        } finally {
-          try {
-            if (!$__6 && $__3.return != null) {
-              $__3.return();
-            }
-          } finally {
-            if ($__7) {
-              throw $__8;
-            }
-          }
-        }
-        return $__2;
-      }()));
+      gData.add(csvdata.data.map(function(d) {
+        return new ActiveRow(d);
+      }));
       if (csvdata.errors.length) {
         console.warn("Errors parsing CSV data", csvdata.errors);
       }
@@ -114,23 +89,23 @@ function fetchData(datestr) {
   });
 }
 function getResults(filters) {
-  var $__18,
+  var $__16,
+      $__17,
       $__19,
-      $__21,
-      $__22;
+      $__20;
   var results = {
     grand_total: gGrandTotal,
     dimensions: {}
   };
   results.grand_total = gGrandTotal;
-  var $__6 = true;
-  var $__7 = false;
-  var $__8 = undefined;
+  var $__4 = true;
+  var $__5 = false;
+  var $__6 = undefined;
   try {
-    var $__23 = function() {
-      var $__17 = $__4.value,
-          name = ($__18 = $__17[Symbol.iterator](), ($__19 = $__18.next()).done ? void 0 : $__19.value),
-          sort = ($__19 = $__18.next()).done ? void 0 : $__19.value;
+    var $__21 = function() {
+      var $__15 = $__2.value,
+          name = ($__16 = $__15[Symbol.iterator](), ($__17 = $__16.next()).done ? void 0 : $__17.value),
+          sort = ($__17 = $__16.next()).done ? void 0 : $__17.value;
       {
         var filter = filters[name];
         var dimension = gDimensions[name];
@@ -143,34 +118,34 @@ function getResults(filters) {
         }
       }
     };
-    for (var $__4 = void 0,
-        $__3 = (gDimensionList)[Symbol.iterator](); !($__6 = ($__4 = $__3.next()).done); $__6 = true) {
-      $__23();
+    for (var $__2 = void 0,
+        $__1 = (gDimensionList)[Symbol.iterator](); !($__4 = ($__2 = $__1.next()).done); $__4 = true) {
+      $__21();
     }
-  } catch ($__9) {
-    $__7 = true;
-    $__8 = $__9;
+  } catch ($__7) {
+    $__5 = true;
+    $__6 = $__7;
   } finally {
     try {
-      if (!$__6 && $__3.return != null) {
-        $__3.return();
+      if (!$__4 && $__1.return != null) {
+        $__1.return();
       }
     } finally {
-      if ($__7) {
-        throw $__8;
+      if ($__5) {
+        throw $__6;
       }
     }
   }
   results.sub_total = gData.groupAll().reduceSum(get_active).value();
-  var $__13 = true;
-  var $__14 = false;
-  var $__15 = undefined;
+  var $__11 = true;
+  var $__12 = false;
+  var $__13 = undefined;
   try {
-    for (var $__11 = void 0,
-        $__10 = (gDimensionList)[Symbol.iterator](); !($__13 = ($__11 = $__10.next()).done); $__13 = true) {
-      var $__20 = $__11.value,
-          name = ($__21 = $__20[Symbol.iterator](), ($__22 = $__21.next()).done ? void 0 : $__22.value),
-          sort = ($__22 = $__21.next()).done ? void 0 : $__22.value;
+    for (var $__9 = void 0,
+        $__8 = (gDimensionList)[Symbol.iterator](); !($__11 = ($__9 = $__8.next()).done); $__11 = true) {
+      var $__18 = $__9.value,
+          name = ($__19 = $__18[Symbol.iterator](), ($__20 = $__19.next()).done ? void 0 : $__20.value),
+          sort = ($__20 = $__19.next()).done ? void 0 : $__20.value;
       {
         var dimension = gDimensions[name];
         var r = dimension.group().reduceSum(get_active).all();
@@ -182,17 +157,17 @@ function getResults(filters) {
         results.dimensions[name] = r;
       }
     }
-  } catch ($__16) {
-    $__14 = true;
-    $__15 = $__16;
+  } catch ($__14) {
+    $__12 = true;
+    $__13 = $__14;
   } finally {
     try {
-      if (!$__13 && $__10.return != null) {
-        $__10.return();
+      if (!$__11 && $__8.return != null) {
+        $__8.return();
       }
     } finally {
-      if ($__14) {
-        throw $__15;
+      if ($__12) {
+        throw $__13;
       }
     }
   }

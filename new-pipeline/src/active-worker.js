@@ -78,7 +78,7 @@ function fetchData(datestr) {
       console.error("CSV parsing error", err, file, inputElem, reason);
     },
     complete: function(csvdata) {
-      gData.add([for (d of csvdata.data) new ActiveRow(d)]);
+      gData.add(csvdata.data.map(d => new ActiveRow(d)));
       if (csvdata.errors.length) {
         console.warn("Errors parsing CSV data", csvdata.errors);
       }

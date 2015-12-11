@@ -109,13 +109,8 @@ function processResults(results) {
         return b.value < a.value ? -1 : b.value > a.value ? 1 : a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
       });
     }
-    // if (ordered.length > 10) {
-    //   var other = d3.sum(ordered.slice(10), function(d) { return d.value; });
-    //   ordered.splice(10, ordered.length - 10,
-    //     { key: "__other__", value: other });
-    // }
 
-    let keyFunction = function(d) { return d.key; };
+    let keyFunction = d => d.key;
     if (name == "osversion") {
       if (!show_osversion) {
         continue;
@@ -140,7 +135,6 @@ function processResults(results) {
     var rows = d3.select("#" + name + "-view.view-section > .view-selector > tbody")
       .selectAll("tr").data(ordered, function(d) { return d.key; });
     var new_row = rows.enter().append("tr");
-    // new_row.classed('view-other', function(d) { return d.key == "__other__"; });
     new_row.append("th").text(keyFunction);
     new_row.append("td").classed('view-value', true);
     new_row.append("td").classed('view-pct', true);

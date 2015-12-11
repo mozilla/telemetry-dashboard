@@ -27,7 +27,8 @@ function update_status() {
 var gMinDate = new Date();
 
 function load_date(date) {
-  ++gPending; ++gTotal;
+  ++gPending;
+  ++gTotal;
   update_status();
 
   if (date < gMinDate) {
@@ -283,7 +284,6 @@ function graph_it() {
     linked_format: '%Y%m%d%H%M%S',
     show_rollover_text: false,
     area: false,
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -305,7 +305,6 @@ function graph_it() {
     interpolate: 'step',
     legend: ['aborted-sessions', 'crashreporter'],
     right: 85,
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -329,7 +328,6 @@ function graph_it() {
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    // aggregate_rollover: true,
   });
 
   data.forEach((d) => {
@@ -359,7 +357,6 @@ function graph_it() {
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    // aggregate_rollover: true,
   });
 
   // PLUGIN CRASHES
@@ -383,7 +380,6 @@ function graph_it() {
     linked_format: '%Y%m%d%H%M%S',
     show_rollover_text: false,
     area: false,
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -409,7 +405,6 @@ function graph_it() {
              'NPAPI crashes', 'GMP crashes',
              'NPAPI hangs'],
     right: 85,
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -434,7 +429,6 @@ function graph_it() {
     yax_count: 5,
     legend: ['NPAPI', 'GMP'],
     format: 'percentage',
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -458,7 +452,6 @@ function graph_it() {
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    // aggregate_rollover: true,
   });
 
   // CONTENT CRASHES
@@ -482,7 +475,6 @@ function graph_it() {
     linked_format: '%Y%m%d%H%M%S',
     show_rollover_text: false,
     area: false,
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -504,7 +496,6 @@ function graph_it() {
     interpolate: 'step',
     legend: ['aborts', 'crashes'],
     right: 85,
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -524,11 +515,10 @@ function graph_it() {
     show_rollover_text: false,
     area: false,
     interpolate: 'step',
-    // max_y: 1,
+    // max_y: 1, THIS IS A DATA ERROR BEING FIXED SOON
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    // aggregate_rollover: true,
   });
 
   MG.data_graphic({
@@ -552,7 +542,6 @@ function graph_it() {
     yax_format: d3.format('%'),
     yax_count: 5,
     format: 'percentage',
-    // aggregate_rollover: true,
   });
 }
 
