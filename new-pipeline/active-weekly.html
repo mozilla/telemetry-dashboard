@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>Active Weekly User Statistics</title>
+
+    <!-- Bootstrap and supporting libraries -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
+    <link rel="stylesheet" type="text/css" href="style/elessar.css" />
+    <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
+
+    <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
+    <link rel="stylesheet" type="text/css" href="style/active.css" />
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <form class="navbar-form inline pull-right">
+                <a href="mailto:bsmedberg@mozilla.com" class="btn btn-success" title="Report a bug" target="_blank">Dashboard owner: bsmedberg</a>
+                <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+            </form>
+            <h1>Weekly Active Users</h1>
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <p>
+                    Week of 5-11 November 2015: <!--<span id="grand-total"></span> Active Users-->
+                </p>
+                <p>
+                    Data notes:
+                    <ul>
+                        <li>
+                            This report is based on the data collected with <a href="https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/">unified telemetry</a>.
+                            Unified telemetry was deployed to 5% of the release population in Firefox 41 and 100% in Firefox 42. This report likely undercounts users who don't update promptly.
+                        </li>
+                        <li>
+                            If a user changed configuration during the week, for example switching release
+                            channels or upgrading the OS version, their last configuration is used.
+                        </li>
+                        <li>Dashboard status: ALPHA. Contact bsmedberg with questions.</li>
+                    </ul>
+                </p>
+                <div class="col-md-12">
+                    <h3>Current Filters</h3>
+                    <p>Ratio of total for current filters: <span id="sub-total-pct"></span>.</p>
+
+                    <section id="channel-view" class="view-section" data-name="channel">
+                        <h3>Update Channel</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="buildversion-view" class="view-section" data-name="buildversion">
+                        <h3>Version</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="locale-view" class="view-section" data-name="locale">
+                        <h3>Locale</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="country-view" class="view-section" data-name="country">
+                        <h3>Country</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="buildarchitecture-view" class="view-section" data-name="buildarchitecture">
+                        <h3>Build Architecture</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="os-view" class="view-section" data-name="os">
+                        <h3>OS</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="osversion-view" class="view-section" data-name="osversion">
+                        <h3>OS Version</h3>
+                        <p id="osversion-note">Please select a specific OS to break down by OS version.</p>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="osservicepack-view" class="view-section" data-name="osservicepack">
+                        <h3>Service Pack</h3>
+                        <p id="osservicepack-note">Please focus a specific Windows version to break down by service pack.</p>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="activeexperiment-view" class="view-section" data-name="activeexperiment">
+                        <h3>Experiment</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                    <section id="active_days-view" class="view-section" data-name="active_days">
+                        <h3>Days Active</h3>
+                        <table class="view-selector"><thead></thead><tbody></tbody><tfoot></tfoot></table>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="busy-indicator">
+        <div class="busy-indicator-progress"></div>
+        <i style="margin: 0 5px" class="fa fa-cog fa-spin"></i>
+        <span class="busy-indicator-message">Loading page...</span>
+    </div>
+
+    <!-- Bootstrap and supporting libraries -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script type="text/javascript" src="lib/daterangepicker.js"></script>
+    <script src="lib/traceur-runtime.js"></script>
+    <script src="lib/elessar.min.js"></script>
+    <script src="lib/crossfilter.min.js"></script>
+
+    <!-- MetricsGraphics libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+    <script src="lib/metricsgraphics.js"></script>
+    <script src="lib/d3pie.min.js"></script>
+
+    <script src="src/dashboards.js"></script>
+    <script src="src-transformed/active-weekly.js"></script>
+</body>
+</html>

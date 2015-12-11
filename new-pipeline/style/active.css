@@ -1,0 +1,54 @@
+.view-section {
+  display: inline-block;
+  padding: 1em;
+  vertical-align: top;
+  height: 24em;
+  overflow-y: auto;
+  overflow-x: visible;
+  padding-right: 24px;
+}
+
+.view-section p {
+  max-width: 20em;
+}
+
+.view-section h3 {
+  text-align: center;
+}
+
+.view-section table {
+  text-align: right;
+}
+
+.view-section td {
+  font-family: monospace;
+}
+
+.view-section th {
+    text-align: right;
+    padding-right: 1em;
+    font-weight: bold;
+}
+
+.hidden {
+  display: none;
+}
+
+.view-selector > tbody > tr:hover {
+  background-color: #CCC;
+}
+.view-selector > tbody > tr.filtered {
+  text-decoration: line-through;
+}
+.view-selector > tbody > tr.excluded {
+  color: #999;
+}
+
+.view-value {
+  padding-right: 1em;
+  display: none;
+}
+
+tr.excluded > .view-pct {
+  visibility: hidden;
+}
