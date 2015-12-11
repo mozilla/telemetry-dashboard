@@ -15,7 +15,7 @@
 
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
     <link rel="stylesheet" type="text/css" href="style/crash-summary.css" />
-
+</head>
 <body>
     <div class="container-fluid">
         <header>
@@ -34,8 +34,8 @@
                     This report is based on the data collected with <a href="https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/">unified telemetry</a>.
                 </li>
                 <li>
-                    Total time is inconsistent across OSes. On Windows,
-                    total time includes sleep time. All other OSes
+                    Total time is inconsistent across operating systems. On Windows,
+                    total time includes sleep time; on other operating systems
                     total time does not include sleep time.
                 </li>
                 <li>Dashboard status: BETA. Contact bsmedberg with questions.</li>
@@ -198,3 +198,5 @@
     <script src="src/dashboards.js"></script>
 
     <script src="src-transformed/crash-summary.js"></script>
+</body>
+</html>
