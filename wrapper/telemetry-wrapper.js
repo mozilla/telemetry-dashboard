@@ -174,6 +174,15 @@ window.TelemetryWrapper.go = function (params, element) {
               return !!evo;
             });
         }
+        if (!evolutions.length) {
+          if (key == '') {
+            // unkeyed histogram with no evolutions. Show a user-visible error
+            showError('All data sanitized away', params, graphContainerEl);
+            return;
+          }
+          console.warn('Whoops? All evolutions sanitized away for key:', key);
+          return;
+        }
 
         // Multiple keys need multiple DOM nodes, in order, in the same place.
         if (oldGraphContainerEl) {
