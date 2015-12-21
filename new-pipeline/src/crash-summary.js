@@ -36,7 +36,7 @@ function load_date(date) {
   }
 
   let date_str = d3.time.format('%Y%m%d')(date);
-  let url = d3.time.format('http://analysis-output.telemetry.mozilla.org/stability-rollups/%Y/%Y%m%d-summary.json.gz')(date);
+  let url = d3.time.format('//analysis-output.telemetry.mozilla.org/stability-rollups/%Y/%Y%m%d-summary.json.gz')(date);
   d3.json(url)
     .on("load", function(data) {
       for (let d of data) {

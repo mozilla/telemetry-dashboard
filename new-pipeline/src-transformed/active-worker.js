@@ -5,7 +5,7 @@ self.importScripts("../lib/crossfilter.min.js");
 var gDimensionList;
 var gData = crossfilter();
 var gDimensions = {};
-var kBaseURL = "http://analysis-output.telemetry.mozilla.org/stability-rollups/YYYY/YYYYMMDD-active-weekly.csv.gz";
+var kBaseURL = "//analysis-output.telemetry.mozilla.org/stability-rollups/YYYY/YYYYMMDD-active-weekly.csv.gz";
 var gGrandTotal;
 function ActiveRow(d) {
   this.buildversion = d.buildversion;
