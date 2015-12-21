@@ -1383,6 +1383,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         }
         var legend = d3.select(axes)
           .select(".mg-active-datapoint")
+          .attr("transform", "")
           .text(labelValue)
           .style("fill", "white");
         var lineHeight = 1.1;
