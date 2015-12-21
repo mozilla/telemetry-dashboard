@@ -831,7 +831,6 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
         values = [d.value];
       }
       var legend = d3.select("#evolutions .mg-active-datapoint")
-        .attr('transform', '')
         .text(moment.utc(date)
           .format("dddd MMMM D, YYYY UTC") + " (build " + moment.utc(date)
           .format("YYYYMMDD") + "):")
