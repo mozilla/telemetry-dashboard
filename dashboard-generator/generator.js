@@ -203,8 +203,7 @@ window.addEventListener('load', function () {
         // Only use the Uppercased app names, as they are the relevant ones
         createOption($('#application'), '', '-No Filter-');
         filterOptions['application']
-          .filter(appName =>
-            appName[0] == appName[0].toUpperCase() && isNaN(appName[0] * 1))
+          .filter(appName => appName[0] >= 'A' && appName[0] <= 'Z')
           .forEach(appName => createOption($('#application'), appName));
 
         // OS has only three useful families: Windows, Linux, OSX
