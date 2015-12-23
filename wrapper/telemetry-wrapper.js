@@ -28,7 +28,7 @@ window.TelemetryWrapper.go = function (params, element) {
       graphTitleEl,
       graphSubtitleEl,
       graphEl,
-      graphLegendEl] = createGraphEls();
+      graphLegendEl] = createGraphEls(params);
     element.appendChild(graphContainerEl);
 
     var evolutionsPromise;
@@ -190,7 +190,7 @@ window.TelemetryWrapper.go = function (params, element) {
             graphTitleEl,
             graphSubtitleEl,
             graphEl,
-            graphLegendEl] = createGraphEls();
+            graphLegendEl] = createGraphEls(params);
           element.insertBefore(graphContainerEl, oldGraphContainerEl.nextSibling);
         }
         oldGraphContainerEl = graphContainerEl;
@@ -664,12 +664,59 @@ window.TelemetryWrapper.go = function (params, element) {
     container.appendChild(msgEl);
   }
 
-  function createGraphEls() {
+  function createTMOLinkForParams(params) {
+    var url = `https://telemetry.mozilla.org/new-pipeline/${params.evoVersions ? 'evo' : 'dist'}.html#!`;
+
+    var queryParams = [];
+    queryParams.push(`max_channel_version=${params.channel}%252F${params.version}`);
+    if (params.evoVersions) {
+      queryParams.push(`min_channel_version=${params.channel}%252F${params.version - params.evoVersions + 1}`);
+    }
+
+    queryParams.push(`sanitize=${params.sanitize ? 1 : 0}`);
+    queryParams.push(`trim=${params.trim ? 1 : 0}`);
+    queryParams.push(`use_submission_date=${params.useSubmissionDate ? 1 : 0}`);
+    queryParams.push(`measure=${params.metric}`);
+
+    if (params.filters) {
+      if ('os' in params.filters) {
+        queryParams.push(`os=${params.filters.os}`);
+      }
+      if ('application' in params.filters) {
+        queryParams.push(`product=${params.filters.application}`);
+      }
+      if ('e10sEnabled' in params.filters) {
+        queryParams.push(`e10s=${params.filters.e10sEnabled}`);
+      }
+      if ('child' in params.filters) {
+        queryParams.push(`processType=${params.filters.child}`);
+      }
+    }
+
+    // Special case: dashgen defaults to not filtering anything
+    // but the dashes default to filtering to only Firefox Desktop
+    if (!(params.filters && 'application' in params.filters)) {
+      // This isn't all products, but it's close enough
+      queryParams.push('product=Firefox!Fennec');
+    }
+
+    if (params.compare) {
+      queryParams.push(`compare=${params.compare}`);
+    }
+
+    return url + queryParams.join('&');
+  }
+
+  function createGraphEls(params) {
     var graphContainerEl = document.createElement('div');
     graphContainerEl.className = 'graph-container';
     var graphTitleEl = document.createElement('h2');
     graphTitleEl.className = 'graph-title';
     graphContainerEl.appendChild(graphTitleEl);
+    var graphTitleLinkEl = document.createElement('a');
+    graphTitleLinkEl.setAttribute('href', createTMOLinkForParams(params));
+    graphTitleLinkEl.className = 'graph-title-link';
+    graphTitleEl.appendChild(graphTitleLinkEl);
     var graphSubtitleEl = document.createElement('div');
     graphSubtitleEl.className = 'graph-subtitle';
     graphContainerEl.appendChild(graphSubtitleEl);
@@ -679,7 +726,7 @@ window.TelemetryWrapper.go = function (params, element) {
     graphLegendEl.className = 'graph-legend';
     graphEl.appendChild(graphLegendEl);
     graphContainerEl.appendChild(graphEl);
-    return [graphContainerEl, graphTitleEl, graphSubtitleEl, graphEl, graphLegendEl];
+    return [graphContainerEl, graphTitleLinkEl, graphSubtitleEl, graphEl, graphLegendEl];
   }
 
   function formatNumber(number) {

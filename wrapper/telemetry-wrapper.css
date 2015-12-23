@@ -9,6 +9,10 @@
   flex-direction: column;
 }
 
+.graph-title-link {
+  color: inherit;
+}
+
 .graph-title {
   font-family: sans-serif;
   font-size: 18px;
