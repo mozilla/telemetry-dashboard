@@ -353,7 +353,7 @@ $(function () {
           }
           displayEvolutions(lines, submissionLines, $(
               "input[name=build-time-toggle]:checked")
-            .val() !== "0", gCurrentKind === "enumerated");
+            .val() !== "0", gCurrentKind === "enumerated" || gCurrentKind === "boolean");
           saveStateToUrlAndCookie();
         });
 
