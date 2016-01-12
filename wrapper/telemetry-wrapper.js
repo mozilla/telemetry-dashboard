@@ -248,7 +248,8 @@ window.TelemetryWrapper.go = function (params, element) {
           // but no one'd see them but us.
           return {
             date: i,
-            value: count / hist.count * 100
+            value: count / hist.count * 100,
+            count: count,
           };
         }));
 
@@ -585,7 +586,7 @@ window.TelemetryWrapper.go = function (params, element) {
         content: data.map((count, i) => {
           return {
             label: BUCKET_NAMES[i] || starts[i],
-            value: count.value,
+            value: count.count,
           }
         }).filter(datum => datum.value > 0),
       },
