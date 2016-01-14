@@ -532,6 +532,9 @@ function calculateHistograms(callback, sanitize) {
               if (sanitize) {
                 fullEvolutionMap[label] = fullEvolutionMap[label].sanitized();
               }
+              if (!fullEvolutionMap[label]) {
+                continue; // data was sanitized away. Move along.
+              }
               if (!fullEvolutionsMap.hasOwnProperty(label)) {
                 fullEvolutionsMap[label] = [];
               }
