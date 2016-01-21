@@ -992,10 +992,10 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
   $(axes)
     .empty(); // Remove tables if they are present
 
-  $('#dist-caption').text(histograms[0].description);
 
   // No histograms available
   if (histograms.length === 0) {
+    $('#dist-caption').text(""); // Clear the histogram caption
     MG.data_graphic({
       chart_type: "missing-data",
       width: $(axes)
@@ -1021,6 +1021,9 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     });
     return;
   }
+
+  // Set the histogram caption to the histogram description
+  $('#dist-caption').text(histograms[0].description);
 
   // All histograms must have the same buckets and be of the same kind
   var starts = histograms[0].map(function (count, start, end, i) {
