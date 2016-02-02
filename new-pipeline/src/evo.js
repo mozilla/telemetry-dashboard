@@ -2,7 +2,9 @@ var gInitialPageState = null;
 var gFilterChangeTimeout = null;
 var gFilters = null,
   gPreviousFilterAllSelected = {};
-var gCurrentLinesMap, gCurrentSubmissionLinesMap, gCurrentKind;
+var gCurrentLinesMap; // mapping from keyed histogram keys to arrays of aggregate lines (non-keyed histograms have lines stored in the key "")
+var gCurrentSubmissionLinesMap; // mapping from keyed histogram keys to arrays of submission lines (non-keyed histograms have lines stored in the key "")
+var gCurrentKind; // the kind of the current measure, or null if this can't be determined
 
 var gDefaultAggregates = [
   ["median", "Median", function (evolution) {
@@ -410,8 +412,6 @@ function updateAggregates(callback) {
         realBuckets = realBuckets || buckets;
 
         if (versionCount == channelVersions.length) {
-          assert(typeof realKind === "string", "Kind must be specified");
-          assert($.isArray(realBuckets), "Buckets must be specified");
           gCurrentKind = realKind;
 
           // Set up the aggregate list depending on the kind of histogram
@@ -432,7 +432,7 @@ function updateAggregates(callback) {
             $("#aggregates")
               .multiselect("selectAll", false)
               .multiselect("updateButtonText");
-          } else {
+          } else { // realKind is another histogram kind, or null because we didn't have any data
             var newAggregates = gDefaultAggregates.map(function (entry) {
               return [entry[0], entry[1]];
             });
