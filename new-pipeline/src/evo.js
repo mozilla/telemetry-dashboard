@@ -436,8 +436,8 @@ function updateAggregates(callback) {
             var newAggregates = gDefaultAggregates.map(function (entry) {
               return [entry[0], entry[1]];
             });
-            multiselectSetOptions($("#aggregates"), newAggregates, [
-              "median"]);
+
+            multiselectSetOptions($("#aggregates"), newAggregates, ["median", "5th-percentile", "95th-percentile"]);
           }
 
           // Load aggregates from state on first load
