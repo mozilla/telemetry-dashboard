@@ -77,7 +77,7 @@ function load_date(date) {
   }).get();
 }
 var kProperties = [['abortedsessioncount', null], ['subsessionlengths', function(v) {
-  return (v / 360);
+  return (v / 3600);
 }], ['abortsplugin', null], ['abortscontent', null], ['abortsgmplugin', null], ['crashesdetectedmain', null], ['crashesdetectedplugin', null], ['pluginhangs', null], ['crashesdetectedcontent', null], ['crashesdetectedgmplugin', null], ['crashsubmitattemptmain', null], ['crashsubmitattemptcontent', null], ['crashsubmitattemptplugin', null], ['crashsubmitsuccessmain', null], ['crashsubmitsuccesscontent', null], ['crashsubmitsuccessplugin', null]];
 function counts_initial() {
   var $__9,
