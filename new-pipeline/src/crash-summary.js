@@ -62,7 +62,7 @@ function load_date(date) {
 
 var kProperties = [
   ['abortedsessioncount', null],
-  ['subsessionlengths', (v) => (v / 360)],
+  ['subsessionlengths', (v) => (v / 3600)],
   ['abortsplugin', null],
   ['abortscontent', null],
   ['abortsgmplugin', null],
