@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"> </script>
 <script type="text/javascript" src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-<script src="d3pie.min.js"></script>
+<script type="text/javascript" src="https://telemetry.mozilla.org/new-pipeline/lib/d3pie.min.js"></script>
 <style>
 
 body {
@@ -34,8 +34,7 @@ body {
   height: 50px;
   border-radius: 5px;
   border: 2px solid grey;
-  padding: 20px; 
-  /*width: 200px;*/
+  padding: 20px;
 }
 .axis text {
   font: 10px sans-serif;
@@ -123,9 +122,6 @@ The users who are out of date with updates enabled encounter the following updat
   friAfterLastWedDate.setDate(lastWedDate.getDate() + 2);
   var lastWedDataFile = year + month + date + ".json";
   var startDate = new Date();
-  //startDate.setDate(1);
-  //startDate.setMonth(0);
-  //startDate.setFullYear(2015);
   startDate.setDate(10);
   startDate.setMonth(1);
   startDate.setFullYear(2016);
@@ -161,8 +157,6 @@ The users who are out of date with updates enabled encounter the following updat
 
   var currentlySelectedDataFile = lastWedDataFile;
 
-  //var testDiv = document.getElementById("test");
-  //testDiv.innerHTML = lastWedDataFile;
   function populateDashboard(event) {
     var dataFile = null;
     if (event && event.type == "load") {
@@ -181,7 +175,7 @@ The users who are out of date with updates enabled encounter the following updat
       document.getElementById("update-ping-code-description").innerHTML = "Hover over a bar below to see a description of the ping code.";
     }
 
-    $.getJSON("https://analysis-output.telemetry.mozilla.org/spohl/update-orphaning-data/" + dataFile,{}, function(data) {
+    $.getJSON("https://analysis-output.telemetry.mozilla.org/spohl/update-orphaning-data/" + dataFile, {}, function(data) {
       var upToDate = data[0]["up-to-date"]["up-to-date"];
       var outOfDate = data[0]["up-to-date"]["out-of-date"];
       var totalUpdateData = upToDate + outOfDate;
@@ -292,10 +286,10 @@ The users who are out of date with updates enabled encounter the following updat
           updateCodesData.push({index:i,value:val});
           totalValues += val;
         }
-        //console.log(updateCodesData);
-        var margin = {top: 20, right: 20, bottom: 30, left: 40},
-                      width = 960 - margin.left - margin.right,
-                      height = 500 - margin.top - margin.bottom;
+
+        var margin = {top: 20, right: 20, bottom: 30, left: 40};
+        var width = 960 - margin.left - margin.right;
+        var height = 500 - margin.top - margin.bottom;
 
         var formatPercent = d3.format(".0%");
 
