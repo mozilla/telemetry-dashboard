@@ -96,7 +96,7 @@ The users who are out of date with updates enabled encounter the following updat
 <div id="update-ping-codes-chart"></div>
 
 <script>
-  var dataUrl = "https://analysis-output.telemetry.mozilla.org/spohl/update-orphaning-data/"
+  var dataUrl = "https://analysis-output.telemetry.mozilla.org/update-orphaning-weekly-analysis/data/"
   var branch = ""
   var wedAsWeekday = 3;
   var today = new Date();
@@ -122,26 +122,13 @@ The users who are out of date with updates enabled encounter the following updat
   friAfterLastWedDate.setDate(lastWedDate.getDate() + 2);
   var lastWedDataFile = year + month + date + ".json";
   var startDate = new Date();
-  startDate.setDate(10);
-  startDate.setMonth(1);
+  startDate.setDate(2);
+  startDate.setMonth(2);
   startDate.setFullYear(2016);
   var tempWedDate = lastWedDate;
   var dateDropdown = document.getElementById("weekly-dropdown");
-  if (today <= friAfterLastWedDate) {
-    // Leave time for the Spark job to create a new weekly report. New weekly
-    // reports should appear on the dashboard on Saturdays. If we fall between
-    // Wednesday and Friday (inclusive) of the current week, don't display the
-    // most recent report as an option in the dropdown menu.
-    tempWedDate.setDate(tempWedDate.getDate() - 7);
-  }
+
   while (tempWedDate >= startDate) {
-    if (tempWedDate > startDate) {
-      // This is a temporary measure to restrict the dashboard to the weekly
-      // report of 2016-02-10 until more recent longitudinal datasets are
-      // available (bug 1246137).
-      tempWedDate.setDate(tempWedDate.getDate() - 7);
-      continue;
-    }
     var tempYear = tempWedDate.getFullYear();
     var tempMonth = tempWedDate.getMonth() + 1;
     if (tempMonth < 10) {
@@ -175,7 +162,7 @@ The users who are out of date with updates enabled encounter the following updat
       document.getElementById("update-ping-code-description").innerHTML = "Hover over a bar below to see a description of the ping code.";
     }
 
-    $.getJSON("https://analysis-output.telemetry.mozilla.org/spohl/update-orphaning-data/" + dataFile, {}, function(data) {
+    $.getJSON(dataUrl + dataFile, {}, function(data) {
       var upToDate = data[0]["up-to-date"]["up-to-date"];
       var outOfDate = data[0]["up-to-date"]["out-of-date"];
       var totalUpdateData = upToDate + outOfDate;
@@ -440,6 +427,7 @@ The users who are out of date with updates enabled encounter the following updat
         var updatesDisabledPercentage = 100 / totalUpdateData * updateDisabled;
         updatesDisabledPercentage = updatesDisabledPercentage.toFixed(1);
         var upToDatePercentage = 100 - ofConcernPercentage - updatesDisabledPercentage;
+        upToDatePercentage = upToDatePercentage.toFixed(1);
 
         var ofConcernSummary = document.getElementById("out-of-date-of-concern-summary");
         ofConcernSummary.innerHTML = "<strong>" + ofConcernPercentage + "%</strong> of users are currently out of date for reasons that are of concern (e.g. failure to download).";
