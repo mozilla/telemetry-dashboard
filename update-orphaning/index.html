@@ -95,6 +95,10 @@ The users who are out of date with updates enabled encounter the following updat
 <div id="update-ping-codes-chart-sorter"><input type="checkbox"> Sort values</div>
 <div id="update-ping-codes-chart"></div>
 
+<br/><hr>
+This dashboard is managed by <a href="mailto:spohl@mozilla.com">:spohl</a>.<br/>
+The Spark script for the weekly reports is scheduled to run every Wednesday and can be found <a href="https://github.com/mozilla-services/data-pipeline/tree/master/reports/update-orphaning/Update orphaning analysis using longitudinal dataset.ipynb">here</a>.
+
 <script>
   var dataUrl = "https://analysis-output.telemetry.mozilla.org/update-orphaning-weekly-analysis/data/"
   var branch = ""
@@ -422,6 +426,7 @@ The users who are out of date with updates enabled encounter the following updat
 
       // Populate summary
       {
+        var latestVersion = data[3]["latest-version"];
         var ofConcernPercentage = 100 / totalUpdateData * updateEnabled;
         ofConcernPercentage = ofConcernPercentage.toFixed(1);
         var updatesDisabledPercentage = 100 / totalUpdateData * updateDisabled;
@@ -434,7 +439,7 @@ The users who are out of date with updates enabled encounter the following updat
         var updatesDisabledSummary = document.getElementById("out-of-date-updates-disabled-summary");
         updatesDisabledSummary.innerHTML = "<strong>" + updatesDisabledPercentage + "%</strong> of users are currently out of date with updates disabled.";
         var upToDateSummary = document.getElementById("up-to-date-summary");
-        upToDateSummary.innerHTML = "<strong>" + upToDatePercentage + "%</strong> of users are up to date.";
+        upToDateSummary.innerHTML = "<strong>" + upToDatePercentage + "%</strong> of users are up to date (version " + (latestVersion - 2) + "+).";
       }
     });
   }
