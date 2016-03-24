@@ -159,6 +159,9 @@ $(document)
           success: function (response) {
             var longUrl = Object.keys(response.results)[0];
             var shortUrl = response.results[longUrl].shortUrl;
+            if (shortUrl.indexOf(":") === 4) {
+              shortUrl = "https" + shortUrl.substring(4);
+            }
             $this.parents(".permalink-control")
               .find("input")
               .show()
