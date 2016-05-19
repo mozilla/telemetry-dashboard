@@ -67,7 +67,11 @@ document.addEventListener("DOMContentLoaded", function() {
 function setup_channel_graph(data, channel) {
   var last_version = null;
   var markers = [];
-  data.query_result.data.rows.forEach(function(row) {
+
+  var rows = data.query_result.data.rows.filter(function(row) {
+    return row.activity_date.getTime() < Date.now() - MS_PER_DAY * 2;
+  });
+  rows.forEach(function(row) {
     if (row.leading_version != last_version) {
       last_version = row.leading_version;
       markers.push({activity_date: row.activity_date, label: row.leading_version});
@@ -75,7 +79,7 @@ function setup_channel_graph(data, channel) {
   });
 
   MG.data_graphic({
-    data: data.query_result.data.rows,
+    data: rows,
     width: gWidth,
     height: gHeight,
     target: "#" + channel + "-graph",
@@ -93,14 +97,17 @@ function setup_channel_graph(data, channel) {
     max_y: 40,
     top: 12,
     bottom: 20,
-    show_rollover_text: false,
+    // show_rollover_text: false,
   });
 }
 
 function setup_e10s_graph(data) {
   var last_version = null;
   var markers = [];
-  data.query_result.data.rows.forEach(function(row) {
+  var rows = data.query_result.data.rows.filter(function(row) {
+    return row.activity_date.getTime() < Date.now() - MS_PER_DAY * 2;
+  });
+  rows.forEach(function(row) {
     if (row.leading_version != last_version) {
       last_version = row.leading_version;
       markers.push({activity_date: row.activity_date, label: row.leading_version});
@@ -108,7 +115,7 @@ function setup_e10s_graph(data) {
   });
 
   var data_map = new Map();
-  var processed = data.query_result.data.rows.filter(function(row) {
+  var processed = rows.filter(function(row) {
     return row.e10s_cohort == 'control';
   });
   processed.forEach(function(row) {
@@ -116,7 +123,15 @@ function setup_e10s_graph(data) {
   });
   data.query_result.data.rows.forEach(function(row) {
     if (row.e10s_cohort == 'test') {
-      data_map.get(row.activity_date_str).e10s_rate = row.app_crash_rate;
+      var base_row = data_map.get(row.activity_date_str);
+      if (!base_row) {
+        base_row = {
+          activity_date: row.activity_date,
+          activity_date_str: row.activity_date_str,
+        };
+        data_map.set(row.activity_date_str, base_row);
+      }
+      base_row.e10s_rate = row.app_crash_rate;
     }
   });
   MG.data_graphic({
