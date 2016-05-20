@@ -1,6 +1,17 @@
 var gWidth;
 var gHeight;
 
+function graph_error(target, err) {
+  MG.data_graphic({
+    width: gWidth,
+    height: gHeight,
+    target: target,
+    chart_type: "missing-data",
+    error: err,
+    missing_text: "Failed to load data.",
+  });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   var s = d3.select("#beta-graph");
   gWidth = parseInt(s.style("width"));
@@ -10,58 +21,26 @@ document.addEventListener("DOMContentLoaded", function() {
     function(data) {
       setup_channel_graph(data, "beta");
     },
-    function(err) {
-      MG.data_graphic({
-        width: gWidth,
-        height: gHeight,
-        target: "#beta-graph",
-        chart_type: "missing-data",
-        error: err,
-        missing_text: "Failed to load data.",
-      });
-    });
+    graph_error.bind(undefined, "#beta-graph")
+  );
   get_aurora_bydate().then(
     function(data) {
       setup_channel_graph(data, "aurora");
     },
-    function(err) {
-      MG.data_graphic({
-        width: gWidth,
-        height: gHeight,
-        target: "#aurora-graph",
-        chart_type: "missing-data",
-        error: err,
-        missing_text: "Failed to load data.",
-      });
-    });
+    graph_error.bind(undefined, "#aurora-graph")
+  );
   get_nightly_bydate().then(
     function(data) {
       setup_channel_graph(data, "nightly");
     },
-    function(err) {
-      MG.data_graphic({
-        width: gWidth,
-        height: gHeight,
-        target: "#nightly-graph",
-        chart_type: "missing-data",
-        error: err,
-        missing_text: "Failed to load data.",
-      });
-    });
+    graph_error.bind(undefined, "#nightly-graph")
+  );
   get_crashes(326, "d2f89374fbb282f44b299e1267f9c99771f59773").then(
     function(data) {
       setup_e10s_graph(data);
     },
-    function(err) {
-      MG.data_graphic({
-        width: gWidth,
-        height: gHeight,
-        target: "#e10s-graph",
-        chart_type: "missing-data",
-        error: err,
-        missing_text: "Failed to load data.",
-      });
-    });
+    graph_error.bind(undefined, "#e10s-graph")
+  );
 });
 
 function setup_channel_graph(data, channel) {
@@ -150,7 +129,7 @@ function setup_e10s_graph(data) {
     max_y: 40,
     top: 12,
     bottom: 20,
-    show_rollover_text: false,
+    // show_rollover_text: false,
     missing_is_hidden: true,
     colors: ['purple', 'red'],
     legend: ['non-e10s', 'e10s'],
