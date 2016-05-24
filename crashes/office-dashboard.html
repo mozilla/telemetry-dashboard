@@ -1,0 +1,40 @@
+<head>
+  <meta charset="utf-8">
+  <title>Firefox Desktop Crash Rates</title>
+  <link rel="stylesheet" href="office-dashboard.css" type="text/css">
+  <link rel="stylesheet" href="../new-pipeline/style/metricsgraphics.css" type="text/css">
+</head>
+<body>
+  <section>
+    <div id="legend"></div>
+    <h1>Firefox Crash Rates
+      <span class="subhead">Crashes per 1000 usage hours</span>
+    </h1>
+  </section>
+  <div class="row">
+    <section class="quadrant">
+      <h2>Beta - no e10s</h2>
+      <div id="beta-graph" class="graph"></div>
+    </section>
+    <section class="quadrant">
+      <h2>DevEdition</h2>
+      <div id="aurora-graph" class="graph"></div>
+    </section>
+  </div>
+  <div class="row">
+    <section class="quadrant">
+      <h2>Beta: e10s versus non-e10s</h2>
+      <div id="e10s-graph" class="graph">
+        <div id="e10s-legend"></div>
+      </div>
+    </section>
+    <section class="quadrant">
+      <h2>Nightly</h2>
+      <div id="nightly-graph" class="graph"></div>
+    </section>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script src="../new-pipeline/lib/metricsgraphics.js"></script>
+  <script src="crashes-common.js"></script>
+  <script src="office-dashboard.js"></script>
