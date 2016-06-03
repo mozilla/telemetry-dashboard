@@ -42,7 +42,7 @@ h2 {
 }
 
 .graph {
-  margin-top: 10px;
+  /* margin-top: 10px; */
   flex: 1 1 0;
 }
 
@@ -61,12 +61,16 @@ h2 {
   display: block;
 }
 
-#e10s-graph {
+#e10s-graph1, #e10s-graph2 {
   position: relative;
 }
-#e10s-legend {
+#e10s-legend1, #e10s-legend2 {
   position: absolute;
   left: 85px;
   top: 15px;
   background-color: rgba(255,255,255,0.5);
+}
+
+.graph .mg-y-axis text {
+  text-transform: none;
 }

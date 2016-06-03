@@ -101,7 +101,7 @@ function setup_e10s_graph(data) {
     data_map.set(row.activity_date_str, row);
   });
   data.query_result.data.rows.forEach(function(row) {
-    if (row.e10s_cohort == 'test') {
+    if (['test', 'control_without_xp', 'test_without_xp'].includes(row.e10s_cohort)) {
       var base_row = data_map.get(row.activity_date_str);
       if (!base_row) {
         base_row = {
@@ -110,20 +110,20 @@ function setup_e10s_graph(data) {
         };
         data_map.set(row.activity_date_str, base_row);
       }
-      base_row.e10s_rate = row.app_crash_rate;
+      base_row[row.e10s_cohort + "_rate"] = row.app_crash_rate;
     }
   });
   MG.data_graphic({
     data: processed,
     width: gWidth,
-    height: gHeight,
-    target: "#e10s-graph",
+    height: gHeight / 2,
+    target: "#e10s-graph1",
     x_accessor: 'activity_date',
-    y_accessor: ['app_crash_rate', 'e10s_rate'],
+    y_accessor: ['app_crash_rate', 'test_rate'],
     markers: markers,
     interpolate: "linear",
     area: false,
-    left: 60,
+    left: 85,
     buffer: 0,
     right: 0,
     max_y: 40,
@@ -133,6 +133,30 @@ function setup_e10s_graph(data) {
     missing_is_hidden: true,
     colors: ['purple', 'red'],
     legend: ['non-e10s', 'e10s'],
-    legend_target: "#e10s-legend",
+    legend_target: "#e10s-legend1",
+    y_label: "With WinXP",
+  });
+  MG.data_graphic({
+    data: processed,
+    width: gWidth,
+    height: gHeight / 2,
+    target: "#e10s-graph2",
+    x_accessor: 'activity_date',
+    y_accessor: ['control_without_xp_rate', 'test_without_xp_rate'],
+    markers: markers,
+    interpolate: "linear",
+    area: false,
+    left: 85,
+    buffer: 0,
+    right: 0,
+    max_y: 40,
+    top: 12,
+    bottom: 20,
+    // show_rollover_text: false,
+    missing_is_hidden: true,
+    colors: ['purple', 'red'],
+    legend: ['non-e10s', 'e10s'],
+    legend_target: "#e10s-legend2",
+    y_label: "Without WinXP",
   });
 }
