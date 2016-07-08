@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Update orphaning dashboard</title>
 <meta charset="utf-8">
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"> </script>
 <script type="text/javascript" src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -93,15 +94,17 @@ The users who are out of date with updates enabled encounter the following updat
 <br/>
 <div id="update-ping-code-description">Hover over a bar below to see a description of the value.</div><br/>
 <div id="update-ping-codes-chart-sorter"><input type="checkbox"> Sort values</div>
-<div id="update-ping-codes-chart"></div>
+<div id="update-ping-codes-chart"></div><br/><br/>
+<div id="version-distribution-chart-title">Orphaned users are distributed across the following Firefox versions:<br/><br/></div>
+<div id="version-distribution-chart"></div>
 
 <br/><hr>
 This dashboard is managed by <a href="mailto:spohl@mozilla.com">:spohl</a>.<br/>
 The Spark script for the weekly reports is scheduled to run every Wednesday and can be found <a href="https://github.com/mozilla-services/data-pipeline/tree/master/reports/update-orphaning/Update orphaning analysis using longitudinal dataset.ipynb">here</a>.
 
 <script>
-  var dataUrl = "https://analysis-output.telemetry.mozilla.org/update-orphaning-weekly-analysis/data/"
-  var branch = ""
+  var dataUrl = "https://analysis-output.telemetry.mozilla.org/update-orphaning-weekly-analysis/data/";
+  var branch = "";
   var wedAsWeekday = 3;
   var today = new Date();
   var todaysWeekday = today.getDay();
@@ -164,6 +167,9 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
       document.getElementById("distribution-chart").innerHTML = "";
       document.getElementById("update-ping-codes-chart").innerHTML = "";
       document.getElementById("update-ping-code-description").innerHTML = "Hover over a bar below to see a description of the ping code.";
+      document.getElementById("version-distribution-chart-title").style.visibility = "visible";
+      document.getElementById("version-distribution-chart").innerHTML = "";
+      document.getElementById("version-distribution-chart").style.visibility = "visible";
     }
 
     $.getJSON(dataUrl + dataFile, {}, function(data) {
@@ -175,17 +181,21 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
       var updateDisabled = data[1]["update-enabled-disabled"]["update-disabled"];
       var first = true;
 
-      // Populate distribution pie chart
-      {
-        var pie = new d3pie("distribution-chart", {
+      // Display a d3pie chart.
+      // @param aDivId: a div id to populate with the d3pie
+      // @param aTitle: a title for the d3pie
+      // @param aDescription: a description for the d3pie
+      // @param aSlices: an array of d3pie slices to populate the pie chart with
+      function displayD3Pie(aDivId, aTitle, aDescription, aSlices) {
+        new d3pie(aDivId, {
           "header": {
             "title": {
-              "text": "Update orphaning distribution",
+              "text": aTitle,
               "fontSize": 24,
               "font": "Arial"
             },
             "subtitle": {
-              "text": "Illustration of the distribution of the three major orphaning states in our user population",
+              "text": aDescription,
               "color": "#999999",
               "fontSize": 16,
               "font": "Arial"
@@ -204,23 +214,7 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
           },
           "data": {
             "sortOrder": "value-desc",
-            "content": [
-              {
-                "label": "Up to date",
-                "value": upToDate,
-                "color": "#2484c1"
-              },
-              {
-                "label": "Out of date, updates disabled",
-                "value": updateDisabled,
-                "color": "#f4f601"
-              },
-              {
-                "label": "Out of date, of concern",
-                "value": updateEnabled,
-                "color": "#fa0228"
-              }
-            ]
+            "content": aSlices
           },
           "labels": {
             "outer": {
@@ -262,6 +256,20 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
             }
           }
         });
+      }
+
+      // Create and display distribution pie chart
+      {
+        var distributionSlices =
+          [{"label": "Up to date", "value": upToDate, "color": "#0065d1"},
+           {"label": "Out of date, updates disabled",
+              "value":  updateDisabled, "color": "#f4f601"},
+           {"label": "Out of date, of concern",
+              "value": updateEnabled, "color": "#d10000"}];
+        displayD3Pie("distribution-chart", "Update orphaning distribution",
+                     "Illustration of the distribution of the three major " +
+                     "orphaning states in our user population",
+                     distributionSlices);
       }
 
       // Populate update ping codes chart
@@ -424,9 +432,49 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
         }, 2000);
       }
 
+      var latestVersion = data[3]["latest-version"];
+      // Populate version distribution pie chart
+      {
+        var orphanedVersions = data[4];
+        if (!orphanedVersions || !orphanedVersions["orphaned-by-versions"]) {
+          document.getElementById("version-distribution-chart-title").style.visibility = "hidden";
+          document.getElementById("version-distribution-chart").style.visibility = "hidden";
+        } else {
+          // Color-blind-friendly palette taken from:
+          // http://mkweb.bcgsc.ca/biovis2012/
+          var versionColors = ["#92B600",  // green
+                               "#24FF24",  // light green
+                               "#B6DBFF",  // light blue
+                               "#004949",  // dark green
+                               "#490092",  // dark purple
+                               "#924900",  // brown
+                               "#009292",  // dark turquoise
+                               "#FFB677",  // orange
+                               "#B66DFF",  // purple
+                               "#006D6D",  // darker turquoise
+                               "#6DB6FF",  // blue
+                               "#FF6DB6",  // pink
+                               "#DBD100",  // dark yellow
+                               "#FFFF6D",  // yellow
+                               "#000000"]; // black
+          orphanedVersions = orphanedVersions["orphaned-by-versions"];
+          var versionSlices = [];
+          for (v in orphanedVersions) {
+            var diff = latestVersion - v.split(".")[0];
+            var color = versionColors[Math.min(diff, versionColors.length - 1)];
+            versionSlices.push({"label": v, "value": orphanedVersions[v],
+                                "color": color});
+          }
+          displayD3Pie("version-distribution-chart",
+                       "Distribution of orphaned users across Firefox versions",
+                       "Illustration of the distribution of orphaned users " +
+                       "across Firefox versions",
+                       versionSlices);
+        }
+      }
+
       // Populate summary
       {
-        var latestVersion = data[3]["latest-version"];
         var ofConcernPercentage = 100 / totalUpdateData * updateEnabled;
         ofConcernPercentage = ofConcernPercentage.toFixed(1);
         var updatesDisabledPercentage = 100 / totalUpdateData * updateDisabled;
