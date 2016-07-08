@@ -181,24 +181,6 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
       var updateDisabled = data[1]["update-enabled-disabled"]["update-disabled"];
       var first = true;
 
-      // Generates the slices for a d3pie chart.
-      // @param aSlicesArray: an array of arrays in the following format:
-      //                      [[label, value, color],
-      //                       [label, value, color],
-      //                       ...
-      //                      ]
-      // @return An array of d3pie slices that can be used for data.content
-      function generateD3PieSlices(aSlicesArray) {
-        var slices = [];
-        for (s in aSlicesArray) {
-          var slice = { "label": aSlicesArray[s][0],
-                        "value": aSlicesArray[s][1],
-                        "color": aSlicesArray[s][2] };
-          slices.push(slice);
-        }
-        return slices;
-      }
-
       // Display a d3pie chart.
       // @param aDivId: a div id to populate with the d3pie
       // @param aTitle: a title for the d3pie
@@ -278,10 +260,12 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
 
       // Create and display distribution pie chart
       {
-        var distributionSlices = generateD3PieSlices(
-          [["Up to date", upToDate, "#0065d1"],
-           ["Out of date, updates disabled", updateDisabled, "#f4f601"],
-           ["Out of date, of concern", updateEnabled, "#d10000"]]);
+        var distributionSlices =
+          [{"label": "Up to date", "value": upToDate, "color": "#0065d1"},
+           {"label": "Out of date, updates disabled",
+              "value":  updateDisabled, "color": "#f4f601"},
+           {"label": "Out of date, of concern",
+              "value": updateEnabled, "color": "#d10000"}];
         displayD3Pie("distribution-chart", "Update orphaning distribution",
                      "Illustration of the distribution of the three major " +
                      "orphaning states in our user population",
@@ -476,22 +460,16 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
           orphanedVersions = orphanedVersions["orphaned-by-versions"];
           var versionSlices = [];
           for (v in orphanedVersions) {
-            var version = v.split(".")[0];
-            var diff = latestVersion - version;
-            var index = versionColors.length - 1;
-            if (diff < versionColors.length) {
-              index = diff;
-            }
-            var color = versionColors[index];
-            var slice = [v, orphanedVersions[v], color];
-            versionSlices.push(slice);
+            var diff = latestVersion - v.split(".")[0];
+            var color = versionColors[Math.min(diff, versionColors.length - 1)];
+            versionSlices.push({"label": v, "value": orphanedVersions[v],
+                                "color": color});
           }
-          var versionD3Slices = generateD3PieSlices(versionSlices);
           displayD3Pie("version-distribution-chart",
                        "Distribution of orphaned users across Firefox versions",
                        "Illustration of the distribution of orphaned users " +
                        "across Firefox versions",
-                       versionD3Slices);
+                       versionSlices);
         }
       }
 
