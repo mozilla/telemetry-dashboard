@@ -175,7 +175,9 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
     $.getJSON(dataUrl + dataFile, {}, function(data) {
       var upToDate = data[0]["up-to-date"]["up-to-date"];
       var outOfDate = data[0]["up-to-date"]["out-of-date"];
-      var totalUpdateData = upToDate + outOfDate;
+      var outOfDateNotLongEnough = data[0]["up-to-date"]["out-of-date-not-run-long-enough"];
+      outOfDateNotLongEnough = outOfDateNotLongEnough ? outOfDateNotLongEnough : 0;
+      var totalUpdateData = upToDate + outOfDate + outOfDateNotLongEnough;
       var upToDateData = [upToDate, outOfDate];
       var updateEnabled = data[1]["update-enabled-disabled"]["update-enabled"];
       var updateDisabled = data[1]["update-enabled-disabled"]["update-disabled"];
@@ -261,13 +263,18 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
       // Create and display distribution pie chart
       {
         var distributionSlices =
-          [{"label": "Up to date", "value": upToDate, "color": "#0065d1"},
+          [{"label": "Up to date", "value": upToDate, "color": "#0065D1"},
            {"label": "Out of date, updates disabled",
-              "value":  updateDisabled, "color": "#f4f601"},
+              "value":  updateDisabled, "color": "#F4F601"},
            {"label": "Out of date, of concern",
-              "value": updateEnabled, "color": "#d10000"}];
+              "value": updateEnabled, "color": "#D10000"}];
+        if (outOfDateNotLongEnough) {
+          distributionSlices.push({"label": "Out of date, not run long enough",
+                                   "value": outOfDateNotLongEnough,
+                                   "color": "#004949"});
+        }
         displayD3Pie("distribution-chart", "Update orphaning distribution",
-                     "Illustration of the distribution of the three major " +
+                     "Illustration of the distribution of the major " +
                      "orphaning states in our user population",
                      distributionSlices);
       }
@@ -477,13 +484,21 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
       {
         var ofConcernPercentage = 100 / totalUpdateData * updateEnabled;
         ofConcernPercentage = ofConcernPercentage.toFixed(1);
+        var outOfDateNotLongEnoughPercentage = 0;
+        if (outOfDateNotLongEnough) {
+          outOfDateNotLongEnoughPercentage = 100 / totalUpdateData * outOfDateNotLongEnough;
+          outOfDateNotLongEnoughPercentage = outOfDateNotLongEnoughPercentage.toFixed(1);
+        }
         var updatesDisabledPercentage = 100 / totalUpdateData * updateDisabled;
         updatesDisabledPercentage = updatesDisabledPercentage.toFixed(1);
-        var upToDatePercentage = 100 - ofConcernPercentage - updatesDisabledPercentage;
+        var upToDatePercentage = 100 - ofConcernPercentage - updatesDisabledPercentage - outOfDateNotLongEnoughPercentage;
         upToDatePercentage = upToDatePercentage.toFixed(1);
 
         var ofConcernSummary = document.getElementById("out-of-date-of-concern-summary");
-        ofConcernSummary.innerHTML = "<strong>" + ofConcernPercentage + "%</strong> of users are currently out of date for reasons that are of concern (e.g. failure to download).";
+        ofConcernSummary.innerHTML = "<strong>" + ofConcernPercentage + "%</strong> of users are currently out of date for reasons that are of concern (e.g. failure to download) and are considered orphaned.";
+        if (outOfDateNotLongEnoughPercentage) {
+          ofConcernSummary.innerHTML += "<br/><strong>" + outOfDateNotLongEnoughPercentage + "%</strong> of users are currently out of date, but haven't run Firefox for at least 2 hours since being orphaned.";
+        }
         var updatesDisabledSummary = document.getElementById("out-of-date-updates-disabled-summary");
         updatesDisabledSummary.innerHTML = "<strong>" + updatesDisabledPercentage + "%</strong> of users are currently out of date with updates disabled.";
         var upToDateSummary = document.getElementById("up-to-date-summary");
