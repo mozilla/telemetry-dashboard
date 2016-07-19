@@ -103,7 +103,7 @@ This dashboard is managed by <a href="mailto:spohl@mozilla.com">:spohl</a>.<br/>
 The Spark script for the weekly reports is scheduled to run every Wednesday and can be found <a href="https://github.com/mozilla-services/data-pipeline/tree/master/reports/update-orphaning/Update orphaning analysis using longitudinal dataset.ipynb">here</a>.
 
 <script>
-  var dataUrl = "https://analysis-output.telemetry.mozilla.org/update-orphaning-weekly-analysis/data/";
+  var dataUrl = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis-2/data/spohl@mozilla.com/Update+Orphaning+View/";
   var branch = "";
   var wedAsWeekday = 3;
   var today = new Date();
@@ -116,6 +116,11 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
   }
   var lastWedDate = new Date();
   lastWedDate.setDate(today.getDate() - daysToLastWed);
+
+  // The Airflow Spark job scheduler currently works with a one week delay, so
+  // we have to drop the most recent date as an option in the dropdown menu.
+  lastWedDate.setDate(lastWedDate.getDate() - 7);
+
   var year = lastWedDate.getFullYear();
   var month = lastWedDate.getMonth() + 1;
   if (month < 10) {
