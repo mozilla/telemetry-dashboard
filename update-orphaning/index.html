@@ -105,14 +105,14 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
 <script>
   var dataUrl = "https://s3-us-west-2.amazonaws.com/telemetry-public-analysis-2/data/spohl@mozilla.com/Update+Orphaning+View/";
   var branch = "";
-  var wedAsWeekday = 3;
   var today = new Date();
   var todaysWeekday = today.getDay();
   var daysToLastWed = 0;
-  if (todaysWeekday >= wedAsWeekday) {
-    daysToLastWed = todaysWeekday - wedAsWeekday;
+
+  if (todaysWeekday == 0) {
+    daysToLastWed = 11;
   } else {
-    daysToLastWed = 7 - (wedAsWeekday - todaysWeekday);
+    daysToLastWed = 4 + todaysWeekday;
   }
   var lastWedDate = new Date();
   lastWedDate.setDate(today.getDate() - daysToLastWed);
