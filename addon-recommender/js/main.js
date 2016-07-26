@@ -21,13 +21,14 @@ function setupAutocomplete() {
     });
   };
 
-  query = $('.select2, .select2-multiple').select2({ placeholder: 'Your Firefox Addons',
-                                                     data: suggestions,
-                                                     multiple: true,
-                                                     openOnEnter: false,
-                                                     closeOnSelect: true,
-                                                     sorter: sortFunc
-                                                   });
+  let query = $('.select2, .select2-multiple')
+                .select2({ placeholder: 'Your Firefox Addons',
+                           data: suggestions,
+                           multiple: true,
+                           openOnEnter: false,
+                           closeOnSelect: true,
+                           sorter: sortFunc
+                         });
   query.on("change", function(e) {
     suggestAddons($(this).val().split(','));
   });
