@@ -15,6 +15,7 @@
     CACHE: {},
     CACHE_LAST_UPDATED: {},
     CACHE_TIMEOUT: 4 * 60 * 60 * 1000,
+    MAX_URL_LENGTH: 4094,
   };
 
   var urlCallbacks = {}
@@ -310,6 +311,7 @@
   Telemetry.getJSON = function (url, callback) {
     assert(typeof url === "string", "`url` must be a string");
     assert(typeof callback === "function", "`callback` must be a function");
+    assert(url.length <= Telemetry.MAX_URL_LENGTH, "`url` is too long (" + url.length + " > " + MAX_URL_LENGTH + ")");
     if (Telemetry.CACHE[url] !== undefined) {
       if (Telemetry.CACHE[url] !== null && Telemetry.CACHE[url]._loading) { // Requested but not yet loaded
         var xhr = Telemetry.CACHE[url];
@@ -459,6 +461,35 @@
     });
   }
 
+  function populateEntriesMap(entriesMap, url, callback) {
+    Telemetry.getJSON(url, function (histograms, status) {
+      if (histograms === null) {
+        assert(status === 404, "Could not obtain evolution: status " +
+          status + " (" + url + ")"); // Only allow null evolution if it is 404 - if there is no evolution for the given filters
+        callback({});
+      } else {
+        histograms.data.forEach(function (entry) {
+          if (!entriesMap.hasOwnProperty(entry.label)) {
+            entriesMap[entry.label] = [];
+          }
+          entriesMap[entry.label].push(entry);
+        });
+        callback(entriesMap, histograms);
+      }
+    });
+  }
+
+  function entriesMapToEvolutionMap(entriesMap, histograms, metric) {
+    var evolutionMap = {};
+    for (var label in entriesMap) {
+      evolutionMap[label] = new Telemetry.Evolution(histograms.buckets,
+        entriesMap[label], histograms.kind, histograms.description,
+        metric);
+    };
+    return evolutionMap;
+  }
+
+
   Telemetry.getEvolution = function Telemetry_getEvolution(channel, version,
     metric, filters, useSubmissionDate, callback) {
     assert(Telemetry.CHANNEL_VERSION_DATES !== null && Telemetry.CHANNEL_VERSION_BUILDIDS !==
@@ -483,27 +514,31 @@
       encodeURIComponent(version) + "&dates=" +
       encodeURIComponent(dates) + "&metric=" + encodeURIComponent(metric) +
       filterString;
-    Telemetry.getJSON(url, function (histograms, status) {
-      if (histograms === null) {
-        assert(status === 404, "Could not obtain evolution: status " +
-          status + " (" + url + ")"); // Only allow null evolution if it is 404 - if there is no evolution for the given filters
-        callback({});
-      } else {
-        var entriesMap = {}; // Mapping from entry labels to a list of entries having that label
-        histograms.data.forEach(function (entry) {
-          if (!entriesMap.hasOwnProperty(entry.label)) {
-            entriesMap[entry.label] = [];
-          }
-          entriesMap[entry.label].push(entry);
+    var entriesMap = {};
+    if (url.length > Telemetry.MAX_URL_LENGTH) {
+      assert(useSubmissionDate, "`url` is too long because of build_id?!");
+      // Some versions have submission dates ranging across years.
+      // This makes for urls that are too long and need to be chopped.
+      var submissionDates = Telemetry.CHANNEL_VERSION_DATES[channel][version];
+      var dates_half = submissionDates.slice(0, submissionDates.length / 2);
+      var url_half = Telemetry.BASE_URL + "aggregates_by/submission_date/channels/" +
+        encodeURIComponent(channel) + "/?version=" + encodeURIComponent(version) +
+        "&dates=" + encodeURIComponent(dates_half.join(",")) + "&metric=" +
+        encodeURIComponent(metric) + filterString;
+      populateEntriesMap(entriesMap, url_half, function (entriesMap) {
+        dates_half = submissionDates.slice(submissionDates.length / 2);
+        url_half = Telemetry.BASE_URL + "aggregates_by/submission_date/channels/" +
+          encodeURIComponent(channel) + "/?version=" + encodeURIComponent(version) +
+          "&dates=" + encodeURIComponent(dates_half.join(",")) + "&metric=" +
+          encodeURIComponent(metric) + filterString;
+        populateEntriesMap(entriesMap, url_half, function (entriesMap, histograms) {
+          callback(entriesMapToEvolutionMap(entriesMap, histograms, metric));
         });
-        var evolutionMap = {}; // Mapping from labels to evolutions for those labels
-        for (var label in entriesMap) {
-          evolutionMap[label] = new Telemetry.Evolution(histograms.buckets,
-            entriesMap[label], histograms.kind, histograms.description,
-            metric);
-        };
-        callback(evolutionMap);
-      }
+      });
+      return;
+    }
+    populateEntriesMap(entriesMap, url, function (entriesMap, histograms) {
+      callback(entriesMapToEvolutionMap(entriesMap, histograms, metric));
     });
   }
 
