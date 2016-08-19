@@ -311,7 +311,7 @@
   Telemetry.getJSON = function (url, callback) {
     assert(typeof url === "string", "`url` must be a string");
     assert(typeof callback === "function", "`callback` must be a function");
-    assert(url.length <= Telemetry.MAX_URL_LENGTH, "`url` is too long (" + url.length + " > " + MAX_URL_LENGTH + ")");
+    assert(url.length <= Telemetry.MAX_URL_LENGTH, "`url` is too long (" + url.length + " > " + Telemetry.MAX_URL_LENGTH + ")");
     if (Telemetry.CACHE[url] !== undefined) {
       if (Telemetry.CACHE[url] !== null && Telemetry.CACHE[url]._loading) { // Requested but not yet loaded
         var xhr = Telemetry.CACHE[url];
