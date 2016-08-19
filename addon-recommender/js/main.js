@@ -2,6 +2,11 @@
 
 var addonMapping = null;
 var rawItemsMatrix = null;
+var topAddonsInfo = null;
+
+// The AMO API endpoint used to request the top addons.
+const topAddonsURI =
+  'https://addons.mozilla.org/api/v3/addons/search/?q=&app=firefox&type=extension&sort=users';
 
 function setupAutocomplete() {
   var suggestions = []
@@ -30,9 +35,26 @@ function setupAutocomplete() {
                            sorter: sortFunc
                          });
   query.on("change", function(e) {
-    suggestAddons($(this).val().split(','));
+    let queriedAddons = $(this).val();
+    if (queriedAddons) {
+      suggestAddons(queriedAddons.split(','));
+    } else {
+      // If no addons where requested, display the top ones.
+      displayTopAddons();
+    }
   });
   $('#search').click(search);
+}
+
+function renderAddonSuggestions(sortedAddons) {
+  var table = $('#recommendations');
+  var rows = ""
+
+  $("#recommendations tr").remove();
+  for (var i = 0; i < 10; i++) {
+    rows += "<tr><td>" + sortedAddons[i] + "</td></tr>";
+  }
+  table.append(rows);
 }
 
 function suggestAddons(addonIds) {
@@ -63,14 +85,7 @@ function suggestAddons(addonIds) {
 
   // Update the dashboard with the suggestions.
   var sorted = getSortedKeys(distances);
-  var table = $('#recommendations');
-  var rows = ""
-
-  $("#recommendations tr").remove();
-  for (var i = 0; i < 10; i++) {
-    rows += "<tr><td>" + sorted[i] + "</td></tr>";
-  }
-  table.append(rows);
+  renderAddonSuggestions(sorted);
 }
 
 function getSortedKeys(obj) {
@@ -89,6 +104,15 @@ function buildAddonsMatrix(data) {
   return math.matrix(m, 'dense', 'number');
 }
 
+function displayTopAddons() {
+  if (!topAddonsInfo || !topAddonsInfo.results) {
+    console.error("Malformed or empty AMO response.");
+    return;
+  }
+  let addonNames = topAddonsInfo.results.map(info => info.name[info.default_locale]);
+  renderAddonSuggestions(addonNames);
+}
+
 $.when(
   $.getJSON('data/addon_mapping.json', function(data) {
     addonMapping = data;
@@ -99,11 +123,18 @@ $.when(
     //  ... { id: 123, features: [1, 2, 3]}, ...
     // ]
     rawItemsMatrix = data;
+  }),
+  $.get(topAddonsURI, function(data) {
+    // The format of the response is documented here:
+    // http://addons-server.readthedocs.io/en/latest/topics/api/addons.html#search
+    topAddonsInfo = data;
   })
 ).then(function() {
-  if (!addonMapping || !rawItemsMatrix) {
+  if (!addonMapping || !rawItemsMatrix || !topAddonsInfo) {
     console.error("There was an error loading the data files.");
     return;
   }
   setupAutocomplete();
+  // We've just loaded the page. Display the top addons.
+  displayTopAddons();
 });
