@@ -4,6 +4,12 @@ var addonMapping = null;
 var rawItemsMatrix = null;
 var topAddonsInfo = null;
 
+// The model data files.
+const itemMatrixURI =
+  'https://s3-us-west-2.amazonaws.com/telemetry-public-analysis-2/telemetry-ml/addon_recommender/item_matrix.json';
+const addonMappingURI =
+  'https://s3-us-west-2.amazonaws.com/telemetry-public-analysis-2/telemetry-ml/addon_recommender/addon_mapping.json';
+
 // The AMO API endpoint used to request the top addons.
 const topAddonsURI =
   'https://addons.mozilla.org/api/v3/addons/search/?q=&app=firefox&type=extension&sort=users';
@@ -114,10 +120,10 @@ function displayTopAddons() {
 }
 
 $.when(
-  $.getJSON('data/addon_mapping.json', function(data) {
+  $.getJSON(addonMappingURI, function(data) {
     addonMapping = data;
   }),
-  $.getJSON('data/item_matrix.json', function(data) {
+  $.getJSON(itemMatrixURI, function(data) {
     // Data is in the following format:
     // [
     //  ... { id: 123, features: [1, 2, 3]}, ...
