@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function(data) {
       setup_e10s_graph(data);
     },
-    graph_error.bind(undefined, "#e10s-graph")
+    graph_error.bind(undefined, "#e10s-graph1")
   );
 });
 
