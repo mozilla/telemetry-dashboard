@@ -132,7 +132,7 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
   }
   var friAfterLastWedDate = new Date();
   friAfterLastWedDate.setDate(lastWedDate.getDate() + 2);
-  var lastWedDataFile = year + month + date + ".json";
+  var lastWedDataFile = [year, month, date, ".json"].join("");
   var startDate = new Date();
   startDate.setDate(2);
   startDate.setMonth(2);
