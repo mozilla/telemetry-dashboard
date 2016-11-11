@@ -99,7 +99,7 @@ The users who are out of date with updates enabled encounter the following updat
 <div id="version-distribution-chart"></div>
 
 <br/><hr>
-This dashboard is managed by <a href="mailto:spohl@mozilla.com">:spohl</a>.<br/>
+This dashboard is maintained by <a href="mailto:mhowell@mozilla.com">:mhowell</a>.<br/>
 The Spark script for the weekly reports is scheduled to run every Wednesday and can be found <a href="https://github.com/mozilla-services/data-pipeline/tree/master/reports/update-orphaning/Update orphaning analysis using longitudinal dataset.ipynb">here</a>.
 
 <script>
@@ -116,10 +116,6 @@ The Spark script for the weekly reports is scheduled to run every Wednesday and 
   }
   var lastWedDate = new Date();
   lastWedDate.setDate(today.getDate() - daysToLastWed);
-
-  // The Airflow Spark job scheduler currently works with a one week delay, so
-  // we have to drop the most recent date as an option in the dropdown menu.
-  lastWedDate.setDate(lastWedDate.getDate() - 7);
 
   var year = lastWedDate.getFullYear();
   var month = lastWedDate.getMonth() + 1;
