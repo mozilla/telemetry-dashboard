@@ -505,8 +505,15 @@
     Object.keys(filters)
       .sort()
       .forEach(function (filterName) { // we need to sort the keys in order to make sure the same filters result in the same URL each time, for caching
-        filterString += "&" + encodeURIComponent(filterName) + "=" +
-          encodeURIComponent(filters[filterName]);
+        var filter = filters[filterName];
+        if (!Array.isArray(filter)) {
+          filter = [filter];
+        }
+
+        for (var i = 0; i < filter.length; ++i) {
+          filterString += "&" + encodeURIComponent(filterName) + "=" +
+            encodeURIComponent(filter[i]);
+        }
       });
     var url = Telemetry.BASE_URL + "aggregates_by/" + (useSubmissionDate ?
         "submission_date" : "build_id") +
