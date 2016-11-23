@@ -1,0 +1,104 @@
+body {
+  font-family: sans-serif;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0 0;
+  border: 1px solid black;
+}
+
+td {
+  border: 1px solid black;
+  padding: 0.1em 0.33em;
+}
+
+td.type-float {
+  text-align: right;
+}
+
+td.clickable {
+  cursor: pointer;
+}
+
+td.clickable:hover,
+td.clickable.clicked {
+  background-color: lightgrey;
+}
+
+thead {
+  font-weight: bold;
+}
+
+#notice {
+  color: orange;
+}
+
+#crash-plot-container {
+  height: 25vh;
+  width: 90vw;
+  margin: 2vmin 0;
+}
+
+#crash-plot-container.nightly .mg-hover-line1-color {
+  fill: #4040e8;
+}
+#crash-plot-container.nightly .mg-line1-color {
+  stroke: #4040e8;
+}
+#crash-plot-container.nightly .mg-area1-color {
+  fill: #0000FF;
+}
+
+#crash-plot-container.aurora .mg-hover-line1-color {
+  fill: #05b378;
+}
+#crash-plot-container.aurora .mg-line1-color {
+  stroke: #05b378;
+}
+#crash-plot-container.aurora .mg-area1-color {
+  fill: #00FF00;
+}
+
+#crash-plot-container.beta .mg-hover-line1-color {
+  fill: #db4437;
+}
+#crash-plot-container.beta .mg-line1-color {
+  stroke: #db4437;
+}
+#crash-plot-container.beta .mg-area1-color {
+  fill: #FF0000;
+}
+
+#crash-plot-container.release .mg-hover-line1-color {
+  fill: #f8b128;
+}
+#crash-plot-container.release .mg-line1-color {
+  stroke: #f8b128;
+}
+#crash-plot-container.release .mg-area1-color {
+  fill: #FFFF00;
+}
+
+#kuh-plot-container {
+  height: 25vh;
+  width: 90vw;
+  margin: 2vmin 0;
+}
+
+.mg-active-datapoint tspan tspan:nth-child(2) {
+  /* baleet the little circle span, as the circle char doesn't exist in all fonts */
+  display: none;
+}
+
+.below-thresholds {
+  background-color: rgba(0, 255, 0, 0.3);
+}
+
+.between-thresholds {
+  background-color: lightyellow;
+}
+
+.above-thresholds {
+  background-color: lightpink;
+}

@@ -1,17 +1,402 @@
+<!DOCTYPE html>
+<html>
 <head>
-  <title>Firefox Stability Dashboards</title>
+<meta name="viewport" content="width=device-width">
+<title>Crash Rates (Telemetry)</title>
+
+<!-- MG.js stuff --!>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="mgjs/metricsgraphics.min.js"></script>
+<link href="mgjs/metricsgraphics.css" rel="stylesheet" type="text/css">
+
+<!-- Include after MG.js' css to override some of its styles. -->
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<script src="thresholds.js"></script>
 </head>
 <body>
-  <h1>Firefox Stability Dashboards</h1>
+<h1>Stability Dashboard</h1>
+<h3>Firefox Desktop</h3>
+<h5>Analyzed date: <select id="analyzed-date"></select></h5>
+<p id="notice">&nbsp;</p>
+<table id="data-table">
+  <thead>
+    <tr>
+      <td>Channel</td>
+      <td>Nightly</td>
+      <td>Aurora</td>
+      <td>Beta</td>
+      <td>Release</td>
+    </tr>
+    <tr>
+      <td>Version</td>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+<div id="crash-plot-container">
+</div>
+<div id="kuh-plot-container">
+</div>
+<p>Cells are of the form <em>Rate (X%)</em> where:</p>
+<dt><em>Rate</em></dt>
+<dd>- (for crashes) is the number of that type of crash divided by the usage_khours</dd>
+<dd>- (for usage_khours) is just the number of usage_khours<dd>
+<dt><em>(X%)</em></dt>
+<dd>- (for crashes) is the percent that this week's number (not the rate) of crashes is vs. last week's number (not rate) of that crash</dd>
+<dd>- (for usage_khours) is the percent that this week's number is of last week's usage_khours</dd>
+<p>Since crash rates are <em>#crashes / usage_khours</em> a low <em>(X%)</em> in <em>usage_khours</em> can result in an inflation of crash rates.</p>
+<p>To estimate how much of an inflation, take a relatively-stable crash type (like <em>P</em>) and compare its <em>(X%)</em> to <em>usage_khours</em>'.</p>
+<p>As of yet, no model has been developed to do this properly, so YMMV.</p>
+<!-- Useful, but only to mozilla employees
+<hr/>
+<p>Data comes from <a href="https://sql.telemetry.mozilla.org/queries/1092/source#table">this query</a>.</p>
+-->
+<script>
 
-  <h2>Dashboards based on the old crash-stats method</h2>
+const CHANNELS = ["nightly", "aurora", "beta", "release"];
+const PERCENT_NOTICE_THRESHOLD = 0.5;
 
-  <ul>
-    <li><a href="https://arewestableyet.com/">arewestableyet.com</a></li>
-  </ul>
+var gData = undefined;
+var gMap = {};
 
-  <h2>Dashboards based on the new unified telemetry method</h2>
+var formatHours = function(hours) {
+  // values are kilo-usage-hours and range in value from, say,
+  // 24.2 (7% of nightly) to
+  // 813,816.57 (~100% of release)
 
-  <ul>
-    <li><a href="office-dashboard.html">Office Dashboard</a></li>
-  </ul>
+  // So... optional "K"?
+
+  hours = Number(hours);
+  let suffix = '';
+  if (hours < 2000) {
+    // do nothing.
+  } else {
+    hours = hours / 1000;
+    suffix = 'k';
+  }
+  return Number(hours).toFixed(Math.max(0, 2 - Math.ceil(Math.log10(hours)))) + suffix;
+}
+
+var formatYYYYmmdd = function(d) {
+  let day = d.getUTCDate();
+  let month = (d.getUTCMonth() + 1);
+  let year = d.getUTCFullYear();
+  return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+}
+
+var xhr = new XMLHttpRequest();
+xhr.addEventListener("load", function() {
+
+  try {
+    gData  = JSON.parse(this.responseText).query_result.data;
+  } catch (e) {
+    console.error("Failed a JSON parse");
+    console.error(e.message);
+    throw e;
+  }
+
+  // Re-arrange data into a useful map
+  gData.rows.forEach(row => {
+    if (!(row.activity_date in gMap)) {
+      gMap[row.activity_date] = {};
+    }
+    if (row.channel in gMap[row.activity_date]) {
+      if (gMap[row.activity_date][row.channel].usage_khours > row.usage_khours ) {
+        return;
+      }
+    }
+    gMap[row.activity_date][row.channel] = row;
+  });
+  let dataDates = Object.keys(gMap).sort((a, b) => a < b ? 1 : (a > b ? -1 : 0));
+
+  let dateSelect = document.getElementById("analyzed-date");
+  dataDates.forEach(dataDate => {
+    let opt = document.createElement("option");
+    opt.textContent = opt.value = dataDate;
+    dateSelect.appendChild(opt);
+  });
+  dateSelect.addEventListener("change", function() {
+    updateNotice(this.selectedOptions[0].value);
+    updateKuhPlot(this.selectedOptions[0].value);
+    emptyCrashPlot();
+    rebakeTable(this.selectedOptions[0].value);
+  });
+
+  // Set up click listeners on the plots
+  ['crash-plot-container', 'kuh-plot-container']
+    .map(id => document.getElementById(id))
+    .forEach(el => {
+      el.addEventListener("click", e => {
+        if (e.target && e.target.__data__ && e.target.__data__.date) {
+          let dateString = formatYYYYmmdd(e.target.__data__.date);
+          dateSelect.querySelector(`[value="${dateString}"]`).selected = true;
+          dateSelect.dispatchEvent(new Event("change"));
+        }
+      });
+    });
+
+  // Find the most recent date that won't show the "you might not want to use this data" notice
+  // and start there.
+  let startDate = dataDates[0]
+  dataDates.some(dataDate => {
+    let [minPercent, maxPercent] = getKuhPercents(dataDate);
+    if (minPercent > PERCENT_NOTICE_THRESHOLD) {
+      startDate = dataDate;
+      return true;
+    }
+  });
+  document.querySelector(`[value="${startDate}"]`).selected = true;
+
+  updateNotice(startDate);
+  updateKuhPlot(startDate);
+  emptyCrashPlot();
+  rebakeTable(startDate);
+});
+
+function getWeekAgo(aDate) {
+  let weekAgoDate = new Date(aDate);
+  weekAgoDate.setDate(weekAgoDate.getDate() - 7);
+  return weekAgoDate.toISOString().slice(0, 10);
+}
+
+function rebakeTable(aDate) {
+  let weekAgoDate = getWeekAgo(aDate);
+
+  if (!gMap[weekAgoDate]) {
+    console.error("No data from a week ago?!");
+  }
+
+  let table = document.getElementById("data-table");
+  let versionsRow = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[1];
+  let tbody = table.getElementsByTagName("tbody")[0];
+
+  // Before we clear the table, what did we have clicked?
+  let previouslyClicked = table.getElementsByClassName("clicked")[0];
+  let clickSelector = previouslyClicked
+    ? `td[data-channel="${previouslyClicked.dataset.channel}"][data-column="${previouslyClicked.dataset.column}"]`
+    : undefined;
+
+  // Clear!
+  tbody.innerHTML = "";
+  versionsRow.innerHTML = "<td>Version</td>";
+
+  // Versions
+  CHANNELS.forEach(channel => {
+    let cell = document.createElement("td");
+    cell.textContent = gMap[aDate][channel].build_version;
+    versionsRow.appendChild(cell);
+  });
+
+  // Table Body (data)
+  gData.columns.forEach((column) => {
+    if (['activity_date', 'channel', 'build_version'].includes(column.name)) {
+      return;
+    }
+    let row = document.createElement("tr");
+    let cell = document.createElement("td");
+    cell.textContent = column.friendly_name;
+    row.appendChild(cell);
+    tbody.appendChild(row);
+    CHANNELS.forEach((channel) => {
+      cell = document.createElement("td");
+      cell.className = "type-" + column.type;
+
+      // if a number, format it
+      if (column.type === "float") {
+        if (column.name === "usage_khours") {
+          let hours = gMap[aDate][channel][column.name];
+          let percent = Number(Number(hours) / Number(gMap[weekAgoDate][channel][column.name]) * 100).toFixed(1);
+          cell.textContent = formatHours(hours) + " (" + percent + "%)";
+        } else {
+          let crashes = gMap[aDate][channel][column.name];
+          let percent = Number(Number(crashes) / Number(gMap[weekAgoDate][channel][column.name]) * 100).toFixed(1);
+          let usage = gMap[aDate][channel]["usage_khours"];
+          let crashRate = crashes / usage;
+          cell.textContent = Number(crashRate).toFixed(2) + " (" + percent + "%)";
+
+          cell.addEventListener("click", function() {
+            for (clicked of document.querySelectorAll("td.clicked")) {
+              clicked.classList.remove("clicked");
+            }
+            this.classList.add("clicked");
+
+            updateCrashPlot(aDate, channel, column.name);
+          });
+          cell.classList.add("clickable");
+          cell.dataset.channel = channel;
+          cell.dataset.column = column.name;
+
+          if (crashRate < THRESHOLDS[channel][column.name].lo) {
+            cell.classList.add("below-thresholds");
+          } else if (crashRate < THRESHOLDS[channel][column.name].hi) {
+            cell.classList.add("between-thresholds");
+          } else {
+            cell.classList.add("above-thresholds");
+          }
+
+          cell.setAttribute("title", `lo: ${THRESHOLDS[channel][column.name].lo} hi: ${THRESHOLDS[channel][column.name].hi}`);
+        }
+      } else {
+        cell.textContent = gMap[aDate][channel][column.name];
+      }
+      row.appendChild(cell);
+    });
+  });
+
+  let toClick = document.querySelector(clickSelector);
+  if (toClick) {
+    toClick.click();
+  }
+}
+
+function getKuhPercents(aDate) {
+  let weekAgoDate = getWeekAgo(aDate);
+  let minPercent = 10;
+  let maxPercent = 0;
+  CHANNELS.forEach((channel) => {
+    let hours = gMap[aDate][channel]["usage_khours"];
+    let percent = Number(hours) / Number(gMap[weekAgoDate][channel]["usage_khours"]);
+    if (percent < minPercent) {
+      minPercent = percent;
+    }
+    if (percent > maxPercent) {
+      maxPercent = percent;
+    }
+  });
+  return [minPercent, maxPercent];
+}
+
+function updateNotice(aDate) {
+  let noticeEl = document.getElementById("notice");
+  noticeEl.textContent = "\xa0";
+
+  let [minPercent, maxPercent] = getKuhPercents(aDate)
+
+  if (minPercent < PERCENT_NOTICE_THRESHOLD) {
+    noticeEl.textContent = '' +
+      `The usage_khours for ${aDate} are low ` +
+      `(${Number(minPercent * 100).toFixed(1)}%~${Number(maxPercent * 100).toFixed(1)}%) ` +
+      `so you may not want to use these figures.`;
+  }
+}
+
+const THRESHOLD = 0.5;
+
+function updateKuhPlot(aDate) {
+  let data = [];
+  let maxDate = aDate;
+  Object.keys(gMap).forEach(activityDate => {
+    if (activityDate > maxDate) {
+      maxDate = activityDate; // need the max date to extend the graphs appropriately
+    }
+    let datum = { date: new Date(activityDate) };
+    CHANNELS.forEach(channel => datum[channel] = gMap[activityDate][channel].usage_khours);
+    data.push(datum);
+  });
+  MG.data_graphic({
+    title: "kusage_hours (log)",
+    description: "A description",
+    data: data,
+    full_width: true,
+    full_height: true,
+    show_tooltips: false,
+    target: "#kuh-plot-container",
+    y_accessor: CHANNELS,
+    y_scale_type: "log",
+    max_x: new Date(maxDate),
+    min_y_from_data: true,
+    legend: CHANNELS,
+    legend_target: "#none",
+    yax_units: "Kuh",
+    yax_units_append: true,
+    markers: [{date: new Date(aDate), label: ""}],
+    utc_time: true,
+    buffer: 0,
+    left: 70,
+    top: 50,
+    right: 15,
+    bottom: 40,
+  });
+}
+
+function updateCrashPlot(date, channel, crash) {
+  let containerEl = document.getElementById("crash-plot-container");
+  CHANNELS.forEach(channel => containerEl.classList.remove(channel));
+  containerEl.classList.add(channel);
+
+  let maxDate = date;
+  let maxY = 0;
+  let data = [];
+  Object.keys(gMap).forEach(activityDate => {
+    if (activityDate > maxDate) {
+      maxDate = activityDate;
+    }
+    let weekAgoData = gMap[getWeekAgo(activityDate)];
+    if (weekAgoData && gMap[activityDate][channel].usage_khours < weekAgoData[channel].usage_khours * THRESHOLD) {
+      return;
+    }
+    let datum = {
+      date: new Date(activityDate),
+      value: gMap[activityDate][channel][crash] / gMap[activityDate][channel].usage_khours,
+    };
+    data.push(datum);
+    if (datum.value > maxY) {
+      maxY = datum.value;
+    }
+  });
+  let baselines = [
+    {value: THRESHOLDS[channel][crash].lo, label: ""},
+    {value: THRESHOLDS[channel][crash].hi, label: ""},
+  ];
+
+  // Don't let spikes kill our plot's scale. Cap it to a reasonable value.
+  let yThreshold = THRESHOLDS[channel][crash].hi * 2;
+  if (maxY > yThreshold) {
+    maxY = yThreshold;
+  } else {
+    maxY = undefined;
+  }
+
+  MG.data_graphic({
+    title: channel + " " + crash,
+    data: data,
+    full_width: true,
+    full_height: true,
+    show_tooltips: false,
+    target: "#crash-plot-container",
+    legend: [channel + " " + crash],
+    legend_target: "#none",
+    max_x: new Date(maxDate),
+    max_y: maxY,
+    baselines: baselines,
+    markers: [{date: new Date(date), label: ""}],
+    utc_time: true,
+    interpolate: d3.curveLinear,
+    buffer: 0,
+    left: 70,
+    top: 50,
+    right: 15,
+    bottom: 40,
+  });
+}
+
+function emptyCrashPlot() {
+  MG.data_graphic({
+    chart_type: "missing-data",
+    missing_text: "Click on a crash cell to populate graph",
+    target: "#crash-plot-container",
+    full_width: true,
+    full_height: true,
+  });
+}
+
+xhr.addEventListener("error", () => {
+  console.error("XHR ERROR");
+});
+xhr.open("GET", "https://sql.telemetry.mozilla.org/api/queries/1092/results.json?api_key=f7dac61893e040ca59c76fd616f082479e2a1c85");
+xhr.send();
+</script>
+</body>
+</html>
