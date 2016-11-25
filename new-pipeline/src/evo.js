@@ -761,12 +761,12 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   });
   for (var date in usedDates) {
     markers.push({
-      date: moment(parseInt(date) + 1).toDate(),
+      date: moment.utc(parseInt(date) + 1).toDate(),
       label: usedDates[date].join(", ")
     }); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
   if (markers.length > 1) { // If there is a marker on the far right, move it back 2 milliseconds in order to make it visible again
-    markers[markers.length - 1].date = moment(markers[markers.length - 1].date.getTime() -
+    markers[markers.length - 1].date = moment.utc(markers[markers.length - 1].date.getTime() -
         2)
       .toDate();
   }
