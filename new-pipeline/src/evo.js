@@ -714,8 +714,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   var lineData = lines.map(function (line) {
     var dataset = line.values.map(function (point) {
       return {
-        date: new Date(moment.utc(point.x)
-          .format("YYYY/MM/DD")),
+        date: moment.utc(point.x).toDate(),
         value: point.y
       };
     });
@@ -725,8 +724,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   var submissionLineData = submissionLines.map(function (line) {
     var dataset = line.values.map(function (point) {
       return {
-        date: new Date(moment.utc(point.x)
-          .format("YYYY/MM/DD")),
+        date: moment.utc(point.x).toDate(),
         value: point.y
       };
     });
