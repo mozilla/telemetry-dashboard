@@ -799,6 +799,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
+    utc_time: true,
     mouseover: function (d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
@@ -905,6 +906,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     markers: markers,
     aggregate_rollover: true,
     linked: true,
+    utc_time: true,
     mouseover: function (d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
