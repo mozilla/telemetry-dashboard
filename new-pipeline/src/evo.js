@@ -710,9 +710,6 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     return line.values.length > 0;
   });
 
-  var timezoneOffsetMinutes = (new Date)
-    .getTimezoneOffset();
-
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
     var dataset = line.values.map(function (point) {
@@ -764,9 +761,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   });
   for (var date in usedDates) {
     markers.push({
-      date: moment(parseInt(date) + 1)
-        .add(timezoneOffsetMinutes, "minutes")
-        .toDate(),
+      date: moment(parseInt(date) + 1).toDate(),
       label: usedDates[date].join(", ")
     }); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
@@ -807,7 +802,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     mouseover: function (d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
-        date = d.values[0].date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.values[0].date;
         rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" +
             d.values[0].line_id + "-color")
           .get(0);
@@ -824,7 +819,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
           return entry.value;
         });
       } else {
-        date = d.date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.date;
         rolloverCircle = $("#evolutions .mg-line-rollover-circle")
           .get(0);
         lineList = [lines[d.line_id - 1]];
@@ -913,7 +908,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     mouseover: function (d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
-        date = d.values[0].date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.values[0].date;
         rolloverCircle = $(
             "#submissions .mg-line-rollover-circle.mg-line" + d.values[0]
             .line_id + "-color")
@@ -931,7 +926,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
           return entry.value;
         });
       } else {
-        date = d.date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.date;
         rolloverCircle = $("#submissions .mg-line-rollover-circle")
           .get(0);
         lineList = [submissionLines[d.line_id - 1]];
