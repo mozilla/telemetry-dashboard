@@ -710,15 +710,11 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     return line.values.length > 0;
   });
 
-  var timezoneOffsetMinutes = (new Date)
-    .getTimezoneOffset();
-
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
     var dataset = line.values.map(function (point) {
       return {
-        date: new Date(moment.utc(point.x)
-          .format("YYYY/MM/DD")),
+        date: moment.utc(point.x).toDate(),
         value: point.y
       };
     });
@@ -728,8 +724,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   var submissionLineData = submissionLines.map(function (line) {
     var dataset = line.values.map(function (point) {
       return {
-        date: new Date(moment.utc(point.x)
-          .format("YYYY/MM/DD")),
+        date: moment.utc(point.x).toDate(),
         value: point.y
       };
     });
@@ -764,14 +759,12 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   });
   for (var date in usedDates) {
     markers.push({
-      date: moment(parseInt(date) + 1)
-        .add(timezoneOffsetMinutes, "minutes")
-        .toDate(),
+      date: moment.utc(parseInt(date) + 1).toDate(),
       label: usedDates[date].join(", ")
     }); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
   if (markers.length > 1) { // If there is a marker on the far right, move it back 2 milliseconds in order to make it visible again
-    markers[markers.length - 1].date = moment(markers[markers.length - 1].date.getTime() -
+    markers[markers.length - 1].date = moment.utc(markers[markers.length - 1].date.getTime() -
         2)
       .toDate();
   }
@@ -804,10 +797,11 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
+    utc_time: true,
     mouseover: function (d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
-        date = d.values[0].date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.values[0].date;
         rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" +
             d.values[0].line_id + "-color")
           .get(0);
@@ -824,7 +818,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
           return entry.value;
         });
       } else {
-        date = d.date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.date;
         rolloverCircle = $("#evolutions .mg-line-rollover-circle")
           .get(0);
         lineList = [lines[d.line_id - 1]];
@@ -910,10 +904,11 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     markers: markers,
     aggregate_rollover: true,
     linked: true,
+    utc_time: true,
     mouseover: function (d, i) {
       var date, rolloverCircle, lineList, values;
       if (d.values) {
-        date = d.values[0].date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.values[0].date;
         rolloverCircle = $(
             "#submissions .mg-line-rollover-circle.mg-line" + d.values[0]
             .line_id + "-color")
@@ -931,7 +926,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
           return entry.value;
         });
       } else {
-        date = d.date - timezoneOffsetMinutes * 60 * 1000;
+        date = d.date;
         rolloverCircle = $("#submissions .mg-line-rollover-circle")
           .get(0);
         lineList = [submissionLines[d.line_id - 1]];
