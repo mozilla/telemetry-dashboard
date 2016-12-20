@@ -1,5 +1,6 @@
 /* Landing page styles */
 .dashboard-list .list-group-item { font-size: 18px; }
+.dashboard-list .list-group-item.disabled { opacity: 0.5; }
 .dashboard-list .list-group-item .dashboard-description { font-size: 12px; }
 .dashboard-list .list-group-item .pipeline-label { font-size: 12px; float: right; }
 .big-dashboard-list .list-group-item {
