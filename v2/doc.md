@@ -1,7 +1,7 @@
 Telemetry.js (v2)
 =================
 
-Telemetry.js v2 is a Javascript library for accessing v4 pipeline data from [Mozilla Telemetry](https://telemetry.mozilla.org/). This library powers the v4 pipeline dashboards on Mozilla Telemetry.
+Telemetry.js is a Javascript library for accessing pipeline data from [Mozilla Telemetry](https://telemetry.mozilla.org/). This library powers the pipeline dashboards on Mozilla Telemetry.
 
 Not familiar with Mozilla Telemetry? Check out this [high-level overview](https://anthony-zhang.me/blog/telemetry-demystified/).
 

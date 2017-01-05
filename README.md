@@ -3,13 +3,11 @@ Telemetry Dashboard
 
 This repository contains the **source code for [telemetry.mozilla.org](https://telemetry.mozilla.org)**. The dashboards on this site can be used for everything from checking measure values to figuring out common causes of Firefox hangs.
 
-The main dashboards on [telemetry.mozilla.org](https://telemetry.mozilla.org) consume data from Telemetry's v2 and v4 backends using Telemetry.js. For an overview of how all these systems fit together, see [Telemetry Demystified](https://anthony-zhang.me/blog/telemetry-demystified/).
+The main dashboards on [telemetry.mozilla.org](https://telemetry.mozilla.org) consume data from Telemetry's backend using Telemetry.js.
 
 The dashboards that do not use Telemetry.js generally use [scheduled analysis jobs](https://analysis.telemetry.mozilla.org/) that regularly publish data on S3. The source code for these can be found in their respective repositories.
 
-This repository also contains the **source code for Telemetry.js** (all versions). The specific files can be found under the `v1/` and `v2/` directories.
-
-We currently have two versions of the Histogram Dashboard and Evolution Dashboard - one for the v2 pipeline, and one for the v4 pipeline. The v4 versions live in the `new-pipeline/` directory. The v2 versions live in the project root.
+This repository also contains the **source code for Telemetry.js**. The specific files can be found under the `v2/` directory.
 
 Deploying Telemetry Dashboard
 -----------------------------
@@ -23,7 +21,6 @@ Using Telemetry.js
 
 Check out the documentation!
 
-* [Telemetry.js v1](https://telemetry.mozilla.org/docs.html)
 * [Telemetry.js v2](https://github.com/mozilla/telemetry-dashboard/blob/master/v2/doc.md)
 
 Adding Telemetry Probes
@@ -44,7 +41,7 @@ Some notes for working on the code:
   * This can be done as follows (requires Python):
 
           cd /PATH_TO_REPOSITORY_ROOT
-          python -m SimpleHTTPServer
+          python -m http.server
           # now visit localhost:8000 in your browser to see the page
 
   * Note that permalink buttons (in the top right hand corner of the main dashboards) will not work when running the site on local servers. This is because they are shortened with bit.ly, which doesn't allow local links.
