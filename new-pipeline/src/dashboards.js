@@ -717,6 +717,8 @@ function getHumanReadableBucketOptions(kind, buckets) {
         " percentage"
       ];
     });
+  } else if (kind == "categorical") {
+    return buckets.map( (b, i) => [i.toString(), b] )
   }
 
   return buckets.map(function (start) {

@@ -1136,7 +1136,16 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     });
   });
 
+  function get_label(index) {
+    if(histograms[0].kind == 'categorical'){
+        return starts[index]
+    } else {
+        return formatNumber(starts[index])
+    }
+  }
+
   // Plot the data using MetricsGraphics
+
   if (histograms.length === 1) { // One histogram available, display as histogram
     var histogram = histograms[0];
     MG.data_graphic({
@@ -1160,9 +1169,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       y_extended_ticks: true,
       x_accessor: "value",
       y_accessor: "count",
-      xax_format: function (index) {
-        return formatNumber(starts[index]);
-      },
+      xax_format: get_label,
       yax_format: function (value) {
         return value + "%";
       },
@@ -1170,12 +1177,15 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         var count = formatNumber(countsList[0][d.x]),
           percentage = Math.round(d.y * 100) / 100 + "%";
         var label;
-        if (ends[d.x] === Infinity) {
+        if (ends[d.x] === Infinity && histogram.kind != "categorical") {
           label = "sample value \u2265 " + formatNumber(cumulative ? 0 :
             starts[d.x]);
         } else if (histogram.kind === "enumerated") {
           label = "sample value" + (cumulative ? " \u2264 " : " is ") +
             formatNumber(starts[d.x]);
+        } else if (histogram.kind == "categorical") {
+          label = "sample value" + (cumulative ? " \u2264 " : " is ") +
+            get_label(d.x)
         } else {
           label = formatNumber(cumulative ? 0 : starts[d.x]) +
             " \u2264 sample value < " + formatNumber(ends[d.x]);
@@ -1317,6 +1327,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         entry.value += 0.5;
       });
     });
+
     MG.data_graphic({
       data: distributionSamples,
       chart_type: "line",
@@ -1335,9 +1346,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       y_extended_ticks: true,
       x_accessor: "value",
       y_accessor: "count",
-      xax_format: function (index) {
-        return formatNumber(starts[index]);
-      },
+      xax_format: get_label,
       yax_format: function (value) {
         return value + "%";
       },
@@ -1377,12 +1386,15 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
           }];
         }
         var labelValue;
-        if (end === Infinity) {
+        if (end === Infinity && histograms[0].kind != "categorical") {
           labelValue = "sample value \u2265 " + formatNumber(cumulative ?
             0 : start) + ":";
         } else if (histograms[0].kind === "enumerated") {
           labelValue = "sample value" + (cumulative ? " \u2264 " : " is ") +
             formatNumber(start) + ":";
+        } else if (histograms[0].kind == "categorical") {
+          labelValue = "sample value" + (cumulative ? " \u2264 " : " is ") +
+            get_label(Math.floor(d.key))
         } else {
           labelValue = formatNumber(cumulative ? 0 : start) +
             " \u2264 sample value < " + formatNumber(end) + ":";
@@ -1500,6 +1512,22 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
 
 function displaySingleHistogramTableSet(axes, starts, ends, countsList,
   histograms) {
+
+  is_categorical = histograms[0].kind == "categorical"
+  start_labs = [$("<th></th>").text("Start"), $("<th></th>").text("End")]
+  if (is_categorical) {
+    start_labs = [$("<th></th>").text("Category")]
+  }
+
+  function get_labels (i) {
+    if(is_categorical) {
+      return [$("<td></td>").text(starts[i])]
+    } else {
+      return [$("<td></td>").text(formatNumber(starts[i])),
+              $("<td></td>").text(formatNumber(ends[i]))]
+    }
+  }
+
   $(axes)
     .empty()
     .append(
@@ -1515,12 +1543,7 @@ function displaySingleHistogramTableSet(axes, starts, ends, countsList,
           .append(
             $("<tr></tr>")
             .append(
-            [
-              $("<th></th>")
-                .text("Start"),
-              $("<th></th>")
-                .text("End"),
-            ].concat(
+            start_labs.concat(
                 histograms.map(function (histogram, i) {
                   return $("<th></th>")
                     .text(histogram.measure + " Count");
@@ -1533,12 +1556,7 @@ function displaySingleHistogramTableSet(axes, starts, ends, countsList,
             countsList[0].map(function (count, i) {
               return $("<tr></tr>")
                 .append(
-              [
-                $("<td></td>")
-                    .text(formatNumber(starts[i])),
-                $("<td></td>")
-                    .text(formatNumber(ends[i])),
-              ].concat(
+                  get_labels(i).concat(
                     countsList.map(function (counts, j) {
                       var percentage = Math.round(10000 * counts[i] /
                         histograms[j].count) / 100;
