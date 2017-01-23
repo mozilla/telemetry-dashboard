@@ -23,10 +23,10 @@
   Telemetry.Histogram = (function () {
     function Histogram(buckets, values, kind, submissions, sum,
       description, measure) {
-      assert(typeof buckets[0] === "number", "`buckets` must be an array");
+      assert(["number", "string"].indexOf(typeof buckets[0]) > -1, "`buckets` must be an array, is " + (typeof buckets[0]));
       assert(typeof values[0] === "number", "`values` must be an array");
       assert(["flag", "boolean", "count", "enumerated", "linear",
-          "exponential"].indexOf(kind) >= 0,
+          "exponential", "categorical"].indexOf(kind) >= 0,
         "`kind` must be a valid histogram kind");
       assert(typeof submissions === "number",
         "`submissions` must be a number");
@@ -130,7 +130,7 @@
 
   Telemetry.Evolution = (function () {
     function Evolution(buckets, data, kind, description, measure) {
-      assert(typeof buckets[0] === "number", "`buckets` must be an array");
+      assert(["number", "string"].indexOf(typeof buckets[0]) > -1, "`buckets` must be an array, is " + (typeof buckets[0]));
       assert(typeof data[0].histogram[0] === "number",
         "`data` must be an array");
       assert(typeof kind === "string", "`kind` must be a string");

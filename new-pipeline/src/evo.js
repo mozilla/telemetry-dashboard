@@ -353,9 +353,9 @@ $(function () {
             lines = gCurrentLinesMap[key];
             submissionLines = gCurrentSubmissionLinesMap[key];
           }
-          displayEvolutions(lines, submissionLines, $(
-              "input[name=build-time-toggle]:checked")
-            .val() !== "0", gCurrentKind === "enumerated" || gCurrentKind === "boolean");
+          displayEvolutions(lines, submissionLines,
+            $("input[name=build-time-toggle]:checked").val() !== "0",
+            gCurrentKind === "enumerated" || gCurrentKind === "boolean" || gCurrentKind == "categorical");
           saveStateToUrlAndCookie();
         });
 
@@ -422,7 +422,11 @@ function updateAggregates(callback) {
               realBuckets);
             multiselectSetOptions($("#aggregates"), newAggregates, [
               newAggregates[0][0]]);
-          } else if (realKind === "boolean" || realKind === "flag") {
+          } else if(realKind == "categorical") {
+            var newAggregates = realBuckets.map((r, i) => {return [i.toString(), r]})
+            multiselectSetOptions($("#aggregates"), newAggregates, [
+              newAggregates[0][0]]);
+          }  else if (realKind === "boolean" || realKind === "flag") {
             var newAggregates = getHumanReadableBucketOptions(realKind,
               realBuckets);
             multiselectSetOptions($("#aggregates"), newAggregates, [
@@ -620,9 +624,9 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
             gDefaultAggregates.forEach(function (entry) {
               aggregateSelector[entry[0]] = entry[2];
             });
+            var options = getHumanReadableBucketOptions(evolution.kind, evolution.buckets)
             evolution.buckets.forEach(function (start, bucketIndex) {
-              var option = getHumanReadableBucketOptions(evolution.kind, [
-                start])[0][0];
+              var option = options[bucketIndex][0];
               aggregateSelector[option] = function (evolution) {
                 return evolution.map(function (histogram) {
                   return 100 * histogram.values[bucketIndex] /
