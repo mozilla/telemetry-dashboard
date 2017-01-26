@@ -1144,6 +1144,13 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     }
   }
 
+  var num_labels = 20
+  var bottom = 30
+  if(histograms[0].kind == 'categorical'){
+    num_labels = starts.length
+    bottom = 150
+  }
+
   // Plot the data using MetricsGraphics
 
   if (histograms.length === 1) { // One histogram available, display as histogram
@@ -1157,6 +1164,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       top: 0,
+      bottom: bottom,
       left: 70,
       right: $(axes)
         .width() / (distributionSamples[0].length + 1),
@@ -1165,10 +1173,11 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       target: axes,
       x_label: histogram.description,
       y_label: "Percentage of Samples",
-      xax_ticks: 20,
+      xax_count: num_labels,
       y_extended_ticks: true,
       x_accessor: "value",
       y_accessor: "count",
+      reduceXTicks: false,
       xax_format: get_label,
       yax_format: function (value) {
         return value + "%";
@@ -1337,12 +1346,13 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       left: 70,
+      bottom: bottom,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
       x_label: histograms[0].description,
       y_label: "Percentage of Samples",
-      xax_ticks: 20,
+      xax_count: num_labels,
       y_extended_ticks: true,
       x_accessor: "value",
       y_accessor: "count",
@@ -1493,7 +1503,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         .attr("dx", "0.3em")
         .attr("dy", "0")
         .attr("text-anchor", "start");
-      if (histograms[0].kind == 'boolean' || histograms[0].kind == 'flag') {
+      if (histograms[0].kind == 'boolean' || histograms[0].kind == 'flag' || histograms[0].kind == 'categorical') {
         var jText = $(text);
         jText.attr('transform', 'rotate(20 ' + jText.attr('x') + ' ' + jText.attr('y') + ')');
       }
