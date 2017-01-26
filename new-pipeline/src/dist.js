@@ -1144,11 +1144,13 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     }
   }
 
-  var num_labels = 20
-  var bottom = 30
+  var num_labels = 20,
+      bottom = 30,
+      right = $(axes).width() / (distributionSamples[0].length + 1)
   if(histograms[0].kind == 'categorical'){
     num_labels = starts.length
     bottom = 150
+    right *= 1.5
   }
 
   // Plot the data using MetricsGraphics
@@ -1166,8 +1168,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       top: 0,
       bottom: bottom,
       left: 70,
-      right: $(axes)
-        .width() / (distributionSamples[0].length + 1),
+      right: right,
       max_y: maxPercentage + 2, // Add some extra space to account for the top label
       transition_on_update: false,
       target: axes,
@@ -1346,6 +1347,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
         .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
       height: 600,
       left: 70,
+      right: right,
       bottom: bottom,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
