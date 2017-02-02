@@ -148,10 +148,15 @@ xhr.addEventListener("load", function() {
       });
     });
 
-  // Find the most recent date that won't show the "you might not want to use this data" notice
-  // and start there.
-  let startDate = dataDates[0]
+  // Choose for the start date either the latest date that won't show you the
+  // "you might not want to use this" notice, or one day back from latest if
+  // there is no such date within the current aurora (because it updates last).
+  let startDate = dataDates[0];
   dataDates.some(dataDate => {
+    if (gMap[dataDate]["aurora"]["build_version"] != gMap[startDate]["aurora"]["build_version"]) {
+      startDate = dataDates[1]; // back up one day to allow for data delay
+      return true;
+    }
     let [minPercent, maxPercent] = getKuhPercents(dataDate);
     if (minPercent > PERCENT_NOTICE_THRESHOLD) {
       startDate = dataDate;
@@ -343,10 +348,6 @@ function updateCrashPlot(date, channel, crash) {
   Object.keys(gMap).forEach(activityDate => {
     if (activityDate > maxDate) {
       maxDate = activityDate;
-    }
-    let weekAgoData = gMap[getWeekAgo(activityDate)];
-    if (weekAgoData && gMap[activityDate][channel].usage_khours < weekAgoData[channel].usage_khours * THRESHOLD) {
-      return;
     }
     let datum = {
       date: new Date(activityDate),
