@@ -35,7 +35,7 @@ thead {
 }
 
 #crash-plot-container {
-  height: 25vh;
+  height: 50vh;
   width: 90vw;
   margin: 2vmin 0;
 }
@@ -81,7 +81,7 @@ thead {
 }
 
 #kuh-plot-container {
-  height: 25vh;
+  height: 40vh;
   width: 90vw;
   margin: 2vmin 0;
 }
