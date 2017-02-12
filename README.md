@@ -21,7 +21,7 @@ Using Telemetry.js
 
 Check out the documentation!
 
-* [Telemetry.js v2](https://github.com/mozilla/telemetry-dashboard/blob/master/v2/doc.md)
+* [Telemetry.js v2](https://github.com/mozilla/telemetry-dashboard/blob/gh-pages/v2/doc.md)
 
 Adding Telemetry Probes
 -----------------------
