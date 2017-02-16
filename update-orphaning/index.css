@@ -1,0 +1,146 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#error-message {
+  display: none;
+}
+#main-div {
+  position: relative;
+  width: 960px;
+  margin: 1em auto 4em;
+}
+#weekly-dropdown-div {
+  border-radius: 5px;
+  border: 2px solid #aaa;
+  background-color: #f0f0f2;
+  padding: 7px;
+  z-index: 10;
+  position: fixed;
+}
+#weekly-dropdown {
+  text-align: center;
+  width: 100%;
+}
+.p0_title,
+.p1_title,
+.p2_title,
+.p3_title {
+  font-weight: bold;
+}
+.section-header {
+  font-family: Arial;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 30px;
+}
+.section-sub-header {
+  font-family: Arial;
+  font-size: .9em;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 2px;
+}
+.section-hover {
+  margin-top: 8px;
+  font-family: Arial;
+  font-size: 14px;
+  text-align: center;
+  color: #999999;
+}
+select {
+  font-size: .9em;
+}
+table {
+  border-radius: 5px;
+  border: 2px solid #aaa;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+td {
+  vertical-align: top;
+  padding: 2px 3px;
+}
+tbody tr:nth-child(odd) {
+  background: #f0f0f2;
+}
+td:nth-child(1),
+td:nth-child(2) {
+  font-weight: bold;
+  text-align: right;
+}
+td:nth-child(3) {
+  width: 100%;
+}
+tr:nth-child(1) td {
+  padding-top: .3em;
+}
+tr:last-child td {
+  padding-bottom: .3em;
+}
+td:nth-child(1) {
+  padding-left: .3em;
+}
+td:nth-child(3) {
+  padding-right: .3em;
+}
+.axis text {
+  font-family: sans-serif;
+  font-size: .9em;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.x.axis path {
+  display: none;
+}
+.pie-chart {
+  height: 500px;
+  margin-top: 20px;
+}
+#out-of-date-desc {
+  margin-top: 20px;
+}
+#not-min-reqs-desc {
+  margin-bottom: 20px;
+}
+.bar-chart-details {
+  font-size: .9em;
+  height: 4em;
+  border-radius: 5px;
+  border: 2px solid #aaa;
+  background-color: #f0f0f2;
+  padding: .3em;
+  margin-bottom: 10px;
+}
+.bar-chart-desc {
+  height: 2em;
+}
+.bar-chart-link {
+  font-size: .9em;
+  height: 2em;
+  padding-top: 10px;
+  text-align: left;
+}
+.good-bar,
+.ok-bar,
+.bad-bar {
+  fill-opacity: .8;
+}
+.good-bar:hover,
+.ok-bar:hover,
+.bad-bar:hover {
+  fill-opacity: 1;
+}
+.good-bar {
+  fill: #92B600;
+}
+.ok-bar {
+  fill: #0065d1;
+}
+.bad-bar {
+  fill: #d10000;
+}
