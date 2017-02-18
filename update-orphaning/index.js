@@ -323,7 +323,7 @@ const STATE_FAILURE_CODE_STARTUP_BAR_CLASS_FN = function(d) {
   }};
 
 // The url where the JSON lives.
-const DATA_URL = "http://exchangecode.com/robert/work/";
+const DATA_URL = "https://analysis-output.telemetry.mozilla.org/app-update/data/out-of-date/";
 // The bar chart transition duration (there are only magic numbers for this value).
 const BC_TRANS_DUR = 800;
 const BC_MARGIN = {top: 20, right: 20, bottom: 30, left: 40};
@@ -349,6 +349,7 @@ const YAXIS = d3.svg.axis()
     .tickFormat(FORMAT_PERCENT);
 
 var reportFile, reportDate;
+var firstLoad = true;
 var startDate = new Date();
 // Set startDate to the first report date that data is available for this dashboard which is 10/23/2016.
 startDate.setDate(23);
@@ -622,6 +623,16 @@ function clearContent() {
   }
 }
 
+function getJSONValue(aData, aKey, aSubKey, aDefault) {
+  var result = aDefault;
+  try {
+    result = aData[aKey][aSubKey];
+  } catch (e) {
+    console.warn("Missing JSON data (Key: " + aKey + ", SubKey: " + aSubKey + ")");
+  }
+  return result;
+}
+
 function populateDashboard(event) {
   var errDiv = document.getElementById("error-message");
   errDiv.style.display = "none";
@@ -635,17 +646,8 @@ function populateDashboard(event) {
 
   clearContent();
 
-  function getJSONValue(aData, aKey, aSubKey, aDefault) {
-    var result = aDefault;
-    try {
-      result = aData[aKey][aSubKey];
-    } catch (e) {
-      console.warn("Missing JSON data (Key: " + aKey + ", SubKey: " + aSubKey + ")");
-    }
-    return result;
-  }
-
   $.getJSON(DATA_URL + dataFile, {}, function(data) {
+    firstLoad = false;
     // Display a d3pie chart.
     // @param aDivId: a div id to populate with the d3pie
     // @param aTitle: a title for the d3pie
@@ -1020,7 +1022,16 @@ function populateDashboard(event) {
     updateBarChart(stateFailureCodeStartupData, "state-failure-code-startup", STATE_FAILURE_CODE_STARTUP_BAR_CLASS_FN,
                    stateFailureCodeStartupOfConcern, stateFailureCodeGeneralDetails, null, false);
   }).fail(function() {
-    displayLoadErr();
+    if (firstLoad) {
+      // Try to load the previous week's data in case the current week's data
+      // isn't available yet.
+      firstLoad = false;
+      var dateDropdown = document.getElementById("weekly-dropdown");
+      dateDropdown.removeChild(dateDropdown.childNodes[0]);
+      populateDashboard();
+    } else {
+      displayLoadErr();
+    }
   });
 }
 
@@ -1029,19 +1040,17 @@ function displayLoadErr() {
   var errDiv = document.getElementById("error-message");
   errDiv.textContent = "";
   var errB = document.createElement("b");
-  errB.textContent = "No data files found at the following location!";
+  errB.textContent = "Expected data file was not found at the following location!";
   errDiv.appendChild(errB);
   var errBR = document.createElement("br");
   errDiv.appendChild(errBR);
-  var errText = document.createTextNode("(URL: ");
+  var errText = document.createTextNode("URL: ");
   errDiv.appendChild(errText);
   var errA = document.createElement("a");
-  errA.setAttribute("href", DATA_URL + reportFile);
+  errA.setAttribute("href", DATA_URL + document.getElementById("weekly-dropdown").value);
   errA.setAttribute("target", "_blank");
-  errA.textContent = DATA_URL + reportFile;
+  errA.textContent = DATA_URL + document.getElementById("weekly-dropdown").value;
   errDiv.appendChild(errA);
-  errText = document.createTextNode(")");
-  errDiv.appendChild(errText);
   errDiv.style.display = "block";
 }
 
@@ -1060,31 +1069,14 @@ function getMonthDateYear(aDate) {
   return [year.toString(), month.toString(), day.toString()];
 }
 
-function xhrHandler() {
-  if (this.status != 404) {
-    finishDataFileCheck();
-    populateDashboard();
-  } else {
-    reportDate.setDate(reportDate.getDate() - 7);
-    // Prevent an infinite loop
-    if (reportDate >= startDate) {
-      [year, month, day] = getMonthDateYear(reportDate);
-      reportFile = year + month + day + ".json";
-      urlExists(DATA_URL + reportFile);
-    } else {
-      displayLoadErr();
-    }
-  }
-}
-
-function urlExists(aURL) {
-  var xhr = new XMLHttpRequest();
-  xhr.onload = xhrHandler;
-  xhr.open("HEAD", aURL, true);
-  xhr.send();
-}
-
-function finishDataFileCheck() {
+function initDashboard() {
+  var today = new Date();
+  var dayIndex = (today.getDay()) % 7;
+  var dateOffset = (24 * 60 * 60 * 1000) * dayIndex;
+  reportDate = new Date();
+  reportDate.setTime(today.getTime() - dateOffset);
+  var [year, month, day] = getMonthDateYear(reportDate);
+  reportFile = year + month + day + ".json";
   var tempReportDate = reportDate;
   var dateDropdown = document.getElementById("weekly-dropdown");
   dateDropdown.textContent = "";
@@ -1096,10 +1088,7 @@ function finishDataFileCheck() {
     dateDropdown.appendChild(option);
     tempReportDate.setDate(tempReportDate.getDate() - 7);
   }
-  var currentlySelectedDataFile = reportFile;
-}
 
-function initDashboard() {
   const BC_PREFIXES = ["check-code", "check-ex-error", "download-code", "state-code-stage",
                        "state-failure-code-stage", "state-code-startup", "state-failure-code-startup"];
   var svg, bottomOffset;
@@ -1125,12 +1114,5 @@ function initDashboard() {
     sortCheckboxes[i].checked = true;
   }
 
-  var today = new Date();
-  var dayIndex = (today.getDay()) % 7;
-  var dateOffset = (24 * 60 * 60 * 1000) * dayIndex;
-  reportDate = new Date();
-  reportDate.setTime(today.getTime() - dateOffset);
-  var [year, month, day] = getMonthDateYear(reportDate);
-  reportFile = year + month + day + ".json";
-  urlExists(DATA_URL + reportFile);
+  populateDashboard();
 }
