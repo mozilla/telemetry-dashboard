@@ -21,10 +21,10 @@ body {
   text-align: center;
   width: 100%;
 }
-.p0_title,
-.p1_title,
-.p2_title,
-.p3_title {
+#summary-dist-chart svg > text:nth-of-type(1),
+#not-min-reqs-chart > svg > text:nth-of-type(1),
+#of-concern-chart > svg > text:nth-of-type(1),
+#version-dist-chart > svg > text:nth-of-type(1) {
   font-weight: bold;
 }
 .section-header {
