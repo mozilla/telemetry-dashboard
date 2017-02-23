@@ -1851,18 +1851,4 @@ function saveStateToUrlAndCookie() {
       .find("span")
       .text("");
   }
-
-  // Reload Disqus comments for the new page state
-  var identifier = "dist@" + gInitialPageState.measure;
-  if (identifier !== gPreviousDisqusIdentifier) {
-    gPreviousDisqusIdentifier = identifier;
-    DISQUS.reset({
-      reload: true,
-      config: function () {
-        this.page.identifier = identifier;
-        this.page.url = window.location.href;
-        console.log("reloading comments for page ID ", this.page.identifier)
-      }
-    });
-  }
 }
