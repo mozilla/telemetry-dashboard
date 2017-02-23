@@ -117,7 +117,7 @@ $(function () {
           .multiselect("select", gInitialPageState.processType);
       } else {
         $("#filter-process-type")
-          .multiselect("selectAll", false)
+          .multiselect("select", "*")
           .multiselect("updateButtonText");
       }
 
