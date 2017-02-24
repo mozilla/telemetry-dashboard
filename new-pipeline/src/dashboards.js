@@ -33,7 +33,7 @@ $(document)
         };
 
         // Horrible hacks to make some very specific functionality work
-        if (["aggregates", "filter-os"].indexOf($this.attr("id")) >= 0) {
+        if (["aggregates", "filter-os"].includes($this.attr("id"))) {
           // Add the Select All option to some of the selectors
           options.includeSelectAllOption = true;
         }
@@ -333,6 +333,13 @@ function getFilterSetsMapping(filters, comparisonName) {
       .length) { // Some options are not selected, so we need to explicitly filter
       if (filterName === "os") {
         selected = compressOSs();
+      } else if (filterName === "child") {
+        // process type is now single-select.
+        if (selector.val() === "*") {
+          // Any process
+          continue;
+        }
+        selected = [selected];
       }
       if (filterName !== comparisonName) { // avoid filtering by the comparison name
         filterMapping[filterName] = selected;
@@ -387,6 +394,15 @@ function getFilterSetsMapping(filters, comparisonName) {
       break;
     case "osVersion":
       comparisonValues = filters["os"].val() || [];
+      break;
+    case "child":
+      if (filters["child"].val() === "*") {
+        comparisonValues = Array.from(filters["child"][0].options)
+          .filter(opt => opt.value !== "*")
+          .map(opt => opt.value);
+      } else {
+        comparisonValues = filters["child"] ? [filters["child"].val()] : [];
+      }
       break;
     default:
       comparisonValues = filters[comparisonName].val() || [];
@@ -596,8 +612,8 @@ function getHumanReadableOptions(filterName, options) {
   } else if (filterName === "child") {
     return options.map(function (option) {
       return [option, processTypeNames.hasOwnProperty(option) ?
-        processTypeNames[option] : option];
-    });
+        processTypeNames[option] : option + " process"];
+    }).concat([["*", "any process"]]);
   } else if (filterName === "measure") {
     // Add a hidden version of the option with spaces instead of underscores, to be able to search with spaces
     return options.sort()

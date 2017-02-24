@@ -136,7 +136,7 @@ $(function () {
           .multiselect("select", gInitialPageState.processType);
       } else {
         $("#filter-process-type")
-          .multiselect("selectAll", false)
+          .multiselect("select", "*")
           .multiselect("updateButtonText");
       }
 
@@ -1230,19 +1230,5 @@ function saveStateToUrlAndCookie() {
     $("#advanced-settings-toggle")
       .find("span")
       .text("");
-  }
-
-  // Reload Disqus comments for the new page state
-  var identifier = "evo@" + gInitialPageState.measure;
-  if (identifier !== gPreviousDisqusIdentifier) {
-    gPreviousDisqusIdentifier = identifier;
-    DISQUS.reset({
-      reload: true,
-      config: function () {
-        this.page.identifier = identifier;
-        this.page.url = window.location.href;
-        console.log("reloading comments for page ID ", this.page.identifier)
-      }
-    });
   }
 }
