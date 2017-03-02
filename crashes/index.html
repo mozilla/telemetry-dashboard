@@ -228,15 +228,17 @@ function rebakeTable(aDate) {
           cell.dataset.channel = channel;
           cell.dataset.column = column.name;
 
-          if (crashRate < THRESHOLDS[channel][column.name].lo) {
-            cell.classList.add("below-thresholds");
-          } else if (crashRate < THRESHOLDS[channel][column.name].hi) {
-            cell.classList.add("between-thresholds");
-          } else {
-            cell.classList.add("above-thresholds");
-          }
+          if (column.name in THRESHOLDS[channel]) {
+            if (crashRate < THRESHOLDS[channel][column.name].lo) {
+              cell.classList.add("below-thresholds");
+            } else if (crashRate < THRESHOLDS[channel][column.name].hi) {
+              cell.classList.add("between-thresholds");
+            } else {
+              cell.classList.add("above-thresholds");
+            }
 
-          cell.setAttribute("title", `lo: ${THRESHOLDS[channel][column.name].lo} hi: ${THRESHOLDS[channel][column.name].hi}`);
+            cell.setAttribute("title", `lo: ${THRESHOLDS[channel][column.name].lo} hi: ${THRESHOLDS[channel][column.name].hi}`);
+          }
         }
       } else {
         cell.textContent = gMap[aDate][channel][column.name];
@@ -346,17 +348,21 @@ function updateCrashPlot(date, channel, crash) {
       maxY = datum.value;
     }
   });
-  let baselines = [
-    {value: THRESHOLDS[channel][crash].lo, label: ""},
-    {value: THRESHOLDS[channel][crash].hi, label: ""},
-  ];
+  let baselines = [];
+  maxY = undefined;
+  if (crash in THRESHOLDS[channel]) {
+    baselines = [
+      {value: THRESHOLDS[channel][crash].lo, label: ""},
+      {value: THRESHOLDS[channel][crash].hi, label: ""},
+    ];
 
-  // Don't let spikes kill our plot's scale. Cap it to a reasonable value.
-  let yThreshold = THRESHOLDS[channel][crash].hi * 2;
-  if (maxY > yThreshold) {
-    maxY = yThreshold;
-  } else {
-    maxY = undefined;
+    // Don't let spikes kill our plot's scale. Cap it to a reasonable value.
+    let yThreshold = THRESHOLDS[channel][crash].hi * 2;
+    if (maxY > yThreshold) {
+      maxY = yThreshold;
+    } else {
+      maxY = undefined;
+    }
   }
 
   MG.data_graphic({
