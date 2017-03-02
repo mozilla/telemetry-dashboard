@@ -349,7 +349,6 @@ function updateCrashPlot(date, channel, crash) {
     }
   });
   let baselines = [];
-  maxY = undefined;
   if (crash in THRESHOLDS[channel]) {
     baselines = [
       {value: THRESHOLDS[channel][crash].lo, label: ""},
