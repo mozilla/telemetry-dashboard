@@ -13,6 +13,7 @@
 <link href="style.css" rel="stylesheet" type="text/css">
 
 <script src="thresholds.js"></script>
+<script src="latest-versions.js"></script>
 </head>
 <body>
 <h1>Stability Dashboard</h1>
@@ -61,6 +62,9 @@ const PERCENT_NOTICE_THRESHOLD = 0.5;
 var gData = undefined;
 var gMap = {};
 
+// When populated, this is a map activity_date -> channel -> version
+var gLatestVersions = getLatestVersions();
+
 var formatHours = function(hours) {
   // values are kilo-usage-hours and range in value from, say,
   // 24.2 (7% of nightly) to
@@ -102,13 +106,25 @@ xhr.addEventListener("load", function() {
     if (!(row.activity_date in gMap)) {
       gMap[row.activity_date] = {};
     }
-    if (row.channel in gMap[row.activity_date]) {
-      if (gMap[row.activity_date][row.channel].usage_khours > row.usage_khours ) {
-        return;
-      }
+    // Ensure every date for every channel has a row.
+    if (!(row.channel in gMap[row.activity_date])) {
+      gMap[row.activity_date][row.channel] = row;
+      return;
     }
-    gMap[row.activity_date][row.channel] = row;
+    if (gLatestVersions) {
+      if (row.build_version == gLatestVersions[row.activity_date][row.channel]) {
+        gMap[row.activity_date][row.channel] = row;
+      }
+    } else {
+      if (row.channel in gMap[row.activity_date]) {
+        if (gMap[row.activity_date][row.channel].usage_khours > row.usage_khours ) {
+          return;
+        }
+      }
+      gMap[row.activity_date][row.channel] = row;
+    }
   });
+
   let dataDates = Object.keys(gMap).sort((a, b) => a < b ? 1 : (a > b ? -1 : 0));
 
   let dateSelect = document.getElementById("analyzed-date");
@@ -137,10 +153,15 @@ xhr.addEventListener("load", function() {
       });
     });
 
-  // Find the most recent date that won't show the "you might not want to use this data" notice
-  // and start there.
-  let startDate = dataDates[0]
+  // Choose for the start date either the latest date that won't show you the
+  // "you might not want to use this" notice, or one day back from latest if
+  // there is no such date within the current aurora (because it updates last).
+  let startDate = dataDates[0];
   dataDates.some(dataDate => {
+    if (gMap[dataDate]["aurora"]["build_version"] != gMap[startDate]["aurora"]["build_version"]) {
+      startDate = dataDates[1]; // back up one day to allow for data delay
+      return true;
+    }
     let [minPercent, maxPercent] = getKuhPercents(dataDate);
     if (minPercent > PERCENT_NOTICE_THRESHOLD) {
       startDate = dataDate;
@@ -334,10 +355,6 @@ function updateCrashPlot(date, channel, crash) {
   Object.keys(gMap).forEach(activityDate => {
     if (activityDate > maxDate) {
       maxDate = activityDate;
-    }
-    let weekAgoData = gMap[getWeekAgo(activityDate)];
-    if (weekAgoData && gMap[activityDate][channel].usage_khours < weekAgoData[channel].usage_khours * THRESHOLD) {
-      return;
     }
     let datum = {
       date: new Date(activityDate),
