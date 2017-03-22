@@ -28,6 +28,7 @@
       <td>Aurora</td>
       <td>Beta</td>
       <td>Release</td>
+      <td>Other</td>
     </tr>
     <tr>
       <td>Version</td>
@@ -56,7 +57,7 @@
 -->
 <script>
 
-const CHANNELS = ["nightly", "aurora", "beta", "release"];
+const CHANNELS = ["nightly", "aurora", "beta", "release", "Other"];
 const PERCENT_NOTICE_THRESHOLD = 0.5;
 
 var gData = undefined;
@@ -111,7 +112,7 @@ xhr.addEventListener("load", function() {
       gMap[row.activity_date][row.channel] = row;
       return;
     }
-    if (gLatestVersions) {
+    if (gLatestVersions && row.channel in gLatestVersions[row.activity_date]) {
       if (row.build_version == gLatestVersions[row.activity_date][row.channel]) {
         gMap[row.activity_date][row.channel] = row;
       }
