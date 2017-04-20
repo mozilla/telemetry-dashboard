@@ -149,16 +149,15 @@ $(document)
       .click(function () {
         var $this = $(this);
         $.ajax({
-          url: "https://api-ssl.bitly.com/shorten",
-          dataType: "jsonp",
+          url: "https://api-ssl.bitly.com/v3/shorten",
+          dataType: "json",
           data: {
             longUrl: window.location.href,
             access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
             format: "json"
           },
           success: function (response) {
-            var longUrl = Object.keys(response.results)[0];
-            var shortUrl = response.results[longUrl].shortUrl;
+            var shortUrl = response.data.url;
             if (shortUrl.indexOf(":") === 4) {
               shortUrl = "https" + shortUrl.substring(4);
             }
@@ -167,8 +166,10 @@ $(document)
               .show()
               .val(shortUrl)
               .focus();
-          }
+          },
+          async:false
         });
+        document.execCommand('copy');
       });
   });
 
