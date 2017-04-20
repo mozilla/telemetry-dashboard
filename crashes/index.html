@@ -28,7 +28,7 @@
       <td>Aurora</td>
       <td>Beta</td>
       <td>Release</td>
-      <td>Other</td>
+      <td>ESR</td>
     </tr>
     <tr>
       <td>Version</td>
@@ -57,7 +57,7 @@
 -->
 <script>
 
-const CHANNELS = ["nightly", "aurora", "beta", "release", "Other"];
+const CHANNELS = ["nightly", "aurora", "beta", "release", "esr"];
 const PERCENT_NOTICE_THRESHOLD = 0.5;
 
 var gData = undefined;
@@ -106,6 +106,10 @@ xhr.addEventListener("load", function() {
   gData.rows.forEach(row => {
     if (!(row.activity_date in gMap)) {
       gMap[row.activity_date] = {};
+    }
+    // Before 2017-04-19 ESR was in 'Other'
+    if (row.channel === 'Other' && row.activity_date < '2017-04-19') {
+      row.channel = 'esr';
     }
     // Ensure every date for every channel has a row.
     if (!(row.channel in gMap[row.activity_date])) {
