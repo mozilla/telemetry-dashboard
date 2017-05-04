@@ -25,7 +25,6 @@
     <tr>
       <td>Channel</td>
       <td>Nightly</td>
-      <td>Aurora</td>
       <td>Beta</td>
       <td>Release</td>
       <td>ESR</td>
@@ -57,7 +56,7 @@
 -->
 <script>
 
-const CHANNELS = ["nightly", "aurora", "beta", "release", "esr"];
+const CHANNELS = ["nightly", "beta", "release", "esr"];
 const PERCENT_NOTICE_THRESHOLD = 0.5;
 
 var gData = undefined;
@@ -160,10 +159,10 @@ xhr.addEventListener("load", function() {
 
   // Choose for the start date either the latest date that won't show you the
   // "you might not want to use this" notice, or one day back from latest if
-  // there is no such date within the current aurora (because it updates last).
+  // there is no such date within the current beta (because it updates last).
   let startDate = dataDates[0];
   dataDates.some(dataDate => {
-    if (gMap[dataDate]["aurora"]["build_version"] != gMap[startDate]["aurora"]["build_version"]) {
+    if (gMap[dataDate]["beta"]["build_version"] != gMap[startDate]["beta"]["build_version"]) {
       startDate = dataDates[1]; // back up one day to allow for data delay
       return true;
     }

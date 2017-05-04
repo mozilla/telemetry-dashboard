@@ -6,13 +6,13 @@
 (function(){
 function getLatestVersions(limit=10) {
 
-  const CHANNELS = ["release", "beta", "aurora", "nightly"];
+  const CHANNELS = ["release", "beta", "nightly"];
 
   // Days after release-channel release that other channels update
-  const CHANNEL_DELAYS = [0, 1, 3, 0];
+  const CHANNEL_DELAYS = [0, 1, 0];
 
 	// Suffixes to apply to versions in this channel to line them up with crash_aggregates
-  const CHANNEL_SUFFIXES = ['', '', 'a2', 'a1'];
+  const CHANNEL_SUFFIXES = ['', '', 'a1'];
 
   let addVersion = function (version, add) {
     if (!add) {
