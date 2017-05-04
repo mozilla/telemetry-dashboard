@@ -229,7 +229,7 @@ function loadStateFromUrlAndCookie() {
     var aggregates = pageState.aggregates.split("!")
       .filter(function (v) {
         return ["5th-percentile", "25th-percentile", "median",
-            "75th-percentile", "95th-percentile", "mean"].indexOf(v) >= 0 ||
+            "75th-percentile", "95th-percentile", "mean", "submissions"].indexOf(v) >= 0 ||
           v.startsWith("bucket-");
       });
     if (aggregates.length > 0) {
