@@ -22,13 +22,6 @@ const THRESHOLDS = {
     [CRASH_NAMES.MCS]: {lo: 7.90, hi: 12.82},
     [CRASH_NAMES.P]: {lo: 1.35, hi: 3.10},
   },
-  "aurora": {
-    [CRASH_NAMES.M]: {lo: 1.71, hi: 3.20},
-    [CRASH_NAMES.MC]: {lo: 13.76, hi: 17.38},
-    [CRASH_NAMES.CS]: {lo: 1.3, hi: 1.45},
-    [CRASH_NAMES.MCS]: {lo: 5.03, hi: 6.65},
-    [CRASH_NAMES.P]: {lo: 2.68, hi: 6.06},
-  },
   "beta": {
     [CRASH_NAMES.M]: {lo: 3.97, hi: 6.65},
     [CRASH_NAMES.MC]: {lo: 8.21, hi: 12.25},
