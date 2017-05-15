@@ -1,6 +1,7 @@
 $(document)
   .ready(function () {
     // Multiselect boxes
+   // comment for testing
     $('.multiselect')
       .each(function (i, select) {
         var $this = $(this);
