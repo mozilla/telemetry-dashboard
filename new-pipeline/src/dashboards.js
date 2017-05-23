@@ -669,10 +669,10 @@ function getHumanReadableOptions(filterName, options) {
           (version <= latestNightlyVersion - 1 ? goodOptions : badOptions)
           .push(option);
         } else if (parts[0] === "beta") {
-          (version <= latestNightlyVersion - 2 ? goodOptions : badOptions)
+          (version <= latestNightlyVersion - 1 ? goodOptions : badOptions)
           .push(option);
         } else if (parts[0] === "release") {
-          (version <= latestNightlyVersion - 3 ? goodOptions : badOptions)
+          (version <= latestNightlyVersion - 2 ? goodOptions : badOptions)
           .push(option);
         } else {
           badOptions.push(option);
