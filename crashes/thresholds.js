@@ -17,7 +17,7 @@ const CRASH_NAMES = {
 const THRESHOLDS = {
   "nightly": {
     [CRASH_NAMES.M]: {lo: 2.59, hi: 5.04},
-    [CRASH_NAMES.MC]: {lo: 18.47, hi: 23.56},
+    [CRASH_NAMES.MC]: {lo: 27.2, hi: 31.8},
     [CRASH_NAMES.CS]: {lo: 3.0, hi: 3.75},
     [CRASH_NAMES.MCS]: {lo: 7.90, hi: 12.82},
     [CRASH_NAMES.P]: {lo: 1.35, hi: 3.10},
