@@ -124,3 +124,14 @@
   text-align: center;
   margin: 0.1em;
 }
+
+/* Error message styles */
+.error-msg {
+  border: 2px solid #C13832; /* Mozilla Red */
+  background-color: #D7D3C8; /* Mozilla Sand */
+  padding: 1em;
+  color: #4D4E53; /* Mozilla charcoal */
+}
+.error-msg:empty {
+  display: none;
+}
