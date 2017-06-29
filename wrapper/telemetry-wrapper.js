@@ -350,6 +350,7 @@ window.TelemetryWrapper.go = function (params, element) {
     var [kind, desc] = [evolutions[0].kind, evolutions[0].description];
     var valueses;
     var yLabel;
+    var percentileLabel = ' - medians'; // i18n?
     var valuesArePercent = false;
     if (kind == 'enumerated' || kind == 'boolean' || kind == 'flag') {
       const BUCKET_INDEX_FOR_ENUMERATED = 0;
@@ -363,8 +364,11 @@ window.TelemetryWrapper.go = function (params, element) {
       ));
       valuesArePercent = true;
     } else {
-      yLabel = evolutions[0].description + ' - medians'; // i18n?
-      valueses = evolutions.map(evo => evo.percentiles(50));
+      if (params.percentile) {
+        percentileLabel = ' - ' + params.percentile + 'th percentile'; // i18n?
+      }
+      yLabel = evolutions[0].description + percentileLabel;
+      valueses = evolutions.map(evo => evo.percentiles(params.percentile || 50));
     }
     var datas = dateses.map((dates, i) => dates.map((date, j) => {
       return {
