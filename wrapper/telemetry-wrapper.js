@@ -364,11 +364,11 @@ window.TelemetryWrapper.go = function (params, element) {
       ));
       valuesArePercent = true;
     } else {
-      if (params.percentile) {
+      if (params.percentile != 50) {
         percentileLabel = ' - ' + params.percentile + 'th percentile'; // i18n?
       }
       yLabel = evolutions[0].description + percentileLabel;
-      valueses = evolutions.map(evo => evo.percentiles(params.percentile || 50));
+      valueses = evolutions.map(evo => evo.percentiles(params.percentile));
     }
     var datas = dateses.map((dates, i) => dates.map((date, j) => {
       return {
@@ -800,6 +800,7 @@ window.TelemetryWrapper.go = function (params, element) {
     params.sensibleCompare = params.sensibleCompare != 'false';
     params.keyLimit = window.parseInt(params.keyLimit) || 4;
     params.evoVersions = params.evoVersions; // default undefined
+    params.percentile = params.percentile || 50;
   }
 
 }
