@@ -43,13 +43,13 @@
 </div>
 <p>Cells are of the form <em>Rate (X%)</em> where:</p>
 <dt><em>Rate</em></dt>
-<dd>- (for crashes) is the number of that type of crash divided by the usage_khours</dd>
-<dd>- (for usage_khours) is just the number of usage_khours<dd>
+<dd>- (for crashes) is the number of that type of crash divided by the kusage_hours</dd>
+<dd>- (for kusage_hours) is just the number of kusage_hours<dd>
 <dt><em>(X%)</em></dt>
 <dd>- (for crashes) is the percent that this week's number (not the rate) of crashes is vs. last week's number (not rate) of that crash</dd>
-<dd>- (for usage_khours) is the percent that this week's number is of last week's usage_khours</dd>
-<p>Since crash rates are <em>#crashes / usage_khours</em> a low <em>(X%)</em> in <em>usage_khours</em> can result in an inflation of crash rates.</p>
-<p>To estimate how much of an inflation, take a relatively-stable crash type (like <em>P</em>) and compare its <em>(X%)</em> to <em>usage_khours</em>'.</p>
+<dd>- (for kusage_hours) is the percent that this week's number is of last week's kusage_hours</dd>
+<p>Since crash rates are <em>#crashes / kusage_hours</em> a low <em>(X%)</em> in <em>kusage_hours</em> can result in an inflation of crash rates.</p>
+<p>To estimate how much of an inflation, take a relatively-stable crash type (like <em>P</em>) and compare its <em>(X%)</em> to <em>kusage_hours</em>'.</p>
 <p>As of yet, no model has been developed to do this properly, so YMMV.</p>
 <!-- Useful, but only to mozilla employees
 <hr/>
@@ -304,7 +304,7 @@ function updateNotice(aDate) {
 
   if (minPercent < PERCENT_NOTICE_THRESHOLD) {
     noticeEl.textContent = '' +
-      `The usage_khours for ${aDate} are low ` +
+      `The kusage_hours for ${aDate} are low ` +
       `(${Number(minPercent * 100).toFixed(1)}%~${Number(maxPercent * 100).toFixed(1)}%) ` +
       `so you may not want to use these figures.`;
   }
