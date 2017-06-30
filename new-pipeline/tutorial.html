@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
     <title>Telemetry Dashboard Documentation</title>
-    
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style/jquery.tocify.css">
     <style>
-    #tocify-header0 > .tocify-item { font-weight: bold; } /* bold the top-level entries */
+       #tocify-header0 > .tocify-item {
+        font-weight: bold;
+       }
+       /* bold the top-level entries */
     </style>
 </head>
+
 <body>
     <form id="histogram-filters" class="navbar-form inline" style="position: fixed; right: 1em; top: 1em; z-index: 1">
         <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
@@ -52,7 +55,6 @@
                     <dt>Submission Date</dt>
                     <dd>The date at which a given submission was sent. This is different from the BuildID - a build made on April 5, being used on May 15, submits with a buildID date of April 5, but submits with a submission date of May 15.</dd>
                 </dl>
-                
                 <h2 id="HistogramDashboard">Histogram Dashboard</h2>
                 <p>The <a href="./dist.html">histogram dashboard</a> is designed for viewing distributions of measures.</p>
                 <p>Example use cases include:</p>
@@ -62,7 +64,7 @@
                     <li>Counting the number of submissions that have a certain range of measure values.</li>
                 </ul>
                 The dashboard has four sections:
-                <img src="img/histogram-sections.png" class="img-responsive">
+                <img src="img/histogram-sections.png" class="img-responsive" alt="histogram-sections.png">
                 <ol>
                     <li>
                         The <u>filters bar</u> has multiple selectors that control which submissions to include in the histogram. In the screenshot above, the filters bar specifies that we want to see the distribution of:
@@ -100,7 +102,6 @@
                         </ul>
                     </li>
                 </ol>
-                
                 <h2 id="EvolutionDashboard">Evolution Dashboard</h2>
                 <p>The <a href="./evo.html">evolution dashboard</a> is designed for viewing the evolution of aggregate values for measures over time.</p>
                 <p>Example use cases include:</p>
@@ -110,7 +111,7 @@
                     <li>Checking the number of Telemetry-enabled applications making submissions.</li>
                 </ul>
                 The dashboard has five sections:
-                <img src="img/evolution-sections.png" class="img-responsive">
+                <img src="img/evolution-sections.png" class="img-responsive" alt="img/evolution-sections.png">
                 <ol>
                     <li>
                         The <u>filters bar</u> has multiple selectors that control which evolutions to show, and how submissions are filtered for use in evolutions. In the screenshot above, the filters bar specifies that we want to see:
@@ -158,14 +159,18 @@
             </div>
         </div>
     </div>
-
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
     <script src="lib/jquery.tocify.min.js"></script>
     <script>
-    $(function() { $("#toc").tocify({theme: "bootstrap3"}); });
+    $(function() {
+        $("#toc").tocify({
+            theme: "bootstrap3"
+        });
+    });
     </script>
 </body>
+
 </html>

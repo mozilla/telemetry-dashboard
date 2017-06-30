@@ -1,101 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<title>Firefox Application Update Out Of Date Dashboard</title>
-<meta charset="utf-8">
-<link rel="stylesheet" title="Default Stylesheet" type="text/css" href="index.css">
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-<script type="text/javascript" src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://telemetry.mozilla.org/new-pipeline/lib/d3pie.min.js"></script>
-<script type="text/javascript" src="index.js" charset="utf-8"></script>
+    <title>Firefox Application Update Out Of Date Dashboard</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" title="Default Stylesheet" type="text/css" href="index.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://telemetry.mozilla.org/new-pipeline/lib/d3pie.min.js"></script>
+    <script type="text/javascript" src="index.js" charset="utf-8"></script>
 </head>
+
 <body onload="initDashboard()">
-<div id="weekly-dropdown-div">
-Report Week:&nbsp;&nbsp;<br/>
-<select id="weekly-dropdown" onchange="populateDashboard()"><option>--/--/----</option></select>
-</div>
-<div id="main-div">
-<h1>Firefox Application Update Out Of Date Dashboard</h1>
-<div><p>The data below is from the Telemetry longitudinal data source which contains approximately
-1% of all Telemetry clients for each Firefox version. The period for the report is the 7 days prior
-to the Report Week date. The old dashboard can be found <a href="index-old.html">here</a>.</p>
-</div>
-<div id="error-message"></div>
-<div id="summary-dist-chart" class="pie-chart"></div>
-<table id="summary-dist-details"></table>
-<div id="out-of-date-desc"></div>
-<div id="not-min-reqs-chart" class="pie-chart"></div>
-<div id="not-min-reqs-desc">Clients are considered <b>out of date, potentially of concern</b> when
-they are out of date and haven't met the minimum requirements for there to be an expectation that
-the client should have updated. Since each client can match multuple criteria the order that they
-are applied affects the percentage of clients that match each criteria. The order that the
-criteria are applied is the same order as they are listed below.</div>
-<table id="not-min-reqs-details"></table>
-<div id="of-concern-chart" class="pie-chart"></div>
-<table id="of-concern-details"></table>
-<div id="version-dist-chart" class="pie-chart"></div>
-<div class="section-header">Out of date, of concern client last update check code (check phase)</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="check-code-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="check-code-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="check-code-details" class="bar-chart-desc"></div>
-<div id="check-code-link" class="bar-chart-link"></div>
-</div>
-<div class="section-header">Out of date, of concern client last update check extended error code (check phase)</div>
-<div class="section-sub-header">Breakdown of codes 22 and 23 from the previous chart</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="check-ex-error-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="check-ex-error-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="check-ex-error-details" class="bar-chart-desc"></div>
-<div id="check-ex-error-link" class="bar-chart-link"></div>
-</div>
-<div class="section-header">Out of date, of concern client last update download code (download phase)</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="download-code-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="download-code-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="download-code-details" class="bar-chart-desc"></div>
-<div id="download-code-link" class="bar-chart-link"></div>
-</div>
-<div class="section-header">Out of date, of concern client update staging state code (stage phase)</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="state-code-stage-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="state-code-stage-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="state-code-stage-details" class="bar-chart-desc"></div>
-<div id="state-code-stage-link" class="bar-chart-link"></div>
-</div>
-<div class="section-header">Out of date, of concern client update staging failure code (stage phase)</div>
-<div class="section-sub-header">Breakdown of code 12 from the previous chart</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="state-failure-code-stage-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="state-failure-code-stage-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="state-failure-code-stage-details" class="bar-chart-desc"></div>
-<div id="state-failure-code-stage-link" class="bar-chart-link"></div>
-</div>
-<div class="section-header">Out of date, of concern client update startup state code (apply phase)</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="state-code-startup-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="state-code-startup-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="state-code-startup-details" class="bar-chart-desc"></div>
-<div id="state-code-startup-link" class="bar-chart-link"></div>
-</div>
-<div class="section-header">Out of date, of concern client update startup failure code (apply phase)</div>
-<div class="section-sub-header">Breakdown of code 12 from the previous chart</div>
-<div class="section-hover">(hover over a bar for details below the chart)</div>
-<div><label><input id="state-failure-code-startup-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
-<div><svg id="state-failure-code-startup-chart"></svg></div>
-<div class="bar-chart-details">
-<div id="state-failure-code-startup-details" class="bar-chart-desc"></div>
-<div id="state-failure-code-startup-link" class="bar-chart-link"></div>
-</div><br/>
-<hr>
-This dashboard is maintained by <a href="mailto:rstrong@mozilla.com">:rstrong</a>.<br/>
-The Spark Notebook for the weekly reports is scheduled to run every Sunday and can be found <a href="https://github.com/mozilla/mozilla-reports/tree/master/projects/app_update_out_of_date.kp/orig_src/app_update_out_of_date.ipynb">here</a>.
-</div>
+    <div id="weekly-dropdown-div">
+        Report Week:&nbsp;&nbsp;
+        <br/>
+        <select id="weekly-dropdown" onchange="populateDashboard()">
+            <option>--/--/----</option>
+        </select>
+    </div>
+    <div id="main-div">
+        <h1>Firefox Application Update Out Of Date Dashboard</h1>
+        <div>
+            <p>The data below is from the Telemetry longitudinal data source which contains approximately 1% of all Telemetry clients for each Firefox version. The period for the report is the 7 days prior to the Report Week date. The old dashboard can be found <a href="index-old.html">here</a>.</p>
+        </div>
+        <div id="error-message"></div>
+        <div id="summary-dist-chart" class="pie-chart"></div>
+        <table id="summary-dist-details"></table>
+        <div id="out-of-date-desc"></div>
+        <div id="not-min-reqs-chart" class="pie-chart"></div>
+        <div id="not-min-reqs-desc">Clients are considered <b>out of date, potentially of concern</b> when they are out of date and haven't met the minimum requirements for there to be an expectation that the client should have updated. Since each client can match multuple criteria the order that they are applied affects the percentage of clients that match each criteria. The order that the criteria are applied is the same order as they are listed below.</div>
+        <table id="not-min-reqs-details"></table>
+        <div id="of-concern-chart" class="pie-chart"></div>
+        <table id="of-concern-details"></table>
+        <div id="version-dist-chart" class="pie-chart"></div>
+        <div class="section-header">Out of date, of concern client last update check code (check phase)</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="check-code-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="check-code-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="check-code-details" class="bar-chart-desc"></div>
+            <div id="check-code-link" class="bar-chart-link"></div>
+        </div>
+        <div class="section-header">Out of date, of concern client last update check extended error code (check phase)</div>
+        <div class="section-sub-header">Breakdown of codes 22 and 23 from the previous chart</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="check-ex-error-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="check-ex-error-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="check-ex-error-details" class="bar-chart-desc"></div>
+            <div id="check-ex-error-link" class="bar-chart-link"></div>
+        </div>
+        <div class="section-header">Out of date, of concern client last update download code (download phase)</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="download-code-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="download-code-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="download-code-details" class="bar-chart-desc"></div>
+            <div id="download-code-link" class="bar-chart-link"></div>
+        </div>
+        <div class="section-header">Out of date, of concern client update staging state code (stage phase)</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="state-code-stage-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="state-code-stage-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="state-code-stage-details" class="bar-chart-desc"></div>
+            <div id="state-code-stage-link" class="bar-chart-link"></div>
+        </div>
+        <div class="section-header">Out of date, of concern client update staging failure code (stage phase)</div>
+        <div class="section-sub-header">Breakdown of code 12 from the previous chart</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="state-failure-code-stage-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="state-failure-code-stage-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="state-failure-code-stage-details" class="bar-chart-desc"></div>
+            <div id="state-failure-code-stage-link" class="bar-chart-link"></div>
+        </div>
+        <div class="section-header">Out of date, of concern client update startup state code (apply phase)</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="state-code-startup-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="state-code-startup-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="state-code-startup-details" class="bar-chart-desc"></div>
+            <div id="state-code-startup-link" class="bar-chart-link"></div>
+        </div>
+        <div class="section-header">Out of date, of concern client update startup failure code (apply phase)</div>
+        <div class="section-sub-header">Breakdown of code 12 from the previous chart</div>
+        <div class="section-hover">(hover over a bar for details below the chart)</div>
+        <div>
+            <label>
+                <input id="state-failure-code-startup-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label>
+        </div>
+        <div>
+            <svg id="state-failure-code-startup-chart"></svg>
+        </div>
+        <div class="bar-chart-details">
+            <div id="state-failure-code-startup-details" class="bar-chart-desc"></div>
+            <div id="state-failure-code-startup-link" class="bar-chart-link"></div>
+        </div>
+        <br/>
+        <hr> This dashboard is maintained by <a href="mailto:rstrong@mozilla.com">:rstrong</a>.
+        <br/> The Spark Notebook for the weekly reports is scheduled to run every Sunday and can be found <a href="https://github.com/mozilla/mozilla-reports/tree/master/projects/app_update_out_of_date.kp/orig_src/app_update_out_of_date.ipynb">here</a>.
+    </div>
 </body>
+
 </html>

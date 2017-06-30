@@ -1,70 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Firefox Add-ons recommender</title>
-
     <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/select2.min.css" rel="stylesheet"/>
-    <link href="css/select2-bootstrap.css" rel="stylesheet"/>
-  </head>
-  <body>
+    <link href="css/select2.min.css" rel="stylesheet" />
+    <link href="css/select2-bootstrap.css" rel="stylesheet" />
+</head>
+
+<body>
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/select2.full.min.js"></script>
     <script src="js/math.min.js"></script>
     <script src="js/main.js"></script>
-
     <div class="container">
-      <div class="page-header">
-        <h1>Firefox Add-ons recommender</h1>
-      </div>
-      <div class="row">
-
-        <div class="col-md-12">
-          <p class="lead text-justify">
-            This is a simple proof concept of a recommendation engine for Firefox, see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1284280">Bug 1284280</a>.
-          </p>
+        <div class="page-header">
+            <h1>Firefox Add-ons recommender</h1>
         </div>
-        <div class="col-md-6 col-md-offset-3">
-          <div class="form-group">
-            <div class="input-group select2-bootstrap-append">
-              <input class="form-control select2" multiple id="query"></input>
-              <span class="input-group-btn">
-                <button class="btn btn-default" type="button" data-select2-open="multi-append" id="search">
-                  <span class="glyphicon glyphicon-search"></span>
-                </button>
-              </span>
+        <div class="row">
+            <div class="col-md-12">
+                <p class="lead text-justify">
+                    This is a simple proof concept of a recommendation engine for Firefox, see <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1284280">Bug 1284280</a>.
+                </p>
             </div>
-          </div>
+            <div class="col-md-6 col-md-offset-3">
+                <div class="form-group">
+                    <div class="input-group select2-bootstrap-append">
+                        <input class="form-control select2" multiple id="query" />
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button" data-select2-open="multi-append" id="search">
+                              <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class"row">
-        <div class="col-md-6 col-md-offset-3">
-          <table class="table table-striped" id="recommendations">
-            <tbody>
-            </tbody>
-          </table>
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <table class="table table-striped" id="recommendations">
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <p class="lead text-justify">
-            The model is trained with the IDs of the add-ons reported by the users. Add-ons which are not publicly reported by the <a href="https://addons.mozilla.org">addons.mozilla.org</a> web API are excluded from the model.
-          </p>
-          <p class="lead text-justify">
-            <strong>Know issues and future work</strong>
-            <ul class="lead">
-              <li>Hitting backspace on multi-select converts element to text - <a href="https://github.com/select2/select2/issues/3354">Link</a>.</li>
-              <li>Improve the order of the suggested addon names for the auto-completion.</li>
-              <li>Show the add-ons names in the user locale, if available. Otherwise fall back to the default locale.</li>
-            </ul>
-          </p>
+        <div class="row">
+            <div class="col-md-12">
+                <p class="lead text-justify">
+                    The model is trained with the IDs of the add-ons reported by the users. Add-ons which are not publicly reported by the <a href="https://addons.mozilla.org">addons.mozilla.org</a> web API are excluded from the model.
+                </p>
+                <p class="lead text-justify">
+                    <strong>Know issues and future work</strong>
+                    <ul class="lead">
+                        <li>Hitting backspace on multi-select converts element to text - <a href="https://github.com/select2/select2/issues/3354">Link</a>.</li>
+                        <li>Improve the order of the suggested addon names for the auto-completion.</li>
+                        <li>Show the add-ons names in the user locale, if available. Otherwise fall back to the default locale.</li>
+                    </ul>
+                </p>
+            </div>
         </div>
-      </div>
     </div>
-  </body>
+</body>
+
 </html>
