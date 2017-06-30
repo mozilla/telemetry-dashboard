@@ -1,137 +1,137 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="en">
 
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<head>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<meta charset="utf-8">
-
-<title>Telemetry Dashboard Generator</title>
-<link rel="stylesheet" href="style.css"/>
-
-<script src="https://telemetry.mozilla.org/v2/telemetry.js"></script>
-<script src="generator.js"></script>
+    <meta charset="utf-8">
+    <title>Telemetry Dashboard Generator</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://telemetry.mozilla.org/v2/telemetry.js"></script>
+    <script src="generator.js"></script>
 </head>
+
 <body>
-<header>
-  <h3>Welcome to the Telemetry Dashboard Generator!</h3>
-  <p>To construct your dashboard: add individually-tailored histogram and evolution plots one at a time, then generate your dashboard.</p>
-  <p>This will generate a codepen populated with your dashboard for instant preview and customization. Be sure to click 'Save' on it to show it to others or export for self-hosting.</p>
-  <p>For an Introduction, check the <a href="https://chuttenblog.wordpress.com/to-order-telemetry-dashboards-dashboard-generator/">Dashboard Generator Introduction Blog Post</a></p>
-</header>
-<main>
-  <fieldset>
-    <label>Channel:
-      <select id="channel">
-        <!-- populated by script on load -->
-      </select>
-    </label>
-    <label>Version:
-      <select id="version">
-        <!-- populated by script on #channel.onchange -->
-      </select>
-    </label>
-    <label>Metric:
-      <input id="metric" list="metrics"/>
-      <datalist id="metrics">
-        <!-- populated by script on #version.onchange -->
-      </datalist>
-    </label>
-  </fieldset>
-  <fieldset>
-    <!-- Filters are a pain to do using form controls
+    <header>
+        <h3>Welcome to the Telemetry Dashboard Generator!</h3>
+        <p>To construct your dashboard: add individually-tailored histogram and evolution plots one at a time, then generate your dashboard.</p>
+        <p>This will generate a codepen populated with your dashboard for instant preview and customization. Be sure to click 'Save' on it to show it to others or export for self-hosting.</p>
+        <p>For an Introduction, check the <a href="https://chuttenblog.wordpress.com/to-order-telemetry-dashboards-dashboard-generator/">Dashboard Generator Introduction Blog Post</a></p>
+    </header>
+    <main>
+        <fieldset>
+            <label>Channel:
+                <select id="channel">
+                    <!-- populated by script on load -->
+                </select>
+            </label>
+            <label>Version:
+                <select id="version">
+                    <!-- populated by script on #channel.onchange -->
+                </select>
+            </label>
+            <label>Metric:
+                <input id="metric" list="metrics" />
+                <datalist id="metrics">
+                    <!-- populated by script on #version.onchange -->
+                </datalist>
+            </label>
+        </fieldset>
+        <fieldset>
+            <!-- Filters are a pain to do using form controls
        - so provide only a few common ones -->
-    <div class="tab-group">
-      <input autocomplete="off" id="show-filters" type="checkbox"/>
-      <label for="show-filters" class="tab-label">Filters</label>
-      <div class="tab filter-tab">
-        <label>Application:
-          <select id="application">
-            <!-- populated on #version.onchange -->
-          </select>
-          <div class="help">Include only samples from the selected application.</div>
-        </label>
-        <label>OS:
-          <select id="os">
-            <!-- populated on #version.onchange -->
-          </select>
-          <div class="help">Include only samples from the selected OS family.</div>
-        </label>
-        <label>E10s Setting:
-          <select id="e10s">
-            <!-- populated on load -->
-          </select>
-          <div class="help">Include only samples that come from clients or processes that have appropriate E10s settings</div>
-        </label>
-      </div>
-    </div>
-  </fieldset>
-  <fieldset>
-    <div class="tab-group">
-      <input autocomplete="off" id="hist-radio" type="radio" name="hist-evo" checked/>
-      <label for="hist-radio" class="tab-label">Histogram</label>
-      <input autocomplete="off" id="evo-radio" type="radio" name="hist-evo"/>
-      <label for="evo-radio" class="tab-label">Evolution</label>
-      <div class="tab hist-tab">
-        <label>Trim:
-          <input type="checkbox" id="trim" checked/>
-          <div class="help">Remove buckets that contain &lt; 0.0001% of the population on both sides of the histogram. Makes for a more condensed view.</div>
-        </label>
-        <!-- you'd think compare'd be just as much of a pain as filter
+            <div class="tab-group">
+                <input autocomplete="off" id="show-filters" type="checkbox" />
+                <label for="show-filters" class="tab-label">Filters</label>
+                <div class="tab filter-tab">
+                    <label>Application:
+                        <select id="application">
+                            <!-- populated on #version.onchange -->
+                        </select>
+                        <span class="help">Include only samples from the selected application.</span>
+                    </label>
+                    <label>OS:
+                        <select id="os">
+                            <!-- populated on #version.onchange -->
+                        </select>
+                        <span class="help">Include only samples from the selected OS family.</span>
+                    </label>
+                    <label>E10s Setting:
+                        <select id="e10s">
+                            <!-- populated on load -->
+                        </select>
+                        <span class="help">Include only samples that come from clients or processes that have appropriate E10s settings</span>
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset>
+            <div class="tab-group">
+                <input autocomplete="off" id="hist-radio" type="radio" name="hist-evo" checked/>
+                <label for="hist-radio" class="tab-label">Histogram</label>
+                <input autocomplete="off" id="evo-radio" type="radio" name="hist-evo" />
+                <label for="evo-radio" class="tab-label">Evolution</label>
+                <div class="tab hist-tab">
+                    <label>Trim:
+                        <input type="checkbox" id="trim" checked/>
+                        <span class="help">Remove buckets that contain &lt; 0.0001% of the population on both sides of the histogram. Makes for a more condensed view.</span>
+                    </label>
+                    <!-- you'd think compare'd be just as much of a pain as filter
            - but we only need to present the filter keys, not the values, so meh -->
-        <label>Compare:
-          <select id="compare"> <!-- remember to disable if evoVersions is > 0 -->
-            <!-- populated by script on #version.onchange -->
-          </select>
-          <div class="help">Split the histogram population by their value of this filter, and plot them comparatively.</div>
-        </label>
-        <label>Sensible Compare:
-          <input type="checkbox" id="sensible-compare" checked/>
-          <div class="help">Some Compare choices have many usually-irrelevant values. Use this to limit them to the most relevant.</div>
-        </label>
-      </div>
-      <div class="tab evo-tab">
-        <label>Use Submission Date:
-          <input type="checkbox" id="use-submission-date"/>
-          <div class="help">Instead of showing the values based on the built date of the software that submitted the ping, use the date the ping was submitted.</div>
-        </label>
-        <label>Versions for Evolution:
-          <input type="number" id="evo-versions" value="1"/>
-          <div class="help">Over how many version back from the selected version would you like to see the values evolve?</div>
-        </label>
-      </div>
-      <label>Sanitize:
-        <input type="checkbox" id="sanitize" checked/>
-        <div class="help">Remove invalid and low-population values from the results.</div>
-      </label>
-    </div>
-  </fieldset>
-  <button id="add">Add to Dashboard</button>
-  <table class="dashboard-plots" cellspacing="0">
-    <thead>
-      <tr>
-        <th>Channel</th>
-        <th>Version</th>
-        <th>Metric</th>
-        <th>Use Submission Date</th>
-        <th>Sanitize</th>
-        <th>Trim</th>
-        <th>Compare</th>
-        <th>Sensible Compare</th>
-        <th>Versions for Evolution</th>
-        <th>Filters</th>
-        <th>-</th>
-      </tr>
-    </thead>
-    <tbody class="dashboard-plots-body">
-    </tbody>
-  </table>
-  <form action="https://codepen.io/pen/define" method="POST" target="_blank">
-    <input autocomplete="off" id="post-data" type="hidden" name="data"/>
-    <button autocomplete="off" id="generate" type="submit" disabled>Generate Dashboard</button>
-  </form>
-</main>
+                    <label>Compare:
+                        <select id="compare">
+                            <!-- remember to disable if evoVersions is > 0 -->
+                            <!-- populated by script on #version.onchange -->
+                        </select>
+                        <span class="help">Split the histogram population by their value of this filter, and plot them comparatively.</span>
+                    </label>
+                    <label>Sensible Compare:
+                        <input type="checkbox" id="sensible-compare" checked/>
+                        <span class="help">Some Compare choices have many usually-irrelevant values. Use this to limit them to the most relevant.</span>
+                    </label>
+                </div>
+                <div class="tab evo-tab">
+                    <label>Use Submission Date:
+                        <input type="checkbox" id="use-submission-date" />
+                        <span class="help">Instead of showing the values based on the built date of the software that submitted the ping, use the date the ping was submitted.</span>
+                    </label>
+                    <label>Versions for Evolution:
+                        <input type="number" id="evo-versions" value="1" />
+                        <span class="help">Over how many version back from the selected version would you like to see the values evolve?</span>
+                    </label>
+                </div>
+                <label>Sanitize:
+                    <input type="checkbox" id="sanitize" checked/>
+                    <span class="help">Remove invalid and low-population values from the results.</span>
+                </label>
+            </div>
+        </fieldset>
+        <button id="add">Add to Dashboard</button>
+        <table class="dashboard-plots" style="border-spacing: 0">
+            <thead>
+                <tr>
+                    <th>Channel</th>
+                    <th>Version</th>
+                    <th>Metric</th>
+                    <th>Use Submission Date</th>
+                    <th>Sanitize</th>
+                    <th>Trim</th>
+                    <th>Compare</th>
+                    <th>Sensible Compare</th>
+                    <th>Versions for Evolution</th>
+                    <th>Filters</th>
+                    <th>-</th>
+                </tr>
+            </thead>
+            <tbody class="dashboard-plots-body">
+            </tbody>
+        </table>
+        <form action="https://codepen.io/pen/define" method="POST" target="_blank">
+            <input autocomplete="off" id="post-data" type="hidden" name="data" />
+            <button autocomplete="off" id="generate" type="submit" disabled>Generate Dashboard</button>
+        </form>
+    </main>
 </body>
+
 </html>

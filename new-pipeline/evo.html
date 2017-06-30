@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
     <title>Evolution Dashboard</title>
-    
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
+    <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
-    
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
 </head>
+
 <body>
     <div class="container-fluid">
         <header>
@@ -82,13 +81,17 @@
                             <form class="form-horizontal">
                                 <div>
                                     Evolution variable: show evolution over build date or submission date:
-                                    <label><input name="build-time-toggle" type="radio" value="0"> Build Date</label>
-                                    <label><input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
+                                    <label>
+                                        <input name="build-time-toggle" type="radio" value="0"> Build Date</label>
+                                    <label>
+                                        <input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
                                 </div>
                                 <div>
                                     Sanitize data: hide data points that don't have enough submissions:
-                                    <label><input name="sanitize-toggle" type="radio" value="0"> Don't Sanitize</label>
-                                    <label><input name="sanitize-toggle" type="radio" value="1"> Sanitize</label>
+                                    <label>
+                                        <input name="sanitize-toggle" type="radio" value="0"> Don't Sanitize</label>
+                                    <label>
+                                        <input name="sanitize-toggle" type="radio" value="1"> Sanitize</label>
                                 </div>
                             </form>
                         </div>
@@ -102,21 +105,18 @@
         <i class="fa fa-cog fa-spin"></i>
         <span class="busy-indicator-message">Loading page...</span>
     </div>
-
-    
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
-    
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="lib/metricsgraphics.js"></script>
-    
     <script src="../v2/telemetry.js"></script>
     <script src="src/dashboards.js"></script>
     <script src="src/evo.js"></script>
 </body>
+
 </html>
