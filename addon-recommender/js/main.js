@@ -18,7 +18,7 @@ function setupAutocomplete() {
   var suggestions = []
 
   for (var addonId in addonMapping) {
-    suggestions.push({id: addonId, text: addonMapping[addonId]});
+    suggestions.push({id: addonId, text: addonMapping[addonId].name});
   }
 
   let sortFunc = function(data) {
@@ -83,9 +83,10 @@ function suggestAddons(addonIds) {
   rawItemsMatrix.forEach(addon => {
     // We don't really need to show the items we requested. They will always
     // end up with the greatest score.
-    if (!addonIdsAsNumbers.includes(addon.id)) {
+    if (!addonIdsAsNumbers.includes(addon.id) &&
+        addonMapping[addon.id].isWebextension) {
       const d = math.dot(tUserFactors, addon.features);
-      distances[addonMapping[addon.id]] = d;
+      distances[addonMapping[addon.id].name] = d;
     }
   });
 
