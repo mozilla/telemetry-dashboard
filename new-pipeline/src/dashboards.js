@@ -844,15 +844,11 @@ function multiselectSetOptions(element, options, defaultSelected) {
     });
     element.empty()
       .append(groups.map(function (group) {
-          var optionsString = groupOptions[group].map(function (triple) {
-              return '<option value="' + triple[0] + '">' + triple[1] +
-                '</option>';
-            })
-            .join();
-          return '<optgroup label="' + group + '">' + optionsString +
-            '</optgroup>'
-        })
-        .join())
+        return $('<optgroup>', {label: group})
+          .append(groupOptions[group].map(function (triple) {
+            return $("<option>", {value: triple[0]}).text(triple[1]);
+          }));
+        }))
       .multiselect("rebuild");
   } else { // Build option elements
     options.forEach(function (option) {
@@ -869,12 +865,10 @@ function multiselectSetOptions(element, options, defaultSelected) {
     element.empty()
       .append(options.map(function (option) {
           if (option === null) {
-            return '<option disabled>&nbsp;</option>';
+            return $('<option>').prop('disabled', true);
           }
-          return '<option value="' + option[0] + '">' + option[1] +
-            '</option>';
-        })
-        .join())
+          return $('<option>', {value: option[0]}).text(option[1]);
+        }))
       .multiselect("rebuild");
   }
 
