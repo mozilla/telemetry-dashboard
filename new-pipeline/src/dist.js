@@ -881,6 +881,13 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     });
   }
 
+  if (histogramsList.length > 0 && histogramsList[0].histograms.length > 0) {
+    // Set the histogram caption to the histogram description
+    $('#dist-caption').text(histogramsList[0].histograms[0].description);
+  } else {
+    $('#dist-caption').text(""); // Clear the histogram caption
+  }
+
   if (histogramsList.length <= 1) { // Only one histograms set
     if (histogramsList.length === 1 && histogramsList[0].histograms.length ===
       1) { // Only show one set of axes
@@ -998,7 +1005,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
 
   // No histograms available
   if (histograms.length === 0) {
-    $('#dist-caption').text(""); // Clear the histogram caption
     MG.data_graphic({
       chart_type: "missing-data",
       width: $(axes)
@@ -1024,9 +1030,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     });
     return;
   }
-
-  // Set the histogram caption to the histogram description
-  $('#dist-caption').text(histograms[0].description);
 
   // All histograms must have the same buckets and be of the same kind
   var starts = histograms[0].map(function (count, start, end, i) {
