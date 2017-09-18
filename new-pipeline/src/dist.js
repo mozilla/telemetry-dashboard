@@ -942,10 +942,13 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     axesContainer.removeClass("col-md-6")
       .addClass("col-md-12")
       .show();
-    axesContainer.find("h3")
-      .hide(); // Hide the graph title as it doesn't need one
-    $("#sort-keys-option")
-      .hide();
+    if (isHistogramsListKeyed(histogramsList)) {
+      axesContainer.find("h3").show();
+      $("#sort-keys-option").show();
+    } else {
+      axesContainer.find("h3").hide(); // Hide the graph title as it doesn't need one
+      $("#sort-keys-option").hide();
+    }
 
     if (histogramsList.length > 0) {
       displaySingleHistogramSet($("#distribution1")
@@ -1735,7 +1738,7 @@ function saveStateToUrlAndCookie() {
     }
     var jsonValue;
     var csvValue;
-    if (gCurrentHistogramsList.length == 1) {
+    if (!isHistogramsListKeyed(gCurrentHistogramsList)) {
       jsonValue = JSON.stringify(histograms[0].map(function (count, start,
         end, i) {
         var entry = {
@@ -1851,4 +1854,8 @@ function saveStateToUrlAndCookie() {
       .find("span")
       .text("");
   }
+}
+
+function isHistogramsListKeyed(histogramsList) {
+  return histogramsList.some(entry => entry.title !== "");
 }
