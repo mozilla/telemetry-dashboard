@@ -43,6 +43,13 @@
     z-index: 1;
     top: 5px;
 }
+
+/** Max Width Setting For e10s **/
+#filter-e10s + .btn-group ul
+{
+    max-width: 10vw !important;
+}
+
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
 .multiselect-group-clickable { border-top: 1px solid gray; }
