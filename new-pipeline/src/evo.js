@@ -3,7 +3,6 @@ var gFilterChangeTimeout = null;
 var gFilters = null,
   gPreviousFilterAllSelected = {};
 var gCurrentLinesMap; // mapping from keyed histogram keys to arrays of aggregate lines (non-keyed histograms have lines stored in the key "")
-var gCurrentSubmissionLinesMap; // mapping from keyed histogram keys to arrays of submission lines (non-keyed histograms have lines stored in the key "")
 var gCurrentKind; // the kind of the current measure, or null if this can't be determined
 
 var gDefaultAggregates = [
@@ -25,10 +24,17 @@ var gDefaultAggregates = [
   ["95th-percentile", "95th percentile", function (evolution) {
     return evolution.percentiles(95);
   }],
+];
+// these will be generated, but won't appear in the multiselect
+// note: some code using gMetaAggregates assumes for convenience that 
+// meta aggregate names are special and hopefully won't ever collide with
+// (dynamically generated) names of other aggregates.
+var gMetaAggregates = [
   ["submissions", "Submissions", function (evolution) {
     return evolution.submissions();
-  }],
+  }, "#submissions"],
 ];
+var gAvailablaAggregates = gDefaultAggregates.concat(gMetaAggregates);
 
 indicate("Initializing Telemetry...");
 
@@ -284,8 +290,7 @@ $(function () {
             }
             updateOSs();
 
-            calculateEvolutions(function (linesMap,
-              submissionLinesMap, evolutionDescription) {
+            calculateEvolutions(function (linesMap, evolutionDescription) {
               var keys = Object.keys(linesMap)
                 .sort();
               var options = getHumanReadableOptions("key",
@@ -313,8 +318,6 @@ $(function () {
               }
 
               gCurrentLinesMap = linesMap;
-              gCurrentSubmissionLinesMap =
-                submissionLinesMap;
 
               // Show the key selector only if it's required
               if (Object.keys(linesMap)
@@ -345,15 +348,13 @@ $(function () {
         .change(function (e) {
           var key = $("#selected-key")
             .val();
-          var lines, submissionLines;
+          var lines;
           if (key === null) {
             lines = [];
-            submissionLines = [];
           } else {
             lines = gCurrentLinesMap[key];
-            submissionLines = gCurrentSubmissionLinesMap[key];
           }
-          displayEvolutions(lines, submissionLines,
+          displayEvolutions(lines,
             $("input[name=build-time-toggle]:checked").val() !== "0",
             gCurrentKind === "enumerated" || gCurrentKind === "boolean" || gCurrentKind == "categorical");
           saveStateToUrlAndCookie();
@@ -440,6 +441,7 @@ function updateAggregates(callback) {
             var newAggregates = gDefaultAggregates.map(function (entry) {
               return [entry[0], entry[1]];
             });
+
 
             multiselectSetOptions($("#aggregates"), newAggregates, ["median", "5th-percentile", "95th-percentile"]);
           }
@@ -543,11 +545,14 @@ function calculateEvolutions(callback) {
   var aggregates = $("#aggregates")
     .val() || [];
 
+  // always load these for extra plots on the bottom
+  for (let metaAggregate of gMetaAggregates)
+    aggregates.push(metaAggregate[0]);
+
   // Obtain a mapping from filter names to filter options
   var filterSets = getFilterSetsMapping(gFilters)["*"];
 
-  var linesMap = {},
-    submissionLinesMap = {};
+  var linesMap = {};
   var versionCount = 0;
   var evolutionDescription = null;
 
@@ -558,7 +563,7 @@ function calculateEvolutions(callback) {
       filterSets, $("input[name=sanitize-toggle]:checked")
       .val() !== "0", $("input[name=build-time-toggle]:checked")
       .val() !== "0",
-      function (newLinesMap, newSubmissionLinesMap, newDescription) {
+      function (newLinesMap, newDescription) {
         if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
           return;
         }
@@ -566,15 +571,12 @@ function calculateEvolutions(callback) {
         for (var key in newLinesMap) {
           linesMap[key] = linesMap.hasOwnProperty(key) ? linesMap[key].concat(
             newLinesMap[key]) : newLinesMap[key];
-          submissionLinesMap[key] = submissionLinesMap.hasOwnProperty(key) ?
-            submissionLinesMap[key].concat(newSubmissionLinesMap[key]) :
-            newSubmissionLinesMap[key];
         }
         evolutionDescription = evolutionDescription || newDescription;
         versionCount++;
         if (versionCount === channelVersions.length) { // Check if lines were loaded for all the versions
           indicate();
-          callback(linesMap, submissionLinesMap, evolutionDescription);
+          callback(linesMap, evolutionDescription);
         }
       });
   });
@@ -621,7 +623,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
               continue;
             }
 
-            gDefaultAggregates.forEach(function (entry) {
+            gAvailablaAggregates.forEach(function (entry) {
               aggregateSelector[entry[0]] = entry[2];
             });
             var options = getHumanReadableBucketOptions(evolution.kind, evolution.buckets)
@@ -634,7 +636,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
                 });
               }
             });
-            gDefaultAggregates.forEach(function (entry) {
+            gAvailablaAggregates.forEach(function (entry) {
               aggregateNames[entry[0]] = entry[1];
             });
             getHumanReadableBucketOptions(evolution.kind, evolution.buckets)
@@ -647,8 +649,7 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
           }
 
           // Create line objects
-          var aggregateLinesMap = {},
-            submissionLinesMap = {};
+          var aggregateLinesMap = {};
           for (var key in finalEvolutionMap) {
             var evolution = finalEvolutionMap[key];
             if (evolution === null) {
@@ -661,38 +662,22 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
                 "Aggregate " + aggregate + " is not valid");
               return aggregateSelector[aggregate](evolution);
             });
-            var submissionValues = evolution.submissions();
             var dates = evolution.dates();
-            var finalAggregateValues = aggregateValues.map(function (
-                values) {
-                return [];
-              }),
-              finalSubmissionValues = [];
-            dates.forEach(function (date, i) {
-              finalAggregateValues.forEach(function (values, j) {
-                values.push({
-                  x: date.getTime(),
-                  y: aggregateValues[j][i]
-                });
-              });
-              finalSubmissionValues.push({
+            var finalAggregateValues = aggregateValues.map(function(values, j) {
+              return dates.map((date, i) => ({
                 x: date.getTime(),
-                y: submissionValues[i]
-              });
+                y: values[i]
+              }));
             });
 
             // Create line objects
-            aggregateLinesMap[key] = finalAggregateValues.map(function (
-              values, i) {
+            aggregateLinesMap[key] = finalAggregateValues.map(function(values, i) {
               return new Line(measure, channel + "/" + version,
                 aggregateNames[aggregates[i]], values);
             });
-            submissionLinesMap[key] = [new Line(measure, channel + "/" +
-              version, aggregateNames["submissions"],
-              finalSubmissionValues)];
           }
 
-          callback(aggregateLinesMap, submissionLinesMap, description,
+          callback(aggregateLinesMap, description,
             kind);
         }
       });
@@ -878,9 +863,11 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
 
 }
 
-function displayEvolutions(lines, submissionLines, useSubmissionDate,
-  usePercentages) {
+function displayEvolutions(allLines, useSubmissionDate, usePercentages) {
   indicate("Rendering evolutions...");
+
+  let metaAggregateNames = gMetaAggregates.map(entry => entry[1]);
+  lines = allLines.filter(line => !metaAggregateNames.includes(line.aggregate));
 
   var aggregateLabels = lines.map(line => line.aggregate);
   var aggregateSet = new Set(aggregateLabels);
@@ -897,11 +884,15 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     y_label: valueLabel,
     legend: aggregateLabels
   });
-  displayEvolution('#submissions', submissionLines, false, {
-    height: 300,
-    x_label: variableLabel,
-    y_label: "Daily Ping Count",
-  });
+  for (let metaAggregate of gMetaAggregates) {
+    let metaLines = allLines.filter(line => line.aggregate == metaAggregate[1]);
+
+    displayEvolution(metaAggregate[3], metaLines, false, {
+      height: 300,
+      x_label: variableLabel,
+      y_label: "Daily Count",
+    });
+  }
 
   indicate();
 }
