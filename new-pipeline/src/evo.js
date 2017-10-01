@@ -33,6 +33,9 @@ var gMetaAggregates = [
   ["submissions", "Submissions", function (evolution) {
     return evolution.submissions();
   }, "#submissions"],
+  ["sample-count", "Sample count", function (evolution) {
+    return evolution.sampleCounts();
+  }, "#sample-counts"],
 ];
 var gAvailablaAggregates = gDefaultAggregates.concat(gMetaAggregates);
 
@@ -331,9 +334,8 @@ $(function () {
                   .show();
               }
 
-              $("#submissions-title")
-                .text($("#measure")
-                  .val() + " submissions");
+              $("#submissions-title").text($("#measure").val() + " submissions");
+              $("#sample-counts-title").text($("#measure").val() + " sample counts");
               $("#measure-description")
                 .text(evolutionDescription === null ? $(
                     "#measure")

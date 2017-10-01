@@ -199,6 +199,12 @@ Returns a list of submission counts for each histogram in `someEvolutionInstance
 
 This is provided as a convenience method to make it easy to plot summary statistics for histogram evolutions.
 
+### `someEvolutionInstance.sampleCounts()`
+
+Returns a list of sample counts for each histogram in `someEvolutionInstance`, sorted by date (oldest to newest).
+
+This is provided as a convenience method to make it easy to plot summary statistics for histogram evolutions.
+
 ### `Telemetry.Histogram`
 
 Class used to represent a histogram. Instances of this class can be obtained from `someEvolutionInstance.histogram()`. This class should not be instantiated directly.
