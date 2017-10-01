@@ -735,20 +735,17 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
     }); // Need to add 1ms because the leftmost marker won't show up otherwise
   }
   if (markers.length > 1) { // If there is a marker on the far right, move it back 2 milliseconds in order to make it visible again
-    markers[markers.length - 1].date = moment.utc(markers[markers.length - 1].date.getTime() -
-        2)
-      .toDate();
+    let lastMarker = markers[markers.length - 1];
+    lastMarker.date = moment.utc(lastMarker.date.getTime() - 2).toDate();
   }
 
-  d3.select(`${target} .active-datapoint-background`)
-    .remove(); // Remove old background
+  d3.select(`${target} .active-datapoint-background`).remove(); // Remove old background
   MG.data_graphic({
     data: lineData,
     chart_type: lineData.length == 0 || lineData[0].length === 0 ?
       "missing-data" : "line",
-    width: $(target)
-      .parent()
-      .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+    // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
+    width: $(target).parent().width(),
     height: 600,
     right: 100,
     bottom: 50, // Extra space on the right and bottom for labels
@@ -758,11 +755,7 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
     y_label: "",
     transition_on_update: false,
     interpolate: "linear",
-    yax_format: usePercentages ? function (y) {
-      return y + "%";
-    } : function (y) {
-      return y;
-    },
+    yax_format: usePercentages ? (y => y + "%") : null,
     markers: markers,
     aggregate_rollover: true,
     linked: true,
@@ -780,12 +773,8 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
           seen[entry.line_id] = true;
           return true;
         });
-        lineList = entries.map(function (entry) {
-          return lines[entry.line_id - 1];
-        });
-        values = entries.map(function (entry) {
-          return entry.value;
-        });
+        lineList = entries.map(entry => lines[entry.line_id - 1]);
+        values = entries.map(entry => entry.value);
       } else {
         date = d.date;
         rolloverCircle = $(`${target} .mg-line-rollover-circle`).get(0);
@@ -810,8 +799,7 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
             values[i]) + (usePercentages ? "%" : ""));
         legend.append("tspan")
           .attr({
-            x: -label.node()
-              .getComputedTextLength(),
+            x: -label.node().getComputedTextLength(),
             y: (lineIndex * lineHeight) + "em"
           })
           .text("\u2014 ")
@@ -825,11 +813,11 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20,
         y = 40;
       var bbox = legend[0][0].getBBox();
-      if (x + bbox.width + 50 > $(`${target} svg`)
-        .width()) x -= bbox.width + 40;
+      if (x + bbox.width + 50 > $(`${target} svg`).width()) {
+        x -= bbox.width + 40;
+      }
       d3.select(`${target} .mg-active-datapoint-container`)
-        .attr("transform", "translate(" + (x + bbox.width) + "," + (y +
-          15) + ")");
+        .attr("transform", `translate(${x + bbox.width}, ${y + 15})`);
 
       // Add background
       var padding = 10;
@@ -847,8 +835,7 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
         .style("fill", "#333");
     },
     mouseout: function (d, i) {
-      d3.select(`${target} .active-datapoint-background`)
-        .remove(); // Remove old background
+      d3.select(`${target} .active-datapoint-background`).remove(); // Remove old background
     },
     ...plotOptions
   });
@@ -895,18 +882,12 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
   usePercentages) {
   indicate("Rendering evolutions...");
 
-  var aggregateLabels = lines.map(function (line) {
-    return line.aggregate;
-  });
-
-  var aggregateMap = {};
-  lines.forEach(function (line) {
-    aggregateMap[line.aggregate] = true;
-  });
+  var aggregateLabels = lines.map(line => line.aggregate);
+  var aggregateSet = new Set(aggregateLabels);
   var variableLabel = useSubmissionDate ?
     "Submission Date (click to use Build ID)" :
     "Build ID (click to use Submission Date)";
-  var valueLabel = Object.keys(aggregateMap)
+  var valueLabel = [...aggregateSet]
     .sort()
     .join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
 
