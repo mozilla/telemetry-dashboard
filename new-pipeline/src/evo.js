@@ -702,17 +702,8 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
   }
 }
 
-function displayEvolutions(lines, submissionLines, useSubmissionDate,
-  usePercentages) {
-  indicate("Rendering evolutions...");
-
-  // filter out empty lines
-  lines = lines.filter(function (line) {
-    return line.values.length > 0;
-  });
-  submissionLines = submissionLines.filter(function (line) {
-    return line.values.length > 0;
-  });
+function displayEvolution(target, lines, usePercentages, plotOptions) {
+  lines = lines.filter(line => line.values.length > 0);
 
   // Transform the data into a form that is suitable for plotting
   var lineData = lines.map(function (line) {
@@ -725,30 +716,6 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
     dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
     return dataset;
   });
-  var submissionLineData = submissionLines.map(function (line) {
-    var dataset = line.values.map(function (point) {
-      return {
-        date: moment.utc(point.x).toDate(),
-        value: point.y
-      };
-    });
-    dataset.push(dataset[dataset.length - 1]); // duplicate the last point to work around a metricsgraphics bug if there are multiple datasets where one or more datasets only have one point
-    return dataset;
-  });
-  var aggregateLabels = lines.map(function (line) {
-    return line.aggregate;
-  });
-
-  var aggregateMap = {};
-  lines.forEach(function (line) {
-    aggregateMap[line.aggregate] = true;
-  });
-  var variableLabel = useSubmissionDate ?
-    "Submission Date (click to use Build ID)" :
-    "Build ID (click to use Submission Date)";
-  var valueLabel = Object.keys(aggregateMap)
-    .sort()
-    .join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
 
   var markers = [],
     usedDates = {};
@@ -773,23 +740,22 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
       .toDate();
   }
 
-  // Plot the data using MetricsGraphics
-  d3.select("#evolutions .active-datapoint-background")
+  d3.select(`${target} .active-datapoint-background`)
     .remove(); // Remove old background
   MG.data_graphic({
     data: lineData,
     chart_type: lineData.length == 0 || lineData[0].length === 0 ?
       "missing-data" : "line",
-    width: $("#evolutions")
+    width: $(target)
       .parent()
       .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
     height: 600,
     right: 100,
     bottom: 50, // Extra space on the right and bottom for labels
-    target: "#evolutions",
+    target: target,
     x_extended_ticks: true,
-    x_label: variableLabel,
-    y_label: valueLabel,
+    x_label: "",
+    y_label: "",
     transition_on_update: false,
     interpolate: "linear",
     yax_format: usePercentages ? function (y) {
@@ -798,7 +764,6 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
       return y;
     },
     markers: markers,
-    legend: aggregateLabels,
     aggregate_rollover: true,
     linked: true,
     utc_time: true,
@@ -806,7 +771,7 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
       var date, rolloverCircle, lineList, values;
       if (d.values) {
         date = d.values[0].date;
-        rolloverCircle = $("#evolutions .mg-line-rollover-circle.mg-line" +
+        rolloverCircle = $(`${target} .mg-line-rollover-circle.mg-line` +
             d.values[0].line_id + "-color")
           .get(0);
         var seen = {};
@@ -823,12 +788,11 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
         });
       } else {
         date = d.date;
-        rolloverCircle = $("#evolutions .mg-line-rollover-circle")
-          .get(0);
+        rolloverCircle = $(`${target} .mg-line-rollover-circle`).get(0);
         lineList = [lines[d.line_id - 1]];
         values = [d.value];
       }
-      var legend = d3.select("#evolutions .mg-active-datapoint")
+      var legend = d3.select(`${target} .mg-active-datapoint`)
         .attr('transform', '')
         .text(moment.utc(date)
           .format("dddd MMMM D, YYYY UTC") + " (build " + moment.utc(date)
@@ -861,17 +825,17 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
       var x = parseInt(rolloverCircle.getAttribute("cx")) + 20,
         y = 40;
       var bbox = legend[0][0].getBBox();
-      if (x + bbox.width + 50 > $("#evolutions svg")
+      if (x + bbox.width + 50 > $(`${target} svg`)
         .width()) x -= bbox.width + 40;
-      d3.select("#evolutions .mg-active-datapoint-container")
+      d3.select(`${target} .mg-active-datapoint-container`)
         .attr("transform", "translate(" + (x + bbox.width) + "," + (y +
           15) + ")");
 
       // Add background
       var padding = 10;
-      d3.select("#evolutions .active-datapoint-background")
+      d3.select(`${target} .active-datapoint-background`)
         .remove(); // Remove old background
-      d3.select("#evolutions svg")
+      d3.select(`${target} svg`)
         .insert("rect", ".mg-active-datapoint-container")
         .classed("active-datapoint-background", true)
         .attr("x", x - padding)
@@ -883,158 +847,39 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
         .style("fill", "#333");
     },
     mouseout: function (d, i) {
-      d3.select("#evolutions .active-datapoint-background")
+      d3.select(`${target} .active-datapoint-background`)
         .remove(); // Remove old background
     },
-  });
-  d3.select("#submissions .active-datapoint-background")
-    .remove(); // Remove old background
-  MG.data_graphic({
-    data: submissionLineData,
-    chart_type: submissionLineData.length === 0 || submissionLineData[0].length ===
-      0 ? "missing-data" : "line",
-    width: $("#submissions")
-      .parent()
-      .width(), // We can't use the full_width option of MetricsGraphics because that breaks page zooming for graphs
-    height: 300,
-    right: 100,
-    bottom: 50, // Extra space on the right and bottom for labels
-    target: "#submissions",
-    x_extended_ticks: true,
-    x_label: variableLabel,
-    y_label: "Daily Ping Count",
-    transition_on_update: false,
-    interpolate: "linear",
-    markers: markers,
-    aggregate_rollover: true,
-    linked: true,
-    utc_time: true,
-    mouseover: function (d, i) {
-      var date, rolloverCircle, lineList, values;
-      if (d.values) {
-        date = d.values[0].date;
-        rolloverCircle = $(
-            "#submissions .mg-line-rollover-circle.mg-line" + d.values[0]
-            .line_id + "-color")
-          .get(0);
-        var seen = {};
-        var entries = d.values.filter(function (entry) {
-          if (seen[entry.line_id]) return false;
-          seen[entry.line_id] = true;
-          return true;
-        });
-        lineList = entries.map(function (entry) {
-          return submissionLines[entry.line_id - 1];
-        });
-        values = entries.map(function (entry) {
-          return entry.value;
-        });
-      } else {
-        date = d.date;
-        rolloverCircle = $("#submissions .mg-line-rollover-circle")
-          .get(0);
-        lineList = [submissionLines[d.line_id - 1]];
-        values = [d.value];
-      }
-      var legend = d3.select("#submissions .mg-active-datapoint")
-        .attr('transform', '')
-        .text(moment.utc(date)
-          .format("dddd MMMM D, YYYY UTC") + " (build " + moment.utc(date)
-          .format("YYYYMMDD") + "):")
-        .style("fill", "white");
-      var lineHeight = 1.1;
-      lineList.forEach(function (line, i) {
-        var lineIndex = i + 1;
-        var label = legend.append("tspan")
-          .attr({
-            x: 0,
-            y: (lineIndex * lineHeight) + "em"
-          })
-          .text(line.getDescriptionString() + ": " + formatNumber(
-            values[i]));
-        legend.append("tspan")
-          .attr({
-            x: -label.node()
-              .getComputedTextLength(),
-            y: (lineIndex * lineHeight) + "em"
-          })
-          .text("\u2014 ")
-          .style({
-            "font-weight": "bold",
-            "stroke": line.color
-          });
-      });
-
-      // Reposition element
-      var x = parseInt(rolloverCircle.getAttribute("cx")) + 20,
-        y = 40;
-      var bbox = legend[0][0].getBBox();
-      if (x + bbox.width + 50 > $("#submissions svg")
-        .width()) x -= bbox.width + 40;
-      d3.select("#submissions .mg-active-datapoint-container")
-        .attr("transform", "translate(" + (x + bbox.width) + "," + (y +
-          15) + ")");
-
-      // Add background
-      var padding = 10;
-      d3.select("#submissions .active-datapoint-background")
-        .remove(); // Remove old background
-      d3.select("#submissions svg")
-        .insert("rect", ".mg-active-datapoint-container")
-        .classed("active-datapoint-background", true)
-        .attr("x", x - padding)
-        .attr("y", y)
-        .attr("width", bbox.width + padding * 2)
-        .attr("height", bbox.height + 8)
-        .attr("rx", "3")
-        .attr("ry", "3")
-        .style("fill", "#333");
-    },
-    mouseout: function (d, i) {
-      d3.select("#submissions .active-datapoint-background")
-        .remove(); // Remove old background
-    },
+    ...plotOptions
   });
 
   // Set the line colors
   lines.forEach(function (line, i) {
     var lineIndex = i + 1;
-    $("#evolutions .mg-main-line.mg-line" + lineIndex + "-color")
+    $(`${target} .mg-main-line.mg-line${lineIndex}-color`)
       .css("stroke", line.color);
-    $("#evolutions .mg-area" + lineIndex + "-color, .mg-hover-line" +
-        lineIndex + "-color")
+    $(`${target} .mg-area${lineIndex}-color, .mg-hover-line${lineIndex}-color`)
       .css("fill", line.color)
       .css("stroke", line.color);
-    $("#evolutions .mg-line" + lineIndex + "-legend-color")
-      .css("fill", line.color);
-  });
-  submissionLines.forEach(function (line, i) {
-    var lineIndex = i + 1;
-    $("#submissions .mg-main-line.mg-line" + lineIndex + "-color")
-      .css("stroke", line.color);
-    $("#submissions .mg-area" + lineIndex + "-color, .mg-hover-line" +
-        lineIndex + "-color")
-      .css("fill", line.color)
-      .css("stroke", line.color);
-    $("#submissions .mg-line" + lineIndex + "-legend-color")
+    $(`${target} .mg-line${lineIndex}-legend-color`)
       .css("fill", line.color);
   });
 
   // Reposition and resize text
-  $(".mg-x-axis .mg-year-marker text")
+  $(`${target} .mg-x-axis .mg-year-marker text`)
     .attr("dy", "5");
-  $(".mg-x-axis .label")
+  $(`${target} .mg-x-axis .label`)
     .attr("dy", "20");
-  $(".mg-y-axis .label")
+  $(`${target} .mg-y-axis .label`)
     .attr("y", "10")
     .attr("dy", "0");
-  $(".mg-marker-text")
+  $(`${target} .mg-marker-text`)
     .attr("text-anchor", "start")
     .attr("dy", "18")
     .attr("dx", "5");
 
   // X axis label should also be build time toggle
-  $(".mg-x-axis .label")
+  $(`${target} .mg-x-axis .label`)
     .attr("text-decoration", "underline")
     .click(function () {
       var newUseSubmissionDate = $("input[name=build-time-toggle]:checked")
@@ -1043,6 +888,39 @@ function displayEvolutions(lines, submissionLines, useSubmissionDate,
         .prop("checked", true)
         .trigger("change");
     });
+
+}
+
+function displayEvolutions(lines, submissionLines, useSubmissionDate,
+  usePercentages) {
+  indicate("Rendering evolutions...");
+
+  var aggregateLabels = lines.map(function (line) {
+    return line.aggregate;
+  });
+
+  var aggregateMap = {};
+  lines.forEach(function (line) {
+    aggregateMap[line.aggregate] = true;
+  });
+  var variableLabel = useSubmissionDate ?
+    "Submission Date (click to use Build ID)" :
+    "Build ID (click to use Submission Date)";
+  var valueLabel = Object.keys(aggregateMap)
+    .sort()
+    .join(", ") + " " + (lines.length > 0 ? lines[0].measure : "");
+
+  displayEvolution('#evolutions', lines, usePercentages, {
+    height: 600,
+    x_label: variableLabel,
+    y_label: valueLabel,
+    legend: aggregateLabels
+  });
+  displayEvolution('#submissions', submissionLines, false, {
+    height: 300,
+    x_label: variableLabel,
+    y_label: "Daily Ping Count",
+  });
 
   indicate();
 }
