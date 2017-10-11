@@ -394,7 +394,7 @@ window.TelemetryWrapper.go = function (params, element) {
         (date.getMonth() + 1) + '-' + date.getDate(), // TODO: i18n
       yax_format: y => valuesArePercent ? y + '%' : y,
       transition_on_update: false,
-      interpolate: 'linear',
+      interpolate: d3.curveLinear,
       legend: legendLabels,
       legend_target: graphEl.querySelector('.graph-legend'),
       aggregate_rollover: true,
@@ -409,7 +409,7 @@ window.TelemetryWrapper.go = function (params, element) {
       aggregate_rollover: true,
       data: datas,
       chart_type: 'line',
-      interpolate: 'linear',
+      interpolate: d3.curveLinear,
       full_width: true,
       full_height: true,
       legend: hists.map(hist => hist.compareLabel),
