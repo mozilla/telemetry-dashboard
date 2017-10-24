@@ -313,7 +313,9 @@
     };
 
     Evolution.prototype.sampleCounts = function () {
-      return this.map(histogram => histogram.count);
+      return this.map(function (histogram) {
+        return histogram.count;
+      });
     };
 
     return Evolution;
