@@ -19,7 +19,7 @@
 }
 .big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
 .scrollable-dashboard-list {
-  height: 600px;
+  height: 700px;
   overflow-y: auto;
 }
 .scrollable-dashboard-list .list-group-item {
