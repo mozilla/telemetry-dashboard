@@ -22,15 +22,6 @@
   border-top: 1px solid #ddd;
 }
 .big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
-.scrollable-dashboard-list {
-  height: 700px;
-  overflow-y: auto;
-}
-.scrollable-dashboard-list .list-group-item {
-  border: none;
-  border-top: 1px solid #ddd;
-}
-.scrollable-dashboard-list .list-group-item:first-child { border-top: none; }
 
 /* Dropdown style overrides */
 .multiselect {
