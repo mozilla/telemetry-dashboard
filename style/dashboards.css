@@ -21,6 +21,9 @@
   border: none;
   border-top: 1px solid #ddd;
 }
+.dashboard-list .list-group-item:first-child {
+  border-top: none;
+}
 .big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
 
 /* Dropdown style overrides */
