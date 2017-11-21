@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Telemetry Dashboards</title>
+    <title>Telemetry portal</title>
 
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -19,13 +19,7 @@
             <form class="navbar-form inline pull-right">
                 <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn" title="Report bugs in Telemetry dashboards" target="_blank">Report bug</a>
             </form>
-            <form class="navbar-form inline pull-right">
-                <a href="https://wiki.mozilla.org/Telemetry" class="btn" title="Wiki" target="_blank">Telemetry Wiki</a>
-            </form>
-            <form class="navbar-form inline pull-right">
-                <a href="http://docs.telemetry.mozilla.org" class="btn" title="Docs" target="_blank">Telemetry Documentation</a>
-            </form>
-            <h2>Telemetry dashboards</h2>
+            <h2>Telemetry portal</h2>
             <!-- <div class="error-msg">
                 The small, unrepresentative sample population of release users will soon stop being aggregated.
                 For context, please read <a href="https://medium.com/@georg.fritzsche/data-preference-changes-in-firefox-58-2d5df9c428b5">this blog post</a>.
@@ -33,8 +27,8 @@
         </header>
         <div class="row">
             <div class="col-md-4">
-                <h3>Main dashboards</h3>
-                <div class="dashboard-list scrollable-dashboard-list list-group" style="margin: 0">
+                <h3>Main tools</h3>
+                <div class="dashboard-list list-group" style="margin: 0">
                     <a class="list-group-item" href="new-pipeline/dist.html">
                         Measurement Dashboard
                         <div class="dashboard-description">View measure distributions as histograms.</div>
@@ -42,19 +36,41 @@
                     <a class="list-group-item" href="new-pipeline/evo.html">
                         Evolution Dashboard <div class="dashboard-description">View evolution of measure values over time.</div>
                     </a>
+                    <a class="list-group-item" href="https://metrics.mozilla.com/firefox-hardware-report/">
+                        Firefox Hardware Report
+                        <div class="dashboard-description">See what hardware Firefox users have.</div>
+                    </a>
                     <a class="list-group-item" href="https://sql.telemetry.mozilla.org/">
-                        SQL Portal <div class="dashboard-description">Query telemetry data with SQL.</div>
+                        SQL Portal <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">View dashboards &amp; run SQL queries.</div>
+                    </a>
+                    <a class="list-group-item" href="https://moz-experiments-viewer.herokuapp.com/">
+                        Experiments Viewer <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">See the impact different experiments have.</div>
                     </a>
                     <a class="list-group-item" href="https://analysis.telemetry.mozilla.org/">
-                        Analysis Portal <div class="dashboard-description">Analyze telemetry data with Spark.</div>
+                        Analysis Portal <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">Analyze telemetry data with Spark.</div>
                     </a>
-                    <a class="list-group-item" href="https://reports.telemetry.mozilla.org/">
-                        Reports Portal <div class="dashboard-description">Explore data analyses &amp; reports.</div>
+                </div>
+                <h3>Documentation</h3>
+                <div class="dashboard-list list-group" style="margin: 0">
+                    <a class="list-group-item" href="https://docs.telemetry.mozilla.org/">
+                        Data Docs <div class="dashboard-description">Find what data is available &amp; how to use it.</div>
+                    </a>
+                    <a class="list-group-item" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/">
+                        Firefox Telemetry Docs <div class="dashboard-description">Learn how to record data &amp; what data gets sent.</div>
+                    </a>
+                    <a class="list-group-item" href="https://georgf.github.io/fx-data-explorer/">
+                        Probe Dictionary <div class="dashboard-description">Find what probes are submitted from Firefox.</div>
+                    </a>
+                    <a class="list-group-item" href="https://wiki.mozilla.org/Firefox/Shield">
+                        Shield Docs <div class="dashboard-description">Learn how to run Shield studies &amp; experiments.</div>
                     </a>
                 </div>
             </div>
             <div class="col-md-4">
-                <h3>Telemetry @ Twitter</h3>
+                <h3>What's new</h3>
                 <!-- Twitter widget -->
                 <div>
                     <a class="twitter-timeline"
@@ -77,18 +93,40 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <h3>Other dashboards</h3>
-                <div class="dashboard-list scrollable-dashboard-list list-group">
+                <h3>Getting help</h3>
+                <div class="dashboard-list list-group">
+                    <a class="list-group-item" href="https://mail.mozilla.org/listinfo/fx-data-dev">
+                      Join the mailing list
+                      <div class="dashboard-description">Get help on data topics and upcoming changes.</div>
+                    </a>
+                    <a class="list-group-item" href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=General">
+                      File a bug
+                      <div class="dashboard-description">File a bug with details on <i>bugzilla.mozilla.org</i>.</div>
+                    </a>
+                    <a class="list-group-item" href="https://chat.mibbit.com/?server=irc.mozilla.org&channel=%23telemetry">
+                      Chat on IRC
+                      <div class="dashboard-description">Find us in <i>#telemetry</i> on <i>irc.mozilla.org</i>.</div>
+                    </a>
+                    <a class="list-group-item" href="https://mozilla.slack.com/messages/C4D5ZA91B/">
+                      Join us on Slack <span class="fa fa-lock"></span>
+                      <div class="dashboard-description">Find us in <i>#fx-metrics</i> on Slack.</div>
+                    </a>
+                </div>
+                <h3>Other tools</h3>
+                <div class="dashboard-list list-group">
+                    <a class="list-group-item" href="https://reports.telemetry.mozilla.org/">
+                        Reports Portal <div class="dashboard-description">Explore data analyses &amp; reports.</div>
+                    </a>
+                    <a class="list-group-item" href="https://sso.mozilla.com/amplitude">
+                        Amplitude <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">Dive into product analytics.</div>
+                    </a>
                     <a class="list-group-item" href="dashboard-generator/index.html">
                       Dashboard Generator
                       <div class="dashboard-description">Hand-craft your own dashboard with the push of a few buttons</div>
                     </a>
                     <a class="list-group-item" href="https://bsmedberg.github.io/telemetry-experiments-dashboard/">
                         Experiment Monitoring <div class="dashboard-description">View vitals and statistics for Firefox Telemetry Experiments.</div>
-                    </a>
-                    <a class="list-group-item" href="https://metrics.mozilla.com/firefox-hardware-report/">
-                        Firefox Hardware Report
-                        <div class="dashboard-description">View the Firefox user population categorized by hardware specifications.</div>
                     </a>
                     <a class="list-group-item" href="http://alerts.telemetry.mozilla.org/">
                         Telemetry Alerts <div class="dashboard-description">Set up email alerts for significant performance changes.</div>
@@ -108,42 +146,6 @@
                     <a class="list-group-item" href="histogram-simulator/">
                         Histogram Simulator <div class="dashboard-description">Simulate histogram bucket widths</div>
                     </a>
-                    <span class="list-group-item disabled">
-                        Addon Startup Correlations
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Addon Shutdown Correlations
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Chrome Hangs
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Fennec App Not Responding (ANR)
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Fennec UI Telemetry
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Firefox UI Telemetry
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Main Thread I/O
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        Power Dashboard <span class="label label-warning" style="font-size: 12px">DRAFT</span>
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
-                    <span class="list-group-item disabled">
-                        SlowSQL
-                        <div class="dashboard-description">Please <a href="https://github.com/mozilla/telemetry-dashboard/issues">Report a Bug</a> if you require this data.</div>
-                    </span>
                 </div>
             </div>
         </div>
