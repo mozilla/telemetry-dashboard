@@ -13,6 +13,19 @@
 
 <script src="https://telemetry.mozilla.org/v2/telemetry.js"></script>
 <script src="generator.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110118568-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+
+  gtag('config', 'UA-110118568-1');
+</script>
+
 </head>
 <body>
 <header>
@@ -21,6 +34,7 @@
   <p>This will generate a codepen populated with your dashboard for instant preview and customization. Be sure to click 'Save' on it to show it to others or export for self-hosting.</p>
   <p>For an Introduction, check the <a href="https://chuttenblog.wordpress.com/to-order-telemetry-dashboards-dashboard-generator/">Dashboard Generator Introduction Blog Post</a></p>
 </header>
+
 <main>
   <fieldset>
     <label>Channel:
