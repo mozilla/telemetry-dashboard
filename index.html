@@ -23,13 +23,31 @@
       gtag('js', new Date());
 
       gtag('config', 'TODO: GA id');
+
+      var trackOutboundLink = function(obj) {
+        var url = obj.getAttribute("href");
+        console.log('trackOutboundLink', url);
+        gtag('event', 'click', {
+          'event_category': 'outbound',
+          'event_label': url,
+          'transport_type': 'beacon',
+          'event_callback': function() {
+            console.log('hitCallback', url);
+            document.location = url;
+          }
+        });
+      }
     </script>
 </head>
 <body>
     <div class="container-fluid">
         <header>
             <form class="navbar-form inline pull-right">
-                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn" title="Report bugs in Telemetry dashboards">Report bug</a>
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues"
+                   onclick="trackOutboundLink(this); return false;"
+                   class="btn" title="Report bugs in Telemetry dashboards">
+                  Report bug
+                </a>
             </form>
             <h2>Telemetry portal</h2>
             <!-- <div class="error-msg">
@@ -41,42 +59,52 @@
             <div class="col-md-4">
                 <h3>Main tools</h3>
                 <div class="dashboard-list list-group" style="margin: 0">
-                    <a class="list-group-item" href="new-pipeline/dist.html">
+                    <a class="list-group-item" href="new-pipeline/dist.html"
+                       onclick="trackOutboundLink(this); return false;">
                         Measurement Dashboard
                         <div class="dashboard-description">View measure distributions as histograms.</div>
                     </a>
-                    <a class="list-group-item" href="new-pipeline/evo.html">
+                    <a class="list-group-item" href="new-pipeline/evo.html"
+                      onclick="trackOutboundLink(this); return false;">
                         Evolution Dashboard <div class="dashboard-description">View evolution of measure values over time.</div>
                     </a>
-                    <a class="list-group-item" href="https://metrics.mozilla.com/firefox-hardware-report/">
+                    <a class="list-group-item" href="https://metrics.mozilla.com/firefox-hardware-report/"
+                       onclick="trackOutboundLink(this); return false;">
                         Firefox Hardware Report
                         <div class="dashboard-description">See what hardware Firefox users have.</div>
                     </a>
-                    <a class="list-group-item" href="https://sql.telemetry.mozilla.org/">
+                    <a class="list-group-item" href="https://sql.telemetry.mozilla.org/"
+                       onclick="trackOutboundLink(this); return false;">
                         SQL Portal <span class="fa fa-lock"></span>
                         <div class="dashboard-description">View dashboards &amp; run SQL queries.</div>
                     </a>
-                    <a class="list-group-item" href="https://moz-experiments-viewer.herokuapp.com/">
+                    <a class="list-group-item" href="https://moz-experiments-viewer.herokuapp.com/"
+                       onclick="trackOutboundLink(this); return false;">
                         Experiments Viewer <span class="fa fa-lock"></span>
                         <div class="dashboard-description">See the impact different experiments have.</div>
                     </a>
-                    <a class="list-group-item" href="https://analysis.telemetry.mozilla.org/">
+                    <a class="list-group-item" href="https://analysis.telemetry.mozilla.org/"
+                       onclick="trackOutboundLink(this); return false;">
                         Analysis Portal <span class="fa fa-lock"></span>
                         <div class="dashboard-description">Analyze telemetry data with Spark.</div>
                     </a>
                 </div>
                 <h3>Documentation</h3>
                 <div class="dashboard-list list-group" style="margin: 0">
-                    <a class="list-group-item" href="https://docs.telemetry.mozilla.org/">
+                    <a class="list-group-item" href="https://docs.telemetry.mozilla.org/"
+                       onclick="trackOutboundLink(this); return false;">
                         Data Docs <div class="dashboard-description">Find what data is available &amp; how to use it.</div>
                     </a>
-                    <a class="list-group-item" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/">
+                    <a class="list-group-item" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/"
+                       onclick="trackOutboundLink(this); return false;">
                         Firefox Telemetry Docs <div class="dashboard-description">Learn how to record data &amp; what data gets sent.</div>
                     </a>
-                    <a class="list-group-item" href="https://georgf.github.io/fx-data-explorer/">
+                    <a class="list-group-item" href="https://georgf.github.io/fx-data-explorer/"
+                       onclick="trackOutboundLink(this); return false;">
                         Probe Dictionary <div class="dashboard-description">Find what probes are submitted from Firefox.</div>
                     </a>
-                    <a class="list-group-item" href="https://wiki.mozilla.org/Firefox/Shield">
+                    <a class="list-group-item" href="https://wiki.mozilla.org/Firefox/Shield"
+                       onclick="trackOutboundLink(this); return false;">
                         Shield Docs <div class="dashboard-description">Learn how to run Shield studies &amp; experiments.</div>
                     </a>
                 </div>
@@ -107,55 +135,69 @@
             <div class="col-md-4">
                 <h3>Getting help</h3>
                 <div class="dashboard-list list-group">
-                    <a class="list-group-item" href="https://mail.mozilla.org/listinfo/fx-data-dev">
+                    <a class="list-group-item" href="https://mail.mozilla.org/listinfo/fx-data-dev"
+                       onclick="trackOutboundLink(this); return false;">
                       Join the mailing list
                       <div class="dashboard-description">Get help on data topics and upcoming changes.</div>
                     </a>
-                    <a class="list-group-item" href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=General">
+                    <a class="list-group-item" href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=General"
+                       onclick="trackOutboundLink(this); return false;">
                       File a bug
                       <div class="dashboard-description">File a bug with details on <i>bugzilla.mozilla.org</i>.</div>
                     </a>
-                    <a class="list-group-item" href="https://chat.mibbit.com/?server=irc.mozilla.org&channel=%23telemetry">
+                    <a class="list-group-item" href="https://chat.mibbit.com/?server=irc.mozilla.org&channel=%23telemetry"
+                       onclick="trackOutboundLink(this); return false;">
                       Chat on IRC
                       <div class="dashboard-description">Find us in <i>#telemetry</i> on <i>irc.mozilla.org</i>.</div>
                     </a>
-                    <a class="list-group-item" href="https://mozilla.slack.com/messages/C4D5ZA91B/">
+                    <a class="list-group-item" href="https://mozilla.slack.com/messages/C4D5ZA91B/"
+                       onclick="trackOutboundLink(this); return false;">
                       Join us on Slack <span class="fa fa-lock"></span>
                       <div class="dashboard-description">Find us in <i>#fx-metrics</i> on Slack.</div>
                     </a>
                 </div>
                 <h3>Other tools</h3>
                 <div class="dashboard-list list-group">
-                    <a class="list-group-item" href="https://reports.telemetry.mozilla.org/">
+                    <a class="list-group-item" href="https://reports.telemetry.mozilla.org/"
+                       onclick="trackOutboundLink(this); return false;">
                         Reports Portal <div class="dashboard-description">Explore data analyses &amp; reports.</div>
                     </a>
-                    <a class="list-group-item" href="https://sso.mozilla.com/amplitude">
+                    <a class="list-group-item" href="https://sso.mozilla.com/amplitude"
+                       onclick="trackOutboundLink(this); return false;">
                         Amplitude <span class="fa fa-lock"></span>
                         <div class="dashboard-description">Dive into product analytics.</div>
                     </a>
-                    <a class="list-group-item" href="dashboard-generator/index.html">
+                    <a class="list-group-item" href="dashboard-generator/index.html"
+                       onclick="trackOutboundLink(this); return false;">
                       Dashboard Generator
                       <div class="dashboard-description">Hand-craft your own dashboard with the push of a few buttons</div>
                     </a>
-                    <a class="list-group-item" href="https://bsmedberg.github.io/telemetry-experiments-dashboard/">
+                    <a class="list-group-item" href="https://bsmedberg.github.io/telemetry-experiments-dashboard/"
+                       onclick="trackOutboundLink(this); return false;">
                         Experiment Monitoring <div class="dashboard-description">View vitals and statistics for Firefox Telemetry Experiments.</div>
                     </a>
-                    <a class="list-group-item" href="http://alerts.telemetry.mozilla.org/">
+                    <a class="list-group-item" href="http://alerts.telemetry.mozilla.org/"
+                       onclick="trackOutboundLink(this); return false;">
                         Telemetry Alerts <div class="dashboard-description">Set up email alerts for significant performance changes.</div>
                     </a>
-                    <a class="list-group-item" href="https://people.mozilla.org/~danderson/moz-gfx-telemetry/www/">
+                    <a class="list-group-item" href="https://people.mozilla.org/~danderson/moz-gfx-telemetry/www/"
+                       onclick="trackOutboundLink(this); return false;">
                         Graphics Telemetry <div class="dashboard-description">View percentage breakdowns for various graphics features.</div>
                     </a>
-                    <a class="list-group-item" href="update-orphaning/">
+                    <a class="list-group-item" href="update-orphaning/"
+                       onclick="trackOutboundLink(this); return false;">
                         Update Orphaning <div class="dashboard-description">View percentage breakdowns of users who are up-to-date vs. out-of-date.</div>
                     </a>
-                    <a class="list-group-item" href="crashes/">
+                    <a class="list-group-item" href="crashes/"
+                       onclick="trackOutboundLink(this); return false;">
                         Stability Dashboard <div class="dashboard-description">See how crash rates evolve over time</div>
                     </a>
-                    <a class="list-group-item" href="https://squarewave.github.io">
+                    <a class="list-group-item" href="https://squarewave.github.io"
+                       onclick="trackOutboundLink(this); return false;">
                         Background Hang Reporting <div class="dashboard-description">View browser hang information collected from Nightly users</div>
                     </a>
-                    <a class="list-group-item" href="histogram-simulator/">
+                    <a class="list-group-item" href="histogram-simulator/"
+                       onclick="trackOutboundLink(this); return false;">
                         Histogram Simulator <div class="dashboard-description">Simulate histogram bucket widths</div>
                     </a>
                 </div>
