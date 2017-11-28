@@ -1049,7 +1049,8 @@ function updateOSs() {
 function getDescriptionWithLink(metric, channel, description) {
   var metricUrlTitle = "View Definition"
   var metricUrl = "https://georgf.github.io/fx-data-explorer/index.html?search=" + metric + "&searchtype=in_name&optout=false&channel=" + channel + "&constraint=is_in&version=any"
+  var imgUrl = "https://upload.wikimedia.org/wikipedia/commons/6/64/Icon_External_Link.png"
   var descr = description === null ? metric : description
 
-  return " <a href=\"" + metricUrl + "\" target=\"_blank\">" + descr + "</a>"
+  return " <a href=\"" + metricUrl + "\" target=\"_blank\">" + descr + "<img src=\"" + imgUrl + "\"/></a>"
 }
