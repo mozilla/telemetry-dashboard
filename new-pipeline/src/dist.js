@@ -883,7 +883,12 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
 
   if (histogramsList.length > 0 && histogramsList[0].histograms.length > 0) {
     // Set the histogram caption to the histogram description
-    $('#dist-caption').text(histogramsList[0].histograms[0].description);
+    var description = histogramsList[0].histograms[0].description
+    var metric = histogramsList[0].histograms[0].measure
+    var channel = $("#channel-version").val().split("/")[0]
+    var desc = getDescriptionWithLink(metric, channel, description)
+
+    $('#dist-caption').html(desc);
   } else {
     $('#dist-caption').text(""); // Clear the histogram caption
   }
