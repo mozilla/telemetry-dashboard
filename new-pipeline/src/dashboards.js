@@ -1045,3 +1045,11 @@ function updateOSs() {
     optionGroupLabel.addClass("all-selected");
   });
 }
+
+function getDescriptionWithLink(metric, channel, description) {
+  var metricUrlTitle = "View Definition"
+  var metricUrl = "https://georgf.github.io/fx-data-explorer/index.html?search=" + metric + "&searchtype=in_name&optout=false&channel=" + channel + "&constraint=is_in&version=any"
+  var descr = description === null ? metric : description
+
+  return descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" + metricUrlTitle + "</a>"
+}

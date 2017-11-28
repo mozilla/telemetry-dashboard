@@ -334,12 +334,13 @@ $(function () {
                   .show();
               }
 
-              $("#submissions-title").text($("#measure").val() + " submissions");
-              $("#sample-counts-title").text($("#measure").val() + " sample counts");
-              $("#measure-description")
-                .text(evolutionDescription === null ? $(
-                    "#measure")
-                  .val() : evolutionDescription);
+              var metric = $("#measure").val()
+              var channel = $("#max-channel-version").val().split("/")[0]
+              var description = getDescriptionWithLink(metric, channel, evolutionDescription)
+
+              $("#submissions-title").text(metric + " submissions");
+              $("#sample-counts-title").text(metric + " sample counts");
+              $("#measure-description").html(description);
               $("#selected-key")
                 .trigger("change");
             });
