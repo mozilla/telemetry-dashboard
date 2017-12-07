@@ -24,6 +24,33 @@ if (window.trackingEnabled()) {
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'UA-49796218-2');
+
+  window.addEventListener("DOMContentLoaded", () => {
+    // Decorate outbound links from the top frame
+    document.addEventListener("click", decoratedLinkHandler, true);
+  });
+}
+
+function decoratedLinkHandler(e) {
+  if (e.button != 0) {
+    return;
+  }
+  let anchor = findAnchor(e.target);
+  if (anchor && anchor.hostname != window.location.hostname) {
+    ga('send', 'event', {
+      eventCategory: 'Outbound Link',
+      eventAction: 'click',
+      eventLabel: anchor.href,
+      transport: 'beacon',
+    });
+  }
+}
+
+function findAnchor(el) {
+  while (el && el.nodeName != 'A') {
+    el = el.parentElement;
+  }
+  return el;
 }
 
 }());
