@@ -37,11 +37,10 @@ function decoratedLinkHandler(e) {
   }
   let anchor = findAnchor(e.target);
   if (anchor && anchor.hostname != window.location.hostname) {
-    ga('send', 'event', {
-      eventCategory: 'Outbound Link',
-      eventAction: 'click',
-      eventLabel: anchor.href,
-      transport: 'beacon',
+    gtag('event', {
+      'event_category': 'Outbound Link',
+      'event_action': 'click',
+      'event_label': anchor.href,
     });
   }
 }
