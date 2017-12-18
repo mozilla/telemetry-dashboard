@@ -19,23 +19,24 @@ Report Week:&nbsp;&nbsp;<br/>
 <div id="main-div">
 <h1>Firefox Application Update Out Of Date Dashboard</h1>
 <div><p>The data below is from the Telemetry longitudinal data source which contains approximately
-1% of all Telemetry clients for each Firefox version. The period for the report is the 7 days prior
-to the Report Week date. The old dashboard can be found <a href="index-old.html">here</a>.</p>
+1% of all Telemetry clients for each Firefox version on the release channel. The period for the
+report is the 7 days prior to the selected Report Week date.</p>
 </div>
 <div id="error-message"></div>
 <div id="summary-dist-chart" class="pie-chart"></div>
 <table id="summary-dist-details"></table>
 <div id="out-of-date-desc"></div>
 <div id="not-min-reqs-chart" class="pie-chart"></div>
-<div id="not-min-reqs-desc">Clients are considered <b>out of date, potentially of concern</b> when
+<table id="not-min-reqs-details"></table>
+<div id="not-min-reqs-desc">Note: Clients are considered <b>out of date, potentially of concern</b> when
 they are out of date and haven't met the minimum requirements for there to be an expectation that
 the client should have updated. Since each client can match multuple criteria the order that they
 are applied affects the percentage of clients that match each criteria. The order that the
-criteria are applied is the same order as they are listed below.</div>
-<table id="not-min-reqs-details"></table>
+criteria are applied is the same order as they are listed above.</div>
 <div id="of-concern-chart" class="pie-chart"></div>
 <table id="of-concern-details"></table>
 <div id="version-dist-chart" class="pie-chart"></div>
+<table id="version-dist-details"></table>
 <div class="section-header">Out of date, of concern client last update check code (check phase)</div>
 <div class="section-hover">(hover over a bar for details below the chart)</div>
 <div><label><input id="check-code-sort-input" class="sort-checkbox" type="checkbox"> Sort values</label></div>
@@ -97,8 +98,7 @@ criteria are applied is the same order as they are listed below.</div>
 </div><br/>
 <hr>
 This dashboard is maintained by <a href="mailto:rstrong@mozilla.com">:rstrong</a>.<br/>
-The Spark Notebook for the weekly reports is scheduled to run every Sunday and can be found <a href="https://github.com/mozilla/mozilla-reports/tree/master/projects/app_update_out_of_date.kp/orig_src/app_update_out_of_date.ipynb">here</a>.
-
+The Spark Notebook for this dashboard is scheduled to run on Monday and Tuesday every week since the longitudinal datasource isn't consistently available on Monday. The Spark Notebook can be found <a href="https://github.com/mozilla/mozilla-reports/tree/master/projects/app_update_out_of_date.kp/orig_src/app_update_out_of_date.ipynb">here</a>.
 <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
 </div>
 </body>
