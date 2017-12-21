@@ -931,10 +931,23 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       }
       $("#summary")
         .show();
+      $("#stats-comparison")
+        .hide();
 
     } else {
+      $("#medians")
+        .empty()
+        .append(
+          histogramsList[0].histograms.map(function(histogram) {
+            $measure = $("<dt></dt>").text(histogram.measure + " Median");
+            $value = $("<dd></dd>").text(formatNumber(histogram.percentile(50)));
+            return $measure.add($value);
+          })
+        );
       $("#summary")
         .hide();
+      $("#stats-comparison")
+        .show();
     }
 
     $("#plots")
@@ -973,6 +986,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     }
   } else { // Show all four axes
     $("#summary")
+      .hide();
+    $("#stats-comparison")
       .hide();
     $("#plots")
       .removeClass("col-md-9")
