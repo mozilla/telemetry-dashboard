@@ -142,3 +142,15 @@
 .error-msg:empty {
   display: none;
 }
+
+/* Histogram statistics */
+.measure-headers, .measure-values {
+  font-size: 0.8em;
+}
+.measure-values td {
+  padding-left: 0.5em;
+  text-align: right;
+}
+.measure-headers th {
+  text-align: right;
+}

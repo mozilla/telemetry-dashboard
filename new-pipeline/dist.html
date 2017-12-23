@@ -118,12 +118,24 @@
                                 </dl>
                             </div>
                         </div>
-                        <div id="stats-comparison">
-                            <div class="scalar-only" style="margin-top: 50px">
-                                <dl class="dl-horizontal" id="medians">
-                                    <dt>Median</dt><dd id="prop-p50"></dd>
-                                </dl>
-                            </div>
+                        <div id="stats-comparison" style="margin-top: 50px; margin-bottom: 20px;">
+                            <table>
+                              <thead class="measure-headers">
+                              <tr>
+                              <th></th>
+                              <th title="5th percentile duration">5 %</th>
+                              <th title="25th percentile duration">25 %</th>
+                              <th title="Median duration">Median</th>
+                              <th title="75th percentile duration">75 %</th>
+                              <th title="95th percentile duration">95 %</th>
+                              </tr>
+                              </thead>
+                              <tbody id="histogram-percentiles" class="measure-values">
+                                  <tr>
+                                  <td colspan="6">No Data</td>
+                                  </tr>
+                              </tbody>
+                            </table>
                         </div>
                         <div style="text-align: center">
                             <a class="btn btn-default btn-sm" id="export-csv" title="Export the current histogram to CSV">Export CSV</a>
