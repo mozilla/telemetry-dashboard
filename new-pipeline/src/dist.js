@@ -935,13 +935,18 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
         .hide();
 
     } else {
-      $("#medians")
+      $("#histogram-percentiles")
         .empty()
         .append(
           histogramsList[0].histograms.map(function(histogram) {
-            $measure = $("<dt></dt>").text(histogram.measure + " Median");
-            $value = $("<dd></dd>").text(formatNumber(histogram.percentile(50)));
-            return $measure.add($value);
+            return `<tr>
+            <th>${histogram.measure}</th>
+            <td>${formatNumber(histogram.percentile(5))}</td>
+            <td>${formatNumber(histogram.percentile(25))}</td>
+            <td>${formatNumber(histogram.percentile(50))}</td>
+            <td>${formatNumber(histogram.percentile(75))}</td>
+            <td>${formatNumber(histogram.percentile(95))}</td>
+            </tr>`;
           })
         );
       $("#summary")
