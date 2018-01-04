@@ -128,10 +128,11 @@ const downloadCodeGeneralDetails = {
   "9": {code: "DWNLD_ERR_PATCH_SIZE_NOT_EQUAL", desc: "The size of the update file being downloaded does not equal the expected size."},
   "10": {code: "DWNLD_ERR_BINDING_ABORTED", desc: "The download request was aborted with NS_BINDING_ABORTED."},
   "11": {code: "DWNLD_ERR_ABORT", desc: "The download request was aborted with NS_ERROR_ABORT."},
-  "12": {code: "DWNLD_ERR_DOCUMENT_NOT_CACHED", desc: "The download request was aborted with NS_ERROR_DOCUMENT_NOT_CACHED and the download will be retried as of Firefox 49 and greater (<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1272585'>Bug 1272585</a>)."},
+  "12": {code: "DWNLD_ERR_DOCUMENT_NOT_CACHED", desc: "The download request was aborted. As of Firefox 49 the download will be continued (<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1272585'>Bug 1272585</a>) and as of Firefox 57 the error should rarely occur if at all."},
   "13": {code: "DWNLD_ERR_VERIFY_NO_REQUEST", desc: "The download network request object no longer exists."},
   "14": {code: "DWNLD_ERR_VERIFY_PATCH_SIZE_NOT_EQUAL", desc: "The size of the downloaded update file does not equal the expected size."},
-  "15": {code: "DWNLD_ERR_VERIFY_NO_HASH_MATCH", desc: "The file hash does not equal the hash specified in the update xml file."}};
+  "15": {code: "DWNLD_ERR_VERIFY_NO_HASH_MATCH", desc: "The file hash does not equal the hash specified in the update xml file."},
+  "16": {code: "DWNLD_RESUME_FAILURE", desc: "The download in progress failed to resume."}};
 
 // Download codes, names, and descriptions specific to UPDATE_DOWNLOAD_CODE_COMPLETE and UPDATE_DOWNLOAD_CODE_PARTIAL.
 const DOWNLOAD_CODE_DETAILS = {
@@ -220,9 +221,15 @@ const stateFailureCodeGeneralDetails = {
   "46": {code: "DELETE_ERROR_EXPECTED_DIR", desc: "When attempting to delete a directory a file was found."},
   "47": {code: "DELETE_ERROR_EXPECTED_FILE", desc: "When attempting to delete a file a directory was found."},
   "48": {code: "RENAME_ERROR_EXPECTED_FILE", desc:  "When attempting to rename a file a directory was found."},
-  "49": {code: "SERVICE_COULD_NOT_COPY_UPDATER", desc: "Unable to copy the updater to a secure location (Windows only)."},
-  "50": {code: "SERVICE_STILL_APPLYING_TERMINATED", desc: "The update is still in the applying state and the updater process was terminated (Windows only)."},
-  "51": {code: "SERVICE_STILL_APPLYING_NO_EXIT_CODE", desc: "The update is still in the applying state and the updater process did not return an exit code (Windows only)."},
+  "49": {code: "SERVICE_COULD_NOT_COPY_UPDATER", desc: "The maintenance service was unable to copy the updater to a secure location (Windows only)."},
+  "50": {code: "SERVICE_STILL_APPLYING_TERMINATED", desc: "The update is still in the applying state and the updater process was terminated by the maintenance service (Windows only)."},
+  "51": {code: "SERVICE_STILL_APPLYING_NO_EXIT_CODE", desc: "The update is still in the applying state and the updater process did not return an exit code to the maintenance service (Windows only)."},
+  "52": {code: "SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR", desc: "The directory to apply the update to is not the same as or a child of the installation directory when checked by the maintenance service (Windows only)."},
+  "53": {code: "SERVICE_CALC_REG_PATH_ERROR", desc: "The maintenance service was unable to calculate the registry path for the installation (Windows only)."},
+  "54": {code: "SERVICE_INVALID_APPLYTO_DIR_ERROR", desc: "Installation directory and working directory were not the same for a non-staged update performed by the maintenance service (Windows only)."},
+  "55": {code: "SERVICE_INVALID_INSTALL_DIR_PATH_ERROR", desc: "The installation directory path passed to the maintenance service is invalid (Windows only)."},
+  "56": {code: "SERVICE_INVALID_WORKING_DIR_PATH_ERROR", desc: "The working directory path passed to the maintenance service is invalid (Windows only)."},
+  "57": {code: "SERVICE_INSTALL_DIR_REG_ERROR", desc: "The installation directory specified in the registry and checked by the maintenance service is invalid (Windows only)."},
   "61": {code: "WRITE_ERROR_FILE_COPY", desc: "Error copying a file."},
   "62": {code: "WRITE_ERROR_DELETE_FILE", desc: "Error deleting a file."},
   "63": {code: "WRITE_ERROR_OPEN_PATCH_FILE", desc: "Unable to create new file for patching."},
@@ -237,13 +244,21 @@ const stateFailureCodeGeneralDetails = {
   "72": {code: "INVALID_APPLYTO_DIR_STAGED_ERROR", desc: "The directory to apply the update to is not the same as or a child of the installation directory."},
   "73": {code: "LOCK_ERROR_PATCH_FILE", desc: "Error locking a patch file (Windows only)."},
   "74": {code: "INVALID_APPLYTO_DIR_ERROR", desc: "Installation directory and working directory were not the same for a non-staged update (Windows only)."},
+  "75": {code: "INVALID_INSTALL_DIR_PATH_ERROR", desc: "The installation directory path is invalid."},
+  "76": {code: "INVALID_WORKING_DIR_PATH_ERROR", desc: "The working directory path is invalid."},
+  "77": {code: "INVALID_CALLBACK_PATH_ERROR", desc: "The application callback path is invalid."},
+  "78": {code: "INVALID_CALLBACK_DIR_ERROR", desc: "The application callback directory is invalid."},
   "80": {code: "FOTA_GENERAL_ERROR", desc: "General error from the recovery service (B2G only)."},
   "81": {code: "FOTA_UNKNOWN_ERROR", desc: "Unexpected error from the recovery service (B2G only)."},
   "82": {code: "FOTA_FILE_OPERATION_ERROR", desc: "File operation error (B2G only)"},
   "83": {code: "FOTA_RECOVERY_ERROR", desc: "Error initializing the receovery service (B2G only)"},
   "84": {code: "INVALID ERROR CODE", desc: "Invalid update state code."},
-  "99": {code: "INVALID ERROR CODE", desc: "Invalid update state failed code."},
-  "100": {code: "INVALID ERROR CODE", desc: "Unknown"}};
+  "90": {code: "ERR_OLDER_VERSION_OR_SAME_BUILD", desc: "The update was for an older version or the same version and build ID."},
+  "91": {code: "ERR_UPDATE_STATE_NONE", desc: "The update status file existed but didn't have a valid state."},
+  "92": {code: "ERR_CHANNEL_CHANGE", desc: "The update was for a different channel."},
+  "98": {code: "INVALID_UPDATER_STATE_CODE", desc: "Invalid update state code."},
+  "99": {code: "INVALID_UPDATER_STATUS_CODE", desc: "Invalid update status code."},
+  "100": {code: "INVALID ERROR CODE", desc: "100 is a test code and should not be reported to telemetry."}};
 
 const CHECK_CODE_GOOD = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11];
 const CHECK_CODE_BAD = [0, 5, 14, 15, 18, 19, 20, 21, 22, 23, 24, 25, 27, 29, 30, 31, 32, 33, 34, 35, 36];
@@ -357,7 +372,7 @@ startDate.setMonth(9); // October
 startDate.setFullYear(2016);
 
 function getDetailsText(aText) {
-  var pos1 = aText.indexOf("<");
+  var pos1 = aText.indexOf("<a");
   // If there are no links in the text just return the text.
   if (pos1 == -1) {
     return [aText, null, null, null];
@@ -437,7 +452,11 @@ function updateDetailsRow(aTableID, aRowNum, aSubset, aTotal, aTitle, aDesc) {
   if (linkURL && linkText && text2) {
     var a = document.createElement("a");
     a.setAttribute("href", linkURL);
-    a.setAttribute("target", "_blank");
+    if (linkURL.indexOf("#") == 0) {
+      a.setAttribute("target", "_self");
+    } else {
+      a.setAttribute("target", "_blank");
+    }
     a.textContent = linkText;
     row.cells[2].appendChild(a);
     text = document.createTextNode(text2);
@@ -496,7 +515,11 @@ function displayBarDetails(aChartPrefix, aIndex, aChartData, aJSONData, aDetails
   if (linkURL && linkText && textEnd) {
     a = document.createElement("a");
     a.setAttribute("href", linkURL);
-    a.setAttribute("target", "_blank");
+    if (linkURL.indexOf("#") == 0) {
+      a.setAttribute("target", "_self");
+    } else {
+      a.setAttribute("target", "_blank");
+    }
     a.textContent = linkText;
     detailsDiv.appendChild(a);
     textNode = document.createTextNode(textEnd);
@@ -634,6 +657,7 @@ function getJSONValue(aData, aKey, aSubKey, aDefault) {
 }
 
 function populateDashboard(event) {
+  document.getElementById("weekly-dropdown").disabled = true;
   var errDiv = document.getElementById("error-message");
   errDiv.style.display = "none";
 
@@ -676,8 +700,9 @@ function populateDashboard(event) {
           "location": "bottom-left"
         },
         "size": {
+          "canvasHeight": 520,
           "canvasWidth": 960,
-          "pieOuterRadius": "90%"
+          "pieOuterRadius": "80%"
         },
         "data": {
           "sortOrder": aSortOrder,
@@ -685,8 +710,8 @@ function populateDashboard(event) {
         },
         "labels": {
           "outer": {
-            "hideWhenLessThanPercentage": 0,
-            "pieDistance": 32
+            "hideWhenLessThanPercentage": null,
+            "pieDistance": 20
           },
           "inner": {
             "hideWhenLessThanPercentage": 3
@@ -788,8 +813,8 @@ function populateDashboard(event) {
     var distributionSlices = [];
     termLabel = "Up to date";
     updateDetailsRow("summary-dist-details", 0, versionUpToDate, totalUpdateData, termLabel,
-                     "the client's Firefox version is " + (latestVersion - 2) + " or higher " +
-                     "and less than " + (latestVersion + 1) + ".");
+                     "the client's Firefox version is " + (latestVersion - upToDateReleases) +
+                     " or higher on the release channel.");
     if (versionUpToDate) {
       distributionSlices.push({"label": termLabel, "value": versionUpToDate, "color": "#0065D1"});
     }
@@ -797,7 +822,9 @@ function populateDashboard(event) {
     termLabel = "Out of date, potentially of concern";
     updateDetailsRow("summary-dist-details", 1, outOfDateExcludedTotal, totalUpdateData, termLabel,
                      "the client does not meet the minimum requirements for there to be an " +
-                     "expectation that the client should have updated (see chart below for details).");
+                     "expectation that the client should have updated (see the " +
+                     "<a href='#not-min-reqs-chart'>Out of date, potentially of concern reason " +
+                     "distribution chart</a> below for details).");
     if (outOfDateExcludedTotal) {
       distributionSlices.push({"label": termLabel, "value": outOfDateExcludedTotal, "color": "#DBD100"});
     }
@@ -805,7 +832,9 @@ function populateDashboard(event) {
     termLabel = "Out of date, of concern";
     updateDetailsRow("summary-dist-details", 2, ofConcernTrue, totalUpdateData, termLabel,
                      "the client meets the minimum requirements for there to be an " +
-                     "expectation that the client should have updated.");
+                     "expectation that the client should have updated (see the " +
+                     "<a href='#of-concern-chart'>Out of date, of concern reason distribution " +
+                     "chart</a> below for details).");
     if (ofConcernTrue) {
       distributionSlices.push({"label": termLabel, "value": ofConcernTrue, "color": "#D10000"});
     }
@@ -823,11 +852,11 @@ function populateDashboard(event) {
       NotMinReqsSlices.push({"label": termLabel, "value": hasOutOfDateMaxVersionFalse, "color": "#0065D1"});
     }
 
-      termLabel = "No update pings";
-      updateDetailsRow("not-min-reqs-details", 1, hasUpdatePingFalse, outOfDateExcludedTotal, termLabel,
-                       "the client has never sent an update telemetry ping for any Firefox " +
-                       "version. This can be caused by building without application update as " +
-                       "Firefox distributions typically do.");
+    termLabel = "No update pings";
+    updateDetailsRow("not-min-reqs-details", 1, hasUpdatePingFalse, outOfDateExcludedTotal, termLabel,
+                     "the client has never sent an update telemetry ping for any Firefox " +
+                     "version. This can be caused by building without application update as " +
+                     "Firefox distributions typically do.");
     if (hasUpdatePingFalse) {
       NotMinReqsSlices.push({"label": termLabel, "value": hasUpdatePingFalse, "color": "#004949"});
     }
@@ -849,8 +878,9 @@ function populateDashboard(event) {
                      weeksOfSubsessionData + " weeks. Since there is an update telemetry ping " +
                      "every 12 hours and it happens within minutes after startup when the 12 " +
                      "hours have elapsed this is equivalent to these clients only running " +
-                     "Firefox on " + (minUpdatePingCount - 1) + " days or less during the "+
-                     "previous " + (weeksOfSubsessionData * 7) + " days.");
+                     "Firefox on " + (minUpdatePingCount - 1) + " days or less over the "+
+                     "previous " + weeksOfSubsessionData + " weeks (" + (weeksOfSubsessionData * 7) +
+                     " days)");
     if (hasMinUpdatePingCountFalse) {
       NotMinReqsSlices.push({"label": termLabel, "value": hasMinUpdatePingCountFalse, "color": "#924900"});
     }
@@ -925,10 +955,10 @@ function populateDashboard(event) {
     b.textContent = "out of date";
     outOfDateDesc.appendChild(b);
     textNode = document.createTextNode(" refers to Firefox 42 (first version with opt-out telemetry " +
-                                       "for 100% of the release population) through versions less " +
-                                       "than Firefox " + (latestVersion - upToDateReleases) + " (" +
-                                       (upToDateReleases + 1) + " versions prior to the latest " +
-                                       "Firefox version at the time this data was generated).");
+                                       "for 100% of the release population) through versions less than Firefox " +
+                                       (latestVersion - upToDateReleases) + " (" +
+                                       (upToDateReleases + 1) + " versions prior to the latest Firefox " +
+                                       "version at the time this data was generated) on the release channel.");
     outOfDateDesc.appendChild(textNode);
 
     var ofConcernByVersion = data["ofConcernByVersion"];
@@ -950,13 +980,47 @@ function populateDashboard(event) {
                            "#FFFF6D",  // yellow
                            "#24FF24",  // light green
                            "#000000"]; // black
+      var detailRows = [];
       var versionSlices = [];
       for (var v in ofConcernByVersion) {
         var labelName = v;
         var diff = (latestVersion - labelName.split(".")[0]) - 3;
         var color = versionColors[Math.min(diff, versionColors.length - 1)];
-        if (labelName == "43.0.1" || labelName == "47.0.2") {
-          labelName = labelName + " (watershed)";
+        switch (labelName) {
+          case "43.0.1":
+            labelName = labelName + " (SHA1 / SHA256 watershed)";
+            detailRows[0] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                             "desc": "a Windows only update watershed was required to change the binary " +
+                                     "signing certificate from SHA1 to SHA256 (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1079858'>Bug 1079858</a>)."};
+            break;
+          case "47.0.2":
+            labelName = labelName + " (Websense watershed)";
+            detailRows[1] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                             "desc": "a Windows only update watershed was required to add detection for the " +
+                                     "Websense application (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1305847'>Bug 1305847</a>)."};
+            break;
+          case "52.0.2":
+            labelName = labelName + " (XP / Vista EOL)";
+            detailRows[2] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                             "desc": "Windows XP / Vista / 2003 are no longer supported as of Firefox 53. These " +
+                                     "clients are being migrated to ESR52 by Release Engineering (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1130266'>Bug 1130266</a>)."};
+            break;
+          case "56.0.2":
+            labelName = labelName + " (JAWS watershed)";
+            detailRows[3] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                             "desc": "a Windows only update watershed was required to add detection for the " +
+                                     "JAWS application (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=617918'>Bug 617918</a>)."};
+            break;
+          case "57.0.2":
+            labelName = labelName + " (LZMA watershed)";
+            detailRows[4] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                             "desc": "an update watershed was added for LZMA update compression support (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=641212'>Bug 641212</a>)."};
+            break;
         }
         versionSlices.push({"label": labelName, "value": ofConcernByVersion[v],
                             "color": color});
@@ -964,6 +1028,19 @@ function populateDashboard(event) {
       displayD3Pie("version-dist-chart",
                    "Out of date, of concern client distribution across Firefox versions",
                    versionSlices, "label-asc");
+      for (var i = 0; i < 5; i++) {
+        if (detailRows[i]) {
+          updateDetailsRow("version-dist-details", i, detailRows[i].subset, ofConcernTrue, detailRows[i].labelName,
+                           detailRows[i].desc);
+        }
+      }
+
+      var versionDetailsTable = document.getElementById("version-dist-details");
+      for (var i = 4; i > -1; i--) {
+        if (!detailRows[i] && versionDetailsTable.rows[i]) {
+          versionDetailsTable.deleteRow(i);
+        }
+      }
     }
 
     var checkCodeNotifyOfConcern = data["checkCodeNotifyOfConcern"];
@@ -1021,7 +1098,9 @@ function populateDashboard(event) {
     });
     updateBarChart(stateFailureCodeStartupData, "state-failure-code-startup", STATE_FAILURE_CODE_STARTUP_BAR_CLASS_FN,
                    stateFailureCodeStartupOfConcern, stateFailureCodeGeneralDetails, null, false);
+    document.getElementById("weekly-dropdown").disabled = false;
   }).fail(function() {
+    document.getElementById("weekly-dropdown").disabled = false;
     if (firstLoad) {
       // Try to load the previous week's data in case the current week's data
       // isn't available yet.
