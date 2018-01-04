@@ -37,10 +37,11 @@ function decoratedLinkHandler(e) {
   }
   let anchor = findAnchor(e.target);
   if (anchor && anchor.hostname != window.location.hostname) {
-    gtag('event', {
-      'event_category': 'Outbound Link',
+    gtag('event', 'outbound_link', {
+      'event_category': 'user_interaction',
       'event_action': 'click',
       'event_label': anchor.href,
+      'transport_type': 'beacon',
     });
   }
 }
