@@ -931,10 +931,28 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       }
       $("#summary")
         .show();
+      $("#stats-comparison")
+        .hide();
 
     } else {
+      $("#histogram-percentiles")
+        .empty()
+        .append(
+          histogramsList[0].histograms.map(function(histogram) {
+            return `<tr>
+            <th>${histogram.measure}</th>
+            <td>${formatNumber(histogram.percentile(5))}</td>
+            <td>${formatNumber(histogram.percentile(25))}</td>
+            <td>${formatNumber(histogram.percentile(50))}</td>
+            <td>${formatNumber(histogram.percentile(75))}</td>
+            <td>${formatNumber(histogram.percentile(95))}</td>
+            </tr>`;
+          })
+        );
       $("#summary")
         .hide();
+      $("#stats-comparison")
+        .show();
     }
 
     $("#plots")
@@ -973,6 +991,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     }
   } else { // Show all four axes
     $("#summary")
+      .hide();
+    $("#stats-comparison")
       .hide();
     $("#plots")
       .removeClass("col-md-9")

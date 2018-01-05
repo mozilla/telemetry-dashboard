@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <title>Measurement Dashboard</title>
-    
+
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/elessar.css" />
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
-    
+
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
     <script src="../analytics/analytics.js"></script>
@@ -118,6 +118,25 @@
                                 </dl>
                             </div>
                         </div>
+                        <div id="stats-comparison" style="margin-top: 50px; margin-bottom: 20px;">
+                            <table>
+                              <thead class="measure-headers">
+                              <tr>
+                              <th></th>
+                              <th title="5th percentile duration">5 %</th>
+                              <th title="25th percentile duration">25 %</th>
+                              <th title="Median duration">Median</th>
+                              <th title="75th percentile duration">75 %</th>
+                              <th title="95th percentile duration">95 %</th>
+                              </tr>
+                              </thead>
+                              <tbody id="histogram-percentiles" class="measure-values">
+                                  <tr>
+                                  <td colspan="6">No Data</td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                        </div>
                         <div style="text-align: center">
                             <a class="btn btn-default btn-sm" id="export-csv" title="Export the current histogram to CSV">Export CSV</a>
                             <a class="btn btn-default btn-sm" id="export-json" title="Export the current histogram to JSON">Export JSON</a>
@@ -192,7 +211,7 @@
         <span class="busy-indicator-message">Loading page...</span>
     </div>
     <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
-    
+
     <!-- Bootstrap and supporting libraries -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
@@ -200,12 +219,12 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
     <script type="text/javascript" src="lib/daterangepicker.js"></script>
     <script src="lib/elessar.min.js"></script>
-    
+
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="lib/metricsgraphics.js"></script>
     <script src="lib/d3pie.min.js"></script>
-    
+
     <script src="../v2/telemetry.js"></script>
     <script src="src/dashboards.js"></script>
     <script src="src/dist.js"></script>
