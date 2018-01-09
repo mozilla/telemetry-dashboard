@@ -26,7 +26,7 @@ var gDefaultAggregates = [
   }],
 ];
 // these will be generated, but won't appear in the multiselect
-// note: some code using gMetaAggregates assumes for convenience that 
+// note: some code using gMetaAggregates assumes for convenience that
 // meta aggregate names are special and hopefully won't ever collide with
 // (dynamically generated) names of other aggregates.
 var gMetaAggregates = [
@@ -301,7 +301,7 @@ $(function () {
               multiselectSetOptions($("#selected-key"),
                 options);
               if (gInitialPageState.keys &&
-                gInitialPageState.keys.length > 0) { // Reselect previously selected key            
+                gInitialPageState.keys.length > 0) { // Reselect previously selected key
                 // Check to make sure the key can actually still be selected
                 var key = gInitialPageState.keys[0];
                 if ($("#selected-key")
@@ -337,6 +337,15 @@ $(function () {
               var metric = $("#measure").val()
               var channel = $("#max-channel-version").val().split("/")[0]
               var description = getDescriptionWithLink(metric, channel, evolutionDescription)
+              var improvedDescription = document.createElement("button");
+
+              improvedDescription.classList.add("button");
+              improvedDescription.classList.add("button-4");
+              improvedDescription.classList.add("button-4c");
+              improvedDescription.classList.add("icon-arrow-right");
+              improvedDescription.innerHTML = description;
+
+              description = improvedDescription;
 
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
