@@ -36,7 +36,7 @@ function decoratedLinkHandler(e) {
     return;
   }
   let anchor = findAnchor(e.target);
-  if (anchor && anchor.hostname != window.location.hostname) {
+  if (anchor && anchor.hostname && anchor.hostname != window.location.hostname) {
     gtag('event', 'outbound_link', {
       'event_category': 'user_interaction',
       'event_action': 'click',
