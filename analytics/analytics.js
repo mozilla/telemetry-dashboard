@@ -25,10 +25,17 @@ if (window.trackingEnabled()) {
   gtag('js', new Date());
   gtag('config', 'UA-49796218-2');
 
-  window.addEventListener("DOMContentLoaded", () => {
-    // Decorate outbound links from the top frame
-    document.addEventListener("click", decoratedLinkHandler, true);
-  });
+  // Decorate outbound links from the top frame of whitelisted pages
+  const OUTBOUND_LINKS_WHITELIST = new Set([
+    '/',
+    '/index.html',
+  ]);
+
+  if (OUTBOUND_LINKS_WHITELIST.has(window.location.pathname)) {
+    window.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("click", decoratedLinkHandler, true);
+    });
+  }
 }
 
 function decoratedLinkHandler(e) {
@@ -36,7 +43,7 @@ function decoratedLinkHandler(e) {
     return;
   }
   let anchor = findAnchor(e.target);
-  if (anchor && anchor.hostname != window.location.hostname) {
+  if (anchor) {
     gtag('event', 'outbound_link', {
       'event_category': 'user_interaction',
       'event_action': 'click',
