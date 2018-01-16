@@ -1054,7 +1054,7 @@ function getDescriptionWithLink(metric, channel, description) {
   div.classList.add("text-center");
   div.innerHTML =  descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" +
                    "<i class=\"btn btn-outline-primary fa fa-info-circle\" " +
-                   "style='float: right; color: black' aria-hidden=\"true\">  " +
+                   "style='color: black' aria-hidden=\"true\">  " +
                    "More Details </i></a>"
 
   return div
