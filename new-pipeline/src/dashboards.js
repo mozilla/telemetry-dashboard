@@ -1048,8 +1048,14 @@ function updateOSs() {
 
 function getDescriptionWithLink(metric, channel, description) {
   var metricUrl = "https://georgf.github.io/fx-data-explorer/index.html?search=" + metric + "&searchtype=in_name&optout=false&channel=" + channel + "&constraint=is_in&version=any"
-  var imgUrl = "https://upload.wikimedia.org/wikipedia/commons/6/64/Icon_External_Link.png"
   var descr = description === null ? metric : description
 
-  return " <a href=\"" + metricUrl + "\" target=\"_blank\">" + descr + "<img src=\"" + imgUrl + "\"/></a>"
+  var div = document.createElement('div');
+  div.classList.add("text-center");
+  div.innerHTML =  descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" +
+                   "<i class=\"btn btn-outline-primary fa fa-info-circle\" " +
+                   "style='float: right; color: black' aria-hidden=\"true\">  " +
+                   "More Details </i></a>"
+
+  return div
 }
