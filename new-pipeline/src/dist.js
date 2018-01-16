@@ -1622,35 +1622,129 @@ var gPreviousCSVBlobUrl = null,
 var gPreviousDisqusIdentifier = null;
 
 function saveStateToUrlAndCookie() {
-    var picker = $("#date-range")
-        .data("daterangepicker");
-    var minChannelVersion = gInitialPageState.min_channel_version;
-    gInitialPageState = {
-        measure: $("#measure")
-            .val(),
-        max_channel_version: $("#channel-version")
-            .val(),
-        sort_keys: $("#sort-keys")
-            .val(),
-        table: $("input[name=table-toggle]:checked")
-            .val() !== "0" ? 1 : 0,
-        cumulative: $("input[name=cumulative-toggle]:checked")
-            .val() !== "0" ? 1 : 0,
-        use_submission_date: $("input[name=build-time-toggle]:checked")
-            .val() !== "0" ? 1 : 0,
-        sanitize: $("input[name=sanitize-toggle]:checked")
-            .val() !== "0" ? 1 : 0,
-        trim: $("input[name=trim-toggle]:checked")
-            .val() !== "0" ? 1 : 0,
-        start_date: moment(picker.startDate)
-            .format("YYYY-MM-DD"),
-        end_date: moment(picker.endDate)
-            .format("YYYY-MM-DD"),
-    };
 
-    // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
-    if (minChannelVersion !== undefined) {
-        gInitialPageState.min_channel_version = minChannelVersion;
+  var picker = $("#date-range")
+    .data("daterangepicker");
+  var minChannelVersion = gInitialPageState.min_channel_version;
+  gInitialPageState = {
+    measure: $("#measure")
+      .val(),
+    max_channel_version: $("#channel-version")
+      .val(),
+    sort_keys: $("#sort-keys")
+      .val(),
+    table: $("input[name=table-toggle]:checked")
+      .val() !== "0" ? 1 : 0,
+    cumulative: $("input[name=cumulative-toggle]:checked")
+      .val() !== "0" ? 1 : 0,
+    use_submission_date: $("input[name=build-time-toggle]:checked")
+      .val() !== "0" ? 1 : 0,
+    sanitize: $("input[name=sanitize-toggle]:checked")
+      .val() !== "0" ? 1 : 0,
+    trim: $("input[name=trim-toggle]:checked")
+      .val() !== "0" ? 1 : 0,
+    start_date: moment(picker.startDate)
+      .format("YYYY-MM-DD"),
+    end_date: moment(picker.endDate)
+      .format("YYYY-MM-DD"),
+  };
+
+  // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
+  if (minChannelVersion !== undefined) {
+    gInitialPageState.min_channel_version = minChannelVersion;
+  }
+
+  var selected = $("#compare")
+    .val();
+  if (selected !== "") {
+    gInitialPageState.compare = selected;
+  }
+  var selected = [$("#selected-key1")
+    .val(), $("#selected-key2")
+    .val(), $("#selected-key3")
+    .val(), $("#selected-key4")
+    .val()].filter(function (value) {
+    return value !== "";
+  });
+  if (selected.length > 0) {
+    gInitialPageState.keys = selected;
+  }
+
+  // Only store these in the state if they are not all selected
+  var selected = $("#filter-product")
+    .val() || [];
+  if (selected.length !== $("#filter-product option")
+    .size()) {
+    gInitialPageState.product = selected;
+  }
+  var selected = $("#filter-os")
+    .val() || [];
+  if (selected.length !== $("#filter-os option")
+    .size()) {
+    gInitialPageState.os = compressOSs();
+  }
+  var selected = $("#filter-arch")
+    .val() || [];
+  if (selected.length !== $("#filter-arch option")
+    .size()) {
+    gInitialPageState.arch = selected;
+  }
+  var selected = $("#filter-e10s")
+    .val() || [];
+  if (selected.length !== $("#filter-e10s option")
+    .size()) {
+    gInitialPageState.e10s = selected;
+  }
+  var selected = $("#filter-process-type")
+    .val() || [];
+  if (selected.length !== $("#filter-process-type option")
+    .size()) {
+    gInitialPageState.processType = selected;
+  }
+
+  var stateString = Object.keys(gInitialPageState)
+    .sort()
+    .map(function (key) {
+      var value = gInitialPageState[key];
+      if ($.isArray(value)) {
+        value = value.join("!");
+      }
+      return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+    })
+    .join("&");
+
+  // Save to the URL hash if it changed
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) {
+    url = decodeURI(window.location.href.substring(index + 1));
+  }
+  if (url[0] == "!") {
+    url = url.slice(1);
+  }
+  if (url !== stateString) {
+    window.location.replace(window.location.origin + window.location.pathname +
+      "#!" + encodeURI(stateString));
+    $(".permalink-control input")
+      .hide(); // Hide the permalink box again since the URL changed
+  }
+
+  // Save the state in a cookie that expires in 28 days
+  var expiry = new Date();
+  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
+  document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
+
+  // Add link to switch to the evolution dashboard with the same settings
+  var dashboardURL = window.location.origin + window.location.pathname.replace(
+    /dist\.html$/, "evo.html") + window.location.hash;
+  $("#switch-views")
+    .attr("href", dashboardURL);
+
+  // Update export links with the new histogram
+  if (gCurrentHistogramsList.length > 0 && gCurrentHistogramsList[0].histograms
+    .length > 0) {
+    if (gPreviousCSVBlobUrl !== null) {
+      URL.revokeObjectURL(gPreviousCSVBlobUrl);
     }
 
     var selected = $("#compare")

@@ -1048,18 +1048,14 @@ function updateOSs() {
 
 function getDescriptionWithLink(metric, channel, description) {
   var metricUrl = "https://georgf.github.io/fx-data-explorer/index.html?search=" + metric + "&searchtype=in_name&optout=false&channel=" + channel + "&constraint=is_in&version=any"
-  var descr = description === null ? metric : description;
+  var descr = description === null ? metric : description
 
-  /*  var improvedDescription = document.createElement("button");
+  var div = document.createElement('div');
+  div.classList.add("text-center");
+  div.innerHTML =  descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" +
+                   "<i class=\"btn btn-outline-primary fa fa-info-circle\" " +
+                   "style='float: right; color: black' aria-hidden=\"true\">  " +
+                   "More Details </i></a>"
 
-    improvedDescription.classList.add("button");
-    improvedDescription.classList.add("button-4");
-    improvedDescription.innerHTML = descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" + "<i id=\"more-details\" class=\"btn btn-outline-primary fa fa-info-circle\" style='float: right; color: black' aria-hidden=\"true\">  more details </i></a>"
-
-    return improvedDescription;*/
-    var divvv = document.createElement('div');
-    divvv.classList.add("text-center");
-    divvv.classList.add("py-5");
-    divvv.innerHTML =  descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" + "<i class=\"btn btn-outline-primary fa fa-info-circle\" style='float: right; color: black' aria-hidden=\"true\">  more details </i></a>"
-  return divvv
+  return div
 }
