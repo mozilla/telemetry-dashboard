@@ -1797,8 +1797,6 @@ function saveStateToUrlAndCookie() {
       // JSON
       var outputObj = {};
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           outputObj[titleHistogramsPair.title] = [];
@@ -1822,8 +1820,6 @@ function saveStateToUrlAndCookie() {
       histograms.forEach(hist => titles.push(hist.measure));
       outputArr.push(titles);
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           var record;
