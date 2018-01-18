@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<title>Public SSL Pageload Dataset</title>
+<link rel="stylesheet" href="doc.css">
+<script src="../analytics/analytics.js"></script>
+</head>
+<body>
+<main>
+<h2>Public SSL Pageload Dataset</h2>
+<p>As noted in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1414839">bug 1414839</a>,
+we now have a public SSL dataset detailing the ratios of pageloads that Firefox users perform over SSL.</p>
+<p>The dataset is a table with the following columns:</p>
+<dl>
+  <dt>submission_date</dt>
+  <dd>
+    A timestamp, day resolution, denoting the submission date of the pageloads information
+    aggregated in this row.
+    This could be different from the day the pageloads occured due to client-side delay.
+  </dd>
+  <dt>os</dt>
+  <dd>
+    The Operating System family of the users whose pageloads are aggregated in this row.
+    Is one of Windows_NT, Darwin, or Linux.
+  </dd>
+  <dt>country</dt>
+  <dd>
+    On receipt of pageloads information from a user, we do a geo-ip lookup of the submitting
+    IP address. This is that data, at country resolution, as an ISO 639 two-character code.
+    Or '<code>??</code>' if we have no idea.
+  </dd>
+  <dt>reporting_ratio</dt>
+  <dd>
+    The percentage, represented as a decimal number between 0 and 1, of clients in the
+    dataset that reported any pageloads at all in the SSL probe.
+    Before Firefox 58, very few users reported <code>HTTP_PAGELOAD_IS_SSL</code>. This number
+    is to help identify rows whose contents might not be representative of the Firefox
+    population as a whole, given their small (and self-selected) sample sizes.
+    See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1413258">bug 1413258</a>
+    for more details.
+  </dd>
+  <dt>normalized_pageloads</dt>
+  <dd>
+    We don't want to report how many pageloads Firefox users conduct. So instead, we normalized
+    the number of pageloads that are applicable to the dimensions in this row
+      (<code>submission_date</code>,
+      <code>os</code>,
+      <code>country</code>)
+    relative to the total number of pageloads observed in the entire dataset.
+    See <i>Combining Rows</i> for a full description.
+    A decimal number between 0 and 1. Generally very close to 0.
+  </dd>
+  <dt>ratio</dt>
+  <dd>
+    The ratio of pageloads that are applicable to the dimensions in this row
+      (<code>submission_date</code>,
+      <code>os</code>,
+      <code>country</code>)
+    that were conducted over SSL. A decimal number between 0 and 1.
+  </dd>
+</dl>
+<h3>Combining Rows</h3>
+<p>You can't add ratios if they have different bases. If 50% of 10 loads were SSL, and 5% of 20
+loads were SSL, you can't get the combined ratio (20%) without knowing that one was for 10 loads
+and the other was for 20.</p>
+<p>If you're reluctant to share the numbers 10 and 20, this gets tricky. So what you do is you
+normalize the whole batch of 30 loads down to the number 1. Then 50% of 0.333... were SSL
+and 5% of 0.666... were SSL. You can still calculate the combined ratio of 20% by normalizing
+them back out thusly:</p>
+<p><code>0.5 * 0.333... + 0.05 * 0.666.. = 0.2</code></p>
+<p>So, in short, if you wish to combine rows in this dataset and get their combined ratio (say
+you wish to know the ratio of all users in the US), you simply need to multiply each row's
+<code>ratio</code> by its <code>normalized_pageloads</code> and sum the results together.</p>
+</main>
+<footer><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></footer>
+</body>
+</html>

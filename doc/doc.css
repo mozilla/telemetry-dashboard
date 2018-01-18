@@ -1,0 +1,20 @@
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+main {
+  align-self: center;
+  max-width: 80ex; /* for comfortable reading */
+}
+
+dt {
+  margin: 1em 0 0;
+  font-weight: bold;
+  font-family: mono;
+}
+
+footer {
+  font-size: smaller;
+}
