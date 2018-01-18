@@ -204,7 +204,7 @@ function loadStateFromUrlAndCookie() {
     pageState.product = ["Firefox"];
     pageState.os = pageState.arch = pageState.e10s = pageState.processType =
       null;
-    pageState.compare ="";
+    pageState.compare = "";
     pageState.keys = [];
     pageState.use_submission_date = 0;
     pageState.sanitize = 1;
