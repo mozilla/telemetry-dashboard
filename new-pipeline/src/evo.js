@@ -25,6 +25,12 @@ var gDefaultAggregates = [
     return evolution.percentiles(95);
   }],
 ];
+
+const kDefaultSelectedAggregates = [
+  "median",
+  "5th-percentile",
+  "95th-percentile",
+];
 // these will be generated, but won't appear in the multiselect
 // note: some code using gMetaAggregates assumes for convenience that 
 // meta aggregate names are special and hopefully won't ever collide with
@@ -249,17 +255,8 @@ $(function () {
               .trigger("change");
           });
         });
-      $("#measure")
-        .change(function (e) {
-          indicate("Updating aggregates...");
-          updateAggregates(function () {
-            indicate();
-            $("#aggregates")
-              .trigger("change");
-          });
-        });
       $(
-          "input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type"
+          "#measure, input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-e10s, #filter-process-type"
         )
         .change(function (e) {
           var $this = $(this);
@@ -393,81 +390,38 @@ $(function () {
 
 var gLoadedAggregatesFromState = false;
 
-function updateAggregates(callback) {
-  var channelVersions = Telemetry.getVersions($("#min-channel-version")
-    .val(), $("#max-channel-version")
-    .val());
-  var realKind = null,
-    realBuckets = null;
-  var versionCount = 0;
+function updateAggregates(kind, buckets) {
+  gCurrentKind = kind;
+  let newAggregates;
+  if (kind === "enumerated") {
+    newAggregates = getHumanReadableBucketOptions(kind, buckets);
+    multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+  } else if(kind == "categorical") {
+    newAggregates = buckets.map((r, i) => {return [i.toString(), r]})
+    multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
+  }  else if (kind === "boolean" || kind === "flag") {
+    newAggregates = getHumanReadableBucketOptions(kind, buckets);
+    multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
 
-  var operation = asyncOperationCheck("updateAggregates");
-  channelVersions.forEach(function (channelVersion) {
-    var parts = channelVersion.split("/");
-    Telemetry.getHistogramInfo(parts[0], parts[1], $("#measure")
-      .val(), null,
-      function (kind, description, buckets, dates) {
-        if (asyncOperationWasInterrupted("updateAggregates", operation)) { // Don't call callback if this isn't the latest invocation of the function
-          return;
-        }
+    // Boolean histograms should always start off with all options selected
+    $("#aggregates")
+      .multiselect("selectAll", false)
+      .multiselect("updateButtonText");
+  } else { // `kind` is another histogram kind, or null because we didn't have any data
+    newAggregates = gDefaultAggregates.map(entry => [entry[0], entry[1]]);
 
-        versionCount++;
-        realKind = realKind || kind;
-        realBuckets = realBuckets || buckets;
+    multiselectSetOptions($("#aggregates"), newAggregates, kDefaultSelectedAggregates);
+  }
 
-        if (versionCount == channelVersions.length) {
-          gCurrentKind = realKind;
-
-          // Set up the aggregate list depending on the kind of histogram
-          var aggregates = $("#aggregates")
-            .val() || [];
-          if (realKind === "enumerated") {
-            var newAggregates = getHumanReadableBucketOptions(realKind,
-              realBuckets);
-            multiselectSetOptions($("#aggregates"), newAggregates, [
-              newAggregates[0][0]]);
-          } else if(realKind == "categorical") {
-            var newAggregates = realBuckets.map((r, i) => {return [i.toString(), r]})
-            multiselectSetOptions($("#aggregates"), newAggregates, [
-              newAggregates[0][0]]);
-          }  else if (realKind === "boolean" || realKind === "flag") {
-            var newAggregates = getHumanReadableBucketOptions(realKind,
-              realBuckets);
-            multiselectSetOptions($("#aggregates"), newAggregates, [
-              newAggregates[0][0]]);
-
-            // Boolean histograms should always start off with all options selected
-            $("#aggregates")
-              .multiselect("selectAll", false)
-              .multiselect("updateButtonText");
-          } else { // realKind is another histogram kind, or null because we didn't have any data
-            var newAggregates = gDefaultAggregates.map(function (entry) {
-              return [entry[0], entry[1]];
-            });
-
-
-            multiselectSetOptions($("#aggregates"), newAggregates, ["median", "5th-percentile", "95th-percentile"]);
-          }
-
-          // Load aggregates from state on first load
-          newAggregates = newAggregates.map(function (entry) {
-            return entry[0];
-          })
-          aggregates = gInitialPageState.aggregates.filter(function (
-            aggregate) {
-            return newAggregates.indexOf(aggregate) >= 0;
-          });
-          if (!gLoadedAggregatesFromState && aggregates.length > 0) {
-            gLoadedAggregatesFromState = true;
-            $("#aggregates")
-              .multiselect("deselectAll", false)
-              .multiselect("select", aggregates);
-          }
-
-          callback();
-        }
-      });
-  });
+  // Load aggregates from state on first load
+  newAggregates = newAggregates.map(entry => entry[0]);
+  let aggregates = gInitialPageState.aggregates.filter(aggregate => newAggregates.includes(aggregate));
+  if (!gLoadedAggregatesFromState && aggregates.length > 0) {
+    gLoadedAggregatesFromState = true;
+    $("#aggregates")
+      .multiselect("deselectAll", false)
+      .multiselect("select", aggregates);
+  }
 }
 
 function updateOptions(callback) {
@@ -612,6 +566,16 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
           if (sanitize) {
             for (var key in finalEvolutionMap) {
               finalEvolutionMap[key] = finalEvolutionMap[key].sanitized();
+            }
+          }
+
+          // Update the selected aggregates for the new evolution kind and buckets
+          let anyEvo = Object.values(finalEvolutionMap).filter(evo => !!evo)[0];
+          if (anyEvo) {
+            updateAggregates(anyEvo.kind, anyEvo.buckets);
+            aggregates = $("#aggregates").val() || [];
+            for (let metaAggregate of gMetaAggregates) {
+              aggregates.push(metaAggregate[0]);
             }
           }
 
