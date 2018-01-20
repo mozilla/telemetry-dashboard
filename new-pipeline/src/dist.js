@@ -1728,9 +1728,9 @@ function saveStateToUrlAndCookie() {
       .hide(); // Hide the permalink box again since the URL changed
   }
 
-  // Save the state in a cookie that expires in 3 days
+  // Save the state in a cookie that expires in 28 days
   var expiry = new Date();
-  expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
+  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
 
   // Add link to switch to the evolution dashboard with the same settings
@@ -1797,8 +1797,6 @@ function saveStateToUrlAndCookie() {
       // JSON
       var outputObj = {};
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           outputObj[titleHistogramsPair.title] = [];
@@ -1822,8 +1820,6 @@ function saveStateToUrlAndCookie() {
       histograms.forEach(hist => titles.push(hist.measure));
       outputArr.push(titles);
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           var record;
