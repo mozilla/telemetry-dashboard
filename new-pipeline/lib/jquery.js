@@ -92,7 +92,7 @@ var
 
 	// Used by jQuery.camelCase as callback to replace()
 	fcamelCase = function( all, letter ) {
-		return letter.toUpperCase();
+		return letter;
 	},
 
 	// The ready event handler

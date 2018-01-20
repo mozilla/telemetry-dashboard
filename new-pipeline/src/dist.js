@@ -1728,9 +1728,9 @@ function saveStateToUrlAndCookie() {
       .hide(); // Hide the permalink box again since the URL changed
   }
 
-  // Save the state in a cookie that expires in 28 days
+  // Save the state in a cookie that expires in 3 days
   var expiry = new Date();
-  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
+  expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
 
   // Add link to switch to the evolution dashboard with the same settings
