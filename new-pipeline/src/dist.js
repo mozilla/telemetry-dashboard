@@ -935,9 +935,10 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
         .hide();
 
     } else {
-      $("#histogram-percentiles")
-        .empty()
-        .append(
+      let histogramPercentiles = $("#histogram-percentiles");
+      histogramPercentiles.empty();
+      if (histogramsList.length > 0) {
+        histogramPercentiles.append(
           histogramsList[0].histograms.map(function(histogram) {
             return `<tr>
             <th>${histogram.measure}</th>
@@ -949,6 +950,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
             </tr>`;
           })
         );
+      }
       $("#summary")
         .hide();
       $("#stats-comparison")
