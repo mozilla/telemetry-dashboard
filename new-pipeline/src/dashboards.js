@@ -1082,16 +1082,25 @@ function getDescriptionWithLink(metric, channel, description) {
     descr = description;
   }
 
-  var div = document.createElement('div');
-  div.classList.add("text-center");
-  var html = descr;
+  var div = $("<div>", {
+    class: "text-center",
+  });
+  div.append($("<span>").text(descr));
+
   if (metricUrl) {
-    html += " <a href=\"" + metricUrl + "\" target=\"_blank\">" +
-            "<i class=\"btn btn-outline-primary fa fa-info-circle\" " +
-            "style='color: black' aria-hidden=\"true\">  " +
-            "More details </i></a>";
+    var link = $("<a>", {
+      href: metricUrl,
+      target: "_blank",
+      css: {
+        color: "black",
+      },
+      "aria-hidden": "true",
+    });
+    link.append($("<i>", {
+      class: "btn btn-outline-primary fa fa-info-circle",
+    }).text(" More details"));
+    div.append(link);
   }
-  div.innerHTML = html;
 
   return div;
 }
