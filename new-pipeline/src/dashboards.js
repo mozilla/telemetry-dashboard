@@ -1048,11 +1048,6 @@ function updateOSs() {
 
 // Build a URL for linking to the probe-dictionary.
 function buildDictionaryURL(metric, channel, description) {
-  // The probe-dictionary doesn't know about simple measures yet.
-  if (metric.startsWith("SIMPLE_MEASURES_")) {
-    return null;
-  }
-
   var baseUrl = "https://georgf.github.io/fx-data-explorer/index.html";
   var params = {
     "searchtype": "in_name",
@@ -1066,6 +1061,9 @@ function buildDictionaryURL(metric, channel, description) {
     // Scalar naming in the aggregates is different from the Firefox names.
     metric = metric.replace(/^SCALARS_/, "").toLowerCase();
     params["detailView"] = "scalar/" + metric;
+  } else if (metric.startsWith("SIMPLE_MEASURES_")) {
+    metric = metric.replace(/^SIMPLE_MEASURES_/, "").toLowerCase();
+    params["detailView"] = "simpleMeasurements/" + metric;
   } else {
     // All other probes in the aggregates should be histograms.
     params["detailView"] = "histogram/" + metric;
