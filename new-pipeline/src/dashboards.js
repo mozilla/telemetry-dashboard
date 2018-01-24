@@ -1046,16 +1046,59 @@ function updateOSs() {
   });
 }
 
+// Build a URL for linking to the probe-dictionary.
+function buildDictionaryURL(metric, channel, description) {
+  var baseUrl = "https://georgf.github.io/fx-data-explorer/index.html";
+  var params = {
+    "searchtype": "in_name",
+    "optout": "false",
+    "channel": channel,
+    "constraint": "is_in",
+    "version": "any",
+  };
+
+  if (metric.startsWith("SCALARS_")) {
+    // Scalar naming in the aggregates is different from the Firefox names.
+    metric = metric.replace(/^SCALARS_/, "").toLowerCase();
+    params["detailView"] = "scalar/" + metric;
+  } else if (metric.startsWith("SIMPLE_MEASURES_")) {
+    metric = metric.replace(/^SIMPLE_MEASURES_/, "").toLowerCase();
+    params["detailView"] = "simpleMeasurements/" + metric;
+  } else {
+    // All other probes in the aggregates should be histograms.
+    params["detailView"] = "histogram/" + metric;
+  }
+
+  params["search"] = metric.toLowerCase();
+  return baseUrl + "?" + $.param(params);
+}
+
 function getDescriptionWithLink(metric, channel, description) {
-  var metricUrl = "https://georgf.github.io/fx-data-explorer/index.html?search=" + metric + "&searchtype=in_name&optout=false&channel=" + channel + "&constraint=is_in&version=any"
-  var descr = description === null ? metric : description
+  var metricUrl = buildDictionaryURL(metric, channel, description);
+  var descr = metric;
+  if (description && (description.length > 0)) {
+    descr = description;
+  }
 
-  var div = document.createElement('div');
-  div.classList.add("text-center");
-  div.innerHTML =  descr + " <a href=\"" + metricUrl + "\" target=\"_blank\">" +
-                   "<i class=\"btn btn-outline-primary fa fa-info-circle\" " +
-                   "style='color: black' aria-hidden=\"true\">  " +
-                   "More Details </i></a>"
+  var div = $("<div>", {
+    class: "text-center",
+  });
+  div.append($("<span>").text(descr));
 
-  return div
+  if (metricUrl) {
+    var link = $("<a>", {
+      href: metricUrl,
+      target: "_blank",
+      css: {
+        color: "black",
+      },
+      "aria-hidden": "true",
+    });
+    link.append($("<i>", {
+      class: "btn btn-outline-primary fa fa-info-circle",
+    }).text(" More details"));
+    div.append(link);
+  }
+
+  return div;
 }
