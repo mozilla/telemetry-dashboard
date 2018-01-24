@@ -436,7 +436,7 @@ function updateOptions(callback) {
     }
 
     multiselectSetOptions($("#measure"), getHumanReadableOptions("measure",
-      deduplicate(optionsMap.metric || [])));
+      deduplicate(optionsMap.metric || []).concat(gInitialPageState.measure)));
     $("#measure")
       .multiselect("select", gInitialPageState.measure);
 
