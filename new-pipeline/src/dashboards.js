@@ -1077,7 +1077,14 @@ function getDescriptionWithLink(metric, channel, description) {
   var metricUrl = buildDictionaryURL(metric, channel, description);
   var descr = metric;
   if (description && (description.length > 0)) {
-    descr = description;
+	  
+	  if (description.length > 200) {
+		  descr = description.substring(0, 200);
+		  descr += ' ...'
+	  }
+	  else {
+		  descr = description;
+	  }
   }
 
   var div = $("<div>", {
