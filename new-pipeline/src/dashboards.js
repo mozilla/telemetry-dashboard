@@ -434,8 +434,7 @@ function getHumanReadableOptions(filterName, options) {
   var channelVersionOrder = {
     "nightly": 0,
     "aurora": 1,
-    "beta": 2,
-    "release": 3
+    "beta": 2
   };
   var productNames = {
     "Firefox": "Firefox Desktop",
@@ -672,8 +671,7 @@ function getHumanReadableOptions(filterName, options) {
           (version <= latestNightlyVersion - 1 ? goodOptions : badOptions)
           .push(option);
         } else if (parts[0] === "release") {
-          (version <= latestNightlyVersion - 2 ? goodOptions : badOptions)
-          .push(option);
+          return;
         } else {
           badOptions.push(option);
         }
