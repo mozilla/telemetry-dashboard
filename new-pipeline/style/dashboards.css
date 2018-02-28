@@ -154,3 +154,36 @@
 .measure-headers th {
   text-align: right;
 }
+
+.tabcontent{
+  display: none;
+}
+
+.dist-tabcontent{
+  display: block;
+}
+
+.tab-toggle{
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+.tab-toggle button{
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+.tab-toggle button:hover {
+    background-color: #ddd;
+}
+
+.tab-toggle button.active {
+    background-color: #ccc;
+}
+
