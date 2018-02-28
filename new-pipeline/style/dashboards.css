@@ -126,10 +126,26 @@
 .mg-marker-text { font-size: 12px !important; }
 .mg-markers line { stroke-width: 2px !important; }
 
-#dist-caption {
+.caption-div {
+  overflow-x: hidden; 
+  display: inline-block;  
+}
+
+#caption-dots {
+  width : 2%;
+  font-size: 1.5em;
+}
+
+#dist-caption, #evo-caption {
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 1.5em;
   text-align: center;
-  margin: 0.1em;
+}
+
+#dist-caption-link, #evo-caption-link {
+  color : black;
+  font-size: 1.5em;
 }
 
 /* Error message styles */
