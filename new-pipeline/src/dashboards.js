@@ -1073,16 +1073,17 @@ function buildDictionaryURL(metric, channel, description) {
 
 function getDescriptionWithLink(metric, channel, description) {
   var metricUrl = buildDictionaryURL(metric, channel, description);
-  var descr = metric;
+  var descr;
+
   if (description && (description.length > 0)) {
-    descr = description;
+  descr = description;
   }
 
   var div = $("<div>", {
     class: "text-center",
   });
+  div.append($("<h3>").text(metric));
   div.append($("<span>").text(descr));
-
   if (metricUrl) {
     var link = $("<a>", {
       href: metricUrl,
