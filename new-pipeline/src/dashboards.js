@@ -202,7 +202,7 @@ function loadStateFromUrlAndCookie() {
     pageState.min_channel_version = null;
     pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
-    pageState.os = pageState.arch = pageState.e10s = pageState.processType =
+    pageState.os = pageState.arch = pageState.processType =
       null;
     pageState.compare = "";
     pageState.keys = [];
@@ -266,12 +266,6 @@ function loadStateFromUrlAndCookie() {
     .filter(function (v) {
       return v !== "";
     }) : null;
-  pageState.e10s = typeof pageState.e10s === "string" && pageState.e10s !== "" &&
-    pageState.e10s !== "null" ?
-    pageState.e10s.split("!")
-    .filter(function (v) {
-      return v !== "";
-    }) : null;
   pageState.processType = typeof pageState.processType === "string" &&
     pageState.processType !== "" && pageState.processType !== "null" ?
     pageState.processType.split("!")
@@ -279,7 +273,7 @@ function loadStateFromUrlAndCookie() {
       return v !== "";
     }) : null;
   pageState.compare = typeof pageState.compare === "string" && ["", "os",
-      "osVersion", "architecture", "e10sEnabled", "child"].indexOf(pageState.compare) >=
+      "osVersion", "architecture", "child"].indexOf(pageState.compare) >=
     0 ?
     pageState.compare : "";
 
@@ -495,10 +489,6 @@ function getHumanReadableOptions(filterName, options) {
     "x86": "32-bit",
     "x86-64": "64-bit"
   };
-  var e10sNames = {
-    "false": "no e10s",
-    "true": "e10s"
-  };
   var processTypeNames = {
     "false": "main process",
     "true": "child process"
@@ -603,11 +593,6 @@ function getHumanReadableOptions(filterName, options) {
   } else if (filterName === "architecture") {
     return options.map(function (option) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] :
-        option];
-    });
-  } else if (filterName === "e10sEnabled") {
-    return options.map(function (option) {
-      return [option, e10sNames.hasOwnProperty(option) ? e10sNames[option] :
         option];
     });
   } else if (filterName === "child") {
