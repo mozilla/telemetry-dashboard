@@ -18,7 +18,6 @@ $(function () {
       "application": $("#filter-product"),
       "os": $("#filter-os"),
       "architecture": $("#filter-arch"),
-      "e10sEnabled": $("#filter-e10s"),
       "child": $("#filter-process-type"),
     };
     gAxesList = [
@@ -104,14 +103,6 @@ $(function () {
           .multiselect("selectAll", false)
           .multiselect("updateButtonText");
       }
-      if (gInitialPageState.e10s !== null) {
-        $("#filter-e10s")
-          .multiselect("select", gInitialPageState.e10s);
-      } else {
-        $("#filter-e10s")
-          .multiselect("selectAll", false)
-          .multiselect("updateButtonText");
-      }
       if (gInitialPageState.processType !== null) {
         $("#filter-process-type")
           .multiselect("select", gInitialPageState.processType);
@@ -156,7 +147,6 @@ $(function () {
         "#filter-product",
         "#filter-os",
         "#filter-arch",
-        "#filter-e10s",
         "#filter-process-type",
         "#compare",
       ].join(",")).change(function (e) {
@@ -444,8 +434,6 @@ function updateOptions(callback) {
       "application", deduplicate(optionsMap.application || [])));
     multiselectSetOptions($("#filter-arch"), getHumanReadableOptions(
       "architecture", deduplicate(optionsMap.architecture || [])));
-    multiselectSetOptions($("#filter-e10s"), getHumanReadableOptions(
-      "e10sEnabled", deduplicate(optionsMap.e10sEnabled || [])));
     multiselectSetOptions($("#filter-process-type"),
       getHumanReadableOptions("child", deduplicate(optionsMap.child || []))
     );
@@ -886,14 +874,13 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var description = histogramsList[0].histograms[0].description
     var metric = histogramsList[0].histograms[0].measure
     var channel = $("#channel-version").val().split("/")[0]
-    var desc = getDescription(metric, channel, description)
-    var link = getDescriptionLink(metric, channel, description)
-
-    $('#dist-caption').html(desc);
-    $('#caption-dots').html("...");
+    var desc = getDescription(metric, channel, description);
+    var link = getDescriptionLink(metric, channel, description);
+    $('#dist-caption-text').html(desc);
     $('#dist-caption-link').html(link);
   } else {
-    $('#dist-caption').text(""); // Clear the histogram caption
+    $('#dist-caption-text').text(""); // Clear the histogram caption
+    $('#dist-caption-link').text(""); // Clear the histogram link
   }
 
   if (histogramsList.length <= 1) { // Only one histograms set
@@ -1692,12 +1679,6 @@ function saveStateToUrlAndCookie() {
   if (selected.length !== $("#filter-arch option")
     .size()) {
     gInitialPageState.arch = selected;
-  }
-  var selected = $("#filter-e10s")
-    .val() || [];
-  if (selected.length !== $("#filter-e10s option")
-    .size()) {
-    gInitialPageState.e10s = selected;
   }
   var selected = $("#filter-process-type")
     .val() || [];

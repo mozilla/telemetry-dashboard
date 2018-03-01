@@ -202,7 +202,7 @@ function loadStateFromUrlAndCookie() {
     pageState.min_channel_version = null;
     pageState.max_channel_version = null;
     pageState.product = ["Firefox"];
-    pageState.os = pageState.arch = pageState.e10s = pageState.processType =
+    pageState.os = pageState.arch = pageState.processType =
       null;
     pageState.compare = "";
     pageState.keys = [];
@@ -266,12 +266,6 @@ function loadStateFromUrlAndCookie() {
     .filter(function (v) {
       return v !== "";
     }) : null;
-  pageState.e10s = typeof pageState.e10s === "string" && pageState.e10s !== "" &&
-    pageState.e10s !== "null" ?
-    pageState.e10s.split("!")
-    .filter(function (v) {
-      return v !== "";
-    }) : null;
   pageState.processType = typeof pageState.processType === "string" &&
     pageState.processType !== "" && pageState.processType !== "null" ?
     pageState.processType.split("!")
@@ -279,7 +273,7 @@ function loadStateFromUrlAndCookie() {
       return v !== "";
     }) : null;
   pageState.compare = typeof pageState.compare === "string" && ["", "os",
-      "osVersion", "architecture", "e10sEnabled", "child"].indexOf(pageState.compare) >=
+      "osVersion", "architecture", "child"].indexOf(pageState.compare) >=
     0 ?
     pageState.compare : "";
 
@@ -434,8 +428,7 @@ function getHumanReadableOptions(filterName, options) {
   var channelVersionOrder = {
     "nightly": 0,
     "aurora": 1,
-    "beta": 2,
-    "release": 3
+    "beta": 2
   };
   var productNames = {
     "Firefox": "Firefox Desktop",
@@ -494,10 +487,6 @@ function getHumanReadableOptions(filterName, options) {
   var archNames = {
     "x86": "32-bit",
     "x86-64": "64-bit"
-  };
-  var e10sNames = {
-    "false": "no e10s",
-    "true": "e10s"
   };
   var processTypeNames = {
     "false": "main process",
@@ -605,11 +594,6 @@ function getHumanReadableOptions(filterName, options) {
       return [option, archNames.hasOwnProperty(option) ? archNames[option] :
         option];
     });
-  } else if (filterName === "e10sEnabled") {
-    return options.map(function (option) {
-      return [option, e10sNames.hasOwnProperty(option) ? e10sNames[option] :
-        option];
-    });
   } else if (filterName === "child") {
     return options.map(function (option) {
       return [option, processTypeNames.hasOwnProperty(option) ?
@@ -672,8 +656,7 @@ function getHumanReadableOptions(filterName, options) {
           (version <= latestNightlyVersion - 1 ? goodOptions : badOptions)
           .push(option);
         } else if (parts[0] === "release") {
-          (version <= latestNightlyVersion - 2 ? goodOptions : badOptions)
-          .push(option);
+          return;
         } else {
           badOptions.push(option);
         }
@@ -1079,20 +1062,11 @@ function getDescription(metric, channel, description) {
     descr = description;
   }
 
-  var div = $("<div>", {
-    class: "text-center",
-  });
-  div.append($("<span>").text(descr));
-
-  return div;
+  return descr;
 }
 
 function getDescriptionLink(metric, channel, description) {
   var metricUrl = buildDictionaryURL(metric, channel, description);
-
-  var div = $("<div>", {
-    class: "text-center",
-  });
 
   if (metricUrl) {
     var link = $("<a>", {
@@ -1106,8 +1080,7 @@ function getDescriptionLink(metric, channel, description) {
     link.append($("<i>", {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
-    div.append(link);
   }
 
-  return div;
+  return link;
 }

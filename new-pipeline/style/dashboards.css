@@ -127,18 +127,17 @@
 .mg-markers line { stroke-width: 2px !important; }
 
 .caption-div {
-  overflow-x: hidden; 
-  display: inline-block;  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 3em;
 }
 
-#caption-dots {
-  width : 2%;
-  font-size: 1.5em;
-}
-
-#dist-caption, #evo-caption {
-  text-overflow: ellipsis;
+.overflow {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 1.5em;
   text-align: center;
 }
@@ -146,6 +145,7 @@
 #dist-caption-link, #evo-caption-link {
   color : black;
   font-size: 1.5em;
+  display: inline-block;
 }
 
 /* Error message styles */

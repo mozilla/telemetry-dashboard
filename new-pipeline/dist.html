@@ -29,10 +29,6 @@
                 <span class="permalink-control"></span>
             </form>
             <h1>Measurement Dashboard</h1>
-            <div class="error-msg">
-                The data from release users will go away soon, affecting this dashboard and the aggregates service.
-                For context, please read <a href="https://medium.com/@georg.fritzsche/data-preference-changes-in-firefox-58-2d5df9c428b5">this blog post</a>.
-            </div>
         </header>
         <div class="row">
             <div class="col-md-12">
@@ -47,8 +43,6 @@
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" data-n-selected="OSs" multiple></select>
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" data-n-selected="architectures" multiple></select>
                     with
-                    <select id="filter-e10s" class="multiselect" title="e10s setting" data-all-selected="any e10s setting" multiple></select>
-                    as
                     <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type"></select>
                     and compare by
                     <select id="compare" class="multiselect" title="Filter name to compare options for">
@@ -56,15 +50,15 @@
                         <option value="os">target OS</option>
                         <option value="osVersion">target OS version</option>
                         <option value="architecture">product architecture</option>
-                        <option value="e10sEnabled">e10s setting</option>
                         <option value="child">process type</option>
                     </select>
                 </h2>
                 <hr></hr>
                 <figure class="col-md-12">
-                  <figcaption id="dist-caption" class="caption-div"></figcaption>
-                  <figcaption id="caption-dots" class="caption-div"></figcaption>
-                  <figcaption id="dist-caption-link" class="caption-div"></figcaption>
+                    <div class="caption-div">
+                        <figcaption id="dist-caption-text" class="overflow"></figcaption>
+                        <figcaption id="dist-caption-link"></figcaption>
+                    </div>
                     <div class="col-md-9" id="plots">
                         <div class="row">
                             <div class="col-md-6" style="text-align: center">
