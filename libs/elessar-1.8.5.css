@@ -52,10 +52,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background: #0099FF;
+  background: blue;
   width: 0;
   z-index: 10;
-  text-align: center;
 }
 .elessar-vertical .elessar-range {
   width: auto;

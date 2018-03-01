@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Telemetry portal</title>
+
+    <link rel="stylesheet" href="bundle.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <form class="navbar-form inline pull-right">
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn" title="Report bugs in Telemetry dashboards">Report bug</a>
+            </form>
+            <h2>Telemetry portal</h2>
+            <!-- <div class="error-msg">
+                The small, unrepresentative sample population of release users will soon stop being aggregated.
+                For context, please read <a href="https://medium.com/@georg.fritzsche/data-preference-changes-in-firefox-58-2d5df9c428b5">this blog post</a>.
+            </div> -->
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <h3>Main tools</h3>
+                <div class="dashboard-list list-group" style="margin: 0">
+                    <a class="list-group-item" href="new-pipeline/dist.html">
+                        Measurement Dashboard
+                        <div class="dashboard-description">View measure distributions as histograms.</div>
+                    </a>
+                    <a class="list-group-item" href="new-pipeline/evo.html">
+                        Evolution Dashboard <div class="dashboard-description">View evolution of measure values over time.</div>
+                    </a>
+                    <a class="list-group-item" href="https://metrics.mozilla.com/firefox-hardware-report/">
+                        Firefox Hardware Report
+                        <div class="dashboard-description">See what hardware Firefox users have.</div>
+                    </a>
+                    <a class="list-group-item" href="https://sql.telemetry.mozilla.org/">
+                        SQL Portal <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">View dashboards &amp; run SQL queries.</div>
+                    </a>
+                    <a class="list-group-item" href="https://moz-experiments-viewer.herokuapp.com/">
+                        Experiments Viewer <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">See the impact different experiments have.</div>
+                    </a>
+                    <a class="list-group-item" href="https://data-missioncontrol.dev.mozaws.net/">
+                      Mission Control <div class="dashboard-description">View key Firefox quality measures in near-realtime.</div>
+                    </a>
+                    <a class="list-group-item" href="https://analysis.telemetry.mozilla.org/">
+                        Analysis Portal <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">Analyze telemetry data with Spark.</div>
+                    </a>
+                </div>
+                <h3>Documentation</h3>
+                <div class="dashboard-list list-group" style="margin: 0">
+                    <a class="list-group-item" href="https://docs.telemetry.mozilla.org/">
+                        Data Docs <div class="dashboard-description">Find what data is available &amp; how to use it.</div>
+                    </a>
+                    <a class="list-group-item" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/">
+                        Firefox Telemetry Docs <div class="dashboard-description">Learn how to record data &amp; what data gets sent.</div>
+                    </a>
+                    <a class="list-group-item" href="https://georgf.github.io/fx-data-explorer/">
+                        Probe Dictionary <div class="dashboard-description">Find what probes are submitted from Firefox.</div>
+                    </a>
+                    <a class="list-group-item" href="https://wiki.mozilla.org/Firefox/Shield">
+                        Shield Docs <div class="dashboard-description">Learn how to run Shield studies &amp; experiments.</div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h3>What's new</h3>
+                <!-- Twitter widget -->
+                <div>
+                    <a class="twitter-timeline"
+                        href="https://twitter.com/MozTelemetry"
+                        data-tweet-limit="3"
+                        data-chrome="noheader nofooter noborders noscrollbar transparent"
+                        data-widget-id="410497663147053056">
+                        Loading updates on telemetry...
+                    </a>
+                    <a href="https://twitter.com/MozTelemetry"
+                       class="twitter-follow-button"
+                       data-show-count="false"
+                       data-align="left"
+                       data-dnt="true"
+                       data-lang="en">
+                        Follow @MozTelemetry
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h3>Getting help</h3>
+                <div class="dashboard-list list-group">
+                    <a class="list-group-item" href="https://mail.mozilla.org/listinfo/fx-data-dev">
+                      Join the mailing list
+                      <div class="dashboard-description">Get help on data topics and upcoming changes.</div>
+                    </a>
+                    <a class="list-group-item" href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=General">
+                      File a bug
+                      <div class="dashboard-description">File a bug with details on <i>bugzilla.mozilla.org</i>.</div>
+                    </a>
+                    <a class="list-group-item" href="https://chat.mibbit.com/?server=irc.mozilla.org&channel=%23telemetry">
+                      Chat on IRC
+                      <div class="dashboard-description">Find us in <i>#telemetry</i> on <i>irc.mozilla.org</i>.</div>
+                    </a>
+                    <a class="list-group-item" href="https://mozilla.slack.com/messages/C4D5ZA91B/">
+                      Join us on Slack <span class="fa fa-lock"></span>
+                      <div class="dashboard-description">Find us in <i>#fx-metrics</i> on Slack.</div>
+                    </a>
+                </div>
+                <h3>Other tools</h3>
+                <div class="dashboard-list list-group">
+                    <a class="list-group-item" href="https://reports.telemetry.mozilla.org/">
+                        Reports Portal <div class="dashboard-description">Explore data analyses &amp; reports.</div>
+                    </a>
+                    <a class="list-group-item" href="https://www.mozdatacollective.com/">
+                        Mozilla Data Collective <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">View curated data reports from across Mozilla.</div>
+                    </a>
+                    <a class="list-group-item" href="https://sso.mozilla.com/amplitude">
+                        Amplitude <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">Dive into product analytics.</div>
+                    </a>
+                    <a class="list-group-item" href="dashboard-generator/index.html">
+                      Dashboard Generator
+                      <div class="dashboard-description">Hand-craft your own dashboard with the push of a few buttons</div>
+                    </a>
+                    <a class="list-group-item" href="https://bsmedberg.github.io/telemetry-experiments-dashboard/">
+                        Experiment Monitoring <div class="dashboard-description">View vitals and statistics for Firefox Telemetry Experiments.</div>
+                    </a>
+                    <a class="list-group-item" href="http://alerts.telemetry.mozilla.org/">
+                        Telemetry Alerts <div class="dashboard-description">Set up email alerts for significant performance changes.</div>
+                    </a>
+                    <a class="list-group-item" href="https://people.mozilla.org/~danderson/moz-gfx-telemetry/www/">
+                        Graphics Telemetry <div class="dashboard-description">View percentage breakdowns for various graphics features.</div>
+                    </a>
+                    <a class="list-group-item" href="https://georgf.github.io/usecounters/index.html">
+                        Use Counters <div class="dashboard-description">View usage of web features relative to page loads.</div>
+                    </a>
+                    <a class="list-group-item" href="update-orphaning/">
+                        Update Orphaning <div class="dashboard-description">View percentage breakdowns of users who are up-to-date vs. out-of-date.</div>
+                    </a>
+                    <a class="list-group-item" href="crashes/">
+                        Stability Dashboard <div class="dashboard-description">See how crash rates evolve over time</div>
+                    </a>
+                    <a class="list-group-item" href="https://squarewave.github.io">
+                        Background Hang Reporting <div class="dashboard-description">View browser hang information collected from Nightly users</div>
+                    </a>
+                    <a class="list-group-item" href="histogram-simulator/">
+                        Histogram Simulator <div class="dashboard-description">Simulate histogram bucket widths</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
+
+    <script src="bundle.min.js"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
+</body>
+</html>

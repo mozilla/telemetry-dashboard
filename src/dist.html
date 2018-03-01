@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Measurement Dashboard</title>
+
+    <link rel="stylesheet" href="bundle.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header>
+            <form class="navbar-form inline pull-right">
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
+                <a href="./evo.html" class="btn btn-default" id="switch-views" title="Switch to the evolution view">Evolution View</a>
+                <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+                <a href="./tutorial.html#HistogramDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
+                <span class="permalink-control"></span>
+            </form>
+            <h1>Measurement Dashboard</h1>
+            <div class="error-msg">
+                The data from release users will go away soon, affecting this dashboard and the aggregates service.
+                For context, please read <a href="https://medium.com/@georg.fritzsche/data-preference-changes-in-firefox-58-2d5df9c428b5">this blog post</a>.
+            </div>
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <h2 style="font-size: 18px; margin-bottom: 0">
+                    <span style="font-weight: bold">
+                        <select id="measure" class="multiselect" title="Value being measured"></select>
+                        distribution for
+                        <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" data-n-selected="products" multiple></select>
+                        <select id="channel-version" class="multiselect" title="Build version"></select>,
+                    </span>
+                    on
+                    <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" data-n-selected="OSs" multiple></select>
+                    <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" data-n-selected="architectures" multiple></select>
+                    with
+                    <select id="filter-e10s" class="multiselect" title="e10s setting" data-all-selected="any e10s setting" multiple></select>
+                    as
+                    <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type"></select>
+                    and compare by
+                    <select id="compare" class="multiselect" title="Filter name to compare options for">
+                        <option value="">none</option>
+                        <option value="os">target OS</option>
+                        <option value="osVersion">target OS version</option>
+                        <option value="architecture">product architecture</option>
+                        <option value="e10sEnabled">e10s setting</option>
+                        <option value="child">process type</option>
+                    </select>
+                </h2>
+                <hr></hr>
+                <figure class="col-md-12">
+                  <figcaption id="dist-caption"></figcaption>
+                    <div class="col-md-9" id="plots">
+                        <div class="row">
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key1" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution1"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key2" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key3" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution3"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="text-align: center">
+                                <h3><select id="selected-key4" class="multiselect" title="Selected key"></select></h3>
+                                <div style="margin-bottom: 20px; z-index: -1">
+                                    <div id="distribution4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3" style="padding-top: 7em">
+                        <div id="summary">
+                            <dl class="dl-horizontal" style="margin-top: 1em">
+                                <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
+                                <dt title="Total number of Telemetry pings shown">Ping Count</dt><dd id="prop-submissions"></dd>
+                                <dt title="Total number of measurements shown">Sample Count</dt><dd id="prop-count"></dd>
+                                <dt title="Sum of all sample values inserted into the histogram">Sample Sum</dt><dd id="prop-sum"></dd>
+                                <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
+                                <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
+                            </dl>
+                            <div class="scalar-only" style="margin-top: 50px">
+                                <dl class="dl-horizontal">
+                                    <dt>5th Percentile</dt><dd id="prop-p5"></dd>
+                                    <dt>25th Percentile</dt><dd id="prop-p25"></dd>
+                                    <dt>Median</dt><dd id="prop-p50"></dd>
+                                    <dt>75th Percentile</dt><dd id="prop-p75"></dd>
+                                    <dt>95th Percentile</dt><dd id="prop-p95"></dd>
+                                    <br>
+                                    <div style="font-size: 80%; margin: 0 20%">
+                                        <strong>Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                        <div id="stats-comparison" style="margin-top: 50px; margin-bottom: 20px;">
+                            <table>
+                              <thead class="measure-headers">
+                              <tr>
+                              <th></th>
+                              <th title="5th percentile duration">5 %</th>
+                              <th title="25th percentile duration">25 %</th>
+                              <th title="Median duration">Median</th>
+                              <th title="75th percentile duration">75 %</th>
+                              <th title="95th percentile duration">95 %</th>
+                              </tr>
+                              </thead>
+                              <tbody id="histogram-percentiles" class="measure-values">
+                                  <tr>
+                                  <td colspan="6">No Data</td>
+                                  </tr>
+                              </tbody>
+                            </table>
+                        </div>
+                        <div style="text-align: center">
+                            <a class="btn btn-default btn-sm" id="export-csv" title="Export the current histogram to CSV">Export CSV</a>
+                            <a class="btn btn-default btn-sm" id="export-json" title="Export the current histogram to JSON">Export JSON</a>
+                        </div>
+                    </div>
+                </figure>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab">
+                        <a class="panel-title" data-toggle="collapse" id="advanced-settings-toggle" href="#advanced-settings">Advanced Settings<span></span></a>
+                    </div>
+                    <div id="advanced-settings" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form class="form-horizontal">
+                                <div id="sort-keys-option">
+                                    <b>Key sorting:</b> sort the key names in the graph titles by
+                                    <select id="sort-keys" class="multiselect" title="sorting criteria">
+                                        <option value="submissions">total submissions</option>
+                                        <option value="5th-percentile">mean of 5th percentiles</option>
+                                        <option value="25th-percentile">mean of 25th percentiles</option>
+                                        <option value="median">mean of medians</option>
+                                        <option value="75th-percentile">mean of 75th percentiles</option>
+                                        <option value="95th-percentile">mean of 95th percentiles</option>
+                                        <option value="mean">mean of means</option>
+                                    </select> from highest to lowest
+                                </div>
+                                <div>
+                                    <b>Table mode:</b> show histograms as tables of values rather than visual charts:
+                                    <label><input name="table-toggle" type="radio" value="0"> Show histograms</label>
+                                    <label><input name="table-toggle" type="radio" value="1"> Show tables</label>
+                                </div>
+                                <div>
+                                    <b>Cumulative mode:</b> show each bucket as the sum of itself and all buckets on its left:
+                                    <label><input name="cumulative-toggle" type="radio" value="0"> Non-cumulative</label>
+                                    <label><input name="cumulative-toggle" type="radio" value="1"> Cumulative</label>
+                                </div>
+                                <div>
+                                    <b>Date range variable:</b> filter submissions by build date range or submission date range:
+                                    <label><input name="build-time-toggle" type="radio" value="0"> Build Date</label>
+                                    <label><input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
+                                </div>
+                                <div>
+                                    <b>Sanitize data:</b> hide data points that don't have enough submissions:
+                                    <label><input name="sanitize-toggle" type="radio" value="0"> Don't Sanitize</label>
+                                    <label><input name="sanitize-toggle" type="radio" value="1"> Sanitize</label>
+                                </div>
+                                <div id="trim-option">
+                                    <b>Trim small buckets:</b> hide buckets on both sides that don't have enough samples:
+                                    <label><input name="trim-toggle" type="radio" value="0"> Don't Trim Buckets</label>
+                                    <label><input name="trim-toggle" type="radio" value="1"> Trim Buckets</label>
+                                </div>
+                                <span id="date-range-controls" class="form-group" style="width: 230px; display: inline-block; margin: 0">
+                                    <span class="input-prepend input-group">
+                                        <span class="add-on input-group-addon"><i class="glyphicon glyphicon-calendar fa fa-calendar"></i></span>
+                                        <input type="text" name="date-range" style="width: 100%" id="date-range" class="form-control date-range">
+                                    </span>
+                                </span>
+                                <span id="range-bar" class="pull-right"></span>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="busy-indicator">
+        <div class="busy-indicator-progress"></div>
+        <i style="margin: 0 5px" class="fa fa-cog fa-spin"></i>
+        <span class="busy-indicator-message">Loading page...</span>
+    </div>
+    <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
+
+    <script src="bundle.min.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
+
+</body>
+</html>

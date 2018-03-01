@@ -1,3 +1,27 @@
+// CSS
+import "../libs/bootstrap-3.3.7.css";
+import "../libs/font-awesome-4.7.0.css";
+import "../libs/bootstrap-multiselect-0.9.13.css";
+import "../libs/daterangepicker-bs3-1.3.23.css";
+import "../libs/elessar-1.8.5.css";
+import "../libs/metricsgraphics-2.13.0.css";
+import "./css/dashboards.css";
+
+// JS libs
+import "../libs/jquery-3.3.1.js";
+import "../libs/bootstrap-3.3.7.js";
+import "../libs/bootstrap-multiselect-0.9.13.js";
+import "../libs/moment-2.20.1.js";
+import "../libs/daterangepicker-1.3.23.js";
+import "../libs/elessar-1.8.5.js";
+import "../libs/d3-3.5.17.js";
+import "../libs/metricsgraphics-2.13.0.js";
+import "../libs/d3pie-0.1.9.js";
+import "../v2/telemetry.js";
+import "./js/dashboards.js";
+import "./js/analytics.js";
+
+
 var gInitialPageState = null;
 var gFilterChangeTimeout = null;
 var gCurrentHistogramsList = null;

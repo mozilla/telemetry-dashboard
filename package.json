@@ -1,0 +1,28 @@
+{
+  "name": "telemetry-dashboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "rollup": "^0.56.3",
+    "rollup-plugin-copy": "^0.2.3",
+    "rollup-plugin-css-porter": "^0.1.2",
+    "rollup-plugin-sourcemaps": "^0.4.2",
+    "rollup-plugin-uglify": "^3.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf dist/* && rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mozilla/telemetry-dashboard.git"
+  },
+  "author": "",
+  "license": "MPL",
+  "bugs": {
+    "url": "https://github.com/mozilla/telemetry-dashboard/issues"
+  },
+  "homepage": "https://github.com/mozilla/telemetry-dashboard#readme"
+}
