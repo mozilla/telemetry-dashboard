@@ -154,3 +154,9 @@
 .measure-headers th {
   text-align: right;
 }
+
+/*Text effects*/
+.light_text {
+  color: #666;
+  font-weight: normal !important;
+}

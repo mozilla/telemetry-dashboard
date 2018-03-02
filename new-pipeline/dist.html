@@ -8,6 +8,7 @@
     <title>Measurement Dashboard</title>
 
     <!-- Bootstrap and supporting libraries -->
+    <link rel="stylesheet" href="../font.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
@@ -32,21 +33,20 @@
         </header>
         <div class="row">
             <div class="col-md-12">
-                <h2 style="font-size: 18px; margin-bottom: 0">
+                <span style="font-size: 18px; margin-bottom: 0;">
                     <span style="font-weight: bold">
                         <select id="measure" class="multiselect" title="Value being measured"></select>
-                        distribution for
+                        <span class="light_text">distribution for</span>
                         <select id="filter-product" class="multiselect" title="Product name" data-all-selected="all products" data-n-selected="products" multiple></select>
                         <select id="channel-version" class="multiselect" title="Build version"></select>,
-                    </span>
-                    on
+                    <span class="light_text">on</span>
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" data-n-selected="OSs" multiple></select>
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" data-n-selected="architectures" multiple></select>
-                    with
+                    <span class="light_text">with</span>
                     <select id="filter-e10s" class="multiselect" title="e10s setting" data-all-selected="any e10s setting" multiple></select>
-                    as
+                    <span class="light_text">as</span>
                     <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type"></select>
-                    and compare by
+                    <span class="light_text">and compare by</span>
                     <select id="compare" class="multiselect" title="Filter name to compare options for">
                         <option value="">none</option>
                         <option value="os">target OS</option>
@@ -55,7 +55,9 @@
                         <option value="e10sEnabled">e10s setting</option>
                         <option value="child">process type</option>
                     </select>
-                </h2>
+                    </span>
+
+                </span>
                 <hr></hr>
                 <figure class="col-md-12">
                   <figcaption id="dist-caption"></figcaption>
