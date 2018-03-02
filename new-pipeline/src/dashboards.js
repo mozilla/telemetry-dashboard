@@ -130,6 +130,7 @@ $(document)
     $(".permalink-control")
       .append(
         '<div class="input-group">' +
+       <span class="input-group-btn"></span>' +
         '    <input type="text" class="form-control">' +
         '</div>'
       );
