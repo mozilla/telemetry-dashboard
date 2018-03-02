@@ -4,27 +4,24 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
     <title>Evolution Dashboard</title>
-    
     <!-- Bootstrap and supporting libraries -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
-    
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
 </head>
 <body>
     <div class="container-fluid">
         <header>
-            <form class="navbar-form inline pull-right">
+            <form class="navbar-form inline pull-right btn-group">
+                <span class="permalink-control btn btn-default">Get Permalink</span>
                 <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
                 <a href="./dist.html" class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</a>
                 <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
                 <a href="./tutorial.html#EvolutionDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
-                <span class="permalink-control"></span>
             </form>
             <h1>Evolution Dashboard</h1>
         </header>
@@ -101,13 +98,13 @@
         <span class="busy-indicator-message">Loading page...</span>
     </div>
     <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
-    
+
     <!-- Bootstrap and supporting libraries -->
     <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap-multiselect.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
-    
+
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="lib/metricsgraphics.min.js"></script>
