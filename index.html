@@ -17,15 +17,26 @@
 <body>
     <div class="container-fluid">
         <header>
-            <form class="navbar-form inline pull-right">
-                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn" title="Report bugs in Telemetry dashboards">Report bug</a>
-            </form>
-            <h2>Telemetry portal</h2>
+            <nav class="navbar navbar-default navbar-fixed-top">
+                <div class="container-fluid">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#">Telemetry portal</a>
+                    </div>
+                    
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="https://github.com/mozilla/telemetry-dashboard/issues">Report bug</a></li>
+                    </ul>
+                </div><!-- /.container-fluid -->
+            </nav>
+        </header>
+        
             <!-- <div class="error-msg">
                 The small, unrepresentative sample population of release users will soon stop being aggregated.
                 For context, please read <a href="https://medium.com/@georg.fritzsche/data-preference-changes-in-firefox-58-2d5df9c428b5">this blog post</a>.
             </div> -->
-        </header>
+        
         <div class="row">
             <div class="col-md-4">
                 <h3>Main tools</h3>
