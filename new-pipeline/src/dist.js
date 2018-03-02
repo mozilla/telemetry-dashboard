@@ -18,7 +18,6 @@ $(function () {
       "application": $("#filter-product"),
       "os": $("#filter-os"),
       "architecture": $("#filter-arch"),
-      "e10sEnabled": $("#filter-e10s"),
       "child": $("#filter-process-type"),
     };
     gAxesList = [
@@ -104,14 +103,6 @@ $(function () {
           .multiselect("selectAll", false)
           .multiselect("updateButtonText");
       }
-      if (gInitialPageState.e10s !== null) {
-        $("#filter-e10s")
-          .multiselect("select", gInitialPageState.e10s);
-      } else {
-        $("#filter-e10s")
-          .multiselect("selectAll", false)
-          .multiselect("updateButtonText");
-      }
       if (gInitialPageState.processType !== null) {
         $("#filter-process-type")
           .multiselect("select", gInitialPageState.processType);
@@ -156,7 +147,6 @@ $(function () {
         "#filter-product",
         "#filter-os",
         "#filter-arch",
-        "#filter-e10s",
         "#filter-process-type",
         "#compare",
       ].join(",")).change(function (e) {
@@ -436,7 +426,7 @@ function updateOptions(callback) {
     }
 
     multiselectSetOptions($("#measure"), getHumanReadableOptions("measure",
-      deduplicate(optionsMap.metric || [])));
+      deduplicate(optionsMap.metric || []).concat(gInitialPageState.measure)));
     $("#measure")
       .multiselect("select", gInitialPageState.measure);
 
@@ -444,8 +434,6 @@ function updateOptions(callback) {
       "application", deduplicate(optionsMap.application || [])));
     multiselectSetOptions($("#filter-arch"), getHumanReadableOptions(
       "architecture", deduplicate(optionsMap.architecture || [])));
-    multiselectSetOptions($("#filter-e10s"), getHumanReadableOptions(
-      "e10sEnabled", deduplicate(optionsMap.e10sEnabled || [])));
     multiselectSetOptions($("#filter-process-type"),
       getHumanReadableOptions("child", deduplicate(optionsMap.child || []))
     );
@@ -935,9 +923,10 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
         .hide();
 
     } else {
-      $("#histogram-percentiles")
-        .empty()
-        .append(
+      let histogramPercentiles = $("#histogram-percentiles");
+      histogramPercentiles.empty();
+      if (histogramsList.length > 0) {
+        histogramPercentiles.append(
           histogramsList[0].histograms.map(function(histogram) {
             return `<tr>
             <th>${histogram.measure}</th>
@@ -949,6 +938,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
             </tr>`;
           })
         );
+      }
       $("#summary")
         .hide();
       $("#stats-comparison")
@@ -1688,12 +1678,6 @@ function saveStateToUrlAndCookie() {
     .size()) {
     gInitialPageState.arch = selected;
   }
-  var selected = $("#filter-e10s")
-    .val() || [];
-  if (selected.length !== $("#filter-e10s option")
-    .size()) {
-    gInitialPageState.e10s = selected;
-  }
   var selected = $("#filter-process-type")
     .val() || [];
   if (selected.length !== $("#filter-process-type option")
@@ -1728,9 +1712,9 @@ function saveStateToUrlAndCookie() {
       .hide(); // Hide the permalink box again since the URL changed
   }
 
-  // Save the state in a cookie that expires in 3 days
+  // Save the state in a cookie that expires in 28 days
   var expiry = new Date();
-  expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
+  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
 
   // Add link to switch to the evolution dashboard with the same settings
@@ -1797,8 +1781,6 @@ function saveStateToUrlAndCookie() {
       // JSON
       var outputObj = {};
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           outputObj[titleHistogramsPair.title] = [];
@@ -1822,8 +1804,6 @@ function saveStateToUrlAndCookie() {
       histograms.forEach(hist => titles.push(hist.measure));
       outputArr.push(titles);
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           var record;

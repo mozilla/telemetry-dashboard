@@ -8,12 +8,11 @@
     <title>Telemetry portal</title>
 
     <!-- Bootstrap and supporting libraries -->
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
-    <link rel="stylesheet" href="style/dashboards.css">
+    <link rel="stylesheet" href="new-pipeline/style/dashboards.css">
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
-    <script src="analytics/analytics.js"></script>
 </head>
 <body>
     <div class="container-fluid">
@@ -33,10 +32,7 @@
                 <div class="dashboard-list list-group" style="margin: 0">
                     <a class="list-group-item" href="new-pipeline/dist.html">
                         Measurement Dashboard
-                        <div class="dashboard-description">View measure distributions as histograms.</div>
-                    </a>
-                    <a class="list-group-item" href="new-pipeline/evo.html">
-                        Evolution Dashboard <div class="dashboard-description">View evolution of measure values over time.</div>
+                        <div class="dashboard-description">View the measure distributions and evolutions over time.</div>
                     </a>
                     <a class="list-group-item" href="https://metrics.mozilla.com/firefox-hardware-report/">
                         Firefox Hardware Report
@@ -75,29 +71,6 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <h3>What's new</h3>
-                <!-- Twitter widget -->
-                <div>
-                    <a class="twitter-timeline"
-                        href="https://twitter.com/MozTelemetry"
-                        data-tweet-limit="3"
-                        data-chrome="noheader nofooter noborders noscrollbar transparent"
-                        data-widget-id="410497663147053056">
-                        Loading updates on telemetry...
-                    </a>
-                    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-                    <a href="https://twitter.com/MozTelemetry"
-                       class="twitter-follow-button"
-                       data-show-count="false"
-                       data-align="left"
-                       data-dnt="true"
-                       data-lang="en">
-                        Follow @MozTelemetry
-                    </a>
-                    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-                </div>
-            </div>
-            <div class="col-md-4">
                 <h3>Getting help</h3>
                 <div class="dashboard-list list-group">
                     <a class="list-group-item" href="https://mail.mozilla.org/listinfo/fx-data-dev">
@@ -121,6 +94,10 @@
                 <div class="dashboard-list list-group">
                     <a class="list-group-item" href="https://reports.telemetry.mozilla.org/">
                         Reports Portal <div class="dashboard-description">Explore data analyses &amp; reports.</div>
+                    </a>
+                    <a class="list-group-item" href="https://www.mozdatacollective.com/">
+                        Mozilla Data Collective <span class="fa fa-lock"></span>
+                        <div class="dashboard-description">View curated data reports from across Mozilla.</div>
                     </a>
                     <a class="list-group-item" href="https://sso.mozilla.com/amplitude">
                         Amplitude <span class="fa fa-lock"></span>
@@ -156,13 +133,34 @@
                     </a>
                 </div>
             </div>
+            <div class="col-md-4">
+                <h3>What's new</h3>
+                <!-- Twitter widget -->
+                <div>
+                    <a class="twitter-timeline"
+                        href="https://twitter.com/MozTelemetry"
+                        data-tweet-limit="3"
+                        data-chrome="noheader nofooter noborders noscrollbar transparent"
+                        data-widget-id="410497663147053056">
+                        Loading updates on telemetry...
+                    </a></br>
+                    <a href="https://twitter.com/MozTelemetry"
+                       class="twitter-follow-button"
+                       data-show-count="false"
+                       data-align="left"
+                       data-dnt="true"
+                       data-lang="en">
+                        Follow @MozTelemetry
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-    <div><a href=https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
+    <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
 
     <!-- Bootstrap and supporting libraries -->
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
     <script>
     // Check for permalink - if there is a URL hash, the user probably clicked on a permalink to the old dashboard, so redirect them there with the same state to avoid breaking permalinks
@@ -170,5 +168,7 @@
         window.location.href = window.location.origin + "/advanced/" + window.location.hash;
     }
     </script>
+    <script src="analytics/analytics.js"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>

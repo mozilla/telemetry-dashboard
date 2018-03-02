@@ -496,6 +496,9 @@ window.TelemetryWrapper.go = function (params, element) {
         if (!starts[index]) {
           return '';
         }
+        if (hist.kind == 'categorical') {
+          return starts[index];
+        }
         return formatNumber(starts[index]);
       },
       yax_format: value => value + '%',
@@ -511,6 +514,8 @@ window.TelemetryWrapper.go = function (params, element) {
           label = ' \u2265 ' + formatNumber(starts[index]);
         } else if (hist.kind == 'enumerated') {
           label = formatNumber(starts[index]);
+        } else if (hist.kind == 'categorical') {
+          label = starts[index];
         } else {
           label = '[' + formatNumber(starts[index])
                   + ', ' + formatNumber(ends[index]) + ')';
@@ -541,6 +546,29 @@ window.TelemetryWrapper.go = function (params, element) {
     var missingWidth = window.parseFloat(hangingBar.getAttribute('width'));
     for (var tick of graphEl.querySelectorAll('.mg-extended-y-ticks')) {
       tick.setAttribute('x2', window.parseFloat(tick.getAttribute('x2')) + missingWidth);
+    }
+
+    // The values used in this section are arbitrary, they seem to fit for now
+    if (hist.kind == 'categorical') {
+      // Rotate the x axis labels
+      for (var text of graphEl.querySelectorAll(".mg-x-axis text:not(.label)")) {
+        text.setAttribute("dx", "0.3em");
+        text.setAttribute("dy", "0");
+        text.setAttribute("text-anchor", "start");
+        text.setAttribute("transform", `rotate(20 ${text.getAttribute("x")} ${text.getAttribute("y")})`);
+        text.setAttribute("overflow", "visible");
+      }
+      // Increase the labels separator size
+      Array.from(graphEl.querySelectorAll(".mg-x-axis line"))
+        .map(l => l.setAttribute("y2", parseInt(l.getAttribute("y1")) + 12));
+      // Make sure the histogram label does not overlap the x axis labels
+      let histLabel = graphEl.querySelector(".mg-x-axis text.label");
+      histLabel.setAttribute("y", parseInt(histLabel.getAttribute("y")) + 30);
+      // Resize the graph containers
+      let svg = graphEl.querySelector("svg");
+      svg.setAttribute("height", parseInt(svg.getAttribute("height")) + 50);
+      let graphContainer = svg.parentNode.parentNode;
+      graphContainer.style.height = `${parseInt(graphContainer.clientHeight) + 50}px`;
     }
   }
 
