@@ -16,11 +16,8 @@
   background: #326AA7;
   color: white;
 }
-.big-dashboard-list .dashboard-description { font-size: 18px; }
-.dashboard-list {
-  height: 600px;
-  overflow-y: auto;
-}
+.big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
+
 .dashboard-list .list-group-item {
   border: none;
   border-top: 1px solid #ddd;
