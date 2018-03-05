@@ -128,9 +128,9 @@ $(document)
 
     // Permalink control
     $(".permalink-control")
-      .append(
+       .append(
         '<div class="input-group">' +
-       <span class="input-group-btn"></span>' +
+        '    <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Permalink">Get Permalink<span class="glyphicon glyphicon-link"></span></button></span>' +
         '    <input type="text" class="form-control">' +
         '</div>'
       );
