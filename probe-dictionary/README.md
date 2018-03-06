@@ -2,7 +2,7 @@
 A tool that makes the Telemetry probe data in Firefox more discoverable and searchable.
 
 This front-end allows answering questions like 
-* *"do we have any probes in Firefox 55 that tell us about [tab usage](http://georgf.github.io/fx-data-explorer/?search=tab&searchtype=in_name&optout=true&channel=release&constraint=is_in&version=55)?"*
+* *"do we have any probes in Firefox 55 that tell us about [tab usage](https://telemetry.mozilla.org/probe-dictionary/?search=tab&searchtype=in_name&optout=true&channel=release&constraint=is_in&version=55)?"*
 * *"which Firefox versions is this probe in anyway?"*
 
 To achieve this, it uses data extracted by the [probe-scraper](https://github.com/mozilla/probe-scraper) project.
