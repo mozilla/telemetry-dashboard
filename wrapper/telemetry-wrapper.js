@@ -818,14 +818,14 @@ window.TelemetryWrapper.go = function (params, element) {
       params.filters = {};
     }
     params.useSubmissionDate = params.useSubmissionDate || false;
-    params.sanitize = params.sanitize != 'false';
-    params.trim = params.trim != 'false';
+    params.sanitize = params.sanitize != false;
+    params.trim = params.trim != false;
     params.compare = params.compare; // default undefined
     if (params.compare && params.filters[params.compare]) {
       // If we're filtering to a particular value, we can't then compare by it.
       delete params.compare;
     }
-    params.sensibleCompare = params.sensibleCompare != 'false';
+    params.sensibleCompare = params.sensibleCompare != false;
     params.keyLimit = window.parseInt(params.keyLimit) || 4;
     params.evoVersions = params.evoVersions; // default undefined
     params.percentile = params.percentile || 50;
