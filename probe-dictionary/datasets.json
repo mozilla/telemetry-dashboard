@@ -1,0 +1,168 @@
+{
+  "environment/system.cpu.count": {
+    "longitudinal": "system_cpu.count"
+  },
+  "environment/system.cpu.cores": {
+    "longitudinal": "system_cpu.cores"
+  },
+  "environment/system.cpu.vendor": {
+    "longitudinal": "system_cpu.vendor"
+  },
+  "environment/system.cpu.family": {
+    "longitudinal": "system_cpu.family"
+  },
+  "environment/system.cpu.model": {
+    "longitudinal": "system_cpu.model"
+  },
+  "environment/system.cpu.stepping": {
+    "longitudinal": "system_cpu.stepping"
+  },
+  "environment/system.cpu.l2cacheKB": {
+    "longitudinal": "system_cpu.l2cache_kb"
+  },
+  "environment/system.cpu.l3cacheKB": {
+    "longitudinal": "system_cpu.l3cache_kb"
+  },
+  "environment/system.cpu.speedMHz": {
+    "longitudinal": "system_cpu.speed_mhz"
+  },
+  "environment/system.cpu.extensions": {
+    "longitudinal": "system_cpu.extensions"
+  },
+  "environment/system.memoryMB": {
+    "longitudinal": "system.memory_mb",
+    "main_summary": "memory_mb"
+  },
+  "environment/system.virtualMaxMB": {
+    "longitudinal": "system.virtual_max_mb"
+  },
+  "environment/system.os.name": {
+    "longitudinal": "system_os.name",
+    "main_summary": "os"
+  },
+  "environment/system.os.version": {
+    "longitudinal": "system_os.version",
+    "main_summary": "os_version"
+  },
+  "environment/system.os.kernelVersion": {
+    "longitudinal": "system_os.kernel_version"
+  },
+  "environment/system.os.servicePackMajor": {
+    "longitudinal": "system_os.service_pack_major",
+    "main_summary": "os_service_pack_major"
+  },
+  "environment/system.os.servicePackMinor": {
+    "longitudinal": "system_os.service_pack_minor",
+    "main_summary": "os_service_pack_minor"
+  },
+  "environment/system.os.windowsBuildNumber": {
+    "longitudinal": "system_os.windows_build_number",
+    "main_summary": "windows_build_number"
+  },
+  "environment/system.os.windowsUBR": {
+    "longitudinal": "system_os.windows_ubr",
+    "main_summary": "windows_ubr"
+  },
+  "environment/system.os.installYear": {
+    "longitudinal": "system_os.install_year",
+    "main_summary": "install_year"
+  },
+  "environment/system.os.locale": {
+    "longitudinal": "system_os.locale"
+  },
+
+
+
+  "simpleMeasurements/activeTicks": {
+    "main_summary": "active_ticks",
+    "longitudinal": "active_ticks"
+  },
+  "simpleMeasurements/main": {
+    "main_summary": "main",
+    "longitudinal": "main"
+  },
+  "simpleMeasurements/firstPaint": {
+    "main_summary": "first_paint",
+    "longitudinal": "first_paint"
+  },
+  "simpleMeasurements/sessionRestored": {
+    "main_summary": "session_restored",
+    "longitudinal": "session_restored"
+  },
+  "simpleMeasurements/totalTime": {
+    "main_summary": "total_time",
+    "longitudinal": "total_time"
+  },
+  "simpleMeasurements/uptime": {
+    "longitudinal": "uptime"
+  },
+  "simpleMeasurements/startupInterrupted": {
+    "longitudinal": "startup_interrupted"
+  },
+  "simpleMeasurements/maximalNumberOfConcurrentThreads": {
+    "longitudinal": "maximal_number_of_concurrent_threads"
+  },
+  "simpleMeasurements/startupSessionRestoreReadBytes": {
+    "longitudinal": "startup_session_restore_read_bytes"
+  },
+  "simpleMeasurements/startupSessionRestoreWriteBytes": {
+    "longitudinal": "startup_session_restore_write_bytes"
+  },
+  "simpleMeasurements/startupWindowVisibleReadBytes": {
+    "longitudinal": "startup_window_visible_read_bytes"
+  },
+  "simpleMeasurements/startupWindowVisibleWriteBytes": {
+    "longitudinal": "startup_window_visible_write_bytes"
+  },
+
+
+
+  "histogram/WEAVE_CONFIGURED": {
+    "main_summary": "sync_configured"
+  },
+  "histogram/WEAVE_DEVICE_COUNT_DESKTOP": {
+    "main_summary": "sync_count_desktop"
+  },
+  "histogram/WEAVE_DEVICE_COUNT_MOBILE": {
+    "main_summary": "sync_count_mobile"
+  },
+  "histogram/SUBPROCESS_CRASHES_WITH_DUMP": {
+    "main_summary": "crashes_detected_<process>, plugin_hangs"
+  },
+  "histogram/SUBPROCESS_ABNORMAL_ABORT": {
+    "main_summary": "aborts_<process>"
+  },
+  "histogram/PROCESS_CRASH_SUBMIT_ATTEMPT": {
+    "main_summary": "crash_submit_attempt_<process>"
+  },
+  "histogram/PROCESS_CRASH_SUBMIT_SUCCESS": {
+    "main_summary": "crash_submit_success_<process>"
+  },
+  "histogram/SUBPROCESS_KILL_HARD": {
+    "main_summary": "shutdown_kill"
+  },
+  "histogram/SEARCH_COUNTS": {
+    "main_summary": "search_counts"
+  },
+  "histogram/DEVTOOLS_TOOLBOX_OPENED_COUNT": {
+    "main_summary": "devtools_toolbox_opened_count"
+  },
+  "histogram/PLACES_BOOKMARKS_COUNT": {
+    "main_summary": "places_bookmarks_count"
+  },
+  "histogram/PLACES_PAGES_COUNT": {
+    "main_summary": "places_pages_count"
+  },
+  "histogram/PUSH_API_NOTIFY": {
+    "main_summary": "push_api_notify"
+  },
+  "histogram/WEB_NOTIFICATION_SHOWN": {
+    "main_summary": "web_notification_shown"
+  },
+  "histogram/POPUP_NOTIFICATION_STATS": {
+    "main_summary": "popup_notification_stats"
+  },
+  "histogram/SSL_HANDSHAKE_RESULT": {
+    "main_summary": "ssl_handshake_result"
+  }
+}

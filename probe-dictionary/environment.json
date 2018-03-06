@@ -1,0 +1,3368 @@
+{
+  "environment/build.applicationId": {
+    "history": {
+      "release": [
+        {
+          "description": "The application UUID.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The application UUID.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The application UUID.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.applicationId",
+    "type": "environment"
+  },
+  "environment/build.applicationName": {
+    "history": {
+      "release": [
+        {
+          "description": "The application name.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The application name.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The application name.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.applicationName",
+    "type": "environment"
+  },
+  "environment/build.architecture": {
+    "history": {
+      "release": [
+        {
+          "description": "The build architecture for the active build.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The build architecture for the active build.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The build architecture for the active build.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.architecture",
+    "type": "environment"
+  },
+  "environment/build.architecturesInBinary": {
+    "history": {
+      "release": [
+        {
+          "description": "For Mac universal builds, this is a string containing a list of architectures delimited by '-'. Architecture sets are always in the same order: ppc > i386 > ppc64 > x86_64 > (future additions). This is only available on Mac.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "For Mac universal builds, this is a string containing a list of architectures delimited by '-'. Architecture sets are always in the same order: ppc > i386 > ppc64 > x86_64 > (future additions). This is only available on Mac.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "For Mac universal builds, this is a string containing a list of architectures delimited by '-'. Architecture sets are always in the same order: ppc > i386 > ppc64 > x86_64 > (future additions). This is only available on Mac.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.architecturesInBinary",
+    "type": "environment"
+  },
+  "environment/build.buildId": {
+    "history": {
+      "release": [
+        {
+          "description": "The build ID/date of the application.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The build ID/date of the application.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The build ID/date of the application.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.buildId",
+    "type": "environment"
+  },
+  "environment/build.version": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the application.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the application.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the application.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.version",
+    "type": "environment"
+  },
+  "environment/build.vendor": {
+    "history": {
+      "release": [
+        {
+          "description": "The application vendor.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The application vendor.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The application vendor.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.vendor",
+    "type": "environment"
+  },
+  "environment/build.platformVersion": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the XULRunner platform.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the XULRunner platform.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the XULRunner platform.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.platformVersion",
+    "type": "environment"
+  },
+  "environment/build.xpcomAbi": {
+    "history": {
+      "release": [
+        {
+          "description": "A string tag identifying the binary ABI of the current processor and compiler vtable. This is taken from the TARGET_XPCOM_ABI configure variable. It may not be available on all platforms, especially unusual processor or compiler combinations. The result takes the form <processor>-<compilerABI>, for example: x86-msvc, ppc-gcc3, ... . This value should almost always be used in combination with  the 'OS'.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "A string tag identifying the binary ABI of the current processor and compiler vtable. This is taken from the TARGET_XPCOM_ABI configure variable. It may not be available on all platforms, especially unusual processor or compiler combinations. The result takes the form <processor>-<compilerABI>, for example: x86-msvc, ppc-gcc3, ... . This value should almost always be used in combination with  the 'OS'.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "A string tag identifying the binary ABI of the current processor and compiler vtable. This is taken from the TARGET_XPCOM_ABI configure variable. It may not be available on all platforms, especially unusual processor or compiler combinations. The result takes the form <processor>-<compilerABI>, for example: x86-msvc, ppc-gcc3, ... . This value should almost always be used in combination with  the 'OS'.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.xpcomAbi",
+    "type": "environment"
+  },
+  "environment/build.updaterAvailable": {
+    "history": {
+      "release": [
+        {
+          "description": "True if the application was built with the support for the updater component.",
+          "bug_numbers": [1393601],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "57",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True if the application was built with the support for the updater component.",
+          "bug_numbers": [1393601],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "57",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True if the application was built with the support for the updater component.",
+          "bug_numbers": [1393601],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "57",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.updaterAvailable",
+    "type": "environment"
+  },
+  "environment/settings.blocklistEnabled": {
+    "history": {
+      "release": [
+        {
+          "description": "True if the blocklist is enabled.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True if the blocklist is enabled.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True if the blocklist is enabled.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.blocklistEnabled",
+    "type": "environment"
+  },
+  "environment/settings.e10sEnabled": {
+    "history": {
+      "release": [
+        {
+          "description": "True if the E10S is enabled.",
+          "bug_numbers": [1122052, 1179189],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True if the E10S is enabled.",
+          "bug_numbers": [1122052, 1179189],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True if the E10S is enabled.",
+          "bug_numbers": [1122052, 1179189],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.e10sEnabled",
+    "type": "environment"
+  },
+  "environment/settings.e10sMultiProcesses": {
+    "history": {
+      "release": [
+        {
+          "description": "The number of content processes to use for normal web pages. If this value is > 1, then e10s-multi should be considered to be 'on'.",
+          "bug_numbers": [1349363],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The number of content processes to use for normal web pages. If this value is > 1, then e10s-multi should be considered to be 'on'.",
+          "bug_numbers": [1349363],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The number of content processes to use for normal web pages. If this value is > 1, then e10s-multi should be considered to be 'on'.",
+          "bug_numbers": [1349363],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.e10sMultiProcesses",
+    "type": "environment"
+  },
+  "environment/settings.telemetryEnabled": {
+    "history": {
+      "release": [
+        {
+          "description": "The state of the `toolkit.telemetry.enabled` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The state of the `toolkit.telemetry.enabled` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The state of the `toolkit.telemetry.enabled` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.telemetryEnabled",
+    "type": "environment"
+  },
+  "environment/settings.locale": {
+    "history": {
+      "release": [
+        {
+          "description": "The best locale that the application should be localized to.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The best locale that the application should be localized to.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The best locale that the application should be localized to.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.locale",
+    "type": "environment"
+  },
+  "environment/settings.update.channel": {
+    "history": {
+      "release": [
+        {
+          "description": "The update channel from the defaults only. Does not include the partner bits.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The update channel from the defaults only. Does not include the partner bits.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The update channel from the defaults only. Does not include the partner bits.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.update.channel",
+    "type": "environment"
+  },
+  "environment/settings.update.enabled": {
+    "history": {
+      "release": [
+        {
+          "description": "The state of the `app.update.enabled` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The state of the `app.update.enabled` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The state of the `app.update.enabled` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.update.enabled",
+    "type": "environment"
+  },
+  "environment/settings.update.autoDownload": {
+    "history": {
+      "release": [
+        {
+          "description": "The state of the `app.update.auto` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The state of the `app.update.auto` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The state of the `app.update.auto` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.update.autoDownload",
+    "type": "environment"
+  },
+  "environment/settings.sandbox.effectiveContentProcessLevel": {
+    "history": {
+      "release": [
+        {
+          "description": "The effective sandbox. The values are OS dependent.",
+          "bug_numbers": [1358223],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The effective sandbox. The values are OS dependent.",
+          "bug_numbers": [1358223],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The effective sandbox. The values are OS dependent.",
+          "bug_numbers": [1358223],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.sandbox.effectiveContentProcessLevel",
+    "type": "environment"
+  },
+  "environment/settings.addonCompatibilityCheckEnabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether application compatibility is respected for add-ons.",
+          "bug_numbers": [1196890],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether application compatibility is respected for add-ons.",
+          "bug_numbers": [1196890],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether application compatibility is respected for add-ons.",
+          "bug_numbers": [1196890],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.addonCompatibilityCheckEnabled",
+    "type": "environment"
+  },
+  "environment/settings.attribution.source": {
+    "history": {
+      "release": [
+        {
+          "description": "Referring partner domain, when install happens via a known partner.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Referring partner domain, when install happens via a known partner.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Referring partner domain, when install happens via a known partner.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "52",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.attribution.source",
+    "type": "environment"
+  },
+  "environment/settings.attribution.medium": {
+    "history": {
+      "release": [
+        {
+          "description": "Category of the source, such as 'organic' for a search engine.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Category of the source, such as 'organic' for a search engine.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Category of the source, such as 'organic' for a search engine.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "52",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.attribution.medium",
+    "type": "environment"
+  },
+  "environment/settings.attribution.campaign": {
+    "history": {
+      "release": [
+        {
+          "description": "Identifier of the particular campaign that led to the download of the product.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Identifier of the particular campaign that led to the download of the product.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Identifier of the particular campaign that led to the download of the product.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "52",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.attribution.campaign",
+    "type": "environment"
+  },
+  "environment/settings.attribution.content": {
+    "history": {
+      "release": [
+        {
+          "description": "Identifier to indicate the particular link within a campaign.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Identifier to indicate the particular link within a campaign.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "50",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Identifier to indicate the particular link within a campaign.",
+          "bug_numbers": [1292360],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "52",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.attribution.content",
+    "type": "environment"
+  },
+  "environment/settings.isDefaultBrowser": {
+    "history": {
+      "release": [
+        {
+          "description": "Identifier to indicate the particular link within a campaign.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Identifier to indicate the particular link within a campaign.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Identifier to indicate the particular link within a campaign.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.isDefaultBrowser",
+    "type": "environment"
+  },
+  "environment/settings.defaultSearchEngine": {
+    "history": {
+      "release": [
+        {
+          "description": "Contains the string identifier or name of the default search engine provider. Deprecated.",
+          "bug_numbers": [1138503],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Contains the string identifier or name of the default search engine provider. Deprecated.",
+          "bug_numbers": [1138503],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Contains the string identifier or name of the default search engine provider. Deprecated.",
+          "bug_numbers": [1138503],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.defaultSearchEngine",
+    "type": "environment"
+  },
+  "environment/settings.defaultSearchEngineData.name": {
+    "history": {
+      "release": [
+        {
+          "description": "The name of the default search engine.",
+          "bug_numbers": [1164159],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The name of the default search engine.",
+          "bug_numbers": [1164159],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The name of the default search engine.",
+          "bug_numbers": [1164159],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.defaultSearchEngineData.name",
+    "type": "environment"
+  },
+  "environment/settings.defaultSearchEngineData.loadPath": {
+    "history": {
+      "release": [
+        {
+          "description": "The anonymized path of the engine xml file, e.g. e.g. jar:[app]/omni.ja!browser/engine.xml (where ‘browser’ is the name of the chrome package, not a folder) [profile]/searchplugins/engine.xml [distribution]/searchplugins/common/engine.xml [other]/engine.xml [other]/addEngineWithDetails [other]/addEngineWithDetails:extensionID [http/https]example.com/engine-name.xml [http/https]example.com/engine-name.xml:extensionID",
+          "bug_numbers": [1259139],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The anonymized path of the engine xml file, e.g. e.g. jar:[app]/omni.ja!browser/engine.xml (where ‘browser’ is the name of the chrome package, not a folder) [profile]/searchplugins/engine.xml [distribution]/searchplugins/common/engine.xml [other]/engine.xml [other]/addEngineWithDetails [other]/addEngineWithDetails:extensionID [http/https]example.com/engine-name.xml [http/https]example.com/engine-name.xml:extensionID",
+          "bug_numbers": [1259139],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The anonymized path of the engine xml file, e.g. e.g. jar:[app]/omni.ja!browser/engine.xml (where ‘browser’ is the name of the chrome package, not a folder) [profile]/searchplugins/engine.xml [distribution]/searchplugins/common/engine.xml [other]/engine.xml [other]/addEngineWithDetails [other]/addEngineWithDetails:extensionID [http/https]example.com/engine-name.xml [http/https]example.com/engine-name.xml:extensionID",
+          "bug_numbers": [1259139],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.defaultSearchEngineData.loadPath",
+    "type": "environment"
+  },
+  "environment/settings.defaultSearchEngineData.origin": {
+    "history": {
+      "release": [
+        {
+          "description": "The origin of the search engine: the value will be default for engines that are built-in or from distribution partners, verified for user-installed engines with valid verification hashes, unverified for non-default engines without verification hash, and invalid for engines with broken verification hashes.",
+          "bug_numbers": [1259139],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The origin of the search engine: the value will be default for engines that are built-in or from distribution partners, verified for user-installed engines with valid verification hashes, unverified for non-default engines without verification hash, and invalid for engines with broken verification hashes.",
+          "bug_numbers": [1259139],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The origin of the search engine: the value will be default for engines that are built-in or from distribution partners, verified for user-installed engines with valid verification hashes, unverified for non-default engines without verification hash, and invalid for engines with broken verification hashes.",
+          "bug_numbers": [1259139],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.defaultSearchEngineData.origin",
+    "type": "environment"
+  },
+  "environment/settings.defaultSearchEngineData.submissionURL": {
+    "history": {
+      "release": [
+        {
+          "description": "The HTTP url we would use to search. For privacy, we don’t record this for user-installed engines.",
+          "bug_numbers": [1164159],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The HTTP url we would use to search. For privacy, we don’t record this for user-installed engines.",
+          "bug_numbers": [1164159],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The HTTP url we would use to search. For privacy, we don’t record this for user-installed engines.",
+          "bug_numbers": [1164159],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "settings.defaultSearchEngineData.submissionURL",
+    "type": "environment"
+  },
+  "environment/profile.creationDate": {
+    "history": {
+      "release": [
+        {
+          "description": "The creation date of the user profile as the integer number of days since UNIX epoch.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The creation date of the user profile as the integer number of days since UNIX epoch.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The creation date of the user profile as the integer number of days since UNIX epoch.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "profile.creationDate",
+    "type": "environment"
+  },
+  "environment/profile.resetDate": {
+    "history": {
+      "release": [
+        {
+          "description": "The date the user profile was reset, as the integer number of days since UNIX epoch. This is optional.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The date the user profile was reset, as the integer number of days since UNIX epoch. This is optional.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The date the user profile was reset, as the integer number of days since UNIX epoch. This is optional.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "profile.resetDate",
+    "type": "environment"
+  },
+  "environment/partner.distributionId": {
+    "history": {
+      "release": [
+        {
+          "description": "The value of the `distribution.id` pref that identifies the Firefox distribution.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The value of the `distribution.id` pref that identifies the Firefox distribution.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The value of the `distribution.id` pref that identifies the Firefox distribution.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "partner.distributionId",
+    "type": "environment"
+  },
+  "environment/partner.distributionVersion": {
+    "history": {
+      "release": [
+        {
+          "description": "The value of the `distribution.version` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The value of the `distribution.version` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The value of the `distribution.version` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "partner.distributionVersion",
+    "type": "environment"
+  },
+  "environment/partner.partnerId": {
+    "history": {
+      "release": [
+        {
+          "description": "The value of the `mozilla.partner.id` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The value of the `mozilla.partner.id` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The value of the `mozilla.partner.id` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "partner.partnerId",
+    "type": "environment"
+  },
+  "environment/partner.distributor": {
+    "history": {
+      "release": [
+        {
+          "description": "The value of the `app.distributor` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The value of the `app.distributor` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The value of the `app.distributor` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "partner.distributor",
+    "type": "environment"
+  },
+  "environment/partner.distributorChannel": {
+    "history": {
+      "release": [
+        {
+          "description": "The value of the `app.distributor.channel` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The value of the `app.distributor.channel` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The value of the `app.distributor.channel` pref.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "partner.distributorChannel",
+    "type": "environment"
+  },
+  "environment/partner.partnerNames": {
+    "history": {
+      "release": [
+        {
+          "description": "The list of names from the `app.partner` children prefs, as `app.partner.<name>=<name>`.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "object"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The list of names from the `app.partner` children prefs, as `app.partner.<name>=<name>`.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "object"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The list of names from the `app.partner` children prefs, as `app.partner.<name>=<name>`.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "object"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "partner.partnerNames",
+    "type": "environment"
+  },
+  "environment/system.cpu.count": {
+    "history": {
+      "release": [
+        {
+          "description": "The number of logical CPUs. Desktop only, e.g. 8, or `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The number of logical CPUs. Desktop only, e.g. 8, or `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The number of logical CPUs. Desktop only, e.g. 8, or `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.count",
+    "type": "environment"
+  },
+  "environment/system.cpu.cores": {
+    "history": {
+      "release": [
+        {
+          "description": "The number of physical CPU cores. Desktop only, e.g. 4, or `null` on failure.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The number of physical CPU cores. Desktop only, e.g. 4, or `null` on failure.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The number of physical CPU cores. Desktop only, e.g. 4, or `null` on failure.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.cores",
+    "type": "environment"
+  },
+  "environment/system.cpu.vendor": {
+    "history": {
+      "release": [
+        {
+          "description": "The CPU vendor, e.g. 'GenuineIntel', or `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The CPU vendor, e.g. 'GenuineIntel', or `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The CPU vendor, e.g. 'GenuineIntel', or `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.vendor",
+    "type": "environment"
+  },
+  "environment/system.cpu.family": {
+    "history": {
+      "release": [
+        {
+          "description": "The CPU family, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The CPU family, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The CPU family, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.family",
+    "type": "environment"
+  },
+  "environment/system.cpu.model": {
+    "history": {
+      "release": [
+        {
+          "description": "The CPU model, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The CPU model, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The CPU model, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.model",
+    "type": "environment"
+  },
+  "environment/system.cpu.stepping": {
+    "history": {
+      "release": [
+        {
+          "description": "The CPU stepping, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The CPU stepping, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The CPU stepping, `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.stepping",
+    "type": "environment"
+  },
+  "environment/system.cpu.l2cacheKB": {
+    "history": {
+      "release": [
+        {
+          "description": "The CPU L2 cache size in KB. `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The CPU L2 cache size in KB. `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The CPU L2 cache size in KB. `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.l2cacheKB",
+    "type": "environment"
+  },
+  "environment/system.cpu.l3cacheKB": {
+    "history": {
+      "release": [
+        {
+          "description": "The CPU L3 cache size in KB. `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The CPU L3 cache size in KB. `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The CPU L3 cache size in KB. `null` on failure. Desktop only.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.l3cacheKB",
+    "type": "environment"
+  },
+  "environment/system.cpu.speedMHz": {
+    "history": {
+      "release": [
+        {
+          "description": "Only available on Firefox desktop. The CPU clock speed in MHz.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Only available on Firefox desktop. The CPU clock speed in MHz.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Only available on Firefox desktop. The CPU clock speed in MHz.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.speedMHz",
+    "type": "environment"
+  },
+  "environment/system.cpu.extensions": {
+    "history": {
+      "release": [
+        {
+          "description": "This lists the avaible CPU extensions as strings. E.g.: 'hasMMX', 'hasSSE', 'hasSSE2', 'hasSSE3', 'hasSSSE3', 'hasSSE4A', 'hasSSE4_1', 'hasSSE4_2', 'hasAVX', 'hasAVX2', 'hasAES', 'hasEDSP', 'hasARMv6', 'hasARMv7', 'hasNEON'.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "Array<string>"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "This lists the avaible CPU extensions as strings. E.g.: 'hasMMX', 'hasSSE', 'hasSSE2', 'hasSSE3', 'hasSSSE3', 'hasSSE4A', 'hasSSE4_1', 'hasSSE4_2', 'hasAVX', 'hasAVX2', 'hasAES', 'hasEDSP', 'hasARMv6', 'hasARMv7', 'hasNEON'.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "Array<string>"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "This lists the avaible CPU extensions as strings. E.g.: 'hasMMX', 'hasSSE', 'hasSSE2', 'hasSSE3', 'hasSSSE3', 'hasSSE4A', 'hasSSE4_1', 'hasSSE4_2', 'hasAVX', 'hasAVX2', 'hasAES', 'hasEDSP', 'hasARMv6', 'hasARMv7', 'hasNEON'.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "Array<string>"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.cpu.extensions",
+    "type": "environment"
+  },
+  "environment/system.memoryMB": {
+    "history": {
+      "release": [
+        {
+          "description": "The machines amount of RAM.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The machines amount of RAM.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The machines amount of RAM.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.memoryMB",
+    "type": "environment"
+  },
+  "environment/system.virtualMaxMB": {
+    "history": {
+      "release": [
+        {
+          "description": "Total virtual memory size in MB. This is Windows only. `null` on failure.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Total virtual memory size in MB. This is Windows only. `null` on failure.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Total virtual memory size in MB. This is Windows only. `null` on failure.",
+          "bug_numbers": [1128472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "43",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.virtualMaxMB",
+    "type": "environment"
+  },
+  "environment/system.isWow64": {
+    "history": {
+      "release": [
+        {
+          "description": "The availability of the WoW64 subsystem. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The availability of the WoW64 subsystem. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The availability of the WoW64 subsystem. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.isWow64",
+    "type": "environment"
+  },
+  "environment/system.os.name": {
+    "history": {
+      "release": [
+        {
+          "description": "The name of the OS, e.g. 'Windows_NT'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The name of the OS, e.g. 'Windows_NT'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The name of the OS, e.g. 'Windows_NT'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.name",
+    "type": "environment"
+  },
+  "environment/system.os.version": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the OS, e.g. '6.1'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the OS, e.g. '6.1'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the OS, e.g. '6.1'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.version",
+    "type": "environment"
+  },
+  "environment/system.os.kernelVersion": {
+    "history": {
+      "release": [
+        {
+          "description": "The kernel version of Android. This is Android only. `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The kernel version of Android. This is Android only. `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The kernel version of Android. This is Android only. `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.kernelVersion",
+    "type": "environment"
+  },
+  "environment/system.os.servicePackMajor": {
+    "history": {
+      "release": [
+        {
+          "description": "The Windows service pack major version. This is Windows only. `null` on failure.",
+          "bug_numbers": [1122052, 1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The Windows service pack major version. This is Windows only. `null` on failure.",
+          "bug_numbers": [1122052, 1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The Windows service pack major version. This is Windows only. `null` on failure.",
+          "bug_numbers": [1122052, 1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.servicePackMajor",
+    "type": "environment"
+  },
+  "environment/system.os.servicePackMinor": {
+    "history": {
+      "release": [
+        {
+          "description": "The Windows service pack minor version. This is Windows only. `null` on failure.",
+          "bug_numbers": [1122052, 1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The Windows service pack minor version. This is Windows only. `null` on failure.",
+          "bug_numbers": [1122052, 1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The Windows service pack minor version. This is Windows only. `null` on failure.",
+          "bug_numbers": [1122052, 1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.servicePackMinor",
+    "type": "environment"
+  },
+  "environment/system.os.windowsBuildNumber": {
+    "history": {
+      "release": [
+        {
+          "description": "The Windows build number. This is Windows only. `null` on failure.",
+          "bug_numbers": [1255472, 1333043],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The Windows build number. This is Windows only. `null` on failure.",
+          "bug_numbers": [1255472, 1333043],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The Windows build number. This is Windows only. `null` on failure.",
+          "bug_numbers": [1255472, 1333043],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.windowsBuildNumber",
+    "type": "environment"
+  },
+  "environment/system.os.windowsUBR": {
+    "history": {
+      "release": [
+        {
+          "description": "The Windows UBR. This is Windows 10 only. `null` on failure.",
+          "bug_numbers": [1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The Windows UBR. This is Windows 10 only. `null` on failure.",
+          "bug_numbers": [1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The Windows UBR. This is Windows 10 only. `null` on failure.",
+          "bug_numbers": [1255472],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "48",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.windowsUBR",
+    "type": "environment"
+  },
+  "environment/system.os.installYear": {
+    "history": {
+      "release": [
+        {
+          "description": "The year Windows was installed. This is Windows only. `null` on failure.",
+          "bug_numbers": [1132558],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The year Windows was installed. This is Windows only. `null` on failure.",
+          "bug_numbers": [1132558],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The year Windows was installed. This is Windows only. `null` on failure.",
+          "bug_numbers": [1132558],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.installYear",
+    "type": "environment"
+  },
+  "environment/system.os.locale": {
+    "history": {
+      "release": [
+        {
+          "description": "The locale of the OS, e.g. 'en'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The locale of the OS, e.g. 'en'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The locale of the OS, e.g. 'en'. This is `null` on failure.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.os.locale",
+    "type": "environment"
+  },
+  "environment/system.hdd.profile.model": {
+    "history": {
+      "release": [
+        {
+          "description": "The model of the hdd where the profile directory is located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The model of the hdd where the profile directory is located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The model of the hdd where the profile directory is located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.hdd.profile.model",
+    "type": "environment"
+  },
+  "environment/system.hdd.profile.revision": {
+    "history": {
+      "release": [
+        {
+          "description": "The revision of the hdd where the profile directory is located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The revision of the hdd where the profile directory is located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The revision of the hdd where the profile directory is located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.hdd.profile.revision",
+    "type": "environment"
+  },
+  "environment/system.hdd.binary.model": {
+    "history": {
+      "release": [
+        {
+          "description": "The model of the hdd where the application binaries are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The model of the hdd where the application binaries are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The model of the hdd where the application binaries are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.hdd.binary.model",
+    "type": "environment"
+  },
+  "environment/system.hdd.binary.revision": {
+    "history": {
+      "release": [
+        {
+          "description": "The revision of the hdd where the application binaries are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The revision of the hdd where the application binaries are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The revision of the hdd where the application binaries are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.hdd.binary.revision",
+    "type": "environment"
+  },
+  "environment/system.hdd.system.model": {
+    "history": {
+      "release": [
+        {
+          "description": "The model of the hdd where the system files are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The model of the hdd where the system files are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The model of the hdd where the system files are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.hdd.system.model",
+    "type": "environment"
+  },
+  "environment/system.hdd.system.revision": {
+    "history": {
+      "release": [
+        {
+          "description": "The revision of the hdd where the system files are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The revision of the hdd where the system files are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The revision of the hdd where the system files are located. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.hdd.system.revision",
+    "type": "environment"
+  }
+}
