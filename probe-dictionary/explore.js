@@ -16,6 +16,48 @@ var gDatasetMappings = null;
 var gView = null;
 var gDetailViewId = null;
 
+$(document)
+  .ready(function () {  
+    // Permalink control
+    $(".permalink-control input")
+      .hide()
+      .focus(function () {
+        // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+        var $this = $(this);
+        $this.select()
+          .mouseup(function () {
+            $this.unbind("mouseup");
+            return false;
+          });
+      });
+    $(".permalink-control button")
+      .click(function () {
+        var $this = $(this);
+        $.ajax({
+          url: "https://api-ssl.bitly.com/v3/shorten",
+          dataType: "json",
+          data: {
+            longUrl: window.location.href,
+            access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+            format: "json"
+          },
+          success: function (response) {
+            var shortUrl = response.data.url;
+            if (shortUrl.indexOf(":") === 4) {
+              shortUrl = "https" + shortUrl.substring(4);
+            }
+            $this.parents(".permalink-control")
+              .find("input")
+              .show()
+              .val(shortUrl)
+              .focus();
+          },
+          async:false
+        });
+        document.execCommand('copy');
+      });
+  });
+
 function mark(marker) {
   if (performance.mark) {
     performance.mark(marker);
