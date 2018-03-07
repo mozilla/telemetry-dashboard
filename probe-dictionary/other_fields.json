@@ -1,0 +1,800 @@
+{
+  "info/reason": {
+    "name": "reason",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "What triggered this ping: \"saved-session\", \"environment-change\", \"shutdown\", etc.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/revision": {
+    "name": "revision",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The revision of Histograms.json in the Firefox code.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/timezoneOffset": {
+    "name": "timezoneOffset",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "Time-zone offset from UTC, in minutes, for the current locale.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/previousBuildId": {
+    "name": "previousBuildId",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The build ID of Firefox in the previous run. null if this is the first run, or the previous build ID is unknown.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/previousBuildId": {
+    "name": "previousBuildId",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The build ID of Firefox in the previous run. null if this is the first run, or the previous build ID is unknown.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/sessionId": {
+    "name": "sessionId",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "A UUID that identifies the current Firefox session. This UUID is shared between 1 to N subsessions.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/subsessionId": {
+    "name": "subsessionId",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "A UUID that identifies the current Firefox subsession.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/previousSessionId": {
+    "name": "previousSessionId",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "A UUID that is the session id of the previous session. This is null on first run.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/previousSubsessionId": {
+    "name": "previousSubsessionId",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "A UUID that is the subsession id of the previous subsession (even if it was in a different Firefox session). This is null on first run.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/subsessionCounter": {
+    "name": "subsessionCounter",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The running no. of subsessions since the start of the browser session.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/profileSubsessionCounter": {
+    "name": "profileSubsessionCounter",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The running no. of all subsessions for the whole profile life time.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/sessionStartDate": {
+    "name": "sessionStartDate",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The date of when the current session started. This is an ISO date in local time with hourly precision.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/subsessionStartDate": {
+    "name": "subsessionStartDate",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The date of when the current subsession started. This is an ISO date in local time with hourly precision.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/sessionLength": {
+    "name": "sessionLength",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The length of the current session so far in seconds. This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic like calculations based on `Date.now()`. If the monotonic clock failed, this will be `-1`. Note that this currently does not behave consistently over our supported platforms.",
+          "bug_numbers": [1204823],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/subsessionLength": {
+    "name": "subsessionLength",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "The length of the current subsession so far in seconds. This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic like calculations based on `Date.now()`. If the monotonic clock failed, this will be `-1`. Note that this currently does not behave consistently over our supported platforms.",
+          "bug_numbers": [1204823],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/flashVersion": {
+    "name": "flashVersion",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "This is obsolete, use `environment.addons.activePlugins`. The current version of the Flash plugin.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "info/addons": {
+    "name": "addons",
+    "type": "info",
+    "history": {
+      "all": [
+        {
+          "description": "This is obsolete, use `environment.addons`. A string containing a list of all addon ids and their version in the format: \"<addon id>:<version>,...\"",
+          "bug_numbers": [],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/totalTime": {
+    "name": "totalTime",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "This is obsolete, use `info.sessionLength` or `info.subsessionLength`. A non-monotonic integer representing the number of seconds the session has been alive.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/uptime": {
+    "name": "uptime",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "This is obsolete, use `info.sessionLength` or `info.subsessionLength`. A non-monotonic integer representing the number of minutes the session has been alive.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/addonManager": {
+    "name": "addonManager",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Only available in prerelease. It contains a set of counters related to Addons. See [here](https://dxr.mozilla.org/mozilla-central/search?q=%22AddonManagerPrivate.recordSimpleMeasure%22&redirect=false&case=true) for a list of recorded measures.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "object"
+          },
+          "expiry_version": "never",
+          "optout": false,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/UITelemetry": {
+    "name": "UITelemetry",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Only available in prerelease. This is obsolete, please use Telemetry Events or other data collection mechanisms.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "object"
+          },
+          "expiry_version": "never",
+          "optout": false,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/startupInterrupted": {
+    "name": "startupInterrupted",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Set to true if startup was interrupted by an interactive prompt.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "bool"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/js": {
+    "name": "js",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "This section contains a series of counters from the JavaScript engine. As of Firefox 59 this section no longer contains any entries.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "object"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/maximalNumberOfConcurrentThreads": {
+    "name": "maximalNumberOfConcurrentThreads",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "An integer representing the highest number of threads encountered so far during the session.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/maximalNumberOfConcurrentThreads": {
+    "name": "maximalNumberOfConcurrentThreads",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "An integer representing the highest number of threads encountered so far during the session.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/startupSessionRestoreReadBytes": {
+    "name": "startupSessionRestoreReadBytes",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Windows-only integer representing the number of bytes read by the main process up until the session store has finished restoring the windows.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/startupSessionRestoreWriteBytes": {
+    "name": "startupSessionRestoreWriteBytes",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Windows-only integer representing the number of bytes written by the main process up until the session store has finished restoring the windows.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/startupWindowVisibleReadBytes": {
+    "name": "startupWindowVisibleReadBytes",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Windows-only integer representing the number of bytes read by the main process up until after a XUL window is made visible.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/startupWindowVisibleWriteBytes": {
+    "name": "startupWindowVisibleWriteBytes",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Windows-only integer representing the number of bytes written by the main process up until after a XUL window is made visible.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/debuggerAttached": {
+    "name": "debuggerAttached",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "A boolean set to true if a debugger is attached to the main process.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "bool"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/shutdownDuration": {
+    "name": "shutdownDuration",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "The time, in milliseconds, it took to complete the last shutdown.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": false,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/failedProfileLockCount": {
+    "name": "failedProfileLockCount",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "The number of times the system failed to lock the user profile.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": false,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/savedPings": {
+    "name": "savedPings",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Integer count of the number of pings that need to be sent.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/activeTicks": {
+    "name": "activeTicks",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Obsolete, use the `active_ticks` scalar. Integer count of the number of five-second intervals ('ticks') the user was considered 'active' (sending UI events to the window).",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/pingsOverdue": {
+    "name": "pingsOverdue",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Integer count of pending Telemetry pings that are overdue.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/firstPaint": {
+    "name": "firstPaint",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'first paint' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/sessionRestored": {
+    "name": "sessionRestored",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'session restored' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/main": {
+    "name": "main",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'main' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  }
+}
