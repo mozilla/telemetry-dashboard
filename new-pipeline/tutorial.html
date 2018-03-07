@@ -13,21 +13,61 @@
     <link rel="stylesheet" href="style/jquery.tocify.css">
     <style>
     #tocify-header0 > .tocify-item { font-weight: bold; } /* bold the top-level entries */
+    body {
+        padding: 20px 5px 5px 5px;
+    }
+    .active {
+        background: rgb(241, 236, 236);
+        border-left: 5px solid #286090;
+    }
+    hr {
+        margin: 0 auto;
+    }
+    nav a{
+        color:black;
+    }
+    nav .nav-stacked li a{
+        color:rgb(85, 81, 81);
+    }
+    #side-nav {
+        padding-top: 2.5em;
+    }
+    .btn-group {
+        padding: 15px;
+    }
+    @media only screen and (max-width: 992px) {
+    #side-nav {
+        display: none;
+    }
+}
     </style>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
 </head>
-<body style="padding: 0 5px 5px 5px;">
-    <form id="histogram-filters" class="navbar-form inline" style="position: fixed; right: 1em; top: 1em; z-index: 1">
-        <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
-        <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
-        <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
-    </form>
-    <div class="container-fuild" style="margin-top: 1em">
+<body>
+    <nav class="navbar navbar-default navbar-fixed-top" style="background:rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0); ">
+        <div class="container-fluid">
+            <div class="btn-group navbar-btn navbar-right" role="group">
+                <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
+                <a href="./evo.html" class="btn btn-default" id="switch-views-evolution" title="Switch to the evolution view">Evolution View</a>
+                <a href="./" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
+            </div>            
+        </div>
+    </nav>
+    <div class="container-fuild" style="margin-top: 3em">
         <div class="row">
-            <div class="col-md-3">
-                <div id="toc" style="margin-top: 5em"></div>
+            <div class="col-md-2">
+                <nav class="navbar-fixed-left" id="side-nav" style="position:fixed;">
+                    <ul class="nav nav-stacked" id="sidebar">
+                        <li><a href="#BasicConcepts">Basic Concepts</a></li>
+                        <hr>
+                        <li><a href="#HistogramDashboard">Historgram Dashboard</a></li>
+                        <hr>
+                        <li><a href="#EvolutionDashboard">Evolution Dashboard</a></li>
+                        <hr>
+                    </ul>
+                </nav>
             </div>
-            <div class="col-md-8 col-md-offset-2">
+            <div class="col-md-9" style="position:relative; float:right;">
                 <h1>Telemetry Dashboard Documentation</h1>
                 <hr>
                 <h2 id="BasicConcepts">Basic Concepts</h2>
@@ -168,6 +208,12 @@
     <script src="lib/jquery.tocify.min.js"></script>
     <script>
     $(function() { $("#toc").tocify({theme: "bootstrap3"}); });
+
+    var selector = '.nav li';
+    $(selector).on('click', function(){
+        $(selector).removeClass('active');
+        $(this).addClass('active');
+    });
     </script>
     <script src="../analytics/analytics.js"></script>
 </body>
