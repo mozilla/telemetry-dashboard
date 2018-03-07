@@ -122,3 +122,8 @@ body {
 .hidden {
     display: none;
 }
+
+.grow:empty:after{
+content: "none";
+font-style: italic;
+}
