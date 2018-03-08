@@ -122,3 +122,7 @@ body {
 .hidden {
     display: none;
 }
+
+.nav-item {
+    font-weight: bold;
+}
