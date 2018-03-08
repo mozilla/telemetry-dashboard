@@ -127,8 +127,3 @@ body {
     font-size: larger;
     padding-right: 8px;
 }
-
-.nav-item > a {
-    background-color: #5496cf;
-    border-radius: 4px;
-}
