@@ -124,6 +124,5 @@ body {
 }
 
 .nav-item {
-    font-size: larger;
-    padding-right: 8px;
+    font-weight: bold;
 }
