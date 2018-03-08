@@ -8,6 +8,18 @@ body {
     margin-right: 2px;
 }
 
+/* Fix the NavBar to the top of the page*/
+.fixed-navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 3;
+}
+/* Fixing the NavBar shifts the content up, so I added padding-top to the search-view to move it back to the original position */
+#search-view {
+  padding-top: 54px;
+}
+
 #github-banner img {
     position: absolute;
     top: 0;
