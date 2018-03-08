@@ -52,8 +52,7 @@ A local webserver is really helpful for running a version of the site on the sam
 
 Permalink buttons (in the top right hand corner of the main dashboards) will not work when running the site on local servers. This is because they are shortened with bit.ly, which doesn't allow local links.
 
-[NPM Install](https://www.npmjs.com/package/http-server)
-Alternatively, we can run on web server using: `npm install http-server -g`
+Alternatively, we can run on [npm web server](https://www.npmjs.com/package/http-server) using: `npm install http-server -g`
 
 ### Submitting pull requests for the dashboard
 
