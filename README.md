@@ -52,6 +52,8 @@ A local webserver is really helpful for running a version of the site on the sam
 
 Permalink buttons (in the top right hand corner of the main dashboards) will not work when running the site on local servers. This is because they are shortened with bit.ly, which doesn't allow local links.
 
+[Alternatively, we can run on web server using: `npm install http-server -g`](https://www.npmjs.com/package/http-server)
+
 ### Submitting pull requests for the dashboard
 
 For pull requests, it is recommended that you set up a live site hosting your branch. This makes it a lot easier for reviewers to check out the changes.
