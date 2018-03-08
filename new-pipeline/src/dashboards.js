@@ -1031,7 +1031,7 @@ function updateOSs() {
 
 // Build a URL for linking to the probe-dictionary.
 function buildDictionaryURL(metric, channel, description) {
-  var baseUrl = "https://georgf.github.io/fx-data-explorer/index.html";
+  var baseUrl = "https://telemetry.mozilla.org/probe-dictionary/";
   var params = {
     "searchtype": "in_name",
     "optout": "false",
