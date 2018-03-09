@@ -127,13 +127,6 @@ $(document)
     }
 
     // Permalink control
-    $(".permalink-control")
-      .append(
-        '<div class="input-group">' +
-        '    <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Permalink">Get Permalink</button></span>' +
-        '    <input type="text" class="form-control">' +
-        '</div>'
-      );
     $(".permalink-control input")
       .hide()
       .focus(function () {
