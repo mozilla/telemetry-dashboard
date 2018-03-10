@@ -409,6 +409,21 @@ function friendlyRecordingRangeForHistory(history, channel) {
   return friendlyRecordingRange(firstVersion, expiry);
 }
 
+// https://stackoverflow.com/questions/19158559/how-to-fix-a-header-on-scroll Used this to learn scroll
+
+function makeSticky() {
+  $(window).scroll(function(){
+    var sticky = $('.sticky'),
+        scroll = $(window).scrollTop(),
+        stickyTop = sticky.offset().top;
+
+    if (scroll >= stickyTop) sticky.addClass('fixed');
+    else sticky.removeClass('fixed');
+    // console.log("sticky top: ", stickyTop);
+    // console.log("scroll top: ", scroll);
+  });
+}
+
 function renderMeasurements(measurements) {
   var selected_channel = $("#select_channel").val();
   var container = $("#measurements");
@@ -427,7 +442,7 @@ function renderMeasurements(measurements) {
   var columns = new Map(rawColumns);
 
   var table = '<table id="search-results-table">';
-  table += ("<tr><th>" + [...columns.keys()].join("</th><th>") + "</th></tr>");
+  table += ("<tr class='search-results-header sticky'><th>" + [...columns.keys()].join("</th><th>") + "</th></tr>");
 
   var name = probeId => probeId.split("/")[1];
   var sortedProbeKeys = Object.keys(measurements)
@@ -469,6 +484,8 @@ function renderMeasurements(measurements) {
 
   container.empty();
   container.append(items.join(""));
+
+  makeSticky();
 }
 
 function renderSearchStats(filtered) {

@@ -20,6 +20,40 @@ body {
   padding-top: 54px;
 }
 
+/* tbody, tr {
+  display: table;
+} */
+
+/* .search-results-header { */
+  /* Position:Sticky is not supported by Firefox:
+    https://github.com/dollarshaveclub/stickybits/issues/143
+    https://bugzilla.mozilla.org/show_bug.cgi?id=975644
+
+    So I had to find some workarounds to make this search results header stick to the top of the page when it scrolls down.
+    I have version 58.0.2 installed.
+    We will need to support versions before 59, so we will not be able to use position: sticky; on its own
+  */
+  /* position: sticky;
+  position: -webkit-sticky; */
+/* } */
+
+/* .search-results-header th {
+  top: 0;
+  z-index: 3;
+  display: block;
+  position: sticky;
+  position: -webkit-sticky;
+} */
+
+.fixed {
+    position: fixed;
+    top: 0;
+    left:0;
+    padding-top: 52px;
+    width: 100%;
+    z-index: 4;
+}
+
 #github-banner img {
     position: absolute;
     top: 0;
