@@ -13,38 +13,57 @@
     <link rel="stylesheet" href="style/jquery.tocify.css">
     <style>
     #tocify-header0 > .tocify-item { font-weight: bold; } /* bold the top-level entries */
+    
     body {
         padding: 0 5px 5px 5px;
     }
+
     .active {
         background: rgb(241, 236, 236);
         border-left: 5px solid #286090;
     }
+
+    .navbar {
+        background: rgba(255, 255, 255, 0);
+        border-color: rgba(255, 255, 255, 0);
+    }
+
     hr {
         margin: 0 auto;
     }
-    nav a{
-        color:black;
+
+    nav a {
+        color: black;
     }
-    nav .nav-stacked li a{
-        color:rgb(85, 81, 81);
+
+    nav .nav-stacked li a {
+        color: rgb(85, 81, 81);
     }
+
     #side-nav {
         padding-top: 2.5em;
+        position: fixed;
     }
+
+    #content {
+        position: relative;
+        float: right;
+    }
+
     .btn-group {
         padding: 15px;
     }
+
     @media only screen and (max-width: 992px) {
-    #side-nav {
+        #side-nav {
         display: none;
+        }
     }
-}
     </style>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
 </head>
 <body>
-    <nav class="navbar navbar-default" style="background:rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0); ">
+    <nav class="navbar navbar-default">
         <div class="container-fluid">
             <div class="btn-group navbar-btn navbar-right" role="group">
                 <a href="./dist.html" class="btn btn-default" id="switch-views-histogram" title="Switch to the histogram view">Histogram View</a>
@@ -53,21 +72,21 @@
             </div>            
         </div>
     </nav>
-    <div class="container-fuild" style="margin-top: 3em">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-md-2">
-                <nav class="navbar-fixed-left" id="side-nav" style="position:fixed;">
+                <nav class="navbar-fixed-left" id="side-nav">
                     <ul class="nav nav-stacked" id="sidebar">
                         <li><a href="#BasicConcepts">Basic Concepts</a></li>
                         <hr>
-                        <li><a href="#HistogramDashboard">Historgram Dashboard</a></li>
+                        <li><a href="#HistogramDashboard">Histogram Dashboard</a></li>
                         <hr>
                         <li><a href="#EvolutionDashboard">Evolution Dashboard</a></li>
                         <hr>
                     </ul>
                 </nav>
             </div>
-            <div class="col-md-9" style="position:relative; float:right;">
+            <div class="col-md-9" id="content">
                 <h1>Telemetry Dashboard Documentation</h1>
                 <hr>
                 <h2 id="BasicConcepts">Basic Concepts</h2>
