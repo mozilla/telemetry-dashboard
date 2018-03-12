@@ -154,7 +154,7 @@ $(document)
             if (shortUrl.indexOf(":") === 4) {
               shortUrl = "https" + shortUrl.substring(4);
             }
-            $this.parents(".permalink-control")
+            $this.parents(".navbar-form")
               .find("input")
               .show()
               .val(shortUrl)
