@@ -138,7 +138,7 @@ $(document)
             return false;
           });
       });
-    $(".permalink-control button")
+    $(".permalink-control btn")
       .click(function () {
         var $this = $(this);
         $.ajax({
