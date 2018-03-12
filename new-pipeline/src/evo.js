@@ -109,7 +109,7 @@ $(function () {
       .trigger("change");
     $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !==
         0 ? 1 : 0) + "]")
-      .prop("checked", true)
+      .prop("checked", false)
       .trigger("change");
 
     // If advanced settings are not at their defaults, expand the settings pane on load
@@ -506,7 +506,7 @@ function calculateEvolutions(callback) {
     var parts = channelVersion.split("/"); //wip: fix this
     getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates,
       filterSets, $("input[name=sanitize-toggle]:checked")
-      .val() !== "0", $("input[name=build-time-toggle]:checked")
+      .val() == "0", $("input[name=build-time-toggle]:checked")
       .val() !== "0",
       function (newLinesMap, newDescription) {
         if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
@@ -811,9 +811,16 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
     .click(function () {
       var newUseSubmissionDate = $("input[name=build-time-toggle]:checked")
         .val() !== "0" ? 0 : 1;
-      $("input[name=build-time-toggle][value=" + newUseSubmissionDate + "]")
-        .prop("checked", true)
-        .trigger("change");
+      if(newUseSubmissionDate == 0){
+        $("input[name=build-time-toggle][value=" + newUseSubmissionDate + "]")
+          .prop("checked", true)
+          .trigger("change");
+      }
+      else{
+        $("input[name=build-time-toggle]")
+          .prop("checked", false)
+          .trigger("change");
+      }
     });
 
 }
@@ -1021,7 +1028,7 @@ function saveStateToUrlAndCookie() {
 
   // If advanced settings are not at their defaults, display a notice in the panel header
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !==
-    1) {
+    0) {
     $("#advanced-settings-toggle")
       .find("span")
       .text(" (modified)");

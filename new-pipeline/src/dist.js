@@ -67,11 +67,11 @@ $(function () {
       .multiselect("select", gInitialPageState.sort_keys);
     $("input[name=table-toggle][value=" + (gInitialPageState.table !==
         0 ? 1 : 0) + "]")
-      .prop("checked", true)
+      .prop("checked", false)
       .trigger("change");
     $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !==
         0 ? 1 : 0) + "]")
-      .prop("checked", true)
+      .prop("checked", false)
       .trigger("change");
     $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ?
         1 : 0) + "]")
@@ -83,7 +83,7 @@ $(function () {
       .trigger("change");
     $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !==
         0 ? 1 : 0) + "]")
-      .prop("checked", true)
+      .prop("checked", false)
       .trigger("change");
 
     updateOptions(function () {
@@ -335,7 +335,7 @@ $(function () {
                 $("#selected-key1")
                   .trigger("change");
               }, $("input[name=sanitize-toggle]:checked")
-              .val() !== "0");
+              .val() == "0");
           }, 0);
         });
 
@@ -368,10 +368,10 @@ $(function () {
           }
           displayHistograms(histogramsList, gCurrentDates, $(
               "input[name=table-toggle]:checked")
-            .val() !== "0", $(
+            .val() == "0", $(
               "input[name=cumulative-toggle]:checked")
-            .val() !== "0", $("input[name=trim-toggle]:checked")
-            .val() !== "0");
+            .val() == "0", $("input[name=trim-toggle]:checked")
+            .val() == "0");
           saveStateToUrlAndCookie();
         });
 
@@ -477,7 +477,7 @@ function calculateHistograms(callback, sanitize) {
   }
 
   var useSubmissionDate = $("input[name=build-time-toggle]:checked")
-    .val() !== "0";
+    .val() == "0";
   var fullEvolutionsMap = {}; // Mapping from labels (the keys in keyed histograms) to lists of combined filtered evolutions (one per comparison option, combined from all filter sets in that option)
   var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0,
@@ -1739,7 +1739,7 @@ function saveStateToUrlAndCookie() {
       });
     });
     if ($("input[name=cumulative-toggle]:checked")
-      .val() !== "0") {
+      .val() == "0") {
       // Apply cumulative option
       countsList = countsList.map(function (counts) {
         var total = 0;
@@ -1850,8 +1850,8 @@ function saveStateToUrlAndCookie() {
   }
 
   var isKeyedHistogram = $("#sort-keys-option").css("display") !== "none";
-  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !==
-    0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
+  if (gInitialPageState.use_submission_date == 0 || gInitialPageState.table ==
+    0 || gInitialPageState.cumulative == 0 || gInitialPageState.trim !== 0 ||
     (isKeyedHistogram && gInitialPageState.sort_keys !== "submissions") ||
     start !== minMoment || end !== maxMoment) {
     $("#advanced-settings-toggle")
