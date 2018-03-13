@@ -127,7 +127,7 @@ $(document)
     }
 
     // Permalink control
-    $(".permalink-control.input")
+    $(".permalink-text")
       .hide()
       .focus(function () {
        // Workaround for broken selection: http://stackoverflow.com/questions/5797539
@@ -138,7 +138,7 @@ $(document)
            return false;
          });
      });
-    $(".permalink-control")
+    $(".permalink-button")
       .click(function () {
         var $this = $(this);
         $.ajax({
@@ -164,7 +164,7 @@ $(document)
         });
         document.execCommand('copy');
       });
-  });
+   });
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
