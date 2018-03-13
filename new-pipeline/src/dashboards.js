@@ -127,8 +127,17 @@ $(document)
     }
 
     // Permalink control
-    $(".permalink-control input")
+    $(".permalink-control.input")
       .hide()
+   .focus(function () {
+        // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+        var $this = $(this);
+        $this.select()
+          .mouseup(function () {
+            $this.unbind("mouseup");
+            return false;
+          });
+     });
     $(".permalink-control")
       .click(function () {
         var $this = $(this);
