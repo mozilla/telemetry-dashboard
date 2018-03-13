@@ -1059,7 +1059,14 @@ function buildDictionaryURL(metric, channel, description) {
 function getDescription(metric, channel, description) {
   var descr = metric;
   if (description && (description.length > 0)) {
-    descr = description;
+	  
+	  if (description.length > 200) {
+		  descr = description.substring(0, 200);
+		  descr += ' ...'
+	  }
+	  else {
+		  descr = description;
+	  }
   }
 
   return descr;
