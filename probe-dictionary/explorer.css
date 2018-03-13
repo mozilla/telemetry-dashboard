@@ -123,14 +123,3 @@ body {
     display: none;
 }
 
-.contrast:after {
-    content: "";
-    position: absolute;
-    height: 30px;
-    background-color: #DEDEDE;
-    padding: 35px;
-    top:  0;
-    left: 0;
-    right: 0;
-    z-index: -1;
-}
