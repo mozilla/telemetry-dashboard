@@ -129,7 +129,7 @@ $(document)
     // Permalink control
     $(".permalink-control.input")
       .hide()
-   .focus(function () {
+      .focus(function () {
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
         var $this = $(this);
         $this.select()
