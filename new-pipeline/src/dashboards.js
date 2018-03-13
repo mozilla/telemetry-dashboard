@@ -127,7 +127,7 @@ $(document)
     }
 
     // Permalink control
-    $(".permalink-control input")
+    $(".permalink-control #hidden")
       .hide()
       .focus(function () {
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
