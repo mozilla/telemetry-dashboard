@@ -124,11 +124,15 @@
 .mg-markers line { stroke-width: 2px !important; }
 
 #dist-caption {
-  font-size: 1.5em;
   text-align: center;
   margin: 0.1em;
 }
-
+#dist-caption span {
+  font-size: 1em;
+  text-align: center;
+  margin: 0.1em;
+  font-weight: normal;
+}
 /* Error message styles */
 .error-msg {
   border: 2px solid #C13832; /* Mozilla Red */
