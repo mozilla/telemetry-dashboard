@@ -1056,17 +1056,17 @@ function buildDictionaryURL(metric, channel, description) {
   return baseUrl + "?" + $.param(params);
 }
 
-function getDescriptionWithLink(metric, channel, description) {
-  var metricUrl = buildDictionaryURL(metric, channel, description);
+function getDescription(metric, channel, description) {
   var descr = metric;
   if (description && (description.length > 0)) {
     descr = description;
   }
 
-  var div = $("<div>", {
-    class: "text-center",
-  });
-  div.append($("<span>").text(descr));
+  return descr;
+}
+
+function getDescriptionLink(metric, channel, description) {
+  var metricUrl = buildDictionaryURL(metric, channel, description);
 
   if (metricUrl) {
     var link = $("<a>", {
@@ -1080,8 +1080,7 @@ function getDescriptionWithLink(metric, channel, description) {
     link.append($("<i>", {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
-    div.append(link);
   }
 
-  return div;
+  return link;
 }
