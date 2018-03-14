@@ -1019,7 +1019,7 @@ function saveStateToUrlAndCookie() {
 
   // If advanced settings are not at their defaults, display a notice in the panel header
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !==
-    1) {
+    0) {
     $("#advanced-settings-toggle")
       .find("span")
       .text(" (modified)");

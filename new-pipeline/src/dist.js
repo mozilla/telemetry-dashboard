@@ -1844,8 +1844,8 @@ function saveStateToUrlAndCookie() {
   }
 
   var isKeyedHistogram = $("#sort-keys-option").css("display") !== "none";
-  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !==
-    0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
+  if (gInitialPageState.use_submission_date == 0 || gInitialPageState.table ==
+    0 || gInitialPageState.cumulative == 0 || gInitialPageState.trim !== 0 ||
     (isKeyedHistogram && gInitialPageState.sort_keys !== "submissions") ||
     start !== minMoment || end !== maxMoment) {
     $("#advanced-settings-toggle")
