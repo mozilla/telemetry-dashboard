@@ -51,6 +51,7 @@ A local webserver is really helpful for running a version of the site on the sam
           # now visit localhost:8000 in your browser to see the page
 
 * It can also be done with NPM:
+
           cd /PATH_TO_REPOSITORY_ROOT
           npm install http-server -g
           # now visit localhost:8080 in your browser to see the page
