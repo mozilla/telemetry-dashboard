@@ -591,6 +591,7 @@ function findProbeIdFromCaseInsensitive(probeid) {
 }
 
 function getDatasetInfos(probeId, channel, state) {
+  const last = array => array[array.length - 1];
   // Available documentation.
   const dataDocs = {
     "longitudinal": "https://docs.telemetry.mozilla.org/concepts/choosing_a_dataset.html#longitudinal",
