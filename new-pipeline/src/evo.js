@@ -324,11 +324,12 @@ $(function () {
 
               var metric = $("#measure").val()
               var channel = $("#max-channel-version").val().split("/")[0]
-              var description = getDescriptionWithLink(metric, channel, evolutionDescription)
-
+              var description = getDescription(metric, channel, evolutionDescription);
+              var link = getDescriptionLink(metric, channel, description);
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
-              $("#measure-description").html(description);
+              $("#evo-caption-text").html(description);
+              $('#evo-caption-link').html(link);
               $("#selected-key")
                 .trigger("change");
             });

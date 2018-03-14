@@ -127,3 +127,7 @@ body {
     content: "none";
     font-style: italic;
 }
+
+.nav-item {
+    font-weight: bold;
+}
