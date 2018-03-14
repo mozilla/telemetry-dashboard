@@ -123,6 +123,11 @@ body {
     display: none;
 }
 
+#detail-cpp-guard:empty:after, #detail-bug-numbers:empty:after {
+    content: "none";
+    font-style: italic;
+}
+
 .nav-item {
     font-weight: bold;
 }
