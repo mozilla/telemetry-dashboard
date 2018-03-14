@@ -104,10 +104,10 @@ $(function () {
     } // Invalid range selected, move min version selector
 
     $("input[name=build-time-toggle]")
-      .prop("checked", gInitialPageState.use_submission_date !== 0 ? true : false)
+      .prop("checked", gInitialPageState.use_submission_date !== 0)
       .trigger("change");
     $("input[name=sanitize-toggle]")
-      .prop("checked", gInitialPageState.sanitize !== 0 ? true : false)
+      .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
 
     // If advanced settings are not at their defaults, expand the settings pane on load
@@ -504,9 +504,9 @@ function calculateEvolutions(callback) {
   channelVersions.forEach(function (channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
     getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates,
-      filterSets, $("input[name=sanitize-toggle]").is(":checked")
-      , $("input[name=build-time-toggle]").is(":checked")
-      , function (newLinesMap, newDescription) {
+      filterSets, $("input[name=sanitize-toggle]").is(":checked"), 
+      $("input[name=build-time-toggle]").is(":checked"),
+      function (newLinesMap, newDescription) {
         if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
           return;
         }
@@ -807,10 +807,8 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
   $(`${target} .mg-x-axis .label`)
     .attr("text-decoration", "underline")
     .click(function () {
-      var newUseSubmissionDate = $("input[name=build-time-toggle]")
-        .is(":checked") ? 0 : 1;
-      $("input[name=build-time-toggle]")
-        .prop("checked", newUseSubmissionDate != 0 ? true : false)
+      let buildTimeToggle = $("input[name=build-time-toggle]");
+      buildTimeToggle.prop("checked", !buildTimeToggle.prop("checked"))
         .trigger("change");
     });
 
@@ -1019,7 +1017,7 @@ function saveStateToUrlAndCookie() {
 
   // If advanced settings are not at their defaults, display a notice in the panel header
   if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.sanitize !==
-    0) {
+    1) {
     $("#advanced-settings-toggle")
       .find("span")
       .text(" (modified)");

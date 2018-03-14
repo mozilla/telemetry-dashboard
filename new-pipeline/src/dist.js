@@ -66,19 +66,19 @@ $(function () {
     $("#sort-keys")
       .multiselect("select", gInitialPageState.sort_keys);
     $("input[name=table-toggle]")
-      .prop("checked", gInitialPageState.table !== 0 ? true : false)
+      .prop("checked", gInitialPageState.table !== 0)
       .trigger("change");
     $("input[name=cumulative-toggle]")
-      .prop("checked", gInitialPageState.cumulative !== 0 ? true : false)
+      .prop("checked", gInitialPageState.cumulative !== 0)
       .trigger("change");
     $("input[name=trim-toggle]")
-      .prop("checked", gInitialPageState.trim !== 0 ? true : false)
+      .prop("checked", gInitialPageState.trim !== 0)
       .trigger("change");
     $("input[name=build-time-toggle]")
-      .prop("checked", gInitialPageState.use_submission_date !== 0 ? true : false)
+      .prop("checked", gInitialPageState.use_submission_date !== 0)
       .trigger("change");
     $("input[name=sanitize-toggle]")
-      .prop("checked", gInitialPageState.sanitize !== 0 ? true : false)
+      .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
 
     updateOptions(function () {
@@ -1844,8 +1844,8 @@ function saveStateToUrlAndCookie() {
   }
 
   var isKeyedHistogram = $("#sort-keys-option").css("display") !== "none";
-  if (gInitialPageState.use_submission_date == 0 || gInitialPageState.table ==
-    0 || gInitialPageState.cumulative == 0 || gInitialPageState.trim !== 0 ||
+  if (gInitialPageState.use_submission_date !== 0 || gInitialPageState.table !==
+    0 || gInitialPageState.cumulative !== 0 || gInitialPageState.trim !== 1 ||
     (isKeyedHistogram && gInitialPageState.sort_keys !== "submissions") ||
     start !== minMoment || end !== maxMoment) {
     $("#advanced-settings-toggle")
