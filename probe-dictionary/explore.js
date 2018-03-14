@@ -227,8 +227,8 @@ function showSearchOnlyFilters(show) {
     }
 
     var channel = $("#select_channel").val();
-    if (!["release", "beta", "nightly", "any"].includes(channel)) {
-      $("#select_channel").val("any");
+    if (!["release", "beta", "nightly"].includes(channel)) {
+      $("#select_channel").val("release");
     }
   }
 }
