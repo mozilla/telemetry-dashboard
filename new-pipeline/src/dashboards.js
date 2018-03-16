@@ -133,10 +133,10 @@ $(document)
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
         var $this = $(this);
         $this.select()
-        .mouseup(function () {
-          $this.unbind("mouseup");
-          return false;
-         });
+          .mouseup(function () {
+           $this.unbind("mouseup");
+           return false;
+          });
       });
     $(".permalink-button")
       .click(function () {
@@ -163,14 +163,13 @@ $(document)
           async:false
         });
         document.execCommand('copy');
+        // Work around to force the clipboard to hold short URL from permalink button.
+        document.addEventListener("copy", e => {
+          e.clipboardData.setData("text/plain", shortUrl);
+          e.preventDefault();
         });
       });
-
-// Work around to force the clipboard to hold short URL from permalink button.
-document.addEventListener("copy", e => {
-  e.clipboardData.setData("text/plain", shortUrl);
-  e.preventDefault();
-});
+     });
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
