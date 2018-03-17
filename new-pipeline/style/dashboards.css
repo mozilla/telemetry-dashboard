@@ -151,3 +151,10 @@
 .measure-headers th {
   text-align: right;
 }
+
+.portal-header-bar {
+  background-color: #EBEBEB;
+  margin-left: -15px;
+  margin-right: -15px;  
+  padding: 1px 15px 1px;
+} 
