@@ -163,12 +163,12 @@ $(document)
           async:false
         });
         document.execCommand('copy');
+      });
         // Work around to force the clipboard to hold short URL from permalink button.
         document.addEventListener("copy", e => {
           e.clipboardData.setData("text/plain", shortUrl);
           e.preventDefault();
         });
-      });
      });
 
 // Load the current state from the URL, or the cookie if the URL is not specified
