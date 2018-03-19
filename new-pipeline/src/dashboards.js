@@ -166,7 +166,7 @@ $(document)
       });
         // Work around to force the clipboard to hold short URL from permalink button.
         document.addEventListener("copy", e => {
-          e.clipboardData.setData("text/plain", shortUrl);
+          e.clipboardData.setData("text/plain", $(".permalink-text").val());
           e.preventDefault();
         });
      });
