@@ -4,7 +4,7 @@
 
 // utility functions
 var $ = (selector) => document.querySelector(selector);
-var countDash=0; //a variable to keep count of the added dashboards
+
 var createOption = (parent, value, text = value, selected = false) => {
   var option = document.createElement('option');
   option.value = value;
@@ -110,7 +110,7 @@ window.addEventListener('load', function () {
   }
 
   function addPlotToTable(plotParams) {
-    countDash++;
+
     // put the params in the table so there are no surprises for the user
     var tr = document.createElement('tr');
     Object.keys(plotParams) // better hope it preserved order
@@ -135,9 +135,10 @@ window.addEventListener('load', function () {
       _dash.splice(plotIndex, 1);
       updatePostData();
       tr.parentElement.removeChild(tr);
-      countDash--;
-      if(countDash==0)
-        $('#generate').setAttribute('disabled',true);
+
+      if ( _dash.length == 0 ) {
+          $('#generate').setAttribute('disabled', true);
+      }
     });
     rmTd.appendChild(rmButton);
     tr.appendChild(rmTd);
@@ -145,8 +146,9 @@ window.addEventListener('load', function () {
     $('.dashboard-plots-body').appendChild(tr);
 
     // now that the dash spec has a plot, user can generate a dash
-    if(countDash)
-      $('#generate').removeAttribute('disabled');
+    if (_dash.length != 0 ) {
+        $('#generate').removeAttribute('disabled');
+    }
   }
 
   function updateChannels() {
