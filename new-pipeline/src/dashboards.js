@@ -127,25 +127,18 @@ $(document)
     }
 
     // Permalink control
-    $(".permalink-control")
-      .append(
-        '<div class="input-group">' +
-        '    <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Permalink"><i class="fa fa-link"></i> Get Permalink</button></span>' +
-        '    <input type="text" class="form-control">' +
-        '</div>'
-      );
-    $(".permalink-control input")
+    $(".permalink-text")
       .hide()
       .focus(function () {
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
         var $this = $(this);
         $this.select()
           .mouseup(function () {
-            $this.unbind("mouseup");
-            return false;
+           $this.unbind("mouseup");
+           return false;
           });
       });
-    $(".permalink-control button")
+    $(".permalink-button")
       .click(function () {
         var $this = $(this);
         $.ajax({
@@ -161,7 +154,7 @@ $(document)
             if (shortUrl.indexOf(":") === 4) {
               shortUrl = "https" + shortUrl.substring(4);
             }
-            $this.parents(".permalink-control")
+            $this.parents(".navbar-form")
               .find("input")
               .show()
               .val(shortUrl)
@@ -171,7 +164,12 @@ $(document)
         });
         document.execCommand('copy');
       });
-  });
+        // Work around to force the clipboard to hold short URL from permalink button.
+        document.addEventListener("copy", e => {
+          e.clipboardData.setData("text/plain", shortUrl);
+          e.preventDefault();
+        });
+     });
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
