@@ -699,12 +699,14 @@ function getHumanReadableOptions(filterName, options) {
       options = options.concat([null])
         .concat(badOptions);
     }
+
     return options.map(function (option) {
-      return option !== null ? [option, option.replace("/", " ")] : null;
+      return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
     });
+		   
   }
   return options.map(function (option) {
-    return [option, option]
+    return [option, option];
   });
 }
 
