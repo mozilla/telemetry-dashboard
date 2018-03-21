@@ -131,9 +131,3 @@ body {
 .nav-item {
     font-weight: bold;
 }
-
-th {
-    position: sticky;
-    top: -1px;
-    background-color: #ECECEC;
-}
