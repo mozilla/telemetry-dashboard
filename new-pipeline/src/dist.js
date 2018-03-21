@@ -9,11 +9,27 @@ var gPreviousFilterAllSelected = {};
 var gAxesList;
 var gAxesSelectors;
 var gNoneKey = "__none__";
+var gChangePending = false;
+const kDefaultFilterChangeTimeoutDelay = 3000;
 
 indicate("Initializing Telemetry...");
 
 $(function () {
   Telemetry.init(function () {
+    let btnGroup = $('.btn-group');
+    btnGroup.on('hide.bs.dropdown', function () {
+      if(gChangePending) {
+        setFilterChangeTimeout(function () {
+          $('#measure')
+            .trigger('change');
+        }, kDefaultFilterChangeTimeoutDelay);
+      }
+    });
+    btnGroup.on('click', function () {
+      if(gChangePending) {
+        clearTimeout(gFilterChangeTimeout);
+      }
+    });
     gFilters = {
       "application": $("#filter-product"),
       "os": $("#filter-os"),
@@ -129,10 +145,12 @@ $(function () {
 
       $("#channel-version")
         .change(function () {
-          updateOptions(function () {
-            $("#measure")
-              .trigger("change");
-          });
+          setFilterChangeTimeout(function () {
+            updateOptions(function () {
+              $("#measure")
+                .trigger("change");
+            });
+          }, kDefaultFilterChangeTimeoutDelay);
         });
       $([
         "input[name=build-time-toggle]",
@@ -149,7 +167,7 @@ $(function () {
           if (gFilterChangeTimeout !== null) {
             clearTimeout(gFilterChangeTimeout);
           }
-          gFilterChangeTimeout = setTimeout(function () { // Debounce the changes to prevent rapid filter changes from causing too many updates
+          setFilterChangeTimeout(function () { // Debounce the changes to prevent rapid filter changes from causing too many updates
             if (["filter-product", "filter-os"].indexOf($this
                 .attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
               // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
@@ -329,9 +347,9 @@ $(function () {
 
                 $("#selected-key1")
                   .trigger("change");
-                }, $("input[name=sanitize-toggle]")
+              }, $("input[name=sanitize-toggle]")
                 .is(":checked"));
-        }, 0);
+          }, e.target.id === 'measure' ? 0 : kDefaultFilterChangeTimeoutDelay);
         });
 
       $(
@@ -1864,4 +1882,12 @@ function saveStateToUrlAndCookie() {
 
 function isHistogramsListKeyed(histogramsList) {
   return histogramsList.some(entry => entry.title !== "");
+}
+
+function setFilterChangeTimeout(timeoutFunction, timeoutDelay) {
+  gChangePending = true;
+  gFilterChangeTimeout = setTimeout(() => {
+    timeoutFunction();
+    gChangePending = false;
+  }, timeoutDelay);
 }
