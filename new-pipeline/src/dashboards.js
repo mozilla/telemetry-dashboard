@@ -133,12 +133,12 @@ $(document)
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
         var $this = $(this);
         $this.select()
-          .mouseup(function () {
-           $this.unbind("mouseup");
-           return false;
-           });
+        .mouseup(function () {
+          $this.unbind("mouseup");
+          return false;
+        });
       });
-    $(".permalink-button")
+      $(".permalink-button")
       .click(function () {
         var $this = $(this);
         $.ajax({
@@ -148,21 +148,21 @@ $(document)
             longUrl: window.location.href,
             access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
             format: "json"
-         },
-         success: function (response) {
-           var shortUrl = response.data.url;
-           if (shortUrl.indexOf(":") === 4) {
-             shortUrl = "https" + shortUrl.substring(4);
-           }
-           $this.parents(".navbar-form")
-             .find("input")
-             .show()
-             .val(shortUrl)
-             .focus();
-         },
-         async:false
-       });
-       document.execCommand('copy');
+          },
+          success: function (response) {
+            var shortUrl = response.data.url;
+            if (shortUrl.indexOf(":") === 4) {
+              shortUrl = "https" + shortUrl.substring(4);
+            }
+            $this.parents(".navbar-form")
+            .find("input")
+            .show()
+            .val(shortUrl)
+            .focus();
+          },
+          async:false
+        });
+        document.execCommand('copy');
       });
       // Work around to force the clipboard to hold short URL from permalink button.
       document.addEventListener("copy", e => {
