@@ -123,10 +123,26 @@
 .mg-marker-text { font-size: 12px !important; }
 .mg-markers line { stroke-width: 2px !important; }
 
-#dist-caption {
+.caption-div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.overflow {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 1.5em;
   text-align: center;
-  margin: 0.1em;
+}
+
+#dist-caption-link, #evo-caption-link {
+  color : black;
+  font-size: 1.5em;
+  display: inline-block;
 }
 
 /* Error message styles */
@@ -150,19 +166,4 @@
 }
 .measure-headers th {
   text-align: right;
-}
-
-.portal-header-bar {
-  background-color: #EBEBEB;
-  margin-top: -20px;
-  margin-bottom: 5px;
-  padding-top: 20px;
-  padding-bottom: 10px;
-  padding-left: 15px; 
-}
-
-.flex-container {
-  display: flex;
-  padding-top: 25px;
-  padding-right: 20px;
 }
