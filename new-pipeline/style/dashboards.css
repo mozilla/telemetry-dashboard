@@ -167,12 +167,3 @@
 .measure-headers th {
   text-align: right;
 }
-
-/* Tabs for distribution and evolution views */
-.nav-tabs a.active{
-  color: black;
-}
-
-.nav-tabs a {
-  color: #7A7A7A;
-}
