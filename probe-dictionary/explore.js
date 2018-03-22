@@ -593,10 +593,37 @@ function updateSearchParams(pushState = false) {
     params.detailView = gDetailViewId;
   }
 
+  if (params['search']=="") {
+    delete params.search;
+  }
+  if (params['searchtype']=="in_any") {
+    delete params.searchtype;
+  }
+  if (params['optout']==false) {
+    delete params.optout;
+  }
+  if (params['channel']=="any") {
+    delete params.channel;
+  }
+  if (params['constraint']=="is_in") {
+    delete params.constraint;
+  }
+  if (params['version']=="any") {
+    delete params.version;
+  }
+  if (params['view']=="search-results-view") {
+    delete params.view;
+  }
+
+  let queryString = "";
+  if (Object.keys(params).length) {
+    queryString = "?" + $.param(params);
+  }
+  
   if (!pushState) {
-    window.history.replaceState("", "", "?" + $.param(params));
+    window.history.replaceState({}, "", queryString);
   } else {
-    window.history.pushState("", "", "?" + $.param(params));
+    window.history.pushState({}, "", queryString);
   }
 }
 
