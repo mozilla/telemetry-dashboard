@@ -31,11 +31,11 @@
       <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand" href="#">Probe dictionary</a>
+      <a class="navbar-brand" href="#">Probe Dictionary</a>
 
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
+          <li class="nav-item">
             <a class="nav-link" data-toggle="tab" href="#search-results-view" role="tab" aria-controls="search-results-view">
               <i class="fa fa-search"></i> Find probes <span class="sr-only">(current)</span>
             </a>
@@ -48,8 +48,16 @@
           <li class="nav-item">
             <a class="nav-link" href="https://github.com/mozilla/probe-dictionary/issues/new" target="_blank"><i class="fa fa-bug"></i> File a bug</a>
           </li>
-          <li>
+          <li class="nav-item">
             <a class="nav-link" href="https://telemetry.mozilla.org/"><i class="fa fa-home"></i> Telemetry portal</a>
+          </li>
+          <li>
+            <div class="permalink-control">
+              <div class="input-group">
+                <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Permalink"><i class="fa fa-link"></i> Get Permalink</button></span>
+                <input type="text" class="form-control">
+              </div>
+            </div>
           </li>
         </ul>
         <div class="navbar-text my-lg-0" id="last-updated">
@@ -161,13 +169,13 @@
         <tr><td class="fit pr-2">Bug numbers:</td><td id="detail-bug-numbers" class="grow"></td></tr>
         <tr><td class="fit pr-2">Recorded in versions:</td><td id="detail-recording-range" class="grow"></td></tr>
         <tr><td class="fit pr-2">Recorded in processes:</td><td id="detail-processes" class="grow"></td></tr>
-        <tr><td class="fit pr-2">C++ guard:</td><td id="detail-cpp-guard" class="grow"></td></tr>
         <tr><td class="fit pr-2">Bucket count:</td><td id="detail-histogram-bucket-count" class="grow"></td></tr>
         <tr><td class="fit pr-2">Low:</td><td id="detail-histogram-low" class="grow"></td></tr>
         <tr><td class="fit pr-2">High:</td><td id="detail-histogram-high" class="grow"></td></tr>
         <tr><td class="fit pr-2">Methods:</td><td id="detail-event-methods" class="grow"></td></tr>
         <tr><td class="fit pr-2">Objects:</td><td id="detail-event-objects" class="grow"></td></tr>
         <tr><td class="fit pr-2">Extra keys:</td><td id="detail-event-extra-keys" class="grow"></td></tr>
+        <tr><td class="fit pr-2">C++ guard:</td><td id="detail-cpp-guard" class="grow"></td></tr>
       </table>
     </div>
   </div>
