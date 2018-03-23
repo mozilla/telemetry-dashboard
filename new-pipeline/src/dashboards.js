@@ -699,12 +699,14 @@ function getHumanReadableOptions(filterName, options) {
       options = options.concat([null])
         .concat(badOptions);
     }
+
     return options.map(function (option) {
-      return option !== null ? [option, option.replace("/", " ")] : null;
+      return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
     });
+		   
   }
   return options.map(function (option) {
-    return [option, option]
+    return [option, option];
   });
 }
 
@@ -1031,7 +1033,7 @@ function updateOSs() {
 
 // Build a URL for linking to the probe-dictionary.
 function buildDictionaryURL(metric, channel, description) {
-  var baseUrl = "https://georgf.github.io/fx-data-explorer/index.html";
+  var baseUrl = "https://telemetry.mozilla.org/probe-dictionary/";
   var params = {
     "searchtype": "in_name",
     "optout": "false",
@@ -1056,17 +1058,17 @@ function buildDictionaryURL(metric, channel, description) {
   return baseUrl + "?" + $.param(params);
 }
 
-function getDescriptionWithLink(metric, channel, description) {
-  var metricUrl = buildDictionaryURL(metric, channel, description);
+function getDescription(metric, channel, description) {
   var descr = metric;
   if (description && (description.length > 0)) {
     descr = description;
   }
 
-  var div = $("<div>", {
-    class: "text-center",
-  });
-  div.append($("<span>").text(descr));
+  return descr;
+}
+
+function getDescriptionLink(metric, channel, description) {
+  var metricUrl = buildDictionaryURL(metric, channel, description);
 
   if (metricUrl) {
     var link = $("<a>", {
@@ -1080,8 +1082,7 @@ function getDescriptionWithLink(metric, channel, description) {
     link.append($("<i>", {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
-    div.append(link);
   }
 
-  return div;
+  return link;
 }

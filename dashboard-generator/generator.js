@@ -134,6 +134,9 @@ window.addEventListener('load', function () {
       _dash.splice(plotIndex, 1);
       updatePostData();
       tr.parentElement.removeChild(tr);
+      if (_dash.length == 0) {
+        $('#generate').setAttribute('disabled',true);
+      }
     });
     rmTd.appendChild(rmButton);
     tr.appendChild(rmTd);
@@ -141,7 +144,9 @@ window.addEventListener('load', function () {
     $('.dashboard-plots-body').appendChild(tr);
 
     // now that the dash spec has a plot, user can generate a dash
-    $('#generate').removeAttribute('disabled');
+    if (_dash.length != 0) {
+        $('#generate').removeAttribute('disabled');
+    }
   }
 
   function updateChannels() {
