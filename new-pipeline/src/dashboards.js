@@ -155,10 +155,10 @@ $(document)
               shortUrl = "https" + shortUrl.substring(4);
             }
             $this.parents(".navbar-form")
-            .find("input")
-            .show()
-            .val(shortUrl)
-            .focus();
+              .find("input")
+              .show()
+              .val(shortUrl)
+              .focus();
           },
           async:false
         });
