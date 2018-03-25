@@ -169,7 +169,7 @@ $(document)
       e.clipboardData.setData("text/plain", $(".permalink-text").val());
       e.preventDefault();
     });
- 
+  }); // ends document.ready() block
 
 // Load the current state from the URL, or the cookie if the URL is not specified
 function loadStateFromUrlAndCookie() {
