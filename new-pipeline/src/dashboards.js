@@ -133,10 +133,10 @@ $(document)
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
         var $this = $(this);
         $this.select()
-        .mouseup(function () {
-          $this.unbind("mouseup");
-          return false;
-        });
+          .mouseup(function () {
+            $this.unbind("mouseup");
+            return false;
+          });
       });
     $(".permalink-button")
       .click(function () {
