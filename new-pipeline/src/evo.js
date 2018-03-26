@@ -406,7 +406,7 @@ function updateAggregates(kind, buckets) {
   }
 
   // Load aggregates from state on first load
-  newAggregates = newAggregates.map(entry => entry[0]);
+  newAggregates = newAggregates.map(entry => entry[1]);
   let aggregates = gInitialPageState.aggregates.filter(aggregate => newAggregates.includes(aggregate));
   if (!gLoadedAggregatesFromState && aggregates.length > 0) {
     gLoadedAggregatesFromState = true;
