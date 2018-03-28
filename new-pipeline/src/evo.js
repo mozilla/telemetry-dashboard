@@ -4,6 +4,7 @@ var gFilters = null,
   gPreviousFilterAllSelected = {};
 var gCurrentLinesMap; // mapping from keyed histogram keys to arrays of aggregate lines (non-keyed histograms have lines stored in the key "")
 var gCurrentKind; // the kind of the current measure, or null if this can't be determined
+let newAggregates;
 
 var gDefaultAggregates = [
   ["median", "Median", function (evolution) {
@@ -384,7 +385,6 @@ var gLoadedAggregatesFromState = false;
 
 function updateAggregates(kind, buckets) {
   gCurrentKind = kind;
-  let newAggregates;
   if (kind === "enumerated") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
     multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
@@ -406,7 +406,8 @@ function updateAggregates(kind, buckets) {
   }
 
   // Load aggregates from state on first load
-  newAggregates = newAggregates.map(entry => entry[0]);
+  newAggregates = newAggregates.map(entry => entry[1]);
+  gInitialPageState.aggregates = $("#aggregates").val().map(x => newAggregates[x]);
   let aggregates = gInitialPageState.aggregates.filter(aggregate => newAggregates.includes(aggregate));
   if (!gLoadedAggregatesFromState && aggregates.length > 0) {
     gLoadedAggregatesFromState = true;
@@ -933,7 +934,8 @@ function saveStateToUrlAndCookie() {
     sanitize: $("input[name=sanitize-toggle]:checked")
       .val() !== "0" ? 1 : 0,
   };
-
+  if (gInitialPageState.aggregates[0].length == 1)
+    gInitialPageState.aggregates = $("#aggregates").val().map(x => newAggregates[x]);
   // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
   if (startDate !== undefined) {
     gInitialPageState.start_date = startDate;
