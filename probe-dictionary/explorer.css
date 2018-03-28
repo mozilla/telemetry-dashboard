@@ -150,3 +150,15 @@ th {
     top: -1px;
     background-color: #ECECEC;
 }
+
+.tab-content {
+    margin-top: 1em;
+}
+
+a i.fa {
+    color: white;
+}
+
+a.btn-secondary {
+    background: rgb(90, 90, 90);
+}
