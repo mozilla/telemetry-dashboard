@@ -168,6 +168,20 @@
   text-align: right;
 }
 
+.portal-header-bar {
+  background-color: #EBEBEB;
+  margin-top: -20px;
+  margin-bottom: 5px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  padding-left: 15px; 
+}
+
+.flex-container {
+  display: flex;
+  padding-top: 25px;
+  padding-right: 20px;
+
 /* Tabs for distribution and evolution views */
 .nav-tabs a.active{
   color: black;
