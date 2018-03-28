@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var ANALYSIS_URI = "https://analysis-output.telemetry.mozilla.org/probe-scraper/data-rest/";
+var ANALYSIS_URI = "https://probeinfo.telemetry.mozilla.org/";
 
 var gChannelInfo = null;
 var gGeneralData = null;
@@ -17,7 +17,7 @@ var gView = null;
 var gDetailViewId = null;
 
 $(document)
-  .ready(function () {  
+  .ready(function () {
     // Permalink control
     $(".permalink-control input")
       .hide()
@@ -619,7 +619,7 @@ function updateSearchParams(pushState = false) {
   if (Object.keys(params).length) {
     queryString = "?" + $.param(params);
   }
-  
+
   if (!pushState) {
     window.history.replaceState({}, "", queryString);
   } else {
