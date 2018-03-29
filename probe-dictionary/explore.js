@@ -681,9 +681,7 @@ function getDatasetInfos(probeId, channel, state) {
     const distURL = getTelemetryDashboardURL('dist', probe.name, probe.type, channel, versions.first, versions.last);
     const evoURL = getTelemetryDashboardURL('evo', probe.name, probe.type, channel, versions.first, versions.last);
     datasetInfos.push("TMO dashboard: "
-                      + `<a href="${distURL}" target="_blank">distribution</a>`
-                      + ", "
-                      + `<a href="${evoURL}" target="_blank">evolution</a>`);
+                      + `<a href="${distURL}" target="_blank">Measurements dashboard</a>`);
   }
 
   // Use counter dashboard links.
