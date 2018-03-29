@@ -3364,5 +3364,1076 @@
     },
     "name": "system.hdd.system.revision",
     "type": "environment"
+  },
+  "environment/system.gfx.D2DEnabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not Direct2D is enabled. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not Direct2D is enabled. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not Direct2D is enabled. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.D2DEnabled",
+    "type": "environment"
+  },
+  "environment/system.gfx.DWriteEnabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not DirectWrite is enabled. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not DirectWrite is enabled. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not DirectWrite is enabled. This is Windows only.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.DWriteEnabled",
+    "type": "environment"
+  },
+  "environment/system.gfx.ContentBackend": {
+    "history": {
+      "release": [
+        {
+          "description": "The name of the content backend.",
+          "bug_numbers": [1302240],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "51",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The name of the content backend.",
+          "bug_numbers": [1302240],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "51",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The name of the content backend.",
+          "bug_numbers": [1302240],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "51",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.ContentBackend",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].description": {
+    "history": {
+      "release": [
+        {
+          "description": "The name of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The name of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The name of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].description",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].vendorID": {
+    "history": {
+      "release": [
+        {
+          "description": "The vendor ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The vendor ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The vendor ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].vendorID",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].deviceID": {
+    "history": {
+      "release": [
+        {
+          "description": "The device ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The device ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The device ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].deviceID",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].subsysID": {
+    "history": {
+      "release": [
+        {
+          "description": "The subsystem ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The subsystem ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The subsystem ID of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].subsysID",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].RAM": {
+    "history": {
+      "release": [
+        {
+          "description": "The amount of onboard RAM, in MB, of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The amount of onboard RAM, in MB, of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The amount of onboard RAM, in MB, of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].RAM",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].driver": {
+    "history": {
+      "release": [
+        {
+          "description": "The driver of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The driver of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The driver of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].driver",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].driverVersion": {
+    "history": {
+      "release": [
+        {
+          "description": "The driver version of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The driver version of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The driver version of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].driverVersion",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].driverDate": {
+    "history": {
+      "release": [
+        {
+          "description": "The driver date of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The driver date of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The driver date of the GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].driverDate",
+    "type": "environment"
+  },
+  "environment/system.gfx.adapters[index].isGPU2Active": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the second GFX adapter is active. Only available on the second GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the second GFX adapter is active. Only available on the second GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the second GFX adapter is active. Only available on the second GFX adapter.",
+          "bug_numbers": [1122052],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.adapters[index].isGPU2Active",
+    "type": "environment"
+  },
+  "environment/system.gfx.monitors[index].screenWidth": {
+    "history": {
+      "release": [
+        {
+          "description": "The width of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The width of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The width of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.monitors[index].screenWidth",
+    "type": "environment"
+  },
+  "environment/system.gfx.monitors[index].screenHeight": {
+    "history": {
+      "release": [
+        {
+          "description": "The height of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The height of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The height of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.monitors[index].screenHeight",
+    "type": "environment"
+  },
+  "environment/system.gfx.monitors[index].refreshRate": {
+    "history": {
+      "release": [
+        {
+          "description": "The refresh rate of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The refresh rate of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The refresh rate of the monitor.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.monitors[index].refreshRate",
+    "type": "environment"
+  },
+  "environment/system.gfx.monitors[index].pseudoDisplay": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the monitor is a pseudo display.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the monitor is a pseudo display.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the monitor is a pseudo display.",
+          "bug_numbers": [1175005],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.monitors[index].pseudoDisplay",
+    "type": "environment"
+  },
+  "environment/system.gfx.features.compositor": {
+    "history": {
+      "release": [
+        {
+          "description": "The name of the compositor. This is one of 'd3d9', 'd3d11', 'opengl', 'basic', or 'none' ('none' indicates no compositors have been created).",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The name of the compositor. This is one of 'd3d9', 'd3d11', 'opengl', 'basic', or 'none' ('none' indicates no compositors have been created).",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The name of the compositor. This is one of 'd3d9', 'd3d11', 'opengl', 'basic', or 'none' ('none' indicates no compositors have been created).",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.features.compositor",
+    "type": "environment"
+  },
+  "environment/system.gfx.features[key].status": {
+    "history": {
+      "release": [
+        {
+          "description": "The status of the compositor's backend. The following statuses are supported: 'unused' if this feature has not been requested, 'unavailable' if OS version or restriction prevents use, 'blocked' if an internal condition (such as safe mode) prevents use, 'blacklisted' if blocked due to a blacklist restriction, 'disabled' if user explicitly disabled this default feature, 'failed' if the feature failed to initialize and 'available' if user has this feature available by default.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The status of the compositor's backend. The following statuses are supported: 'unused' if this feature has not been requested, 'unavailable' if OS version or restriction prevents use, 'blocked' if an internal condition (such as safe mode) prevents use, 'blacklisted' if blocked due to a blacklist restriction, 'disabled' if user explicitly disabled this default feature, 'failed' if the feature failed to initialize and 'available' if user has this feature available by default.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The status of the compositor's backend. The following statuses are supported: 'unused' if this feature has not been requested, 'unavailable' if OS version or restriction prevents use, 'blocked' if an internal condition (such as safe mode) prevents use, 'blacklisted' if blocked due to a blacklist restriction, 'disabled' if user explicitly disabled this default feature, 'failed' if the feature failed to initialize and 'available' if user has this feature available by default.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.features[key].status",
+    "type": "environment"
+  },
+  "environment/system.gfx.features[key].version": {
+    "history": {
+      "release": [
+        {
+          "description": "The feature's version.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The feature's version.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The feature's version.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.features[key].version",
+    "type": "environment"
+  },
+  "environment/system.gfx.features[key].warp": {
+    "history": {
+      "release": [
+        {
+          "description": "The feature's warp status. Only valid for D2D11.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The feature's warp status. Only valid for D2D11.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The feature's warp status. Only valid for D2D11.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.features[key].warp",
+    "type": "environment"
+  },
+  "environment/system.gfx.features[key].textureSharing": {
+    "history": {
+      "release": [
+        {
+          "description": "The feature's texture sharing status. Only valid for D2D11.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The feature's texture sharing status. Only valid for D2D11.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The feature's texture sharing status. Only valid for D2D11.",
+          "bug_numbers": [1179051],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "system.gfx.features[key].textureSharing",
+    "type": "environment"
   }
 }
