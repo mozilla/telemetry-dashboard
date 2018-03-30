@@ -4639,5 +4639,107 @@
     },
     "name": "system.sec.firewall",
     "type": "environment"
+  },
+  "environment/experiments[id].branch": {
+    "history": {
+      "release": [
+        {
+          "description": "The branch the client is enrolled in.",
+          "bug_numbers": [1348748],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "53",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The branch the client is enrolled in.",
+          "bug_numbers": [1348748],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "53",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The branch the client is enrolled in.",
+          "bug_numbers": [1348748],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "experiments[id].branch",
+    "type": "environment"
+  },
+  "environment/experiments[id].type": {
+    "history": {
+      "release": [
+        {
+          "description": "The specific type of the experiment.",
+          "bug_numbers": [1376599],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The specific type of the experiment.",
+          "bug_numbers": [1376599],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The specific type of the experiment.",
+          "bug_numbers": [1376599],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "56",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "experiments[id].type",
+    "type": "environment"
   }
 }
