@@ -701,8 +701,8 @@ function getHumanReadableOptions(filterName, options) {
     return options.map(function (option) {
       return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
     });
-
   }
+  
   return options.map(function (option) {
     return [option, option];
   });
@@ -1096,7 +1096,6 @@ function getDescriptionLink(metric, channel, description) {
     $(".use-counter-link > a").attr('href', useCounterLink);
     $(".use-counter-link")
       .show();
-    console.log(useCounterLink);
   }
 
   return link;
