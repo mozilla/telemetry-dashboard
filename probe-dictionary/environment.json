@@ -4639,5 +4639,2147 @@
     },
     "name": "system.sec.firewall",
     "type": "environment"
+  },
+  "environment/experiments[id].branch": {
+    "history": {
+      "release": [
+        {
+          "description": "The branch the client is enrolled in.",
+          "bug_numbers": [1348748],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "53",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The branch the client is enrolled in.",
+          "bug_numbers": [1348748],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "53",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The branch the client is enrolled in.",
+          "bug_numbers": [1348748],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "experiments[id].branch",
+    "type": "environment"
+  },
+  "environment/experiments[id].type": {
+    "history": {
+      "release": [
+        {
+          "description": "The specific type of the experiment.",
+          "bug_numbers": [1376599],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The specific type of the experiment.",
+          "bug_numbers": [1376599],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The specific type of the experiment.",
+          "bug_numbers": [1376599],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "56",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "experiments[id].type",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].version": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the add-on. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the add-on. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the add-on. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].version",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].scope": {
+    "history": {
+      "release": [
+        {
+          "description": "Indicates what scope the add-on is installed in, per profile, user, system, or application. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Indicates what scope the add-on is installed in, per profile, user, system, or application. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Indicates what scope the add-on is installed in, per profile, user, system, or application. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].scope",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].type": {
+    "history": {
+      "release": [
+        {
+          "description": "The type of the add-on. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The type of the add-on. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The type of the add-on. This field is available at startup.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].type",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].updateDay": {
+    "history": {
+      "release": [
+        {
+          "description": "The day the add-on was last updated. This field is optional, but available at startup if present.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The day the add-on was last updated. This field is optional, but available at startup if present.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The day the add-on was last updated. This field is optional, but available at startup if present.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].updateDay",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].isSystem": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the add-on is a system add-on. This field is available at startup.",
+          "bug_numbers": [1232222],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the add-on is a system add-on. This field is available at startup.",
+          "bug_numbers": [1232222],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the add-on is a system add-on. This field is available at startup.",
+          "bug_numbers": [1232222],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "47",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].isSystem",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].isWebExtension": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the add-on is a WebExtension add-on. This field is available at startup.",
+          "bug_numbers": [1357460],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the add-on is a WebExtension add-on. This field is available at startup.",
+          "bug_numbers": [1357460],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the add-on is a WebExtension add-on. This field is available at startup.",
+          "bug_numbers": [1357460],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "55",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].isWebExtension",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].multiprocessCompatible": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the add-on is a compatible with e10s. Since Firefox 61, this is always true. This field is available at startup.",
+          "bug_numbers": [1357460],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the add-on is a compatible with e10s. Since Firefox 61, this is always true. This field is available at startup.",
+          "bug_numbers": [1357460],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the add-on is a compatible with e10s. Since Firefox 61, this is always true. This field is available at startup.",
+          "bug_numbers": [1357460],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "54",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].multiprocessCompatible",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].blocklisted": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the add-on appears in the blocklist. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the add-on appears in the blocklist. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the add-on appears in the blocklist. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].blocklisted",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].description": {
+    "history": {
+      "release": [
+        {
+          "description": "The add-on description, limited to 100 characters. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The add-on description, limited to 100 characters. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The add-on description, limited to 100 characters. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].description",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].name": {
+    "history": {
+      "release": [
+        {
+          "description": "The add-on name, limited to 100 characters. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The add-on name, limited to 100 characters. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The add-on name, limited to 100 characters. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].name",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].userDisabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the user disabled the add-on. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the user disabled the add-on. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the user disabled the add-on. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].userDisabled",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].appDisabled": {
+    "history": {
+      "release": [
+        {
+          "description": "True if this add-on cannot be used in the application based on version compatibility, dependencies, and blocklisting. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True if this add-on cannot be used in the application based on version compatibility, dependencies, and blocklisting. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True if this add-on cannot be used in the application based on version compatibility, dependencies, and blocklisting. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].appDisabled",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].foreignInstall": {
+    "history": {
+      "release": [
+        {
+          "description": "True or false depending on whether the add-on is a third party add-on installation or not. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True or false depending on whether the add-on is a third party add-on installation or not. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True or false depending on whether the add-on is a third party add-on installation or not. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].foreignInstall",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].hasBinaryComponents": {
+    "history": {
+      "release": [
+        {
+          "description": "True or false depending on whether the add-on has binary components. This is always false since Firefox 60. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True or false depending on whether the add-on has binary components. This is always false since Firefox 60. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True or false depending on whether the add-on has binary components. This is always false since Firefox 60. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].hasBinaryComponents",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].installDay": {
+    "history": {
+      "release": [
+        {
+          "description": "The days since epoch that the add-on was first installed. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The days since epoch that the add-on was first installed. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The days since epoch that the add-on was first installed. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].installDay",
+    "type": "environment"
+  },
+  "environment/addons.activeAddons[addonId].signedState": {
+    "history": {
+      "release": [
+        {
+          "description": "The state of the signature of the add-on. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1062388],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The state of the signature of the add-on. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1062388],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The state of the signature of the add-on. This field is only available after the 'sessionstore-windows-restored' topic is notified.",
+          "bug_numbers": [1062388],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeAddons[addonId].signedState",
+    "type": "environment"
+  },
+  "environment/addons.theme.id": {
+    "history": {
+      "release": [
+        {
+          "description": "The id of the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The id of the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The id of the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.id",
+    "type": "environment"
+  },
+  "environment/addons.theme.version": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.version",
+    "type": "environment"
+  },
+  "environment/addons.theme.scope": {
+    "history": {
+      "release": [
+        {
+          "description": "Indicates what scope the theme is installed in, per profile, user, system, or application.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Indicates what scope the theme is installed in, per profile, user, system, or application.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Indicates what scope the theme is installed in, per profile, user, system, or application.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.scope",
+    "type": "environment"
+  },
+  "environment/addons.theme.updateDay": {
+    "history": {
+      "release": [
+        {
+          "description": "The day the theme was last updated.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The day the theme was last updated.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The day the theme was last updated.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.updateDay",
+    "type": "environment"
+  },
+  "environment/addons.theme.blocklisted": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the theme appears in the blocklist.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the theme appears in the blocklist.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the theme appears in the blocklist.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.blocklisted",
+    "type": "environment"
+  },
+  "environment/addons.theme.description": {
+    "history": {
+      "release": [
+        {
+          "description": "The theme description, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The theme description, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The theme description, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.description",
+    "type": "environment"
+  },
+  "environment/addons.theme.name": {
+    "history": {
+      "release": [
+        {
+          "description": "The theme name, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The theme name, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The theme name, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.name",
+    "type": "environment"
+  },
+  "environment/addons.theme.userDisabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the user disabled the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the user disabled the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the user disabled the theme.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.userDisabled",
+    "type": "environment"
+  },
+  "environment/addons.theme.appDisabled": {
+    "history": {
+      "release": [
+        {
+          "description": "True if this theme cannot be used in the application based on version compatibility, dependencies, and blocklisting.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True if this theme cannot be used in the application based on version compatibility, dependencies, and blocklisting.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True if this theme cannot be used in the application based on version compatibility, dependencies, and blocklisting.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.appDisabled",
+    "type": "environment"
+  },
+  "environment/addons.theme.foreignInstall": {
+    "history": {
+      "release": [
+        {
+          "description": "True or false depending on whether the theme is a third party theme installation or not.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True or false depending on whether the theme is a third party theme installation or not.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True or false depending on whether the theme is a third party theme installation or not.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.foreignInstall",
+    "type": "environment"
+  },
+  "environment/addons.theme.hasBinaryComponents": {
+    "history": {
+      "release": [
+        {
+          "description": "True or false depending on whether the theme has binary components. This is always false since Firefox 60.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "True or false depending on whether the theme has binary components. This is always false since Firefox 60.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "True or false depending on whether the theme has binary components. This is always false since Firefox 60.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.hasBinaryComponents",
+    "type": "environment"
+  },
+  "environment/addons.theme.installDay": {
+    "history": {
+      "release": [
+        {
+          "description": "The days since epoch that the theme was first installed.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The days since epoch that the theme was first installed.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The days since epoch that the theme was first installed.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.theme.installDay",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].version": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].version",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].updateDay": {
+    "history": {
+      "release": [
+        {
+          "description": "The day the plugin was last updated.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The day the plugin was last updated.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The day the plugin was last updated.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].updateDay",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].blocklisted": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the plugin appears in the blocklist.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the plugin appears in the blocklist.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the plugin appears in the blocklist.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].blocklisted",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].description": {
+    "history": {
+      "release": [
+        {
+          "description": "The plugin description, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The plugin description, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The plugin description, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].description",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].name": {
+    "history": {
+      "release": [
+        {
+          "description": "The plugin name, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The plugin name, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The plugin name, limited to 100 characters.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].name",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].disabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the plugin is disabled.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the plugin is disabled.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the plugin is disabled.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].disabled",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].clicktoplay": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not clicktoplay is enabled for this plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not clicktoplay is enabled for this plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not clicktoplay is enabled for this plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].clicktoplay",
+    "type": "environment"
+  },
+  "environment/addons.activePlugins[index].mimeTypes": {
+    "history": {
+      "release": [
+        {
+          "description": "The list of mime types handled by this plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "Array<string>"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The list of mime types handled by this plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "Array<string>"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The list of mime types handled by this plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "Array<string>"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activePlugins[index].mimeTypes",
+    "type": "environment"
+  },
+  "environment/addons.activeGMPlugins[id].version": {
+    "history": {
+      "release": [
+        {
+          "description": "The version of the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The version of the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The version of the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeGMPlugins[index].version",
+    "type": "environment"
+  },
+  "environment/addons.activeGMPlugins[index].userDisabled": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the user disabled the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the user disabled the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the user disabled the plugin.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeGMPlugins[index].userDisabled",
+    "type": "environment"
+  },
+  "environment/addons.activeGMPlugins[index].applyBackgroundUpdates": {
+    "history": {
+      "release": [
+        {
+          "description": "Whether or not the plugin automatically updates in background.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "Whether or not the plugin automatically updates in background.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "Whether or not the plugin automatically updates in background.",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "boolean"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.activeGMPlugins[index].applyBackgroundUpdates",
+    "type": "environment"
+  },
+  "environment/addons.persona": {
+    "history": {
+      "release": [
+        {
+          "description": "The id of the active persona (theme).",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The id of the active persona (theme).",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The id of the active persona (theme).",
+          "bug_numbers": [1122050],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "addons.persona",
+    "type": "environment"
   }
 }
