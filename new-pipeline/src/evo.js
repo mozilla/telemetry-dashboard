@@ -326,7 +326,11 @@ $(function () {
               var link = getDescriptionLink(metric, channel, description);
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
-              $("#evo-caption-text").html(description);
+              if (metric != description) {
+                $("#evo-caption-text").html(description);
+              } else {
+                $('#evo-caption-text').text("");
+              }
               $('#evo-caption-link').html(link);
               $("#selected-key")
                 .trigger("change");

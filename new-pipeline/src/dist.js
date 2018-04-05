@@ -869,7 +869,11 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
-    $('#dist-caption-text').html(desc);
+    if (metric != desc) {
+      $('#dist-caption-text').html(desc);
+    } else {
+      $('#dist-caption-text').text("");
+    }
     $('#dist-caption-link').html(link);
   } else {
     $('#dist-caption-text').text(""); // Clear the histogram caption
