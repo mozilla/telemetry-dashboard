@@ -155,3 +155,7 @@ th {
     top: -1px;
     background-color: #ECECEC;
 }
+
+#detail-probe-name {
+    overflow-wrap: break-word;
+}
