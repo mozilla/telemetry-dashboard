@@ -477,8 +477,8 @@
   function populateEntriesMap(entriesMap, url, callback) {
     Telemetry.getJSON(url, function (histograms, status) {
       if (histograms === null) {
-        assert(status === 404 || status === 500 , "Could not obtain evolution: status " +
-          status + " (" + url + ")"); // Only allow null evolution if it is 404 or 500 - if there is no evolution for the given filters
+        assert(status === 404 || status === 500 || status === 405 , "Could not obtain evolution: status " +
+          status + " (" + url + ")"); // Only allow null evolution if it is 404, 500 or 405 - if there is no evolution for the given filters
         callback({});
       } else {
         histograms.data.forEach(function (entry) {
