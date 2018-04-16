@@ -939,6 +939,12 @@ function getMeasurementCountsPerVersion() {
     };
   }
 
+function releaseProbesCount(data, k) {
+  if ((channel === "release" && k === "optout") || (channel !== "release")) {
+    data[k] += 1;
+  }
+}
+
   $.each(gProbeData, (id, data) => {
     let history = data.history[channel];
     if (!history) {
@@ -950,7 +956,7 @@ function getMeasurementCountsPerVersion() {
         let oldest = last(history);
         let versions = getVersionRange(channel, oldest.revisions);
         let k = oldest.optout ? "optout" : "optin";
-        perVersionCounts[versions.first][k] += 1;
+        releaseProbesCount(perVersionCounts[versions.first], k);
         break;
       }
       case "is_in":
@@ -967,15 +973,7 @@ function getMeasurementCountsPerVersion() {
           // If so, increase the count.
           if (recording) {
             let k = recording.optout ? "optout" : "optin";
-            // For release channel show only "optout" probes
-            if (channel === "release") {
-              if (k === "optout") {
-                data[k] += 1;
-              }  
-            }
-            else {
-              data[k] += 1;
-            }
+            releaseProbesCount(data, k);
           }
         });
         break;
@@ -989,7 +987,7 @@ function getMeasurementCountsPerVersion() {
           if ((versions.first <= versionNum) && (versions.last >= versionNum) &&
               (expires != "never") && (parseInt(expires) <= versionNum)) {
             let k = newest.optout ? "optout" : "optin";
-            data[k] += 1;
+            releaseProbesCount(data, k);
           }
         });
         break;
