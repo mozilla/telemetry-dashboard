@@ -967,7 +967,13 @@ function getMeasurementCountsPerVersion() {
           // If so, increase the count.
           if (recording) {
             let k = recording.optout ? "optout" : "optin";
-            if (k === "optout") {
+            // For release channel show only "optout" probes
+            if (channel === "release") {
+              if (k === "optout") {
+                data[k] += 1;
+              }  
+            }
+            else {
               data[k] += 1;
             }
           }
