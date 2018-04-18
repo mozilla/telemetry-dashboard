@@ -16,6 +16,9 @@ var gDatasetMappings = null;
 var gView = null;
 var gDetailViewId = null;
 
+var optin_count = null;
+var optout_count = null;
+
 $(document)
   .ready(function () {
     // Permalink control
@@ -998,6 +1001,8 @@ function releaseProbesCount(data, k) {
 
   let counts = [];
   $.each(perVersionCounts, (version, data) => {
+    optin_count = data.optin;
+    optout_count = data.optout;
     data.total = data.optin + data.optout;
     data.version = version;
     counts.push(data);
@@ -1090,6 +1095,13 @@ function renderProbeStats() {
       .attr("text-anchor", "start")
       .attr("fill", "#000")
       .text("Count of " + constraintText + " probes");
+
+  if(optin_count == 0) {
+    columns = ["optout"];
+  }
+  else if (optout_count == 0) {
+    columns = ["optin"];
+  }
 
   var legend = g.selectAll(".legend")
     .data(columns.reverse())
