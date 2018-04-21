@@ -16,9 +16,6 @@ var gDatasetMappings = null;
 var gView = null;
 var gDetailViewId = null;
 
-var optin_count = null;
-var optout_count = null;
-
 $(document)
   .ready(function () {
     // Permalink control
@@ -942,11 +939,11 @@ function getMeasurementCountsPerVersion() {
     };
   }
 
-function releaseProbesCount(data, k) {
-  if ((channel === "release" && k === "optout") || (channel !== "release")) {
-    data[k] += 1;
+  function countProbe(data, k) {
+    if ((channel === "release" && k === "optout") || (channel !== "release")) {
+      data[k] += 1;
+    }
   }
-}
 
   $.each(gProbeData, (id, data) => {
     let history = data.history[channel];
@@ -959,7 +956,7 @@ function releaseProbesCount(data, k) {
         let oldest = last(history);
         let versions = getVersionRange(channel, oldest.revisions);
         let k = oldest.optout ? "optout" : "optin";
-        releaseProbesCount(perVersionCounts[versions.first], k);
+        countProbe(perVersionCounts[versions.first], k);
         break;
       }
       case "is_in":
@@ -976,7 +973,7 @@ function releaseProbesCount(data, k) {
           // If so, increase the count.
           if (recording) {
             let k = recording.optout ? "optout" : "optin";
-            releaseProbesCount(data, k);
+            countProbe(data, k);
           }
         });
         break;
@@ -990,7 +987,7 @@ function releaseProbesCount(data, k) {
           if ((versions.first <= versionNum) && (versions.last >= versionNum) &&
               (expires != "never") && (parseInt(expires) <= versionNum)) {
             let k = newest.optout ? "optout" : "optin";
-            releaseProbesCount(data, k);
+            countProbe(data, k);
           }
         });
         break;
@@ -1001,8 +998,6 @@ function releaseProbesCount(data, k) {
 
   let counts = [];
   $.each(perVersionCounts, (version, data) => {
-    optin_count = data.optin;
-    optout_count = data.optout;
     data.total = data.optin + data.optout;
     data.version = version;
     counts.push(data);
@@ -1013,6 +1008,17 @@ function releaseProbesCount(data, k) {
 
 function renderProbeStats() {
   var data = getMeasurementCountsPerVersion();
+  var optin_bool = false;
+  var optout_bool = false;
+
+  data.forEach(function(item) {
+    if (item.optout > 0) {
+      optout_bool = true;
+    }
+    if (item.optin > 0) {
+      optin_bool = true;
+    }
+  });
 
   let last = array => array[array.length - 1];
   let version_constraint = $("#select_constraint").val();
@@ -1096,11 +1102,15 @@ function renderProbeStats() {
       .attr("fill", "#000")
       .text("Count of " + constraintText + " probes");
 
-  if(optin_count == 0) {
-    columns = ["optout"];
+  columns = [];
+  if (!optin_bool) {
+    columns.push("optout");
   }
-  else if (optout_count == 0) {
-    columns = ["optin"];
+  else if (!optout_bool) {
+    columns.push("optin");
+  }
+  else {
+    columns.push("optin", "optout");
   }
 
   var legend = g.selectAll(".legend")
