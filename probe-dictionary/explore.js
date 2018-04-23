@@ -940,7 +940,7 @@ function getMeasurementCountsPerVersion() {
   }
 
   function countProbe(data, k) {
-    if ((channel === "release" && k === "optout") || (channel !== "release")) {
+    if ((channel !== "release") || (k === "optout")) {
       data[k] += 1;
     }
   }
