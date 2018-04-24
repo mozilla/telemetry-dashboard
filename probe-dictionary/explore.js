@@ -143,7 +143,6 @@ $(document).ready(function() {
     let date = new Date(gGeneralData.lastUpdate);
     $("#last-updated-date").text(date.toDateString());
 
-    $("#loading-overlay").addClass("hidden");
     mark("done");
   }, e => {
     console.log("caught", e);
