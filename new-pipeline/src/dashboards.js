@@ -701,8 +701,8 @@ function getHumanReadableOptions(filterName, options) {
     return options.map(function (option) {
       return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
     });
-		   
   }
+  
   return options.map(function (option) {
     return [option, option];
   });
@@ -1080,6 +1080,22 @@ function getDescriptionLink(metric, channel, description) {
     link.append($("<i>", {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
+  }
+
+  //Hide use counter link if not applicable.
+  if (metric.startsWith("USE_COUNTER") !== true) {
+    $(".use-counter-link")
+    .hide();
+  }
+
+  //Show correct use counter link based on group selection.
+  if (metric.startsWith("USE_COUNTER") === true) {
+    metricSplit = metric.split("_");
+    group = metricSplit[2];
+    useCounterLink = "http://georgf.github.io/usecounters/#kind=page&group=" + group + "&channel=beta&version=60";
+    $(".use-counter-link > a").attr('href', useCounterLink);
+    $(".use-counter-link")
+      .show();
   }
 
   return link;

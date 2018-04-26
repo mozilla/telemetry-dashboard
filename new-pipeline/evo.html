@@ -58,13 +58,16 @@
                     as
                     <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type"></select>
                 </h2>
+                <h4 class="use-counter-link">
+                  <a href="#">View in use counter dashboard.</a>
+                </h4>
                 <hr></hr>
                 <div class="caption-div">
                     <figcaption id="evo-caption-text" class="overflow"></figcaption>
                     <figcaption id="evo-caption-link"></figcaption>
-                </div> 
-                
-                <h2 style="font-size: 18px; margin-bottom: 0">Showing graphs for key <select id="selected-key" class="multiselect" title="Selected key"></select></h2>          
+                </div>
+
+                <h2 style="font-size: 18px; margin-bottom: 0">Showing graphs for key <select id="selected-key" class="multiselect" title="Selected key"></select></h2>
                 <figure class="col-md-12">
                     <div class="col-md-12" id="evolutions"></div>
                 </figure>
@@ -118,11 +121,11 @@
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
     <script src="lib/metricsgraphics.min.js"></script>
-
+ 
     <script src="../v2/telemetry.js"></script>
     <script src="src/dashboards.js"></script>
     <script src="src/evo.js"></script>
-
+    
     <script src="../analytics/analytics.js"></script>
 </body>
 </html>
