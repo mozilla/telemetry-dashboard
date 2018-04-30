@@ -23,7 +23,9 @@ if (window.trackingEnabled()) {
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'UA-49796218-2');
+  gtag('config', 'UA-49796218-2', {
+    'cookie_domain': 'telemetry.mozilla.org',
+  });
 
   // Decorate outbound links from the top frame of whitelisted pages
   const OUTBOUND_LINKS_WHITELIST = new Set([
