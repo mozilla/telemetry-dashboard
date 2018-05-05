@@ -1008,17 +1008,9 @@ function getMeasurementCountsPerVersion() {
 
 function renderProbeStats() {
   var data = getMeasurementCountsPerVersion();
-  var optin_bool = false;
-  var optout_bool = false;
+  var hasOptoutData = (data.find(item => item.optout > 0) !== undefined);
+  var hasOptinData = (data.find(item => item.optin > 0) !== undefined);
 
-  data.forEach(function(item) {
-    if (item.optout > 0) {
-      optout_bool = true;
-    }
-    if (item.optin > 0) {
-      optin_bool = true;
-    }
-  });
 
   let last = array => array[array.length - 1];
   let version_constraint = $("#select_constraint").val();
@@ -1102,17 +1094,14 @@ function renderProbeStats() {
       .attr("fill", "#000")
       .text("Count of " + constraintText + " probes");
 
-  columns = [];
-  if (!optin_bool) {
-    columns.push("optout");
-  }
-  else if (!optout_bool) {
+  var columns = [];
+  if (hasOptinData) {
     columns.push("optin");
   }
-  else {
-    columns.push("optin", "optout");
+  if (hasOptoutData) {
+    columns.push("optout");
   }
-
+  
   var legend = g.selectAll(".legend")
     .data(columns.reverse())
     .enter().append("g")
