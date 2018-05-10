@@ -431,24 +431,26 @@ function shortVersion(v) {
   return v.split(".")[0];
 }
 
-function friendlyRecordingRange(firstVersion, expiry) {
-  if (expiry == "never") {
-    return `from ${firstVersion}`;
-  }
-  return `${firstVersion} to ${parseInt(shortVersion(expiry)) - 1}`;
-}
-
-function friendlyRecordingRangeForState(state, channel) {
-  const firstVersion = getVersionRange(channel, state["revisions"]).first;
-  const expiry = state.expiry_version;
-  return friendlyRecordingRange(firstVersion, expiry);
-}
-
 function friendlyRecordingRangeForHistory(history, channel) {
   const last = array => array[array.length - 1];
-  const firstVersion = getVersionRange(channel, history[0]["revisions"]).first;
+
   const expiry = last(history).expiry_version;
-  return friendlyRecordingRange(firstVersion, expiry);
+  const latestVersion = Math.max.apply(null, Object.keys(gChannelInfo[channel].versions));
+  const firstVersion = getVersionRange(channel, last(history).revisions).first;
+  let lastVersion = getVersionRange(channel, history[0].revisions).last;
+
+  if (expiry == "never" && (lastVersion >= latestVersion)) {
+    return `from ${firstVersion}`;
+  }
+
+  if (expiry != "never") {
+    const expiryVersion = parseInt(shortVersion(expiry));
+    if (lastVersion >= expiryVersion) {
+      lastVersion = expiryVersion - 1;
+    }
+  }
+
+  return `${firstVersion} to ${lastVersion}`;
 }
 
 function renderMeasurements(measurements) {
