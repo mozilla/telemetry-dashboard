@@ -952,11 +952,20 @@ function getMeasurementCountsPerVersion() {
     }
 
     switch (version_constraint) {
-      case "new_in": {
-        let oldest = last(history);
-        let versions = getVersionRange(channel, oldest.revisions);
-        let k = oldest.optout ? "optout" : "optin";
-        countProbe(perVersionCounts[versions.first], k);
+      case "new_in": 
+      {
+        $.each(perVersionCounts, (version, data) => {
+          let recording = history.find(h => {
+            let ver = parseInt(version);
+            let versions = getVersionRange(channel, h.revisions);
+            return (ver == versions.first);
+          });
+          // If so, increase the count.
+          if (recording) {
+            let k = recording.optout ? "optout" : "optin";
+            countProbe(data, k);
+          }
+        });
         break;
       }
       case "is_in":
@@ -1094,16 +1103,16 @@ function renderProbeStats() {
       .attr("fill", "#000")
       .text("Count of " + constraintText + " probes");
 
-  var columns = [];
+  var legendLabels = [];
   if (hasOptinData) {
-    columns.push("optin");
+    legendLabels.push("optin");
   }
   if (hasOptoutData) {
-    columns.push("optout");
+    legendLabels.push("optout");
   }
   
   var legend = g.selectAll(".legend")
-    .data(columns.reverse())
+    .data(legendLabels.reverse())
     .enter().append("g")
       .attr("class", "legend")
       .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; })
