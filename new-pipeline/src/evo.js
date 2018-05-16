@@ -326,12 +326,12 @@ $(function () {
               var channel = $("#max-channel-version").val().split("/")[0]
               var description = getDescription(metric, channel, evolutionDescription);
               var link = getDescriptionLink(metric, channel, description);
-              var use-counter= useCounterLink(metric, channel, description);
+              var useCounter= useCounterLink(metric, channel, description);
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
               $("#evo-caption-text").html(description);
               $('#evo-caption-link').html(link);
-              $('.use-counter-link').html(use-counter);
+              $('.use-counter-link').html(useCounter);
               $("#selected-key")
                 .trigger("change");
             });

@@ -702,7 +702,7 @@ function getHumanReadableOptions(filterName, options) {
       return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
     });
   }
-  
+
   return options.map(function (option) {
     return [option, option];
   });
@@ -1081,7 +1081,10 @@ function getDescriptionLink(metric, channel, description) {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
   }
+}
 
+function useCounterLink(metric, channel, description) {
+  var metricUrl = buildDictionaryURL(metric, channel, description);
   //Hide use counter link if not applicable.
   if (metric.startsWith("USE_COUNTER") !== true) {
     $(".use-counter-link")
