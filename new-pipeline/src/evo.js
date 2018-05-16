@@ -32,7 +32,7 @@ const kDefaultSelectedAggregates = [
   "95th-percentile",
 ];
 // these will be generated, but won't appear in the multiselect
-// note: some code using gMetaAggregates assumes for convenience that 
+// note: some code using gMetaAggregates assumes for convenience that
 // meta aggregate names are special and hopefully won't ever collide with
 // (dynamically generated) names of other aggregates.
 var gMetaAggregates = [
@@ -289,7 +289,7 @@ $(function () {
               multiselectSetOptions($("#selected-key"),
                 options);
               if (gInitialPageState.keys &&
-                gInitialPageState.keys.length > 0) { // Reselect previously selected key            
+                gInitialPageState.keys.length > 0) { // Reselect previously selected key
                 // Check to make sure the key can actually still be selected
                 var key = gInitialPageState.keys[0];
                 if ($("#selected-key")
@@ -326,10 +326,12 @@ $(function () {
               var channel = $("#max-channel-version").val().split("/")[0]
               var description = getDescription(metric, channel, evolutionDescription);
               var link = getDescriptionLink(metric, channel, description);
+              var use-counter= useCounterLink(metric, channel, description);
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
               $("#evo-caption-text").html(description);
               $('#evo-caption-link').html(link);
+              $('.use-counter-link').html(use-counter);
               $("#selected-key")
                 .trigger("change");
             });
