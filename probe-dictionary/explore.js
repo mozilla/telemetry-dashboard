@@ -935,6 +935,12 @@ function getMeasurementCountsPerVersion() {
     };
   }
 
+  function countProbe(data, k) {
+    if ((channel !== "release") || (k === "optout")) {
+      data[k] += 1;
+    }
+  }
+
   $.each(gProbeData, (id, data) => {
     let history = data.history[channel];
     if (!history) {
@@ -942,11 +948,20 @@ function getMeasurementCountsPerVersion() {
     }
 
     switch (version_constraint) {
-      case "new_in": {
-        let oldest = last(history);
-        let versions = getVersionRange(channel, oldest.revisions);
-        let k = oldest.optout ? "optout" : "optin";
-        perVersionCounts[versions.first][k] += 1;
+      case "new_in": 
+      {
+        $.each(perVersionCounts, (version, data) => {
+          let recording = history.find(h => {
+            let ver = parseInt(version);
+            let versions = getVersionRange(channel, h.revisions);
+            return (ver == versions.first);
+          });
+          // If so, increase the count.
+          if (recording) {
+            let k = recording.optout ? "optout" : "optin";
+            countProbe(data, k);
+          }
+        });
         break;
       }
       case "is_in":
@@ -963,7 +978,7 @@ function getMeasurementCountsPerVersion() {
           // If so, increase the count.
           if (recording) {
             let k = recording.optout ? "optout" : "optin";
-            data[k] += 1;
+            countProbe(data, k);
           }
         });
         break;
@@ -977,7 +992,7 @@ function getMeasurementCountsPerVersion() {
           if ((versions.first <= versionNum) && (versions.last >= versionNum) &&
               (expires != "never") && (parseInt(expires) <= versionNum)) {
             let k = newest.optout ? "optout" : "optin";
-            data[k] += 1;
+            countProbe(data, k);
           }
         });
         break;
@@ -998,6 +1013,9 @@ function getMeasurementCountsPerVersion() {
 
 function renderProbeStats() {
   var data = getMeasurementCountsPerVersion();
+  var hasOptoutData = (data.find(item => item.optout > 0) !== undefined);
+  var hasOptinData = (data.find(item => item.optin > 0) !== undefined);
+
 
   let last = array => array[array.length - 1];
   let version_constraint = $("#select_constraint").val();
@@ -1036,7 +1054,7 @@ function renderProbeStats() {
       .rangeRound([height, 0]);
 
   var z = d3.scaleOrdinal()
-      .range(["#98abc5", "#d0743c"]);
+      .range(["#d0743c", "#98abc5"]);
 
   var stack = d3.stack();
 
@@ -1081,8 +1099,16 @@ function renderProbeStats() {
       .attr("fill", "#000")
       .text("Count of " + constraintText + " probes");
 
+  var legendLabels = [];
+  if (hasOptinData) {
+    legendLabels.push("optin");
+  }
+  if (hasOptoutData) {
+    legendLabels.push("optout");
+  }
+  
   var legend = g.selectAll(".legend")
-    .data(columns.reverse())
+    .data(legendLabels.reverse())
     .enter().append("g")
       .attr("class", "legend")
       .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; })
