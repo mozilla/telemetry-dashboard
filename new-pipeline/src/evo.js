@@ -334,6 +334,8 @@ $(function () {
               }
               $('#evo-caption-link').html(link);
               $('#use-counter-link').html(useCounterLink);
+              $('#use-counter-link')
+                .trigger('change');
               $("#selected-key")
                 .trigger("change");
             });

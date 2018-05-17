@@ -1085,13 +1085,11 @@ function getDescriptionLink(metric, channel, description) {
 }
 
 function getUseCounterLink(metric, channel, description) {
-  //Show correct use counter link based on group selection.
   var metricUrl = buildDictionaryURL(metric, channel, description);
   if (metric.startsWith("USE_COUNTER") !== true) {
-    $(".use-counter-link")
-    .hide();
+    $(".use-counter-link").text(""); // Clear use counter link;
   }
-
+  //Show correct use counter link based on group selection.
   else {
     metricSplit = metric.split("_");
     var group = metricSplit[2];
@@ -1100,6 +1098,5 @@ function getUseCounterLink(metric, channel, description) {
       target: "_blank",
     });
     useCounterLink.text("View in use counter dashboard.");
-    return useCounterLink;
   }
 }
