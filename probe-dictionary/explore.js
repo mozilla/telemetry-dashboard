@@ -434,6 +434,14 @@ function shortVersion(v) {
 function friendlyRecordingRangeForHistory(history, channel) {
   const last = array => array[array.length - 1];
 
+  if (channel == "release") {
+    history = history.filter(h => h.optout);
+  }
+
+  if (history.length == 0) {
+    return "never";
+  }
+
   const expiry = last(history).expiry_version;
   const latestVersion = Math.max.apply(null, Object.keys(gChannelInfo[channel].versions));
   const firstVersion = getVersionRange(channel, last(history).revisions).first;
