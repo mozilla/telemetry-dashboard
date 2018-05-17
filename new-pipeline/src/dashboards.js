@@ -1086,6 +1086,7 @@ function getDescriptionLink(metric, channel, description) {
 
 function useCounterLink(metric, channel, description) {
   //Show correct use counter link based on group selection.
+  var metricUrl = buildDictionaryURL(metric, channel, description);
   if (metric.startsWith("USE_COUNTER") === true) {
     metricSplit = metric.split("_");
     var group = metricSplit[2];
