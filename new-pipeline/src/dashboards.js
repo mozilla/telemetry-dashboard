@@ -1099,4 +1099,5 @@ function getUseCounterLink(metric, channel, description) {
     });
     useCounterLink.text("View in use counter dashboard.");
   }
+  return useCounterLink;
 }
