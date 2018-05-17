@@ -324,15 +324,12 @@ $(function () {
               var channel = $("#max-channel-version").val().split("/")[0]
               var description = getDescription(metric, channel, evolutionDescription);
               var link = getDescriptionLink(metric, channel, description);
-              var useCounterLink = showUseCounterLink(metric, channel, description);
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
               if (metric != description) {
                 $("#evo-caption-text").html(description);
-                $("#use-counter-link").html(useCounterLink);
               } else {
                 $('#evo-caption-text').text("");
-                $('#use-counter-link').text("");
               }
               $('#evo-caption-link').html(link);
               $("#selected-key")
