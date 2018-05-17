@@ -361,9 +361,9 @@ $(function () {
           } else { // Non-keyed histogram or a keyed histogram with only one key
             var histogramsList = gCurrentHistogramsList;
           }
-          displayHistograms(histogramsList, gCurrentDates, 
-            $("input[name=table-toggle]").is(':checked'), 
-            $("input[name=cumulative-toggle]").is(':checked'), 
+          displayHistograms(histogramsList, gCurrentDates,
+            $("input[name=table-toggle]").is(':checked'),
+            $("input[name=cumulative-toggle]").is(':checked'),
             $("input[name=trim-toggle]").is(':checked')
           );
           saveStateToUrlAndCookie();
@@ -869,12 +869,9 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
-    if (metric != desc) {
-      $('#dist-caption-text').html(desc);
-    } else {
-      $('#dist-caption-text').text("");
-    }
+    $('#dist-caption-text').html(desc);
     $('#dist-caption-link').html(link);
+
   } else {
     $('#dist-caption-text').text(""); // Clear the histogram caption
     $('#dist-caption-link').text(""); // Clear the histogram link

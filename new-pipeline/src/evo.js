@@ -32,7 +32,7 @@ const kDefaultSelectedAggregates = [
   "95th-percentile",
 ];
 // these will be generated, but won't appear in the multiselect
-// note: some code using gMetaAggregates assumes for convenience that 
+// note: some code using gMetaAggregates assumes for convenience that
 // meta aggregate names are special and hopefully won't ever collide with
 // (dynamically generated) names of other aggregates.
 var gMetaAggregates = [
@@ -287,7 +287,7 @@ $(function () {
               multiselectSetOptions($("#selected-key"),
                 options);
               if (gInitialPageState.keys &&
-                gInitialPageState.keys.length > 0) { // Reselect previously selected key            
+                gInitialPageState.keys.length > 0) { // Reselect previously selected key
                 // Check to make sure the key can actually still be selected
                 var key = gInitialPageState.keys[0];
                 if ($("#selected-key")
@@ -508,7 +508,7 @@ function calculateEvolutions(callback) {
   channelVersions.forEach(function (channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
     getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates,
-      filterSets, $("input[name=sanitize-toggle]").is(":checked"), 
+      filterSets, $("input[name=sanitize-toggle]").is(":checked"),
       $("input[name=build-time-toggle]").is(":checked"),
       function (newLinesMap, newDescription) {
         if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
