@@ -1085,20 +1085,19 @@ function getDescriptionLink(metric, channel, description) {
 }
 
 function useCounterLink(metric, channel, description) {
-  var metricUrl = buildDictionaryURL(metric, channel, description);
-  //Hide use counter link if not applicable.
-  if (metric.startsWith("USE_COUNTER") !== true) {
-    $(".use-counter-link")
-    .hide();
-  }
-
   //Show correct use counter link based on group selection.
   if (metric.startsWith("USE_COUNTER") === true) {
     metricSplit = metric.split("_");
-    group = metricSplit[2];
-    useCounterLink = "http://georgf.github.io/usecounters/#kind=page&group=" + group + "&channel=beta&version=60";
-    $(".use-counter-link > a").attr('href', useCounterLink);
-    $(".use-counter-link")
-      .show();
+    var group = metricSplit[2];
+    var useCounterLink = $("<a>", {
+      href: "http://georgf.github.io/usecounters/#kind=page&group=" + group + "&channel=beta&version=60",
+      target: "_blank",
+      css: {
+        color: "black",
+      },
+      "aria-hidden": "true",
+    });
+    useCounterLink.text("View in use counter dashboard.");
   }
+  return useCounterLink;
 }
