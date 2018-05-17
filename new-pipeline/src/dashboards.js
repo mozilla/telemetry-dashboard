@@ -1087,16 +1087,17 @@ function getDescriptionLink(metric, channel, description) {
 function showUseCounterLink(metric, channel, description) {
   //Show correct use counter link based on group selection.
   var metricUrl = buildDictionaryURL(metric, channel, description);
-  if (metric.startsWith("USE_COUNTER") === true) {
+  if (metric.startsWith("USE_COUNTER") !== true) {
+    $(".use-counter-link")
+    .text("");
+  }
+
+  else {
     metricSplit = metric.split("_");
     var group = metricSplit[2];
     var useCounterLink = $("<a>", {
       href: "http://georgf.github.io/usecounters/#kind=page&group=" + group + "&channel=beta&version=60",
       target: "_blank",
-      css: {
-        color: "black",
-      },
-      "aria-hidden": "true",
     });
     useCounterLink.text("View in use counter dashboard.");
   }
