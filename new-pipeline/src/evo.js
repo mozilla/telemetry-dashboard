@@ -103,13 +103,11 @@ $(function () {
         .multiselect("select", toVersion);
     } // Invalid range selected, move min version selector
 
-    $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=build-time-toggle]")
+      .prop("checked", gInitialPageState.use_submission_date !== 0)
       .trigger("change");
-    $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=sanitize-toggle]")
+      .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
 
     // If advanced settings are not at their defaults, expand the settings pane on load
@@ -328,7 +326,11 @@ $(function () {
               var link = getDescriptionLink(metric, channel, description);
               $("#submissions-title").text(metric + " submissions");
               $("#sample-counts-title").text(metric + " sample counts");
-              $("#evo-caption-text").html(description);
+              if (metric != description) {
+                $("#evo-caption-text").html(description);
+              } else {
+                $('#evo-caption-text').text("");
+              }
               $('#evo-caption-link').html(link);
               $("#selected-key")
                 .trigger("change");
@@ -347,7 +349,7 @@ $(function () {
             lines = gCurrentLinesMap[key];
           }
           displayEvolutions(lines,
-            $("input[name=build-time-toggle]:checked").val() !== "0",
+            $("input[name=build-time-toggle]").is(":checked"),
             gCurrentKind === "enumerated" || gCurrentKind === "boolean" || gCurrentKind == "categorical");
           saveStateToUrlAndCookie();
         });
@@ -506,9 +508,8 @@ function calculateEvolutions(callback) {
   channelVersions.forEach(function (channelVersion) {
     var parts = channelVersion.split("/"); //wip: fix this
     getHistogramEvolutionLines(parts[0], parts[1], measure, aggregates,
-      filterSets, $("input[name=sanitize-toggle]:checked")
-      .val() !== "0", $("input[name=build-time-toggle]:checked")
-      .val() !== "0",
+      filterSets, $("input[name=sanitize-toggle]").is(":checked"), 
+      $("input[name=build-time-toggle]").is(":checked"),
       function (newLinesMap, newDescription) {
         if (asyncOperationWasInterrupted("calculateEvolutions", operation)) { // Don't call callback if this isn't the latest invocation of the function
           return;
@@ -810,10 +811,8 @@ function displayEvolution(target, lines, usePercentages, plotOptions) {
   $(`${target} .mg-x-axis .label`)
     .attr("text-decoration", "underline")
     .click(function () {
-      var newUseSubmissionDate = $("input[name=build-time-toggle]:checked")
-        .val() !== "0" ? 0 : 1;
-      $("input[name=build-time-toggle][value=" + newUseSubmissionDate + "]")
-        .prop("checked", true)
+      let buildTimeToggle = $("input[name=build-time-toggle]");
+      buildTimeToggle.prop("checked", !buildTimeToggle.prop("checked"))
         .trigger("change");
     });
 
@@ -928,10 +927,10 @@ function saveStateToUrlAndCookie() {
       .val(),
     max_channel_version: $("#max-channel-version")
       .val(),
-    use_submission_date: $("input[name=build-time-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    sanitize: $("input[name=sanitize-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
+    use_submission_date: $("input[name=build-time-toggle]")
+      .is(":checked") ? 1 : 0,
+    sanitize: $("input[name=sanitize-toggle]")
+      .is(":checked") ? 1 : 0,
   };
 
   // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards

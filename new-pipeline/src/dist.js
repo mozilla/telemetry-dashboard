@@ -65,25 +65,20 @@ $(function () {
     // Initialize setting values from the page state
     $("#sort-keys")
       .multiselect("select", gInitialPageState.sort_keys);
-    $("input[name=table-toggle][value=" + (gInitialPageState.table !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+      $("input[name=table-toggle]")
+      .prop("checked", gInitialPageState.table !== 0)
       .trigger("change");
-    $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=cumulative-toggle]")
+      .prop("checked", gInitialPageState.cumulative !== 0)
       .trigger("change");
-    $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ?
-        1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=trim-toggle]")
+      .prop("checked", gInitialPageState.trim !== 0)
       .trigger("change");
-    $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=build-time-toggle]")
+      .prop("checked", gInitialPageState.use_submission_date !== 0)
       .trigger("change");
-    $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=sanitize-toggle]")
+      .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
 
     updateOptions(function () {
@@ -334,9 +329,9 @@ $(function () {
 
                 $("#selected-key1")
                   .trigger("change");
-              }, $("input[name=sanitize-toggle]:checked")
-              .val() !== "0");
-          }, 0);
+                }, $("input[name=sanitize-toggle]")
+                .is(":checked"));
+        }, 0);
         });
 
       $(
@@ -366,12 +361,11 @@ $(function () {
           } else { // Non-keyed histogram or a keyed histogram with only one key
             var histogramsList = gCurrentHistogramsList;
           }
-          displayHistograms(histogramsList, gCurrentDates, $(
-              "input[name=table-toggle]:checked")
-            .val() !== "0", $(
-              "input[name=cumulative-toggle]:checked")
-            .val() !== "0", $("input[name=trim-toggle]:checked")
-            .val() !== "0");
+          displayHistograms(histogramsList, gCurrentDates, 
+            $("input[name=table-toggle]").is(':checked'), 
+            $("input[name=cumulative-toggle]").is(':checked'), 
+            $("input[name=trim-toggle]").is(':checked')
+          );
           saveStateToUrlAndCookie();
         });
 
@@ -476,8 +470,7 @@ function calculateHistograms(callback, sanitize) {
     return;
   }
 
-  var useSubmissionDate = $("input[name=build-time-toggle]:checked")
-    .val() !== "0";
+  var useSubmissionDate = $("input[name=build-time-toggle]").is(":checked");
   var fullEvolutionsMap = {}; // Mapping from labels (the keys in keyed histograms) to lists of combined filtered evolutions (one per comparison option, combined from all filter sets in that option)
   var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0,
@@ -876,7 +869,11 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
-    $('#dist-caption-text').html(desc);
+    if (metric != desc) {
+      $('#dist-caption-text').html(desc);
+    } else {
+      $('#dist-caption-text').text("");
+    }
     $('#dist-caption-link').html(link);
   } else {
     $('#dist-caption-text').text(""); // Clear the histogram caption
@@ -1195,7 +1192,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       max_y: maxPercentage + 2, // Add some extra space to account for the top label
       transition_on_update: false,
       target: axes,
-      x_label: histogram.description,
+      x_label: histogram.measure,
       y_label: "Percentage of Samples",
       xax_count: num_labels,
       y_extended_ticks: true,
@@ -1331,7 +1328,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       target: axes,
       //min_x: -0.5,
       max_x: truths.length + 0.5,
-      x_label: histograms[0].description,
+      x_label: histograms[0].measure,
       y_label: "Percentage True",
       xax_count: truths.length,
       y_extended_ticks: true,
@@ -1375,7 +1372,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
-      x_label: histograms[0].description,
+      x_label: histograms[0].measure,
       y_label: "Percentage of Samples",
       xax_count: num_labels,
       y_extended_ticks: true,
@@ -1624,16 +1621,16 @@ function saveStateToUrlAndCookie() {
       .val(),
     sort_keys: $("#sort-keys")
       .val(),
-    table: $("input[name=table-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    cumulative: $("input[name=cumulative-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    use_submission_date: $("input[name=build-time-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    sanitize: $("input[name=sanitize-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    trim: $("input[name=trim-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
+    table: $("input[name=table-toggle]")
+      .is(":checked") ? 1 : 0,
+    cumulative: $("input[name=cumulative-toggle]")
+      .is(":checked") ? 1 : 0,
+    use_submission_date: $("input[name=build-time-toggle]")
+      .is(":checked") ? 1 : 0,
+    sanitize: $("input[name=sanitize-toggle]")
+      .is(":checked") ? 1 : 0,
+    trim: $("input[name=trim-toggle]")
+      .is(":checked") ? 1 : 0,
     start_date: moment(picker.startDate)
       .format("YYYY-MM-DD"),
     end_date: moment(picker.endDate)
@@ -1740,8 +1737,7 @@ function saveStateToUrlAndCookie() {
         return count;
       });
     });
-    if ($("input[name=cumulative-toggle]:checked")
-      .val() !== "0") {
+    if ($("input[name=cumulative-toggle]").is(":checked")) {
       // Apply cumulative option
       countsList = countsList.map(function (counts) {
         var total = 0;
