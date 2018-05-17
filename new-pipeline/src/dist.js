@@ -884,6 +884,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
   } else {
     $('#dist-caption-text').text(""); // Clear the histogram caption
     $('#dist-caption-link').text(""); // Clear the histogram link
+    $('.use-counter-link').text(""); // Clear use counter link
   }
 
   if (histogramsList.length <= 1) { // Only one histograms set

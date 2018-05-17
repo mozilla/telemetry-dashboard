@@ -1081,6 +1081,7 @@ function getDescriptionLink(metric, channel, description) {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
   }
+  return link;
 }
 
 function useCounterLink(metric, channel, description) {
@@ -1100,6 +1101,4 @@ function useCounterLink(metric, channel, description) {
     $(".use-counter-link")
       .show();
   }
-
-  return link;
 }
