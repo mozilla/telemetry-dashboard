@@ -1089,7 +1089,7 @@ function showUseCounterLink(metric, channel, description) {
   var metricUrl = buildDictionaryURL(metric, channel, description);
   if (metric.startsWith("USE_COUNTER") !== true) {
     $(".use-counter-link")
-    .text("");
+    .hide();
   }
 
   else {
