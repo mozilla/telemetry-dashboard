@@ -869,7 +869,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
-    var useCounter = showUseCounterLink(metric, channel, description);
+    var useCounterLink = showUseCounterLink(metric, channel, description);
     $('#dist-caption-text').html(desc);
     $('#dist-caption-link').html(link);
     $('#use-counter-link').html(useCounterLink);
