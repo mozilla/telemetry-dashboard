@@ -331,15 +331,16 @@ $(function () {
                 $("#evo-caption-text").html(description);
               } else {
                 $('#evo-caption-text').text("");
+                $('#use-counter-link').text("");
               }
               $('#evo-caption-link').html(link);
               $("#selected-key")
                 .trigger("change");
               // Clear use counter link when not applicable.
-              if (getUseCounterLink() returns null) {
+              if (!useCounterLink) {
                 $('#use-counter-link').text("");
               } else {
-                $('#use-counter-link').html(useCounterLink)
+                $('#use-counter-link').html(useCounterLink);
               }
             });
           });

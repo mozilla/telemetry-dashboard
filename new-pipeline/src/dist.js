@@ -862,14 +862,6 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     });
   }
 
-  var useCounterLink = getUseCounterLink(metric, channel, description);
-  if (!useCounterLink) {
-    $('#use-counter-link').text("");
-  }
-  else {
-    $('#use-counter-link').html(useCounterLink);
-  }
-
   if (histogramsList.length > 0 && histogramsList[0].histograms.length > 0) {
     // Set the histogram caption to the histogram description
     var description = histogramsList[0].histograms[0].description
@@ -877,6 +869,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
+    var useCounterLink = getUseCounterLink(metric, channel, description);
     $('#dist-caption-text').html(desc);
     $('#dist-caption-link').html(link);
     $('#use-counter-link').html(useCounterLink);
@@ -885,6 +878,13 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     $('#dist-caption-text').text(""); // Clear the histogram caption
     $('#dist-caption-link').text(""); // Clear the histogram link
     $('#use-counter-link').text(""); // Clear use counter link
+  }
+
+  if (!useCounterLink) {
+    $('#use-counter-link').text("");
+  }
+  else {
+    $('#use-counter-link').html(useCounterLink);
   }
 
   if (histogramsList.length <= 1) { // Only one histograms set
