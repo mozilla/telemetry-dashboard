@@ -1095,7 +1095,7 @@ function getUseCounterLink(metric, channel, description) {
       href: "http://georgf.github.io/usecounters/#kind=page&group=" + group + "&channel=beta&version=60",
       target: "_blank",
     });
-    useCounterLink.append($"<i>", {
+    useCounterLink.append($("<i>", {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" View in use counter dashboard."));
   else {
