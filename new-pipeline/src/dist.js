@@ -862,6 +862,14 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     });
   }
 
+  if (getUseCounterLink() returns null) {
+    $('use-counter-link').text("");
+  }
+  var useCounterLink = getUseCounterLink(metric, channel, description);
+  else {
+    $('use-counter-link').html(useCounterLink);
+  }
+
   if (histogramsList.length > 0 && histogramsList[0].histograms.length > 0) {
     // Set the histogram caption to the histogram description
     var description = histogramsList[0].histograms[0].description
@@ -869,7 +877,6 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
-    var useCounterLink = getUseCounterLink(metric, channel, description);
     $('#dist-caption-text').html(desc);
     $('#dist-caption-link').html(link);
     $('#use-counter-link').html(useCounterLink);

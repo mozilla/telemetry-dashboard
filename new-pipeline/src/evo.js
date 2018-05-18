@@ -333,9 +333,14 @@ $(function () {
                 $('#evo-caption-text').text("");
               }
               $('#evo-caption-link').html(link);
-              $('#use-counter-link').html(useCounterLink);
               $("#selected-key")
                 .trigger("change");
+              // Clear use counter link when not applicable.
+              if (getUseCounterLink() returns null) {
+                $('#use-counter-link').text("");
+              } else {
+                $('#use-counter-link').html(useCounterLink)
+              }
             });
           });
         });

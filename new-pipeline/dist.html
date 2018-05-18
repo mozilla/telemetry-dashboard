@@ -59,91 +59,92 @@
                 </h2>
                 <hr></hr>
                 <figure class="col-md-12">
-                    <div id="use-counter-link" style="text-align: center">
-                    </div>
-                    <div class="caption-div">
-                        <figcaption id="dist-caption-text" class="overflow"></figcaption>
-                        <figcaption id="dist-caption-link"></figcaption>
-                    </div>
-                    <div class="col-md-9" id="plots">
-                        <div class="row">
-                            <div class="col-md-6" style="text-align: center">
-                                <h3><select id="selected-key1" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution1"></div>
-                                </div>
-                            </div>
-                            <div class="col-md-6" style="text-align: center">
-                                <h3><select id="selected-key2" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution2"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6" style="text-align: center">
-                                <h3><select id="selected-key3" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution3"></div>
-                                </div>
-                            </div>
-                            <div class="col-md-6" style="text-align: center">
-                                <h3><select id="selected-key4" class="multiselect" title="Selected key"></select></h3>
-                                <div style="margin-bottom: 20px; z-index: -1">
-                                    <div id="distribution4"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3" style="padding-top: 7em">
-                        <div id="summary">
-                            <dl class="dl-horizontal" style="margin-top: 1em">
-                                <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
-                                <dt title="Total number of Telemetry pings shown">Ping Count</dt><dd id="prop-submissions"></dd>
-                                <dt title="Total number of measurements shown">Sample Count</dt><dd id="prop-count"></dd>
-                                <dt title="Sum of all sample values inserted into the histogram">Sample Sum</dt><dd id="prop-sum"></dd>
-                                <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
-                                <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
-                            </dl>
-                            <div class="scalar-only" style="margin-top: 50px">
-                                <dl class="dl-horizontal">
-                                    <dt>5th Percentile</dt><dd id="prop-p5"></dd>
-                                    <dt>25th Percentile</dt><dd id="prop-p25"></dd>
-                                    <dt>Median</dt><dd id="prop-p50"></dd>
-                                    <dt>75th Percentile</dt><dd id="prop-p75"></dd>
-                                    <dt>95th Percentile</dt><dd id="prop-p95"></dd>
-                                    <br>
-                                    <div style="font-size: 80%; margin: 0 20%">
-                                        <strong>Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
-                                    </div>
-                                </dl>
-                            </div>
-                        </div>
-                        <div id="stats-comparison" style="margin-top: 50px; margin-bottom: 20px;">
-                            <table>
-                              <thead class="measure-headers">
-                              <tr>
-                              <th></th>
-                              <th title="5th percentile duration">5 %</th>
-                              <th title="25th percentile duration">25 %</th>
-                              <th title="Median duration">Median</th>
-                              <th title="75th percentile duration">75 %</th>
-                              <th title="95th percentile duration">95 %</th>
-                              </tr>
-                              </thead>
-                              <tbody id="histogram-percentiles" class="measure-values">
-                                  <tr>
-                                  <td colspan="6">No Data</td>
-                                  </tr>
-                              </tbody>
-                            </table>
-                        </div>
-                        <div style="text-align: center">
-                            <a class="btn btn-default btn-sm" id="export-csv" title="Export the current histogram to CSV">Export CSV</a>
-                            <a class="btn btn-default btn-sm" id="export-json" title="Export the current histogram to JSON">Export JSON</a>
-                        </div>
-                    </div>
-                </figure>
+                  <div>
+                    <figcaption id="use-counter-link"></figcaption>
+                  </div>
+                  <div class="caption-div">
+                    <figcaption id="dist-caption-text" class="overflow"></figcaption>
+                    <figcaption id="dist-caption-link"></figcaption>
+                  </div>
+                  <div class="col-md-9" id="plots">
+                      <div class="row">
+                          <div class="col-md-6" style="text-align: center">
+                              <h3><select id="selected-key1" class="multiselect" title="Selected key"></select></h3>
+                              <div style="margin-bottom: 20px; z-index: -1">
+                                  <div id="distribution1"></div>
+                              </div>
+                          </div>
+                          <div class="col-md-6" style="text-align: center">
+                              <h3><select id="selected-key2" class="multiselect" title="Selected key"></select></h3>
+                              <div style="margin-bottom: 20px; z-index: -1">
+                                  <div id="distribution2"></div>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-md-6" style="text-align: center">
+                              <h3><select id="selected-key3" class="multiselect" title="Selected key"></select></h3>
+                              <div style="margin-bottom: 20px; z-index: -1">
+                                  <div id="distribution3"></div>
+                              </div>
+                          </div>
+                          <div class="col-md-6" style="text-align: center">
+                              <h3><select id="selected-key4" class="multiselect" title="Selected key"></select></h3>
+                              <div style="margin-bottom: 20px; z-index: -1">
+                                  <div id="distribution4"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="col-md-3" style="padding-top: 7em">
+                      <div id="summary">
+                          <dl class="dl-horizontal" style="margin-top: 1em">
+                              <dt title="The type of the histogram (e.g., linear, exponential, Boolean)">Histogram Type</dt><dd id="prop-kind"></dd>
+                              <dt title="Total number of Telemetry pings shown">Ping Count</dt><dd id="prop-submissions"></dd>
+                              <dt title="Total number of measurements shown">Sample Count</dt><dd id="prop-count"></dd>
+                              <dt title="Sum of all sample values inserted into the histogram">Sample Sum</dt><dd id="prop-sum"></dd>
+                              <dt title="Number of distinct dates shown">Number of dates</dt><dd id="prop-dates"></dd>
+                              <dt title="Range of dates currently shown">Selected Dates</dt><dd id="prop-date-range"></dd>
+                          </dl>
+                          <div class="scalar-only" style="margin-top: 50px">
+                              <dl class="dl-horizontal">
+                                  <dt>5th Percentile</dt><dd id="prop-p5"></dd>
+                                  <dt>25th Percentile</dt><dd id="prop-p25"></dd>
+                                  <dt>Median</dt><dd id="prop-p50"></dd>
+                                  <dt>75th Percentile</dt><dd id="prop-p75"></dd>
+                                  <dt>95th Percentile</dt><dd id="prop-p95"></dd>
+                                  <br>
+                                  <div style="font-size: 80%; margin: 0 20%">
+                                      <strong>Notice</strong> percentiles are estimated based on values in the histogram. Values are only guaranteed to be accurate to the nearest bucket.
+                                  </div>
+                              </dl>
+                          </div>
+                      </div>
+                      <div id="stats-comparison" style="margin-top: 50px; margin-bottom: 20px;">
+                          <table>
+                            <thead class="measure-headers">
+                            <tr>
+                            <th></th>
+                            <th title="5th percentile duration">5 %</th>
+                            <th title="25th percentile duration">25 %</th>
+                            <th title="Median duration">Median</th>
+                            <th title="75th percentile duration">75 %</th>
+                            <th title="95th percentile duration">95 %</th>
+                            </tr>
+                            </thead>
+                            <tbody id="histogram-percentiles" class="measure-values">
+                                <tr>
+                                <td colspan="6">No Data</td>
+                                </tr>
+                            </tbody>
+                          </table>
+                      </div>
+                      <div style="text-align: center">
+                          <a class="btn btn-default btn-sm" id="export-csv" title="Export the current histogram to CSV">Export CSV</a>
+                          <a class="btn btn-default btn-sm" id="export-json" title="Export the current histogram to JSON">Export JSON</a>
+                      </div>
+                  </div>
+              </figure>
             </div>
         </div>
         <div class="row">
