@@ -1097,7 +1097,7 @@ function getUseCounterLink(metric, channel, description) {
     });
     useCounterLink.append($"<i>", {
       class: "btn btn-outline-primary fa fa-info-circle",
-    }).text(" View in use counter dashboard.");
+    }).text(" View in use counter dashboard."));
   else {
     return null;
   }
