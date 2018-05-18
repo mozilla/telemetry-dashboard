@@ -431,10 +431,10 @@ function shortVersion(v) {
   return v.split(".")[0];
 }
 
-function friendlyRecordingRangeForHistory(history, channel) {
+function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
   const last = array => array[array.length - 1];
 
-  if (channel == "release") {
+  if ((channel == "release") && filterPrerelease) {
     history = history.filter(h => h.optout);
   }
 
@@ -471,7 +471,7 @@ function renderMeasurements(measurements) {
     ["name", (d, h, c) => d.name],
     ["type", (d, h, c) => d.type],
     ["population", (d, h, c) => h.optout ? "release" : "prerelease"],
-    ["recorded", (d, h, c, history) => friendlyRecordingRangeForHistory(history, c)],
+    ["recorded", (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false)],
     // TODO: overflow should cut off
     ["description", (d, h, c) => escapeHtml(h.description)],
   ];
@@ -853,7 +853,7 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
     if ((!history[0].optout && (ch == "release")) || (ch == "aurora")) {
       continue;
     }
-    rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch)}`);
+    rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch, true)}`);
   }
   $('#detail-recording-range').html(rangeText.join("<br/>"));
 
