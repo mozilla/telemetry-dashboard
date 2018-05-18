@@ -862,12 +862,12 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     });
   }
 
-  if (getUseCounterLink() returns null) {
-    $('use-counter-link').text("");
-  }
   var useCounterLink = getUseCounterLink(metric, channel, description);
+  if (!useCounterLink) {
+    $('#use-counter-link').text("");
+  }
   else {
-    $('use-counter-link').html(useCounterLink);
+    $('#use-counter-link').html(useCounterLink);
   }
 
   if (histogramsList.length > 0 && histogramsList[0].histograms.length > 0) {
