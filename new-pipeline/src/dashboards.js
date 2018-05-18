@@ -1085,7 +1085,6 @@ function getDescriptionLink(metric, channel, description) {
 }
 
 function getUseCounterLink(metric, channel, description) {
-  var metric = metric;
   if (metric.startsWith("USE_COUNTER") !== true) {
     return null;
   }
