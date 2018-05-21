@@ -431,24 +431,46 @@ function shortVersion(v) {
   return v.split(".")[0];
 }
 
-function friendlyRecordingRange(firstVersion, expiry) {
-  if (expiry == "never") {
+/**
+ * Return a human readable description of from when to when a probe is recorded.
+ * This can return "never", "from X to Y" or "from X" for non-expiring probes.
+ *
+ * @param history The history array of a probe for a channel.
+ * @param channel The Firefox channel this history is for.
+ * @param filterPrerelease Whether to filter out prerelease probes on the release channel.
+ */
+function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
+  const last = array => array[array.length - 1];
+
+  // Optionally filter out prerelease probes on the release channel.
+  // This is used for the detail view, but not for the search results view.
+  if ((channel == "release") && filterPrerelease) {
+    history = history.filter(h => h.optout);
+  }
+
+  // The filtering might have left us with an empty recording history.
+  // This means we never recorded anything on this channel.
+  if (history.length == 0) {
+    return "never";
+  }
+
+  const expiry = last(history).expiry_version;
+  const latestVersion = Math.max.apply(null, Object.keys(gChannelInfo[channel].versions));
+  const firstVersion = getVersionRange(channel, last(history).revisions).first;
+  let lastVersion = getVersionRange(channel, history[0].revisions).last;
+
+  if (expiry == "never" && (lastVersion >= latestVersion)) {
     return `from ${firstVersion}`;
   }
-  return `${firstVersion} to ${parseInt(shortVersion(expiry)) - 1}`;
-}
 
-function friendlyRecordingRangeForState(state, channel) {
-  const firstVersion = getVersionRange(channel, state["revisions"]).first;
-  const expiry = state.expiry_version;
-  return friendlyRecordingRange(firstVersion, expiry);
-}
+  if (expiry != "never") {
+    const expiryVersion = parseInt(shortVersion(expiry));
+    if (lastVersion >= expiryVersion) {
+      lastVersion = expiryVersion - 1;
+    }
+  }
 
-function friendlyRecordingRangeForHistory(history, channel) {
-  const last = array => array[array.length - 1];
-  const firstVersion = getVersionRange(channel, history[0]["revisions"]).first;
-  const expiry = last(history).expiry_version;
-  return friendlyRecordingRange(firstVersion, expiry);
+  return `${firstVersion} to ${lastVersion}`;
 }
 
 function renderMeasurements(measurements) {
@@ -461,7 +483,7 @@ function renderMeasurements(measurements) {
     ["name", (d, h, c) => d.name],
     ["type", (d, h, c) => d.type],
     ["population", (d, h, c) => h.optout ? "release" : "prerelease"],
-    ["recorded", (d, h, c, history) => friendlyRecordingRangeForHistory(history, c)],
+    ["recorded", (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false)],
     // TODO: overflow should cut off
     ["description", (d, h, c) => escapeHtml(h.description)],
   ];
@@ -843,7 +865,7 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
     if ((!history[0].optout && (ch == "release")) || (ch == "aurora")) {
       continue;
     }
-    rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch)}`);
+    rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch, true)}`);
   }
   $('#detail-recording-range').html(rangeText.join("<br/>"));
 
