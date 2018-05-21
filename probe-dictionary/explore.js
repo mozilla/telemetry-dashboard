@@ -431,13 +431,25 @@ function shortVersion(v) {
   return v.split(".")[0];
 }
 
+/**
+ * Return a human readable description of from when to when a probe is recorded.
+ * This can return "never", "from X to Y" or "from X" for non-expiring probes.
+ *
+ * @param history The history array of a probe for a channel.
+ * @param channel The Firefox channel this history is for.
+ * @param filterPrerelease Whether to filter out prerelease probes on the release channel.
+ */
 function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
   const last = array => array[array.length - 1];
 
+  // Optionally filter out prerelease probes on the release channel.
+  // This is used for the detail view, but not for the search results view.
   if ((channel == "release") && filterPrerelease) {
     history = history.filter(h => h.optout);
   }
 
+  // The filtering might have left us with an empty recording history.
+  // This means we never recorded anything on this channel.
   if (history.length == 0) {
     return "never";
   }
