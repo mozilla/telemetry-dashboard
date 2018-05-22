@@ -869,22 +869,20 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     var channel = $("#channel-version").val().split("/")[0]
     var desc = getDescription(metric, channel, description);
     var link = getDescriptionLink(metric, channel, description);
-    var useCounterLink = getUseCounterLink(metric, channel, description);
-    $('#dist-caption-text').html(desc);
+    if (metric != desc) {
+      $('#dist-caption-text').html(desc);
+    } else {
+      $('#dist-caption-text').text("");
+    }
     $('#dist-caption-link').html(link);
+
+    var useCounterLink = getUseCounterLink(metric, channel, description);
     $('#use-counter-link').html(useCounterLink);
 
   } else {
     $('#dist-caption-text').text(""); // Clear the histogram caption
     $('#dist-caption-link').text(""); // Clear the histogram link
-    $('#use-counter-link').text(""); // Clear use counter link
-  }
-
-  if (!useCounterLink) {
-    $('#use-counter-link').text("");
-  }
-  else {
-    $('#use-counter-link').html(useCounterLink);
+    $('#use-counter-link').text(""); // Clear the use counter link
   }
 
   if (histogramsList.length <= 1) { // Only one histograms set

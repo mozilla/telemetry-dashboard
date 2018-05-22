@@ -331,7 +331,6 @@ $(function () {
                 $("#evo-caption-text").html(description);
               } else {
                 $('#evo-caption-text').text("");
-                $('#use-counter-link').text("");
               }
               $('#evo-caption-link').html(link);
               $("#selected-key")
