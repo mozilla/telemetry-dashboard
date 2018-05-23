@@ -1081,6 +1081,7 @@ function getDescriptionLink(metric, channel, description) {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
   }
+  
   return link;
 }
 
