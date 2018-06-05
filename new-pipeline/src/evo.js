@@ -394,13 +394,10 @@ var gLoadedAggregatesFromState = false;
 function updateAggregates(kind, buckets) {
   gCurrentKind = kind;
   let newAggregates;
-  if (kind === "enumerated") {
+  if (kind === "enumerated" || kind === "categorical") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
     multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
-  } else if(kind == "categorical") {
-    newAggregates = buckets.map((r, i) => {return [i.toString(), r]})
-    multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
-  }  else if (kind === "boolean" || kind === "flag") {
+  } else if (kind === "boolean" || kind === "flag") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
     multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
 
