@@ -123,7 +123,7 @@
 .mg-marker-text { font-size: 12px !important; }
 .mg-markers line { stroke-width: 2px !important; }
 
-.caption-div {
+.caption-div, .use-counter-div {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -139,7 +139,7 @@
   text-align: center;
 }
 
-#dist-caption-link, #evo-caption-link {
+#dist-caption-link, #evo-caption-link, #use-counter-link {
   color : black;
   display: inline-block;
 }

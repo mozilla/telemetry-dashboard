@@ -701,8 +701,8 @@ function getHumanReadableOptions(filterName, options) {
     return options.map(function (option) {
       return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
     });
-		   
   }
+
   return options.map(function (option) {
     return [option, option];
   });
@@ -1081,6 +1081,29 @@ function getDescriptionLink(metric, channel, description) {
       class: "btn btn-outline-primary fa fa-info-circle",
     }).text(" More details"));
   }
-
   return link;
+}
+
+function getUseCounterLink(metric, channel, description) {
+  var metricUrl = buildDictionaryURL(metric, channel, description);
+  if (!metric.startsWith("USE_COUNTER2")) {
+    return null; // Clear use counter link;
+  }
+  //Show correct use counter link based on group selection.
+  var metricSplit = metric.split("_");
+  if (metricSplit.length < 3) {
+    return null;
+  }
+  var group = metricSplit[2];
+  var useCounterLink = $("<a>", {
+    href: "http://georgf.github.io/usecounters/#kind=page&group=" + group + "&channel=beta",
+    target: "_blank",
+    css: {
+      color: "black",
+    },
+  });
+  useCounterLink.append($("<i>", {
+    class: "btn btn-outline-primary fa fa-info-circle",
+  }).text(" View in use counter dashboard."));
+  return useCounterLink;
 }
