@@ -16,47 +16,6 @@ var gDatasetMappings = null;
 var gView = null;
 var gDetailViewId = null;
 
-$(document)
-  .ready(function () {
-    // Permalink control
-    $(".permalink-control input")
-      .hide()
-      .focus(function () {
-        // Workaround for broken selection: http://stackoverflow.com/questions/5797539
-        var $this = $(this);
-        $this.select()
-          .mouseup(function () {
-            $this.unbind("mouseup");
-            return false;
-          });
-      });
-    $(".permalink-control button")
-      .click(function () {
-        var $this = $(this);
-        $.ajax({
-          url: "https://api-ssl.bitly.com/v3/shorten",
-          dataType: "json",
-          data: {
-            longUrl: window.location.href,
-            access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
-            format: "json"
-          },
-          success: function (response) {
-            var shortUrl = response.data.url;
-            if (shortUrl.indexOf(":") === 4) {
-              shortUrl = "https" + shortUrl.substring(4);
-            }
-            $this.parents(".permalink-control")
-              .find("input")
-              .show()
-              .val(shortUrl)
-              .focus();
-          },
-          async:false
-        });
-        document.execCommand('copy');
-      });
-  });
 
 function mark(marker) {
   if (performance.mark) {
@@ -99,56 +58,103 @@ $(document).ready(function() {
     promiseGetJSON("datasets.json", ""),
   ];
 
-  Promise.all(loads).then(values => {
-    mark("all json loaded");
-    [gGeneralData, gRevisionsData, gProbeData, gEnvironmentData, gSimpleMeasurementsData, gDatasetMappings] = values;
-
-    extractChannelInfo();
-    processOtherFieldData(gEnvironmentData);
-    processOtherFieldData(gSimpleMeasurementsData);
-    renderVersions();
-    loadURIData();
-    update();
-
-    mark("updated site");
-
-    // Tab change events.
-    $('a[data-toggle="tab"]').on('show.bs.tab', tabChange);
-    $('a[data-toggle="tab"]').on('shown.bs.tab', updateSearchParams);
-
-    // Search view events.
-    $("#select_constraint").change(update);
-    $("#select_version").change(update);
-    $("#select_version").keyup(update);
-    $("#select_channel").change(update);
-    $("#optout").change(update);
-    $("#search_constraint").change(update);
-    $(window).on('popstate', loadURIData);
-
-    var delaySearch = makeDelay(50);
-    $("#text_search").keyup(() => delaySearch(update));
-
-    // Add detail view events.
-    $(document).keyup(e => {
-      // Catch Escape key presses.
-      if ((e.which == 27) && gDetailViewId) {
-        hideDetailView();
-      }
-    });
-    $("#close-detail-view").click(() => {
-      hideDetailView();
-    });
-
-    // Add when the data was last updated.
-    let date = new Date(gGeneralData.lastUpdate);
-    $("#last-updated-date").text(date.toDateString());
-
-    $("#loading-overlay").addClass("hidden");
-    mark("done");
-  }, e => {
-    console.log("caught", e);
-  });
+  Promise.all(loads)
+         .then(values => initializePage(values))
+         .catch(e => console.log("caught", e));
 });
+
+function initializePage(values) {
+  mark("all json loaded");
+  [gGeneralData, gRevisionsData, gProbeData, gEnvironmentData, gSimpleMeasurementsData, gDatasetMappings] = values;
+
+  extractChannelInfo();
+  processOtherFieldData(gEnvironmentData);
+  processOtherFieldData(gSimpleMeasurementsData);
+  renderVersions();
+  loadURIData();
+  update();
+
+  mark("updated site");
+
+  // Tab change events.
+  $('a[data-toggle="tab"]').on('show.bs.tab', tabChange);
+  $('a[data-toggle="tab"]').on('shown.bs.tab', updateSearchParams);
+
+  // Search view events.
+  $("#select_constraint").change(update);
+  $("#select_version").change(update);
+  $("#select_version").keyup(update);
+  $("#select_channel").change(update);
+  $("#optout").change(update);
+  $("#search_constraint").change(update);
+  $(window).on('popstate', loadURIData);
+
+  var delaySearch = makeDelay(50);
+  $("#text_search").keyup(() => delaySearch(update));
+
+  // Add detail view events.
+  $(document).keyup(e => {
+    // Catch Escape key presses.
+    if ((e.which == 27) && gDetailViewId) {
+      hideDetailView();
+    }
+  });
+  $("#close-detail-view").click(() => {
+    hideDetailView();
+  });
+
+  // Add when the data was last updated.
+  let date = new Date(gGeneralData.lastUpdate);
+  $("#last-updated-date").text(date.toDateString());
+
+  $("#loading-overlay").addClass("hidden");
+
+  initializeShortlink();
+
+  mark("init done");
+}
+
+function initializeShortlink() {
+  $(".permalink-control input").hide().focus(function () {
+    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+    var $this = $(this);
+    $this.select().mouseup(function () {
+      $this.unbind("mouseup");
+      return false;
+    });
+  });
+
+  $(".permalink-control button").click(function () {
+    var $this = $(this);
+    $.ajax({
+      url: "https://api-ssl.bitly.com/v3/shorten",
+      dataType: "json",
+      data: {
+        longUrl: window.location.href,
+        access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+        format: "json"
+      },
+      success: function (response) {
+        var shortUrl = response.data.url;
+        if (!shortUrl) {
+          console.error("failed to get shortUrl");
+          return;
+        }
+        if (shortUrl.indexOf(":") === 4) {
+          shortUrl = "https" + shortUrl.substring(4);
+        }
+        $this.parents(".permalink-control")
+          .find("input")
+          .show()
+          .val(shortUrl)
+          .focus();
+      },
+      async: false
+    });
+
+    document.execCommand('copy');
+  });
+}
 
 function extractChannelInfo() {
   var result = {};
