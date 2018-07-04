@@ -496,37 +496,37 @@ function renderMeasurements(measurements) {
   var name = probeId => probeId.split("/")[1];
   var sortedProbeKeys = Object.keys(measurements)
                               .sort((a, b) => name(a).toLowerCase().localeCompare(name(b).toLowerCase()));
-  sortedProbeKeys.forEach(id => {
+  for (var id of sortedProbeKeys) {
     var data = measurements[id];
-    for (let [channel, history] of Object.entries(data.history)) {
-      // TODO: Why do we include the following in the filtering stage? Fix this.
-      // Only show channels that we should show now.
-      if ((selectedChannel !== "any") && (channel !== selectedChannel)) {
-        continue;
-      }
-      if (channel == "aurora") {
-        continue;
-      }
-      // When not filtering by channel, it's confusing to show multiple rows for each probe (one for each channel).
-      // The short-term hack here to improve this is to only show the release channel state.
-      // TODO: solve this better.
-      if ((selectedChannel === "any") && (channel !== "release")) {
-        continue;
-      }
-      // Don't show pre-release measurements for the release channel.
-      if (!history[0].optout && (channel == "release") && (selectedChannel !== "any")) {
-        continue;
-      }
 
-      var cells = [...columns.entries()].map(([field, fn]) => {
-        var d = fn(data, history[0], channel, history);
-        return `<td class="search-results-field-${field}">${d}</td>`;
-      });
-      table += `<tr onclick="showDetailView(this); return false;" probeid="${id}" channel="${channel}">`;
-      table += cells.join("");
-      table += `</tr>`;
+    // If a specific channel is selected, skip probes that are not on it.
+    if ((selectedChannel !== "any") && !(selectedChannel in data.history)) {
+      continue;
     }
-  });
+
+    // If a specific channel is selected, use the history from that channel.
+    // If searching on "any" channel, use the first applicable channel for the probe.
+    // Doing this allows us to also see probes whose state hasn't propagated to release yet.
+    var channel = selectedChannel;
+    if (selectedChannel === "any") {
+      channel = ["release", "beta", "nightly"].find(c => c in data.history);
+    }
+    var history = data.history[channel];
+
+    // Don't show pre-release measurements for the release channel.
+    if (!history[0].optout && (channel == "release") && (selectedChannel !== "any")) {
+      continue;
+    }
+
+    // Render entry into a search results row.
+    var cells = [...columns.entries()].map(([field, fn]) => {
+      var d = fn(data, history[0], channel, history);
+      return `<td class="search-results-field-${field}">${d}</td>`;
+    });
+    table += `<tr onclick="showDetailView(this); return false;" probeid="${id}" channel="${channel}">`;
+    table += cells.join("");
+    table += `</tr>`;
+  }
 
   table += "</table>";
   items.push(table);
