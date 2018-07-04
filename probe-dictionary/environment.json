@@ -254,6 +254,57 @@
     "name": "build.buildId",
     "type": "environment"
   },
+  "environment/build.displayVersion": {
+    "history": {
+      "release": [
+        {
+          "description": "The display version of the application.",
+          "bug_numbers": [1452745],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "61",
+            "last": "latest"
+          }
+        }
+      ],
+      "beta": [
+        {
+          "description": "The display version of the application.",
+          "bug_numbers": [1452745],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "61",
+            "last": "latest"
+          }
+        }
+      ],
+      "nightly": [
+        {
+          "description": "The display version of the application.",
+          "bug_numbers": [1452745],
+          "details": {
+            "kind": "string"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "61",
+            "last": "latest"
+          }
+        }
+      ]
+    },
+    "name": "build.displayVersion",
+    "type": "environment"
+  },
   "environment/build.version": {
     "history": {
       "release": [
