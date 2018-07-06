@@ -465,7 +465,7 @@ function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
 
   if (expiry != "never") {
     const expiryVersion = parseInt(shortVersion(expiry));
-    if (lastVersion >= expiryVersion) {
+    if ((lastVersion >= expiryVersion) || (lastVersion >= latestVersion)) {
       lastVersion = expiryVersion - 1;
     }
   }
