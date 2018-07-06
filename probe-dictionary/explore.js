@@ -861,13 +861,20 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
 
   // Recording range
   let rangeText = [];
+  let expiryText = [];
   for (let [ch, history] of Object.entries(probe.history)) {
     if ((!history[0].optout && (ch == "release")) || (ch == "aurora")) {
       continue;
     }
+
     rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch, true)}`);
+
+    let expiry = history[0].expiry_version || "never";
+    let expireDetail = (expiry == "never") ? "never expires" : `stops recording in ${expiry}`;
+    expiryText.push(`${ch} ${expireDetail}`);
   }
   $('#detail-recording-range').html(rangeText.join("<br/>"));
+  $('#detail-expiry').html(expiryText.join("<br/>"));
 
   // Apply dataset infos.
   var datasetInfos = getDatasetInfos(probeId, channel, state);
