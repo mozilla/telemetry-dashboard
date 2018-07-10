@@ -432,7 +432,7 @@ function shortVersion(v) {
 }
 
 function getLatestVersion(channel) {
-  return Math.max.apply(null, Object.keys(gChannelInfo[channel].versions));
+  return Math.max(...Object.keys(gChannelInfo[channel].versions));
 }
 
 /**
