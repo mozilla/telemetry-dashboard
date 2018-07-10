@@ -437,6 +437,10 @@ function shortVersion(v) {
   return v.split(".")[0];
 }
 
+function getLatestVersion(channel) {
+  return Math.max(...Object.keys(gChannelInfo[channel].versions));
+}
+
 /**
  * Return a human readable description of from when to when a probe is recorded.
  * This can return "never", "from X to Y" or "from X" for non-expiring probes.
@@ -461,7 +465,7 @@ function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
   }
 
   const expiry = last(history).expiry_version;
-  const latestVersion = Math.max.apply(null, Object.keys(gChannelInfo[channel].versions));
+  const latestVersion = getLatestVersion(channel);
   const firstVersion = getVersionRange(channel, last(history).revisions).first;
   let lastVersion = getVersionRange(channel, history[0].revisions).last;
 
@@ -471,12 +475,25 @@ function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
 
   if (expiry != "never") {
     const expiryVersion = parseInt(shortVersion(expiry));
-    if (lastVersion >= expiryVersion) {
+    if ((lastVersion >= expiryVersion) || (lastVersion >= latestVersion)) {
       lastVersion = expiryVersion - 1;
     }
   }
 
   return `${firstVersion} to ${lastVersion}`;
+}
+
+function friendlyExpiryDescriptionForHistory(history, channel) {
+  let expiry = history[0].expiry_version || "never";
+  if (expiry == "never") {
+    return "never expires";
+  }
+
+  const expiryVersion = parseInt(shortVersion(expiry));
+  let latestVersion = getLatestVersion(channel);
+  let alreadyExpired = (latestVersion >= expiryVersion);
+
+  return `${alreadyExpired ? "stopped" : "will stop"} recording in ${expiry}`;
 }
 
 function renderMeasurements(measurements) {
@@ -865,15 +882,19 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
   $('#detail-recording-type').text(state.optout ? "release" : "prerelease");
   $('#detail-description').text(state.description);
 
-  // Recording range
+  // Recording range and expiry.
   let rangeText = [];
+  let expiryText = [];
   for (let [ch, history] of Object.entries(probe.history)) {
     if ((!history[0].optout && (ch == "release")) || (ch == "aurora")) {
       continue;
     }
+
     rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch, true)}`);
+    expiryText.push(`${ch} ${friendlyExpiryDescriptionForHistory(history, ch)}`);
   }
   $('#detail-recording-range').html(rangeText.join("<br/>"));
+  $('#detail-expiry').html(expiryText.join("<br/>"));
 
   // Apply dataset infos.
   var datasetInfos = getDatasetInfos(probeId, channel, state);
