@@ -487,7 +487,7 @@ function friendlyExpiryDescriptionForHistory(history, channel) {
   let latestVersion = getLatestVersion(channel);
   let alreadyExpired = (latestVersion >= expiryVersion);
 
-  return `${alreadyExpired ? "stopped" : "stops"} recording in ${expiry}`;
+  return `${alreadyExpired ? "stopped" : "will stop"} recording in ${expiry}`;
 }
 
 function renderMeasurements(measurements) {
