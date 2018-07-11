@@ -502,13 +502,29 @@ function renderMeasurements(measurements) {
   var items = [];
 
   var rawColumns = [
-    ["", (d, h, c) => '<span class="btn btn-outline-secondary btn-sm">+<span>'],
-    ["name", (d, h, c) => d.name],
-    ["type", (d, h, c) => d.type],
-    ["population", (d, h, c) => h.optout ? "release" : "prerelease"],
-    ["recorded", (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false)],
+    ["", {
+      content: (d, h, c) => '<span class="btn btn-outline-secondary btn-sm">+<span>',
+    }],
+    ["name", {
+      content: (d, h, c) => d.name,
+    }],
+    ["type", {
+      content: (d, h, c) => d.type,
+    }],
+    ["population", {
+      content: (d, h, c) => h.optout ? "release" : "prerelease",
+      tooltip: "Wether this probe collected on Firefox release or only on " +
+               "prerelease channels."
+    }],
+    ["recorded", {
+      content: (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false),
+      tooltip: "What versions this probe is actually recorded in. This depends on " +
+               "when the probe was added, removed and it's expiry.",
+    }],
     // TODO: overflow should cut off
-    ["description", (d, h, c) => escapeHtml(h.description)],
+    ["description", {
+      content: (d, h, c) => escapeHtml(h.description),
+    }],
   ];
 
   var columns = new Map(rawColumns);
@@ -542,9 +558,9 @@ function renderMeasurements(measurements) {
     }
 
     // Render entry into a search results row.
-    var cells = [...columns.entries()].map(([field, fn]) => {
-      var d = fn(data, history[0], channel, history);
-      return `<td class="search-results-field-${field}">${d}</td>`;
+    var cells = [...columns.entries()].map(([field, entry]) => {
+      var d = entry.content(data, history[0], channel, history);
+      return `<td class="search-results-field-${field}" title="${entry.tooltip || ""}">${d}</td>`;
     });
     table += `<tr onclick="showDetailView(this); return false;" probeid="${id}" channel="${channel}">`;
     table += cells.join("");
