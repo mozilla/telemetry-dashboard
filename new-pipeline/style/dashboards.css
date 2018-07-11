@@ -148,8 +148,9 @@
 .error-msg {
   border: 2px solid #C13832; /* Mozilla Red */
   background-color: #D7D3C8; /* Mozilla Sand */
-  padding: 1em;
+  padding: 0.5em;
   color: #4D4E53; /* Mozilla charcoal */
+  margin-bottom: 1em;
 }
 .error-msg:empty {
   display: none;
