@@ -513,13 +513,13 @@ function renderMeasurements(measurements) {
     }],
     ["population", {
       content: (d, h, c) => h.optout ? "release" : "prerelease",
-      tooltip: "Wether this probe collected on Firefox release or only on " +
+      tooltip: "Whether this probe collected on Firefox release or only on " +
                "prerelease channels."
     }],
     ["recorded", {
       content: (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false),
       tooltip: "What versions this probe is actually recorded in. This depends on " +
-               "when the probe was added, removed and it's expiry.",
+               "when the probe was added, removed and its expiry.",
     }],
     // TODO: overflow should cut off
     ["description", {
