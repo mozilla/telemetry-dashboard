@@ -156,8 +156,11 @@
       <br />
       <table class="table table-sm table-striped table-hover table-bordered border-0">
         <tr><td class="fit pr-2">Type:</td><td id="detail-probe-type" class="grow"></td></tr>
-        <tr><td class="fit pr-2">Population:</td><td id="detail-recording-type" class="grow"></td></tr>
-        <tr id="detail-datasets-row">
+        <tr title="Whether this probe collected on Firefox release or only on prerelease channels.">
+          <td class="fit pr-2">Population:</td><td id="detail-recording-type" class="grow"></td>
+        </tr>
+        <tr id="detail-datasets-row"
+            title="This lists some of the tools or datasets this probe is available in. Note that this is not a complete list.">
           <td class="fit pr-2">Available in:</td><td id="detail-datasets-content" class="grow"></td>
         </tr>
       </table>
@@ -168,9 +171,11 @@
         <tr><td class="fit ml-1">Kind:</td><td id="detail-kind" class="grow"></td></tr>
         <tr><td class="fit pr-2">Keyed:</td><td id="detail-keyed" class="grow"></td></tr>
         <tr><td class="fit pr-2">Bug numbers:</td><td id="detail-bug-numbers" class="grow"></td></tr>
-        <tr><td class="fit pr-2">Recorded in versions:</td><td id="detail-recording-range" class="grow"></td></tr>
+        <tr title="What versions this probe is actually recorded in. This depends on when the probe was added, removed and its expiry.">
+          <td class="fit pr-2">Recorded in versions:</td><td id="detail-recording-range" class="grow"></td>
+        </tr>
         <tr><td class="fit pr-2">Recorded in processes:</td><td id="detail-processes" class="grow"></td></tr>
-        <tr title="This is when the probe will automatically expire and stop recording. Note that the code recording it could be removed before that.">
+        <tr title="The probe will automatically expire in and stop recording in this version. This means that the probe will record at most until the version before that. Note that the code recording it could be removed before that.">
           <td class="fit pr-2">Expiry:</td><td id="detail-expiry" class="grow"></td>
         </tr>
         <tr><td class="fit pr-2">Bucket count:</td><td id="detail-histogram-bucket-count" class="grow"></td></tr>
@@ -179,7 +184,9 @@
         <tr><td class="fit pr-2">Methods:</td><td id="detail-event-methods" class="grow"></td></tr>
         <tr><td class="fit pr-2">Objects:</td><td id="detail-event-objects" class="grow"></td></tr>
         <tr><td class="fit pr-2">Extra keys:</td><td id="detail-event-extra-keys" class="grow"></td></tr>
-        <tr><td class="fit pr-2">C++ guard:</td><td id="detail-cpp-guard" class="grow"></td></tr>
+        <tr title="Some probes have a 'C++ guard' set, which generates a preprocessor statement in Firefox code. This is used to limit probes to record only on some platforms or products.">
+          <td class="fit pr-2">Preprocessor guard:</td><td id="detail-cpp-guard" class="grow"></td>
+        </tr>
       </table>
     </div>
   </div>
