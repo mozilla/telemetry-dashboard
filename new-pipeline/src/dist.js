@@ -18,7 +18,6 @@ $(function () {
       "application": $("#filter-product"),
       "os": $("#filter-os"),
       "architecture": $("#filter-arch"),
-      "e10sEnabled": $("#filter-e10s"),
       "child": $("#filter-process-type"),
     };
     gAxesList = [
@@ -66,25 +65,20 @@ $(function () {
     // Initialize setting values from the page state
     $("#sort-keys")
       .multiselect("select", gInitialPageState.sort_keys);
-    $("input[name=table-toggle][value=" + (gInitialPageState.table !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+      $("input[name=table-toggle]")
+      .prop("checked", gInitialPageState.table !== 0)
       .trigger("change");
-    $("input[name=cumulative-toggle][value=" + (gInitialPageState.cumulative !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=cumulative-toggle]")
+      .prop("checked", gInitialPageState.cumulative !== 0)
       .trigger("change");
-    $("input[name=trim-toggle][value=" + (gInitialPageState.trim !== 0 ?
-        1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=trim-toggle]")
+      .prop("checked", gInitialPageState.trim !== 0)
       .trigger("change");
-    $("input[name=build-time-toggle][value=" + (gInitialPageState.use_submission_date !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=build-time-toggle]")
+      .prop("checked", gInitialPageState.use_submission_date !== 0)
       .trigger("change");
-    $("input[name=sanitize-toggle][value=" + (gInitialPageState.sanitize !==
-        0 ? 1 : 0) + "]")
-      .prop("checked", true)
+    $("input[name=sanitize-toggle]")
+      .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
 
     updateOptions(function () {
@@ -101,14 +95,6 @@ $(function () {
           .multiselect("select", gInitialPageState.arch);
       } else {
         $("#filter-arch")
-          .multiselect("selectAll", false)
-          .multiselect("updateButtonText");
-      }
-      if (gInitialPageState.e10s !== null) {
-        $("#filter-e10s")
-          .multiselect("select", gInitialPageState.e10s);
-      } else {
-        $("#filter-e10s")
           .multiselect("selectAll", false)
           .multiselect("updateButtonText");
       }
@@ -156,7 +142,6 @@ $(function () {
         "#filter-product",
         "#filter-os",
         "#filter-arch",
-        "#filter-e10s",
         "#filter-process-type",
         "#compare",
       ].join(",")).change(function (e) {
@@ -344,9 +329,9 @@ $(function () {
 
                 $("#selected-key1")
                   .trigger("change");
-              }, $("input[name=sanitize-toggle]:checked")
-              .val() !== "0");
-          }, 0);
+                }, $("input[name=sanitize-toggle]")
+                .is(":checked"));
+        }, 0);
         });
 
       $(
@@ -376,12 +361,11 @@ $(function () {
           } else { // Non-keyed histogram or a keyed histogram with only one key
             var histogramsList = gCurrentHistogramsList;
           }
-          displayHistograms(histogramsList, gCurrentDates, $(
-              "input[name=table-toggle]:checked")
-            .val() !== "0", $(
-              "input[name=cumulative-toggle]:checked")
-            .val() !== "0", $("input[name=trim-toggle]:checked")
-            .val() !== "0");
+          displayHistograms(histogramsList, gCurrentDates,
+            $("input[name=table-toggle]").is(':checked'),
+            $("input[name=cumulative-toggle]").is(':checked'),
+            $("input[name=trim-toggle]").is(':checked')
+          );
           saveStateToUrlAndCookie();
         });
 
@@ -436,7 +420,7 @@ function updateOptions(callback) {
     }
 
     multiselectSetOptions($("#measure"), getHumanReadableOptions("measure",
-      deduplicate(optionsMap.metric || [])));
+      deduplicate(optionsMap.metric || []).concat(gInitialPageState.measure)));
     $("#measure")
       .multiselect("select", gInitialPageState.measure);
 
@@ -444,8 +428,6 @@ function updateOptions(callback) {
       "application", deduplicate(optionsMap.application || [])));
     multiselectSetOptions($("#filter-arch"), getHumanReadableOptions(
       "architecture", deduplicate(optionsMap.architecture || [])));
-    multiselectSetOptions($("#filter-e10s"), getHumanReadableOptions(
-      "e10sEnabled", deduplicate(optionsMap.e10sEnabled || [])));
     multiselectSetOptions($("#filter-process-type"),
       getHumanReadableOptions("child", deduplicate(optionsMap.child || []))
     );
@@ -488,8 +470,7 @@ function calculateHistograms(callback, sanitize) {
     return;
   }
 
-  var useSubmissionDate = $("input[name=build-time-toggle]:checked")
-    .val() !== "0";
+  var useSubmissionDate = $("input[name=build-time-toggle]").is(":checked");
   var fullEvolutionsMap = {}; // Mapping from labels (the keys in keyed histograms) to lists of combined filtered evolutions (one per comparison option, combined from all filter sets in that option)
   var optionValues = {}; // Map from labels to lists of options in the order that they were done being processed, rather than the order they appeared in
   var filterSetsCount = 0,
@@ -881,6 +862,29 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     });
   }
 
+  if (histogramsList.length > 0 && histogramsList[0].histograms.length > 0) {
+    // Set the histogram caption to the histogram description
+    var description = histogramsList[0].histograms[0].description
+    var metric = histogramsList[0].histograms[0].measure
+    var channel = $("#channel-version").val().split("/")[0]
+    var desc = getDescription(metric, channel, description);
+    var link = getDescriptionLink(metric, channel, description);
+    if (metric != desc) {
+      $('#dist-caption-text').html(desc);
+    } else {
+      $('#dist-caption-text').text("");
+    }
+    $('#dist-caption-link').html(link);
+
+    var useCounterLink = getUseCounterLink(metric, channel, description);
+    $('#use-counter-link').html(useCounterLink);
+
+  } else {
+    $('#dist-caption-text').text(""); // Clear the histogram caption
+    $('#dist-caption-link').text(""); // Clear the histogram link
+    $('#use-counter-link').text(""); // Clear the use counter link
+  }
+
   if (histogramsList.length <= 1) { // Only one histograms set
     if (histogramsList.length === 1 && histogramsList[0].histograms.length ===
       1) { // Only show one set of axes
@@ -919,10 +923,30 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
       }
       $("#summary")
         .show();
+      $("#stats-comparison")
+        .hide();
 
     } else {
+      let histogramPercentiles = $("#histogram-percentiles");
+      histogramPercentiles.empty();
+      if (histogramsList.length > 0) {
+        histogramPercentiles.append(
+          histogramsList[0].histograms.map(function(histogram) {
+            return `<tr>
+            <th>${histogram.measure}</th>
+            <td>${formatNumber(histogram.percentile(5))}</td>
+            <td>${formatNumber(histogram.percentile(25))}</td>
+            <td>${formatNumber(histogram.percentile(50))}</td>
+            <td>${formatNumber(histogram.percentile(75))}</td>
+            <td>${formatNumber(histogram.percentile(95))}</td>
+            </tr>`;
+          })
+        );
+      }
       $("#summary")
         .hide();
+      $("#stats-comparison")
+        .show();
     }
 
     $("#plots")
@@ -942,10 +966,13 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     axesContainer.removeClass("col-md-6")
       .addClass("col-md-12")
       .show();
-    axesContainer.find("h3")
-      .hide(); // Hide the graph title as it doesn't need one
-    $("#sort-keys-option")
-      .hide();
+    if (isHistogramsListKeyed(histogramsList)) {
+      axesContainer.find("h3").show();
+      $("#sort-keys-option").show();
+    } else {
+      axesContainer.find("h3").hide(); // Hide the graph title as it doesn't need one
+      $("#sort-keys-option").hide();
+    }
 
     if (histogramsList.length > 0) {
       displaySingleHistogramSet($("#distribution1")
@@ -958,6 +985,8 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
     }
   } else { // Show all four axes
     $("#summary")
+      .hide();
+    $("#stats-comparison")
       .hide();
     $("#plots")
       .removeClass("col-md-9")
@@ -995,7 +1024,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
 
   // No histograms available
   if (histograms.length === 0) {
-    $('#dist-caption').text(""); // Clear the histogram caption
     MG.data_graphic({
       chart_type: "missing-data",
       width: $(axes)
@@ -1021,9 +1049,6 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     });
     return;
   }
-
-  // Set the histogram caption to the histogram description
-  $('#dist-caption').text(histograms[0].description);
 
   // All histograms must have the same buckets and be of the same kind
   var starts = histograms[0].map(function (count, start, end, i) {
@@ -1172,7 +1197,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       max_y: maxPercentage + 2, // Add some extra space to account for the top label
       transition_on_update: false,
       target: axes,
-      x_label: histogram.description,
+      x_label: histogram.measure,
       y_label: "Percentage of Samples",
       xax_count: num_labels,
       y_extended_ticks: true,
@@ -1308,7 +1333,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       target: axes,
       //min_x: -0.5,
       max_x: truths.length + 0.5,
-      x_label: histograms[0].description,
+      x_label: histograms[0].measure,
       y_label: "Percentage True",
       xax_count: truths.length,
       y_extended_ticks: true,
@@ -1352,7 +1377,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       max_y: maxPercentage + 2, // Add some extra space to account for the bezier curves
       transition_on_update: false,
       target: axes,
-      x_label: histograms[0].description,
+      x_label: histograms[0].measure,
       y_label: "Percentage of Samples",
       xax_count: num_labels,
       y_extended_ticks: true,
@@ -1601,16 +1626,16 @@ function saveStateToUrlAndCookie() {
       .val(),
     sort_keys: $("#sort-keys")
       .val(),
-    table: $("input[name=table-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    cumulative: $("input[name=cumulative-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    use_submission_date: $("input[name=build-time-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    sanitize: $("input[name=sanitize-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
-    trim: $("input[name=trim-toggle]:checked")
-      .val() !== "0" ? 1 : 0,
+    table: $("input[name=table-toggle]")
+      .is(":checked") ? 1 : 0,
+    cumulative: $("input[name=cumulative-toggle]")
+      .is(":checked") ? 1 : 0,
+    use_submission_date: $("input[name=build-time-toggle]")
+      .is(":checked") ? 1 : 0,
+    sanitize: $("input[name=sanitize-toggle]")
+      .is(":checked") ? 1 : 0,
+    trim: $("input[name=trim-toggle]")
+      .is(":checked") ? 1 : 0,
     start_date: moment(picker.startDate)
       .format("YYYY-MM-DD"),
     end_date: moment(picker.endDate)
@@ -1657,12 +1682,6 @@ function saveStateToUrlAndCookie() {
     .size()) {
     gInitialPageState.arch = selected;
   }
-  var selected = $("#filter-e10s")
-    .val() || [];
-  if (selected.length !== $("#filter-e10s option")
-    .size()) {
-    gInitialPageState.e10s = selected;
-  }
   var selected = $("#filter-process-type")
     .val() || [];
   if (selected.length !== $("#filter-process-type option")
@@ -1697,9 +1716,9 @@ function saveStateToUrlAndCookie() {
       .hide(); // Hide the permalink box again since the URL changed
   }
 
-  // Save the state in a cookie that expires in 3 days
+  // Save the state in a cookie that expires in 28 days
   var expiry = new Date();
-  expiry.setTime(expiry.getTime() + (3 * 24 * 60 * 60 * 1000));
+  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
   document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
 
   // Add link to switch to the evolution dashboard with the same settings
@@ -1723,8 +1742,7 @@ function saveStateToUrlAndCookie() {
         return count;
       });
     });
-    if ($("input[name=cumulative-toggle]:checked")
-      .val() !== "0") {
+    if ($("input[name=cumulative-toggle]").is(":checked")) {
       // Apply cumulative option
       countsList = countsList.map(function (counts) {
         var total = 0;
@@ -1735,7 +1753,7 @@ function saveStateToUrlAndCookie() {
     }
     var jsonValue;
     var csvValue;
-    if (gCurrentHistogramsList.length == 1) {
+    if (!isHistogramsListKeyed(gCurrentHistogramsList)) {
       jsonValue = JSON.stringify(histograms[0].map(function (count, start,
         end, i) {
         var entry = {
@@ -1766,8 +1784,6 @@ function saveStateToUrlAndCookie() {
       // JSON
       var outputObj = {};
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           outputObj[titleHistogramsPair.title] = [];
@@ -1791,8 +1807,6 @@ function saveStateToUrlAndCookie() {
       histograms.forEach(hist => titles.push(hist.measure));
       outputArr.push(titles);
       gCurrentHistogramsList
-        .filter(titleHistogramsPair =>
-          shownKeys.indexOf(titleHistogramsPair.title) != -1)
         .sort((a, b) => shownKeys.indexOf(a.title) - shownKeys.indexOf(b.title))
         .forEach(titleHistogramsPair => {
           var record;
@@ -1851,4 +1865,8 @@ function saveStateToUrlAndCookie() {
       .find("span")
       .text("");
   }
+}
+
+function isHistogramsListKeyed(histogramsList) {
+  return histogramsList.some(entry => entry.title !== "");
 }

@@ -4,34 +4,34 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <title>Evolution Dashboard</title>
-    
+
     <!-- Bootstrap and supporting libraries -->
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="style/bootstrap-multiselect.css" type="text/css"/>
-    <link rel="stylesheet" type="text/css" href="lib/daterangepicker-bs3.css" />
     <link rel="stylesheet" type="text/css" href="style/metricsgraphics.css" />
-    
+
     <link rel="stylesheet" type="text/css" href="style/dashboards.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
 </head>
 <body>
     <div class="container-fluid">
         <header>
-            <form class="navbar-form inline pull-right">
-                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank">Report bug</a>
-                <a href="./dist.html" class="btn btn-default" id="switch-views" title="Switch to the distribution view">Distribution View</a>
-                <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards">Dashboards Home</a>
-                <a href="./tutorial.html#EvolutionDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards">Usage Tutorial</a>
-                <span class="permalink-control"></span>
+            <form class="navbar-form inline pull-right btn-group">
+                <a href="#" class="btn btn-default permalink-button" title="Get Shortlink"><i class="fa fa-link"></i> Get Shortlink</a>
+                <input type="text" class="permalink-text input btn btn-default">
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn btn-success" title="Report a bug in Telemetry dashboards" target="_blank"><i class="fa fa-bug"></i> Report bug</a>
+                <a href="/" class="btn btn-default btn-primary" title="Landing page for Telemetry dashboards"><i class="fa fa-home"></i> Telemetry Portal</a>
+                <a href="./tutorial.html#EvolutionDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards"><i class="fa fa-question-circle"></i> Usage Tutorial</a>
             </form>
             <h1>Evolution Dashboard</h1>
-            <!-- <div class="error-msg">
-              We're currently experiencing an issue with the Measurement and Evolution Dashboards.
-              <a href="https://bugzil.la/1375921">More Details</a>
-            </div> -->
         </header>
+        <ul class="nav nav-tabs">
+            <li><a href="./dist.html"><i class="fa fa-bar-chart"></i><strong>  Distribution</strong></a></li>
+            <li class="active"><a href="#"><i class="fa fa-line-chart"></i><strong>  Evolution</strong></a></li>
+        </ul>
         <div class="row">
             <div class="col-md-12">
                 <h2 style="font-size: 18px; margin-bottom: 0">
@@ -55,13 +55,18 @@
                     on
                     <select id="filter-os" class="multiselect" title="Target OS" data-all-selected="any OS" data-n-selected="OSs" multiple></select>
                     <select id="filter-arch" class="multiselect" title="Product architecture" data-all-selected="any architecture" data-n-selected="architectures" multiple></select>
-                    with
-                    <select id="filter-e10s" class="multiselect" title="e10s setting" data-all-selected="any e10s setting" multiple></select>
                     as
                     <select id="filter-process-type" class="multiselect" title="Process type" data-all-selected="any process type"></select>
                 </h2>
-                <h3 id="measure-description" style="font-size: 14px; margin: 0 3px"></h3>
-                <h2 style="font-size: 18px; margin-bottom: 0">Showing graphs for <select id="selected-key" class="multiselect" title="Selected key"></select></h3>
+                <hr></hr>
+                <div class="caption-div">
+                    <figcaption id="evo-caption-text" class="overflow"></figcaption>
+                    <figcaption id="evo-caption-link"></figcaption>
+                </div>
+                <div class=use-counter-div>
+                    <figcaption id="use-counter-link"></figcaption>
+                </div>
+                <h2 style="font-size: 18px; margin-bottom: 0">Showing graphs for key <select id="selected-key" class="multiselect" title="Selected key"></select></h2>
                 <figure class="col-md-12">
                     <div class="col-md-12" id="evolutions"></div>
                 </figure>
@@ -69,26 +74,28 @@
                 <figure class="col-md-12">
                     <div class="col-md-12" id="submissions"></div>
                 </figure>
+                <h2 id="sample-counts-title" style="font-size: 18px; margin-bottom: 0"></h2>
+                <figure class="col-md-12">
+                    <div class="col-md-12" id="sample-counts"></div>
+                </figure>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-heading" role="tab">
-                        <a class="panel-title" data-toggle="collapse" id="advanced-settings-toggle" href="#advanced-settings">Advanced Settings<span></span></a>
+                        <a class="panel-title" data-toggle="collapse" id="advanced-settings-toggle" href="#advanced-settings"><i class="fa fa-cog"></i> Advanced Settings<span></span></a>
                     </div>
                     <div id="advanced-settings" class="panel-collapse collapse">
                         <div class="panel-body">
                             <form class="form-horizontal">
                                 <div>
-                                    Evolution variable: show evolution over build date or submission date:
-                                    <label><input name="build-time-toggle" type="radio" value="0"> Build Date</label>
-                                    <label><input name="build-time-toggle" type="radio" value="1"> Submission Date</label>
+                                    <label><input name="build-time-toggle" type="checkbox"> <b>Submission date range</b> </label>
+                                    Filter submissions as submission date range rather than build date range.
                                 </div>
                                 <div>
-                                    Sanitize data: hide data points that don't have enough submissions:
-                                    <label><input name="sanitize-toggle" type="radio" value="0"> Don't Sanitize</label>
-                                    <label><input name="sanitize-toggle" type="radio" value="1"> Sanitize</label>
+                                    <label><input name="sanitize-toggle" type="checkbox"> <b>Sanitize data</b> </label>
+                                    Hide data points that don't have enough submissions.
                                 </div>
                             </form>
                         </div>
@@ -102,21 +109,22 @@
         <i class="fa fa-cog fa-spin"></i>
         <span class="busy-indicator-message">Loading page...</span>
     </div>
+    <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
 
-    
     <!-- Bootstrap and supporting libraries -->
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="lib/bootstrap-multiselect.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
-    <script type="text/javascript" src="lib/daterangepicker.js"></script>
-    
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap-multiselect.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+
     <!-- MetricsGraphics libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
-    <script src="lib/metricsgraphics.js"></script>
-    
+    <script src="lib/metricsgraphics.min.js"></script>
+
     <script src="../v2/telemetry.js"></script>
     <script src="src/dashboards.js"></script>
     <script src="src/evo.js"></script>
+
+    <script src="../analytics/analytics.js"></script>
 </body>
 </html>

@@ -1,0 +1,199 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Firefox probe dictionary - Find probes</title>
+
+  <!-- CSS  -->
+  <!-- CSS: Framework BS 4 alpha -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <!-- CSS: Framework:Theme United -->
+  <link rel="stylesheet" href="theme_cosmo.min.css">
+  <!-- CSS: LoadingBar -->
+  <link rel="stylesheet" href="explorer.css">
+  <!-- Font Awesome -->
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <div class="container-full">
+    <nav class="navbar navbar-toggleable-md navbar-inverse bg-primary">
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand" href="#">Probe Dictionary</a>
+
+      <div class="collapse navbar-collapse" id="navbarCollapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#search-results-view" role="tab" aria-controls="search-results-view">
+              <i class="fa fa-search"></i> Find probes <span class="sr-only">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#stats-view" role="tab" aria-controls="stats-view">
+              <i class="fa fa-bar-chart"></i> Stats
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://github.com/mozilla/probe-dictionary/issues/new" target="_blank"><i class="fa fa-bug"></i> File a bug</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://telemetry.mozilla.org/"><i class="fa fa-home"></i> Telemetry portal</a>
+          </li>
+          <li>
+            <div class="permalink-control">
+              <div class="input-group">
+                <span class="input-group-btn"><button type="button" class="btn btn-default" title="Get Shortlink"><i class="fa fa-link"></i> Get Shortlink</button></span>
+                <input type="text" class="form-control">
+              </div>
+            </div>
+          </li>
+        </ul>
+        <div class="navbar-text my-lg-0" id="last-updated">
+          Updated <span id="last-updated-date"></span>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Loading overlay with progress bar. -->
+  <div id="loading-overlay">
+    <div class="progress">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+  </div>
+
+  <!-- Search form. -->
+  <div id="search-view">
+
+    <div class="container-fluid" id="search-form">
+      <form class="ml-1 mt-3">
+        <div class="form-group form-inline" id="text-search-element">
+          <!-- This is not shown for the stats view. -->
+          <div class="input-group mr-2">
+            <input class="form-control"
+                   id="text_search" name="text_search" placeholder="Search for text...">
+            <div class="input-group-addon" ><i class="fa fa-search"></i></div>
+          </div>
+          in
+          <select class="form-control ml-2 mr-1" id="search_constraint">
+            <option value="in_any" selected="selected">any text field</option>
+            <option value="in_name">name</option>
+            <option value="in_description">description</option>
+          </select>
+          .
+        </div>
+        <div id="probe-filters">
+          <div class="form-row form-inline">
+            Filter for probes
+            <select class="form-control form-control-sm ml-1 mr-1" id="select_constraint">
+              <option value="is_in" selected="selected">recorded</option>
+              <option value="new_in">new</option>
+              <option value="is_expired">expired</option>
+            </select>
+            <div id="version-selection-element">
+              <!-- This is not shown for the stats view. -->
+              in version
+              <select class="form-control form-control-sm ml-1 mr-1" id="select_version">
+                <option id="version_any" value="any" selected="selected">any</option>
+              </select>
+            </div>
+            on channel
+            <select class="form-control form-control-sm ml-1 mr-1" id="select_channel">
+              <option value="any" selected="selected">any</option>
+              <option value="release">release</option>
+              <option value="beta">beta</option>
+              <option value="nightly">nightly</option>
+            </select>
+            .
+          </div>
+          <div class="form-row form-inline mt-2" id="optout-selection-element">
+            <!-- This is not shown for the stats view. -->
+            <input class="form-control form-control-sm mr-1" id="optout" type="checkbox">
+            <label for="optout">Show only measurements collected on release.</label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <hr />
+  </div>
+
+  <!-- Tab container of main page contents. -->
+  <div class="tab-content" id="main-tab-holder">
+    <!-- Placeholders filled by JS -->
+    <div class="tab-pane active" id="search-results-view">
+      <div class="container ml-4" id="stats"></div>
+      <div class="container table table-sm table-striped table-hover table-bordered border-0 pl-5" id="measurements"></div>
+    </div>
+
+    <!-- SVG placeholder for D3 Chart -->
+    <div class="tab-pane" id="stats-view">
+      <svg class="img-fluid" id="stats-content" width="960" height="500"></svg>
+    </div>
+  </div>
+
+  <div class="container-fluid hidden" id="probe-detail-view">
+    <div id="detail-body">
+      <button type="button" class="close"
+              aria-label="Close" id="close-detail-view">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <h2 id="detail-probe-name">Probe name</h2>
+      <br />
+      <br />
+      <table class="table table-sm table-striped table-hover table-bordered border-0">
+        <tr><td class="fit pr-2">Type:</td><td id="detail-probe-type" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Population:</td><td id="detail-recording-type" class="grow"></td></tr>
+        <tr id="detail-datasets-row">
+          <td class="fit pr-2">Available in:</td><td id="detail-datasets-content" class="grow"></td>
+        </tr>
+      </table>
+      <br />
+      <div id="detail-description">...</div>
+      <br />
+      <table class="table table-sm table-striped table-hover table-bordered border-0">
+        <tr><td class="fit ml-1">Kind:</td><td id="detail-kind" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Keyed:</td><td id="detail-keyed" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Bug numbers:</td><td id="detail-bug-numbers" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Recorded in versions:</td><td id="detail-recording-range" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Recorded in processes:</td><td id="detail-processes" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Bucket count:</td><td id="detail-histogram-bucket-count" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Low:</td><td id="detail-histogram-low" class="grow"></td></tr>
+        <tr><td class="fit pr-2">High:</td><td id="detail-histogram-high" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Methods:</td><td id="detail-event-methods" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Objects:</td><td id="detail-event-objects" class="grow"></td></tr>
+        <tr><td class="fit pr-2">Extra keys:</td><td id="detail-event-extra-keys" class="grow"></td></tr>
+        <tr><td class="fit pr-2">C++ guard:</td><td id="detail-cpp-guard" class="grow"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- JS Files -->
+  <!-- JS: jQuery 3.2.1 -->
+  <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.3/js/tether.min.js"></script>
+  <!-- JS: Bootstrap -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+  <!-- JS: Custom Functions -->
+  <script type="text/javascript" src="explore.js"></script>
+  <!-- JS: Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <!-- JS: D3 Visualization -->
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+
+  <script src="../analytics/analytics.js"></script>
+</body>
+</html>

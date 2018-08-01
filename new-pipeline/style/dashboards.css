@@ -17,15 +17,12 @@
   color: white;
 }
 .big-dashboard-list .list-group-item .dashboard-description { font-size: 18px; }
-.scrollable-dashboard-list {
-  height: 600px;
-  overflow-y: auto;
-}
-.scrollable-dashboard-list .list-group-item {
+
+.dashboard-list .list-group-item {
   border: none;
   border-top: 1px solid #ddd;
 }
-.scrollable-dashboard-list .list-group-item:first-child { border-top: none; }
+.dashboard-list .list-group-item:first-child { border-top: none; }
 
 /* Dropdown style overrides */
 .multiselect {
@@ -43,6 +40,13 @@
     z-index: 1;
     top: 5px;
 }
+
+/** Max Width Setting For e10s **/
+#filter-e10s + .btn-group ul
+{
+    max-width: 10vw !important;
+}
+
 .multiselect .caret { display: none; }
 .multiselect-selected-text { text-decoration: underline; }
 .multiselect-group-clickable { border-top: 1px solid gray; }
@@ -119,10 +123,25 @@
 .mg-marker-text { font-size: 12px !important; }
 .mg-markers line { stroke-width: 2px !important; }
 
-#dist-caption {
-  font-size: 1.5em;
+.caption-div, .use-counter-div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
-  margin: 0.1em;
+  margin-bottom: 0;
+  font-size: medium;
+}
+
+.overflow {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+#dist-caption-link, #evo-caption-link, #use-counter-link {
+  color : black;
+  display: inline-block;
 }
 
 /* Error message styles */
@@ -134,4 +153,25 @@
 }
 .error-msg:empty {
   display: none;
+}
+
+/* Histogram statistics */
+.measure-headers, .measure-values {
+  font-size: 0.8em;
+}
+.measure-values td {
+  padding-left: 0.5em;
+  text-align: right;
+}
+.measure-headers th {
+  text-align: right;
+}
+
+/* Tabs for distribution and evolution views */
+.nav-tabs a.active{
+  color: black;
+}
+
+.nav-tabs a {
+  color: #7A7A7A;
 }

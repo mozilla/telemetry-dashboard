@@ -38,7 +38,7 @@ Where `parentEl` is:
 <body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-  <script src="https://telemetry.mozilla.org/new-pipeline/lib/metricsgraphics.js"></script>
+  <script src="https://telemetry.mozilla.org/new-pipeline/lib/metricsgraphics.min.js"></script>
   <script src="https://telemetry.mozilla.org/new-pipeline/lib/d3pie.min.js"></script>
   <script src="https://telemetry.mozilla.org/v2/telemetry.js"></script>
   <script src="https://telemetry.mozilla.org/wrapper/telemetry-wrapper.js"></script>

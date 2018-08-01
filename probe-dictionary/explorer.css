@@ -1,0 +1,161 @@
+
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+.navbar i.fa {
+    margin-right: 2px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.permalink-control button {
+    background: none;
+    cursor: pointer;
+    padding: 7.5px 8px;
+    line-height: 1.5;
+    color:rgba(255,255,255,.75);
+    font-weight: bold;
+    font-family: "Segoe UI", "Source Sans Pro", Calibri, Candara, Arial, sans-serif;
+}
+
+.permalink-control button:hover {
+    color : white;
+}
+
+#github-banner img {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 0;
+    z-index: 15;
+}
+
+#loading-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    background: #000;
+    opacity: 0.7;
+    filter: alpha(opacity=70);
+    z-index: 14;
+}
+
+#loading-overlay .progress {
+    width: 76%;
+    /*height: 10%;*/
+    height: 30px;
+    position: absolute;
+    top: 50%;
+    left: 12%;
+    border: 6px solid grey;
+}
+
+#loading-overlay .progress-bar {
+    width: 100%;
+    height: 100%;
+}
+
+#last-updated {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 80%;
+}
+
+#probe-filters {
+    font-size: 90%;
+}
+
+#probe-filters .form-control {
+    font-size: 90%;
+}
+
+#probe-detail-view {
+    padding-top: 20px;
+}
+
+#detail-probe-name {
+    display: inline;
+}
+
+#stats {
+    font-style: italic;
+    font-size: 90%;
+    margin-bottom: 10px;
+}
+
+#measurements {
+    padding-left: 0px !important;
+}
+
+#search-results-table {
+    width: 100%;
+}
+
+#search-results-table td {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.search-results-field-name,
+.search-results-field-description {
+    max-width: 400px;
+    min-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#search-results-table tr th:first-child {
+    background-color: white;
+    border: none;
+}
+
+#search-results-table tr td:first-child {
+    background-color: white;
+    border: none;
+}
+
+.code {
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
+    font-size: 85%;
+}
+
+.table td.fit,
+.table th.fit {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.table td.grow,
+.table th.grow {
+    white-space: nowrap;
+    width: 100%;
+}
+
+.hidden {
+    display: none;
+}
+
+#detail-cpp-guard:empty:after, #detail-bug-numbers:empty:after {
+    content: "none";
+    font-style: italic;
+}
+
+.nav-item {
+    font-weight: bold;
+}
+
+th {
+    position: sticky;
+    top: -1px;
+    background-color: #ECECEC;
+}
+
+#detail-probe-name {
+    overflow-wrap: break-word;
+}

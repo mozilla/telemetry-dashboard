@@ -16,6 +16,7 @@ body {
   padding: 7px;
   z-index: 10;
   position: fixed;
+  right: 0;
 }
 #weekly-dropdown {
   text-align: center;
@@ -98,11 +99,16 @@ td:nth-child(3) {
   display: none;
 }
 .pie-chart {
-  height: 500px;
+  height: 490px;
   margin-top: 20px;
 }
-#out-of-date-desc {
-  margin-top: 20px;
+#version-dist-chart {
+  height: 530px;
+}
+#out-of-date-desc,
+#not-min-reqs-desc {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 #not-min-reqs-desc {
   margin-bottom: 20px;
