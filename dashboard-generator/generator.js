@@ -82,6 +82,7 @@ window.addEventListener('load', function () {
       sensibleCompare: $('#sensible-compare').checked,
       evoVersions: $('#evo-radio').checked ? $('#evo-versions').value : 0,
       filters: undefined,
+      evoBucketIndex : $('#evo-radio').checked ? 0 : -1
     };
 
     // now to add the filters
@@ -265,6 +266,7 @@ window.addEventListener('load', function () {
           sensibleCompare: params['sensibleCompare'][i],
           evoVersions: params['evoVersions'][i],
           filters: params['filters'][i] ? JSON.parse(params['filters'][i]) : '',
+          evoBucketIndex:params['evoBucketIndexes'][i]
         };
         _dash.push(plot);
         addPlotToTable(plot);
@@ -283,7 +285,8 @@ window.addEventListener('load', function () {
     var sensibleCompares = [];
     var evoVersionses = [];
     var filterses = [];
-    _dash.forEach(plot => {
+    var evoBucketIndexes = [];
+    _dash.forEach((plot) => {
       channels.push(plot.channel);
       versions.push(plot.version || '');
       metrics.push(plot.metric);
@@ -294,6 +297,7 @@ window.addEventListener('load', function () {
       sensibleCompares.push(plot.sensibleCompare || false);
       evoVersionses.push(plot.evoVersions || 0);
       filterses.push(plot.filters ? JSON.stringify(plot.filters) : '');
+      evoBucketIndexes.push(plot.evoBucketIndex);
     });
 
     var queryString = '?' +
@@ -301,7 +305,8 @@ window.addEventListener('load', function () {
       `&metric=${metrics.join(';')}&useSubmissionDate=${useSubmissionDates.join(';')}` +
       `&sanitize=${sanitizes.join(';')}&trim=${trims.join(';')}` +
       `&compare=${compares.join(';')}&sensibleCompare=${sensibleCompares.join(';')}` +
-      `&evoVersions=${evoVersionses.join(';')}&filters=${filterses.join(';')}`;
+      `&evoVersions=${evoVersionses.join(';')}&filters=${filterses.join(';')}` +
+      `&evoBucketIndexes=${evoBucketIndexes.join(';')}`;
 
     if (!window.location.search) {
       return window.location.href + queryString;

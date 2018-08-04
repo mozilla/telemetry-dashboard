@@ -20,7 +20,6 @@ window.TelemetryWrapper = window.TelemetryWrapper || {};
  *  - evoVersions:int - show evolutions of values over the past `evoVersions` versions in `channel` starting at `version` instead of histograms
 */
 window.TelemetryWrapper.go = function (params, element) {
-
   Telemetry.init(function () {
     setDefaultParams(params);
 
@@ -353,7 +352,7 @@ window.TelemetryWrapper.go = function (params, element) {
     var percentileLabel = ' - medians'; // i18n?
     var valuesArePercent = false;
     if (kind == 'enumerated' || kind == 'boolean' || kind == 'flag') {
-      const BUCKET_INDEX_FOR_ENUMERATED = 0;
+      const BUCKET_INDEX_FOR_ENUMERATED = params.evoBucketIndex > 0 ? params.evoBucketIndex : 0;
       if (kind == 'boolean') {
         yLabel = desc + ' % FALSE'; // TODO: i18n
       } else {
