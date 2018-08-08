@@ -20,7 +20,6 @@ window.TelemetryWrapper = window.TelemetryWrapper || {};
  *  - evoVersions:int - show evolutions of values over the past `evoVersions` versions in `channel` starting at `version` instead of histograms
 */
 window.TelemetryWrapper.go = function (params, element) {
-
   Telemetry.init(function () {
     setDefaultParams(params);
 
@@ -353,14 +352,14 @@ window.TelemetryWrapper.go = function (params, element) {
     var percentileLabel = ' - medians'; // i18n?
     var valuesArePercent = false;
     if (kind == 'enumerated' || kind == 'boolean' || kind == 'flag') {
-      const BUCKET_INDEX_FOR_ENUMERATED = 0;
-      if (kind == 'boolean') {
+      const bucketIndex = params.evoBucketIndex > 0 ? params.evoBucketIndex : 0;
+      if (kind == 'boolean' && bucketIndex == 0) {
         yLabel = desc + ' % FALSE'; // TODO: i18n
       } else {
-        yLabel = desc + ' - bucket ' + BUCKET_INDEX_FOR_ENUMERATED; // i18n?
+        yLabel = desc + ' - bucket ' + bucketIndex; // i18n?
       }
       valueses = evolutions.map(evo =>
-        evo.map(hist => 100 * hist.values[BUCKET_INDEX_FOR_ENUMERATED] / hist.count
+        evo.map(hist => 100 * hist.values[(bucketIndex >= hist.values.length ? 0 : bucketIndex)] / hist.count
       ));
       valuesArePercent = true;
     } else {
