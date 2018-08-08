@@ -22,7 +22,7 @@ Where `params` is:
 * `keyLimit` - a positive integer limiting the number of a keyed measure's measures to be plotted, ordered by number of submissions (default: `4`)
 * `evoVersions` - A number telling us how many versions back to look. If > 0, we will ignore trim, compare, and sensibleCompare and show an evolution instead of a histogram (default: `0`)
 * `percentile` - A number telling us the value below which a given percentage of measurements may be found. This is only valid when evoVersions > 0 (default: `50`)
-* `evoBucketIndex` - The index denoting which bucket index to used to view an evolution for enumerated vendors. (default:0)
+* `evoBucketIndex` - The index denoting which bucket index to used to view an evolution for enumerated histograms. (default:0)
 
 Where `parentEl` is:
 * The parent element you want the wrapper to render its plots into.
