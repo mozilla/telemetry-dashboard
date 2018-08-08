@@ -353,13 +353,13 @@ window.TelemetryWrapper.go = function (params, element) {
     var valuesArePercent = false;
     if (kind == 'enumerated' || kind == 'boolean' || kind == 'flag') {
       const bucketIndex = params.evoBucketIndex > 0 ? params.evoBucketIndex : 0;
-      if (kind == 'boolean') {
+      if (kind == 'boolean' && bucketIndex == 0) {
         yLabel = desc + ' % FALSE'; // TODO: i18n
       } else {
         yLabel = desc + ' - bucket ' + bucketIndex; // i18n?
       }
       valueses = evolutions.map(evo =>
-        evo.map(hist => 100 * hist.values[bucketIndex] / hist.count
+        evo.map(hist => 100 * hist.values[(bucketIndex >= hist.values.length ? 0 : bucketIndex)] / hist.count
       ));
       valuesArePercent = true;
     } else {
