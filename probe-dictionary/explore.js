@@ -16,47 +16,6 @@ var gDatasetMappings = null;
 var gView = null;
 var gDetailViewId = null;
 
-$(document)
-  .ready(function () {
-    // Permalink control
-    $(".permalink-control input")
-      .hide()
-      .focus(function () {
-        // Workaround for broken selection: http://stackoverflow.com/questions/5797539
-        var $this = $(this);
-        $this.select()
-          .mouseup(function () {
-            $this.unbind("mouseup");
-            return false;
-          });
-      });
-    $(".permalink-control button")
-      .click(function () {
-        var $this = $(this);
-        $.ajax({
-          url: "https://api-ssl.bitly.com/v3/shorten",
-          dataType: "json",
-          data: {
-            longUrl: window.location.href,
-            access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
-            format: "json"
-          },
-          success: function (response) {
-            var shortUrl = response.data.url;
-            if (shortUrl.indexOf(":") === 4) {
-              shortUrl = "https" + shortUrl.substring(4);
-            }
-            $this.parents(".permalink-control")
-              .find("input")
-              .show()
-              .val(shortUrl)
-              .focus();
-          },
-          async:false
-        });
-        document.execCommand('copy');
-      });
-  });
 
 function mark(marker) {
   if (performance.mark) {
@@ -99,56 +58,103 @@ $(document).ready(function() {
     promiseGetJSON("datasets.json", ""),
   ];
 
-  Promise.all(loads).then(values => {
-    mark("all json loaded");
-    [gGeneralData, gRevisionsData, gProbeData, gEnvironmentData, gSimpleMeasurementsData, gDatasetMappings] = values;
-
-    extractChannelInfo();
-    processOtherFieldData(gEnvironmentData);
-    processOtherFieldData(gSimpleMeasurementsData);
-    renderVersions();
-    loadURIData();
-    update();
-
-    mark("updated site");
-
-    // Tab change events.
-    $('a[data-toggle="tab"]').on('show.bs.tab', tabChange);
-    $('a[data-toggle="tab"]').on('shown.bs.tab', updateSearchParams);
-
-    // Search view events.
-    $("#select_constraint").change(update);
-    $("#select_version").change(update);
-    $("#select_version").keyup(update);
-    $("#select_channel").change(update);
-    $("#optout").change(update);
-    $("#search_constraint").change(update);
-    $(window).on('popstate', loadURIData);
-
-    var delaySearch = makeDelay(50);
-    $("#text_search").keyup(() => delaySearch(update));
-
-    // Add detail view events.
-    $(document).keyup(e => {
-      // Catch Escape key presses.
-      if ((e.which == 27) && gDetailViewId) {
-        hideDetailView();
-      }
-    });
-    $("#close-detail-view").click(() => {
-      hideDetailView();
-    });
-
-    // Add when the data was last updated.
-    let date = new Date(gGeneralData.lastUpdate);
-    $("#last-updated-date").text(date.toDateString());
-
-    $("#loading-overlay").addClass("hidden");
-    mark("done");
-  }, e => {
-    console.log("caught", e);
-  });
+  Promise.all(loads)
+         .then(values => initializePage(values))
+         .catch(e => console.log("caught", e));
 });
+
+function initializePage(values) {
+  mark("all json loaded");
+  [gGeneralData, gRevisionsData, gProbeData, gEnvironmentData, gSimpleMeasurementsData, gDatasetMappings] = values;
+
+  extractChannelInfo();
+  processOtherFieldData(gEnvironmentData);
+  processOtherFieldData(gSimpleMeasurementsData);
+  renderVersions();
+  loadURIData();
+  update();
+
+  mark("updated site");
+
+  // Tab change events.
+  $('a[data-toggle="tab"]').on('show.bs.tab', tabChange);
+  $('a[data-toggle="tab"]').on('shown.bs.tab', updateSearchParams);
+
+  // Search view events.
+  $("#select_constraint").change(update);
+  $("#select_version").change(update);
+  $("#select_version").keyup(update);
+  $("#select_channel").change(update);
+  $("#optout").change(update);
+  $("#search_constraint").change(update);
+  $(window).on('popstate', loadURIData);
+
+  var delaySearch = makeDelay(50);
+  $("#text_search").keyup(() => delaySearch(update));
+
+  // Add detail view events.
+  $(document).keyup(e => {
+    // Catch Escape key presses.
+    if ((e.which == 27) && gDetailViewId) {
+      hideDetailView();
+    }
+  });
+  $("#close-detail-view").click(() => {
+    hideDetailView();
+  });
+
+  // Add when the data was last updated.
+  let date = new Date(gGeneralData.lastUpdate);
+  $("#last-updated-date").text(date.toDateString());
+
+  $("#loading-overlay").addClass("hidden");
+
+  initializeShortlink();
+
+  mark("init done");
+}
+
+function initializeShortlink() {
+  $(".permalink-control input").hide().focus(function () {
+    // Workaround for broken selection: http://stackoverflow.com/questions/5797539
+    var $this = $(this);
+    $this.select().mouseup(function () {
+      $this.unbind("mouseup");
+      return false;
+    });
+  });
+
+  $(".permalink-control button").click(function () {
+    var $this = $(this);
+    $.ajax({
+      url: "https://api-ssl.bitly.com/v3/shorten",
+      dataType: "json",
+      data: {
+        longUrl: window.location.href,
+        access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
+        format: "json"
+      },
+      success: function (response) {
+        var shortUrl = response.data.url;
+        if (!shortUrl) {
+          console.error("failed to get shortUrl");
+          return;
+        }
+        if (shortUrl.indexOf(":") === 4) {
+          shortUrl = "https" + shortUrl.substring(4);
+        }
+        $this.parents(".permalink-control")
+          .find("input")
+          .show()
+          .val(shortUrl)
+          .focus();
+      },
+      async: false
+    });
+
+    document.execCommand('copy');
+  });
+}
 
 function extractChannelInfo() {
   var result = {};
@@ -431,6 +437,10 @@ function shortVersion(v) {
   return v.split(".")[0];
 }
 
+function getLatestVersion(channel) {
+  return Math.max(...Object.keys(gChannelInfo[channel].versions));
+}
+
 /**
  * Return a human readable description of from when to when a probe is recorded.
  * This can return "never", "from X to Y" or "from X" for non-expiring probes.
@@ -455,7 +465,7 @@ function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
   }
 
   const expiry = last(history).expiry_version;
-  const latestVersion = Math.max.apply(null, Object.keys(gChannelInfo[channel].versions));
+  const latestVersion = getLatestVersion(channel);
   const firstVersion = getVersionRange(channel, last(history).revisions).first;
   let lastVersion = getVersionRange(channel, history[0].revisions).last;
 
@@ -465,12 +475,25 @@ function friendlyRecordingRangeForHistory(history, channel, filterPrerelease) {
 
   if (expiry != "never") {
     const expiryVersion = parseInt(shortVersion(expiry));
-    if (lastVersion >= expiryVersion) {
+    if ((lastVersion >= expiryVersion) || (lastVersion >= latestVersion)) {
       lastVersion = expiryVersion - 1;
     }
   }
 
   return `${firstVersion} to ${lastVersion}`;
+}
+
+function friendlyExpiryDescriptionForHistory(history, channel) {
+  let expiry = history[0].expiry_version || "never";
+  if (expiry == "never") {
+    return "never expires";
+  }
+
+  const expiryVersion = parseInt(shortVersion(expiry));
+  let latestVersion = getLatestVersion(channel);
+  let alreadyExpired = (latestVersion >= expiryVersion);
+
+  return `${alreadyExpired ? "stopped" : "will stop"} recording in ${expiry}`;
 }
 
 function renderMeasurements(measurements) {
@@ -479,13 +502,29 @@ function renderMeasurements(measurements) {
   var items = [];
 
   var rawColumns = [
-    ["", (d, h, c) => '<span class="btn btn-outline-secondary btn-sm">+<span>'],
-    ["name", (d, h, c) => d.name],
-    ["type", (d, h, c) => d.type],
-    ["population", (d, h, c) => h.optout ? "release" : "prerelease"],
-    ["recorded", (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false)],
+    ["", {
+      content: (d, h, c) => '<span class="btn btn-outline-secondary btn-sm">+<span>',
+    }],
+    ["name", {
+      content: (d, h, c) => d.name,
+    }],
+    ["type", {
+      content: (d, h, c) => d.type,
+    }],
+    ["population", {
+      content: (d, h, c) => h.optout ? "release" : "prerelease",
+      tooltip: "Whether this probe collected on Firefox release or only on " +
+               "prerelease channels."
+    }],
+    ["recorded", {
+      content: (d, h, c, history) => friendlyRecordingRangeForHistory(history, c, false),
+      tooltip: "What versions this probe is actually recorded in. This depends on " +
+               "when the probe was added, removed and its expiry.",
+    }],
     // TODO: overflow should cut off
-    ["description", (d, h, c) => escapeHtml(h.description)],
+    ["description", {
+      content: (d, h, c) => escapeHtml(h.description),
+    }],
   ];
 
   var columns = new Map(rawColumns);
@@ -496,37 +535,37 @@ function renderMeasurements(measurements) {
   var name = probeId => probeId.split("/")[1];
   var sortedProbeKeys = Object.keys(measurements)
                               .sort((a, b) => name(a).toLowerCase().localeCompare(name(b).toLowerCase()));
-  sortedProbeKeys.forEach(id => {
+  for (var id of sortedProbeKeys) {
     var data = measurements[id];
-    for (let [channel, history] of Object.entries(data.history)) {
-      // TODO: Why do we include the following in the filtering stage? Fix this.
-      // Only show channels that we should show now.
-      if ((selectedChannel !== "any") && (channel !== selectedChannel)) {
-        continue;
-      }
-      if (channel == "aurora") {
-        continue;
-      }
-      // When not filtering by channel, it's confusing to show multiple rows for each probe (one for each channel).
-      // The short-term hack here to improve this is to only show the release channel state.
-      // TODO: solve this better.
-      if ((selectedChannel === "any") && (channel !== "release")) {
-        continue;
-      }
-      // Don't show pre-release measurements for the release channel.
-      if (!history[0].optout && (channel == "release") && (selectedChannel !== "any")) {
-        continue;
-      }
 
-      var cells = [...columns.entries()].map(([field, fn]) => {
-        var d = fn(data, history[0], channel, history);
-        return `<td class="search-results-field-${field}">${d}</td>`;
-      });
-      table += `<tr onclick="showDetailView(this); return false;" probeid="${id}" channel="${channel}">`;
-      table += cells.join("");
-      table += `</tr>`;
+    // If a specific channel is selected, skip probes that are not on it.
+    if ((selectedChannel !== "any") && !(selectedChannel in data.history)) {
+      continue;
     }
-  });
+
+    // If a specific channel is selected, use the history from that channel.
+    // If searching on "any" channel, use the first applicable channel for the probe.
+    // Doing this allows us to also see probes whose state hasn't propagated to release yet.
+    var channel = selectedChannel;
+    if (selectedChannel === "any") {
+      channel = ["release", "beta", "nightly"].find(c => c in data.history);
+    }
+    var history = data.history[channel];
+
+    // Don't show pre-release measurements for the release channel.
+    if (!history[0].optout && (channel == "release") && (selectedChannel !== "any")) {
+      continue;
+    }
+
+    // Render entry into a search results row.
+    var cells = [...columns.entries()].map(([field, entry]) => {
+      var d = entry.content(data, history[0], channel, history);
+      return `<td class="search-results-field-${field}" title="${entry.tooltip || ""}">${d}</td>`;
+    });
+    table += `<tr onclick="showDetailView(this); return false;" probeid="${id}" channel="${channel}">`;
+    table += cells.join("");
+    table += `</tr>`;
+  }
 
   table += "</table>";
   items.push(table);
@@ -859,15 +898,19 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
   $('#detail-recording-type').text(state.optout ? "release" : "prerelease");
   $('#detail-description').text(state.description);
 
-  // Recording range
+  // Recording range and expiry.
   let rangeText = [];
+  let expiryText = [];
   for (let [ch, history] of Object.entries(probe.history)) {
     if ((!history[0].optout && (ch == "release")) || (ch == "aurora")) {
       continue;
     }
+
     rangeText.push(`${ch} ${friendlyRecordingRangeForHistory(history, ch, true)}`);
+    expiryText.push(`${ch} ${friendlyExpiryDescriptionForHistory(history, ch)}`);
   }
   $('#detail-recording-range').html(rangeText.join("<br/>"));
+  $('#detail-expiry').html(expiryText.join("<br/>"));
 
   // Apply dataset infos.
   var datasetInfos = getDatasetInfos(probeId, channel, state);
