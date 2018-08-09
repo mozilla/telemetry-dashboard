@@ -82,7 +82,7 @@ window.addEventListener('load', function () {
       sensibleCompare: $('#sensible-compare').checked,
       evoVersions: $('#evo-radio').checked ? $('#evo-versions').value : 0,
       filters: undefined,
-      evoBucketIndex: $('#evo-radio').checked ? 0 : -1
+      evoBucketIndex: $('#evo-radio').checked ? $('#evo-bucketindex').value : -1
     };
 
     // now to add the filters
@@ -316,8 +316,8 @@ window.addEventListener('load', function () {
   }
 
   function updatePostData() {
-    const BASE_URL = 'https://telemetry.mozilla.org/';
-
+    //const BASE_URL = 'https://telemetry.mozilla.org/';
+    const BASE_URL = ' https://ab0092.github.io/telemetry-dashboard/';
     const EXTERNAL_CSS = '' +
       BASE_URL + 'new-pipeline/style/metricsgraphics.css;' +
       BASE_URL + 'wrapper/telemetry-wrapper.css';
