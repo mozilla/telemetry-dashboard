@@ -413,6 +413,9 @@ function updateAggregates(kind, buckets) {
 
   // Load aggregates from state on first load
   let aggregates = gInitialPageState.aggregates
+                    .filter((aggregate)=>{
+                      return newAggregates.filter((newaggregate)=> newaggregate[1] == aggregate).length > 0
+                    })
                     .map((aggregate)=> { 
                       // re-map aggregate values to back to keys  
                       return newAggregates.find((newaggregate)=> newaggregate[1] == aggregate)[0]
