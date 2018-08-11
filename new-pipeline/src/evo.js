@@ -412,8 +412,11 @@ function updateAggregates(kind, buckets) {
   }
 
   // Load aggregates from state on first load
-  newAggregates = newAggregates.map(entry => entry[0]);
-  let aggregates = gInitialPageState.aggregates.filter(aggregate => newAggregates.includes(aggregate));
+  let aggregates = gInitialPageState.aggregates
+                    .map((aggregate)=> { 
+                      // re-map aggregate values to back to keys  
+                      return newAggregates.find((newaggregate)=> newaggregate[1] == aggregate)[0]
+                    });
   if (!gLoadedAggregatesFromState && aggregates.length > 0) {
     gLoadedAggregatesFromState = true;
     $("#aggregates")
@@ -921,10 +924,14 @@ function saveStateToUrlAndCookie() {
     cumulative = gInitialPageState.cumulative,
     trim = gInitialPageState.trim,
     sortKeys = gInitialPageState.sort_keys,
-    selectedKeys = gInitialPageState.keys;
+    selectedKeys = gInitialPageState.keys,
+    aggregateOptions = $("#aggregates option"),
+    // Get Aggregate Values instead of keys to save 
+    // in the state url to increase readability
+    aggregateValues = $("#aggregates").val()
+                      .map((v)=> aggregateOptions.filter((i,e)=> e.value == v )[0].innerText);
   gInitialPageState = {
-    aggregates: $("#aggregates")
-      .val() || [],
+    aggregates:  aggregateValues || [],
     measure: $("#measure")
       .val(),
     min_channel_version: $("#min-channel-version")

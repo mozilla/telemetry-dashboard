@@ -228,7 +228,7 @@ function loadStateFromUrlAndCookie() {
       .filter(function (v) {
         return ["5th-percentile", "25th-percentile", "median",
             "75th-percentile", "95th-percentile", "mean", "submissions"].indexOf(v) >= 0 ||
-          v.startsWith("bucket-");
+            !v.startsWith("bucket-");
       });
     if (aggregates.length > 0) {
       pageState.aggregates = aggregates;
