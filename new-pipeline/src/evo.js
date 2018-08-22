@@ -941,9 +941,9 @@ function saveStateToUrlAndCookie() {
     // Get Aggregate Values instead of keys to save 
     // in the state url to increase readability
     aggregateValues = $("#aggregates").val()
-                      .map((v)=> aggregateOptions.filter((i, e)=> e.value == v )[0].innerText);
+                      .map((v) => aggregateOptions.filter((i, e) => e.value == v)[0].innerText);
   gInitialPageState = {
-    aggregates:  aggregateValues || [],
+    aggregates: aggregateValues || [],
     measure: $("#measure")
       .val(),
     min_channel_version: $("#min-channel-version")
