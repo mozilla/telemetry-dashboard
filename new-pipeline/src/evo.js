@@ -413,12 +413,21 @@ function updateAggregates(kind, buckets) {
 
   // Load aggregates from state on first load
   let aggregates = gInitialPageState.aggregates
-                    .filter((aggregate)=>{
-                      return newAggregates.filter((newaggregate)=> newaggregate[1] == aggregate).length > 0
+                    .filter((aggregate) => {
+                      return newAggregates
+                              .filter((newaggregate) => { 
+                                /* 
+                                  Both index values are being checked to implement backward compatibility
+                                  newaggregate[1] contains aggregate values so being checked for values in the URL
+                                  newaggregate[0] contains aggregate keys so being checked for old URL values which may contain keys
+                                */
+                                return (newaggregate[1] == aggregate || newaggregate[0] == aggregate);
+                              }).length > 0
                     })
-                    .map((aggregate)=> { 
-                      // re-map aggregate values to back to keys  
-                      return newAggregates.find((newaggregate)=> newaggregate[1] == aggregate)[0]
+                    .map((aggregate) => { 
+                      return newAggregates.find((newaggregate) => {
+                          return (newaggregate[1] == aggregate || newaggregate[0] == aggregate);
+                          })[0]
                     });
   if (!gLoadedAggregatesFromState && aggregates.length > 0) {
     gLoadedAggregatesFromState = true;
@@ -932,7 +941,7 @@ function saveStateToUrlAndCookie() {
     // Get Aggregate Values instead of keys to save 
     // in the state url to increase readability
     aggregateValues = $("#aggregates").val()
-                      .map((v)=> aggregateOptions.filter((i,e)=> e.value == v )[0].innerText);
+                      .map((v)=> aggregateOptions.filter((i, e)=> e.value == v )[0].innerText);
   gInitialPageState = {
     aggregates:  aggregateValues || [],
     measure: $("#measure")
