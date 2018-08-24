@@ -199,7 +199,7 @@ $(function () {
               var latestChannelVersion = Infinity;
               if (channel === "nightly") {
                 latestChannelVersion = latestNightlyVersion;
-              } else if (channel === "aurora") {
+              } else if (channel === "dev edition") {
                 latestChannelVersion = latestNightlyVersion - 1;
               } else if (channel === "beta") {
                 latestChannelVersion = latestNightlyVersion - 2;
