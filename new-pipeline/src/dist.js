@@ -80,6 +80,9 @@ $(function () {
     $("input[name=sanitize-toggle]")
       .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
+      $("input[name=include-spill-toggle]")
+      .prop("checked", gInitialPageState.include_spill > 0)
+      .trigger("change");
 
     updateOptions(function () {
       if (gInitialPageState.product !== null) {
@@ -250,7 +253,6 @@ $(function () {
                 if (getAggregate === undefined) {
                   throw "Could not obtain aggregate function"
                 };
-
                 gCurrentHistogramsList = Object.keys(
                     histogramsMap)
                   .map(function (label) {
@@ -335,7 +337,7 @@ $(function () {
         });
 
       $(
-          "#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle]"
+          "#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle], input[name=include-spill-toggle]"
         )
         .change(function (e) {
           if (gCurrentHistogramsList.length > 1) { // Keyed histogram with multiple keys, find the selected keys
@@ -359,12 +361,13 @@ $(function () {
               }
             });
           } else { // Non-keyed histogram or a keyed histogram with only one key
-            var histogramsList = gCurrentHistogramsList;
+            var histogramsList = makenewHistogramListCopy(gCurrentHistogramsList);
           }
           displayHistograms(histogramsList, gCurrentDates,
             $("input[name=table-toggle]").is(':checked'),
             $("input[name=cumulative-toggle]").is(':checked'),
-            $("input[name=trim-toggle]").is(':checked')
+            $("input[name=trim-toggle]").is(':checked'),
+            $("input[name=include-spill-toggle]").is(':checked')
           );
           saveStateToUrlAndCookie();
         });
@@ -788,9 +791,18 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   }
 }
 
-function displayHistograms(histogramsList, dates, useTable, cumulative, trim) {
+function displayHistograms(histogramsList, dates, useTable, cumulative, trim, includeSpill) {
   cumulative = cumulative === undefined ? false : cumulative;
   trim = trim === undefined ? true : trim;
+
+  if(!includeSpill)// Hide the 'spill' related data
+  {
+    const spillindex = histogramsList[0].histograms[0].buckets.indexOf("spill");
+    histogramsList[0].histograms[0].buckets = histogramsList[0].histograms[0].buckets
+                                            .filter((value, index) => index !== spillindex);
+    histogramsList[0].histograms[0].values = histogramsList[0].histograms[0].values
+                                            .filter((value, index) => index !== spillindex);
+  }
 
   var minTrimLeft = 0,
     minTrimRight = 0,
@@ -1640,6 +1652,8 @@ function saveStateToUrlAndCookie() {
       .format("YYYY-MM-DD"),
     end_date: moment(picker.endDate)
       .format("YYYY-MM-DD"),
+    include_spill: $("input[name=include-spill-toggle]")
+    .is(":checked") ? 1 : 0
   };
 
   // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
@@ -1869,4 +1883,25 @@ function saveStateToUrlAndCookie() {
 
 function isHistogramsListKeyed(histogramsList) {
   return histogramsList.some(entry => entry.title !== "");
+}
+
+function makenewHistogramListCopy(histogramlist) {
+ return histogramlist.map((item) => {
+    return {
+      title: item.title,
+      histograms: item.histograms.map((histogram) => {
+        // Creating a new deep Copy of histogram to keep original data unchanged
+        const newHistCopy = Object.create(histogram);
+        newHistCopy.buckets = histogram.buckets.slice(0);
+        newHistCopy.count = histogram.count;
+        newHistCopy.description = histogram.description;
+        newHistCopy.kind = histogram.kind;
+        newHistCopy.measure = histogram.measure;
+        newHistCopy.submissions = histogram.submissions;
+        newHistCopy.sum = histogram.sum;
+        newHistCopy.values = histogram.values.slice(0);
+        return newHistCopy;
+      })
+    }
+  });
 }
