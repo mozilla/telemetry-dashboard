@@ -21,19 +21,19 @@ $(function () {
       "child": $("#filter-process-type"),
     };
     gAxesList = [
-    $("#distribution1")
-      .get(0), $("#distribution2")
-      .get(0),
-    $("#distribution3")
-      .get(0), $("#distribution4")
-      .get(0),
-  ];
+      $("#distribution1")
+        .get(0), $("#distribution2")
+          .get(0),
+      $("#distribution3")
+        .get(0), $("#distribution4")
+          .get(0),
+    ];
     gAxesSelectors = [
-    $("#selected-key1"),
-    $("#selected-key2"),
-    $("#selected-key3"),
-    $("#selected-key4"),
-  ]
+      $("#selected-key1"),
+      $("#selected-key2"),
+      $("#selected-key3"),
+      $("#selected-key4"),
+    ]
     gInitialPageState = loadStateFromUrlAndCookie();
 
     // Set up settings selectors
@@ -65,7 +65,7 @@ $(function () {
     // Initialize setting values from the page state
     $("#sort-keys")
       .multiselect("select", gInitialPageState.sort_keys);
-      $("input[name=table-toggle]")
+    $("input[name=table-toggle]")
       .prop("checked", gInitialPageState.table !== 0)
       .trigger("change");
     $("input[name=cumulative-toggle]")
@@ -80,7 +80,7 @@ $(function () {
     $("input[name=sanitize-toggle]")
       .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
-      $("input[name=include-spill-toggle]")
+    $("input[name=include-spill-toggle]")
       .prop("checked", gInitialPageState.include_spill > 0)
       .trigger("change");
 
@@ -122,7 +122,7 @@ $(function () {
       for (var filterName in gFilters) {
         var selector = gFilters[filterName];
         if (["filter-product", "filter-os"].indexOf(selector.attr(
-            "id")) >= 0) { // Only apply the select all change to the product and OS selector
+          "id")) >= 0) { // Only apply the select all change to the product and OS selector
           var selected = selector.val() || [],
             options = selector.find("option");
           gPreviousFilterAllSelected[selector.attr("id")] =
@@ -148,197 +148,197 @@ $(function () {
         "#filter-process-type",
         "#compare",
       ].join(",")).change(function (e) {
-          var $this = $(this);
-          if (gFilterChangeTimeout !== null) {
-            clearTimeout(gFilterChangeTimeout);
-          }
-          gFilterChangeTimeout = setTimeout(function () { // Debounce the changes to prevent rapid filter changes from causing too many updates
-            if (["filter-product", "filter-os"].indexOf($this
-                .attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
-              // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
-              var selected = $this.val() || [],
-                options = $this.find("option");
-              if (selected.length !== options.length &&
-                selected.length > 0 &&
-                gPreviousFilterAllSelected[$this.attr("id")]) {
-                var nonSelectedOptions = options.map(function (
-                    i, option) {
-                    return option.getAttribute("value");
-                  })
-                  .toArray()
-                  .filter(function (filterOption) {
-                    return selected.indexOf(filterOption) <
-                      0;
-                  });
-                $this.multiselect("deselectAll")
-                  .multiselect("select", nonSelectedOptions);
-              }
-              gPreviousFilterAllSelected[$this.attr("id")] =
-                selected.length === options.length; // Store state
-            }
-            updateOSs();
-
-            calculateHistograms(function (histogramsMap,
-                evolutionsMap) {
-                // histogramsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of histograms (one per comparison option, so each histogram in a list has the same buckets)
-                // evolutionsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of evolutions (one per comparison option, so each evolution in a list has the same dates)
-
-                // Get the set union of all the dates in all the evolutions
-                var datesMap = {};
-                for (var label in evolutionsMap) {
-                  evolutionsMap[label][0].dates()
-                    .forEach(function (date) {
-                      datesMap[date.getTime()] = true;
-                    });
-                }
-                gCurrentDates = Object.keys(datesMap)
-                  .map(function (dateString) {
-                    return new Date(parseInt(dateString));
-                  })
-                  .sort(function (a, b) {
-                    return a - b;
-                  });
-
-                // Set up key selectors, selecting the previously selected key if it still exists and the first key otherwise
-                var getAggregate = { // Function to get an aggregate for a list of histograms, used for sorting later
-                  "submissions": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.count;
-                    }, 0);
-                  },
-                  "mean": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.mean();
-                    }, 0) / histograms.length;
-                  },
-                  "5th-percentile": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.percentile(
-                        5);
-                    }, 0) / histograms.length;
-                  },
-                  "25th-percentile": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.percentile(
-                        25);
-                    }, 0) / histograms.length;
-                  },
-                  "median": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.percentile(
-                        50);
-                    }, 0) / histograms.length;
-                  },
-                  "75th-percentile": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.percentile(
-                        75);
-                    }, 0) / histograms.length;
-                  },
-                  "95th-percentile": function (histograms) {
-                    return histograms.reduce(function (
-                      total, histogram) {
-                      return total + histogram.percentile(
-                        95);
-                    }, 0) / histograms.length;
-                  },
-                }[$("#sort-keys")
-                  .val()];
-                if (getAggregate === undefined) {
-                  throw "Could not obtain aggregate function"
-                };
-                gCurrentHistogramsList = Object.keys(
-                    histogramsMap)
-                  .map(function (label) {
-                    return {
-                      title: label,
-                      histograms: histogramsMap[label]
-                    };
-                  })
-                  .sort(function (entry1, entry2) { // Sort by the desired aggregate
-                    return getAggregate(entry2.histograms) -
-                      getAggregate(entry1.histograms);
-                  });
-
-                var keys = gCurrentHistogramsList.map(
-                  function (entry) {
-                    return entry.title;
-                  });
-                var options = getHumanReadableOptions("key",
-                  keys);
-                gAxesSelectors.forEach(function (selector,
-                  i) {
-                  multiselectSetOptions(selector,
-                    options.concat([[gNoneKey,
-                      "(none)"]]));
-
-                  // If the recalculation was done as a result of resorting keys, reset the keys to the top 4
-                  if ($this.attr("id") === "sort-keys") {
-                    gInitialPageState.keys = options.map(
-                        function (option) {
-                          return option[0]
-                        })
-                      .filter(function (value, i) {
-                        return i < 4;
-                      });
-                  }
-
-                  // There is a bug in bootstrap-multiselect where, upon selection when existing items are selected,
-                  // the existing item's radio button does not become deselected - we work around this by manually clearing
-                  // all the buttons, which works pretty well
-                  selector.multiselect("deselectAll",
-                      false)
-                    .next()
-                    .find("input[type=radio]")
-                    .attr("checked", false);
-
-                  // Select i-th key if possible, otherwise none
-                  if (i < options.length) {
-                    selector.multiselect("select",
-                      options[i][0]);
-                  } else {
-                    selector.multiselect("select",
-                      gNoneKey);
-                  }
+        var $this = $(this);
+        if (gFilterChangeTimeout !== null) {
+          clearTimeout(gFilterChangeTimeout);
+        }
+        gFilterChangeTimeout = setTimeout(function () { // Debounce the changes to prevent rapid filter changes from causing too many updates
+          if (["filter-product", "filter-os"].indexOf($this
+            .attr("id")) >= 0) { // Only apply the select all change to the product and OS selector
+            // If options (but not all options) were deselected when previously all options were selected, invert selection to include only those deselected
+            var selected = $this.val() || [],
+              options = $this.find("option");
+            if (selected.length !== options.length &&
+              selected.length > 0 &&
+              gPreviousFilterAllSelected[$this.attr("id")]) {
+              var nonSelectedOptions = options.map(function (
+                i, option) {
+                return option.getAttribute("value");
+              })
+                .toArray()
+                .filter(function (filterOption) {
+                  return selected.indexOf(filterOption) <
+                    0;
                 });
-                if (gInitialPageState.keys) { // Reselect previously selected keys
-                  gInitialPageState.keys.forEach(function (
-                    key, i) {
-                    if (key !== gNoneKey) {
-                      // Check to make sure the key can actually still be selected
-                      if (gAxesSelectors[i].find(
-                          "option")
-                        .filter(function (i, option) {
-                          return $(option)
-                            .val() === key;
-                        })
-                        .length > 0) {
-                        gAxesSelectors[i].next()
-                          .find("input[type=radio]")
-                          .attr("checked", false);
-                        gAxesSelectors[i].multiselect(
-                          "select", key);
-                      }
-                    }
-                  });
-                }
+              $this.multiselect("deselectAll")
+                .multiselect("select", nonSelectedOptions);
+            }
+            gPreviousFilterAllSelected[$this.attr("id")] =
+              selected.length === options.length; // Store state
+          }
+          updateOSs();
 
-                $("#selected-key1")
-                  .trigger("change");
-                }, $("input[name=sanitize-toggle]")
-                .is(":checked"));
+          calculateHistograms(function (histogramsMap,
+            evolutionsMap) {
+            // histogramsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of histograms (one per comparison option, so each histogram in a list has the same buckets)
+            // evolutionsMap is a mapping from keyed histogram keys (or "" if not a keyed histogram) to lists of evolutions (one per comparison option, so each evolution in a list has the same dates)
+
+            // Get the set union of all the dates in all the evolutions
+            var datesMap = {};
+            for (var label in evolutionsMap) {
+              evolutionsMap[label][0].dates()
+                .forEach(function (date) {
+                  datesMap[date.getTime()] = true;
+                });
+            }
+            gCurrentDates = Object.keys(datesMap)
+              .map(function (dateString) {
+                return new Date(parseInt(dateString));
+              })
+              .sort(function (a, b) {
+                return a - b;
+              });
+
+            // Set up key selectors, selecting the previously selected key if it still exists and the first key otherwise
+            var getAggregate = { // Function to get an aggregate for a list of histograms, used for sorting later
+              "submissions": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.count;
+                }, 0);
+              },
+              "mean": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.mean();
+                }, 0) / histograms.length;
+              },
+              "5th-percentile": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.percentile(
+                    5);
+                }, 0) / histograms.length;
+              },
+              "25th-percentile": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.percentile(
+                    25);
+                }, 0) / histograms.length;
+              },
+              "median": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.percentile(
+                    50);
+                }, 0) / histograms.length;
+              },
+              "75th-percentile": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.percentile(
+                    75);
+                }, 0) / histograms.length;
+              },
+              "95th-percentile": function (histograms) {
+                return histograms.reduce(function (
+                  total, histogram) {
+                  return total + histogram.percentile(
+                    95);
+                }, 0) / histograms.length;
+              },
+            }[$("#sort-keys")
+              .val()];
+            if (getAggregate === undefined) {
+              throw "Could not obtain aggregate function"
+            };
+            gCurrentHistogramsList = Object.keys(
+              histogramsMap)
+              .map(function (label) {
+                return {
+                  title: label,
+                  histograms: histogramsMap[label]
+                };
+              })
+              .sort(function (entry1, entry2) { // Sort by the desired aggregate
+                return getAggregate(entry2.histograms) -
+                  getAggregate(entry1.histograms);
+              });
+
+            var keys = gCurrentHistogramsList.map(
+              function (entry) {
+                return entry.title;
+              });
+            var options = getHumanReadableOptions("key",
+              keys);
+            gAxesSelectors.forEach(function (selector,
+              i) {
+              multiselectSetOptions(selector,
+                options.concat([[gNoneKey,
+                  "(none)"]]));
+
+              // If the recalculation was done as a result of resorting keys, reset the keys to the top 4
+              if ($this.attr("id") === "sort-keys") {
+                gInitialPageState.keys = options.map(
+                  function (option) {
+                    return option[0]
+                  })
+                  .filter(function (value, i) {
+                    return i < 4;
+                  });
+              }
+
+              // There is a bug in bootstrap-multiselect where, upon selection when existing items are selected,
+              // the existing item's radio button does not become deselected - we work around this by manually clearing
+              // all the buttons, which works pretty well
+              selector.multiselect("deselectAll",
+                false)
+                .next()
+                .find("input[type=radio]")
+                .attr("checked", false);
+
+              // Select i-th key if possible, otherwise none
+              if (i < options.length) {
+                selector.multiselect("select",
+                  options[i][0]);
+              } else {
+                selector.multiselect("select",
+                  gNoneKey);
+              }
+            });
+            if (gInitialPageState.keys) { // Reselect previously selected keys
+              gInitialPageState.keys.forEach(function (
+                key, i) {
+                if (key !== gNoneKey) {
+                  // Check to make sure the key can actually still be selected
+                  if (gAxesSelectors[i].find(
+                    "option")
+                    .filter(function (i, option) {
+                      return $(option)
+                        .val() === key;
+                    })
+                    .length > 0) {
+                    gAxesSelectors[i].next()
+                      .find("input[type=radio]")
+                      .attr("checked", false);
+                    gAxesSelectors[i].multiselect(
+                      "select", key);
+                  }
+                }
+              });
+            }
+
+            $("#selected-key1")
+              .trigger("change");
+          }, $("input[name=sanitize-toggle]")
+            .is(":checked"));
         }, 0);
-        });
+      });
 
       $(
-          "#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle], input[name=include-spill-toggle]"
-        )
+        "#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle], input[name=include-spill-toggle]"
+      )
         .change(function (e) {
           if (gCurrentHistogramsList.length > 1) { // Keyed histogram with multiple keys, find the selected keys
             var histogramsList = [];
@@ -492,7 +492,7 @@ function calculateHistograms(callback, sanitize) {
         useSubmissionDate,
         function (evolutionMap) {
           if (asyncOperationWasInterrupted("calculateHistograms",
-              operation)) { // Don't call callback if this isn't the latest invocation of the function
+            operation)) { // Don't call callback if this isn't the latest invocation of the function
             return;
           }
 
@@ -589,18 +589,18 @@ function calculateHistograms(callback, sanitize) {
                               getHumanReadableOptions(
                                 comparisonName, [
                                   filteredOptionValues[i]])[0][
-                                1];
+                              1];
                             histogram.measure =
                               humanReadableOption;
                           }
                           return histogram;
                         })
-                        .sort(function (histogram1, histogram2) {
-                          return histogram1.measure <
-                            histogram2.measure ?
-                            -1 : (histogram1.measure >
-                              histogram2.measure ? 1 : 0);
-                        });
+                          .sort(function (histogram1, histogram2) {
+                            return histogram1.measure <
+                              histogram2.measure ?
+                              -1 : (histogram1.measure >
+                                histogram2.measure ? 1 : 0);
+                          });
                     }
                   }
                   callback(filteredHistogramsMap,
@@ -624,7 +624,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   shouldUpdateRangebar = shouldUpdateRangebar === undefined ? true :
     shouldUpdateRangebar;
 
-  gCurrentDateRangeUpdateCallback = callback || function () {};
+  gCurrentDateRangeUpdateCallback = callback || function () { };
 
   if (dates.length === 0) {
     $("#date-range")
@@ -651,7 +651,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   var minMoment = moment.utc(dates[0])
     .format("YYYY-MM-DD"),
     maxMoment = moment.utc(dates[dates.length - 1])
-    .format("YYYY-MM-DD");
+      .format("YYYY-MM-DD");
   gCurrentMinDate = minMoment, gCurrentMaxDate = maxMoment;
 
   // Update the start and end range and update the selection if necessary
@@ -685,7 +685,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
       endMoment = gInitialPageState.end_date;
     if (moment.utc(startMoment)
       .isValid() && moment.utc(endMoment)
-      .isValid()) {
+        .isValid()) {
       picker.setStartDate(startMoment);
       picker.setEndDate(endMoment);
       gPreviousMinMoment = minMoment;
@@ -721,27 +721,27 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   // Rebuild rangebar if it was changed by something other than the user
   if (shouldUpdateRangebar) {
     var rangeBarControl = RangeBar({
-        min: minMoment,
-        max: moment(maxMoment)
-          .add(1, "days")
-          .format("YYYY-MM-DD"),
-        maxRanges: 1,
-        valueFormat: function (ts) {
-          return ts;
-        },
-        valueParse: function (date) {
-          return moment.utc(date)
-            .valueOf();
-        },
-        label: function (a) {
-          var days = (a[1] - a[0]) / 86400000;
-          return days < 5 ? days : moment.utc(a[1])
-            .from(a[0], true);
-        },
-        snap: 1000 * 60 * 60 * 24,
-        minSize: 1000 * 60 * 60 * 24,
-        bgLabels: 0,
-      })
+      min: minMoment,
+      max: moment(maxMoment)
+        .add(1, "days")
+        .format("YYYY-MM-DD"),
+      maxRanges: 1,
+      valueFormat: function (ts) {
+        return ts;
+      },
+      valueParse: function (date) {
+        return moment.utc(date)
+          .valueOf();
+      },
+      label: function (a) {
+        var days = (a[1] - a[0]) / 86400000;
+        return days < 5 ? days : moment.utc(a[1])
+          .from(a[0], true);
+      },
+      snap: 1000 * 60 * 60 * 24,
+      minSize: 1000 * 60 * 60 * 24,
+      bgLabels: 0,
+    })
       .on("changing", function (e, ranges, changed) {
         var range = ranges[0];
         if (gLastTimeoutID !== null) {
@@ -766,14 +766,14 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
         .width() - dateControls.outerWidth() - 10);
     rangeBarControl.val([[moment(pickerStartDate)
       .toDate(), moment(pickerEndDate)
-      .add(1, "days")
-      .toDate()]]);
+        .add(1, "days")
+        .toDate()]]);
   }
 
   var min = moment.utc(pickerStartDate)
     .toDate(),
     max = moment.utc(pickerEndDate)
-    .toDate();
+      .toDate();
   var filteredDates = dates.filter(function (date) {
     return min <= date && date <= max;
   });
@@ -794,14 +794,13 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
 function displayHistograms(histogramsList, dates, useTable, cumulative, trim, includeSpill) {
   cumulative = cumulative === undefined ? false : cumulative;
   trim = trim === undefined ? true : trim;
-
-  if(!includeSpill)// Hide the 'spill' related data
-  {
-    const spillindex = histogramsList[0].histograms[0].buckets.indexOf("spill");
+  // Hide the 'spill' bucket if present.
+  if (!includeSpill) {
+    const spillIndex = histogramsList[0].histograms[0].buckets.indexOf("spill");
     histogramsList[0].histograms[0].buckets = histogramsList[0].histograms[0].buckets
-                                            .filter((value, index) => index !== spillindex);
+      .filter((value, index) => index !== spillIndex);
     histogramsList[0].histograms[0].values = histogramsList[0].histograms[0].values
-                                            .filter((value, index) => index !== spillindex);
+      .filter((value, index) => index !== spillIndex);
   }
 
   var minTrimLeft = 0,
@@ -908,7 +907,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim, in
       $("#prop-date-range")
         .text(moment.utc(dates[0])
           .format("YYYY/MM/DD") + ((dates.length == 1) ? "" : " to " + moment.utc(
-              dates[dates.length - 1])
+            dates[dates.length - 1])
             .format("YYYY/MM/DD")));
       $("#prop-submissions")
         .text(formatNumber(histogram.submissions));
@@ -943,7 +942,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim, in
       histogramPercentiles.empty();
       if (histogramsList.length > 0) {
         histogramPercentiles.append(
-          histogramsList[0].histograms.map(function(histogram) {
+          histogramsList[0].histograms.map(function (histogram) {
             return `<tr>
             <th>${histogram.measure}</th>
             <td>${formatNumber(histogram.percentile(5))}</td>
@@ -1054,9 +1053,9 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
     text.append("tspan").attr("y", y + 80).attr("text-anchor", "start").text("1) The Telemetry submissions haven't been aggregated for the dashboard yet (it takes a couple of days)");
     text.append("tspan").attr("y", y + 110).attr("text-anchor", "start").text("2) Too few submissions were received & are being filtered out in the dash. Turn off \"Sanitize data\" in Advanced Settings panel?");
     text.append("tspan").attr("y", y + 140).attr("text-anchor", "start").text("3) The data was sent to Telemetry before the unified Telemetry pipeline came online (July 2015)");
-    $(axes).find("tspan").each(function(i, element) { d3.select(element).attr("x", 0); });
+    $(axes).find("tspan").each(function (i, element) { d3.select(element).attr("x", 0); });
     var width = text[0][0].getBBox().width;
-    $(axes).find("tspan").each(function(i, element) {
+    $(axes).find("tspan").each(function (i, element) {
       d3.select(element).attr("x", ($(axes).width() - width) / 2);
     });
     return;
@@ -1078,7 +1077,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
 
   // For single boolean and flag charts, display a pie chart instead of a histogram
   if (histograms.length === 1 && (histograms[0].kind === "boolean" ||
-      histograms[0].kind === "flag") && !useTable) {
+    histograms[0].kind === "flag") && !useTable) {
     new d3pie(axes, {
       size: {
         canvasHeight: 600,
@@ -1088,12 +1087,12 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       },
       data: {
         content: countsList[0].map(function (count, i) {
-            var bucketNames = ["False", "True", "Invalid values"];
-            return {
-              label: bucketNames[i] || starts[i],
-              value: count
-            };
-          })
+          var bucketNames = ["False", "True", "Invalid values"];
+          return {
+            label: bucketNames[i] || starts[i],
+            value: count
+          };
+        })
           .filter(function (entry) {
             return entry.value > 0;
           }),
@@ -1174,17 +1173,17 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
   });
 
   function get_label(index) {
-    if(histograms[0].kind == 'categorical'){
-        return starts[index]
+    if (histograms[0].kind == 'categorical') {
+      return starts[index]
     } else {
-        return formatNumber(starts[index])
+      return formatNumber(starts[index])
     }
   }
 
   var num_labels = 20,
-      bottom = 30,
-      right = $(axes).width() / (distributionSamples[0].length + 1)
-  if(histograms[0].kind == 'categorical'){
+    bottom = 30,
+    right = $(axes).width() / (distributionSamples[0].length + 1)
+  if (histograms[0].kind == 'categorical') {
     num_labels = starts.length
     bottom = 150
     right *= 1.5
@@ -1358,7 +1357,7 @@ function displaySingleHistogramSet(axes, useTable, histograms, title,
       mouseover: (d, i) => {
         if (truths[d.x]) {
           $('.mg-active-datapoint')
-            .text(truths[d.x].label + ' ' +  Math.round(d.y * 100) / 100 + '% True');
+            .text(truths[d.x].label + ' ' + Math.round(d.y * 100) / 100 + '% True');
         }
       },
     });
@@ -1568,12 +1567,12 @@ function displaySingleHistogramTableSet(axes, starts, ends, countsList,
     start_labs = [$("<th></th>").text("Category")]
   }
 
-  function get_labels (i) {
-    if(is_categorical) {
+  function get_labels(i) {
+    if (is_categorical) {
       return [$("<td></td>").text(starts[i])]
     } else {
       return [$("<td></td>").text(formatNumber(starts[i])),
-              $("<td></td>").text(formatNumber(ends[i]))]
+      $("<td></td>").text(formatNumber(ends[i]))]
     }
   }
 
@@ -1581,44 +1580,44 @@ function displaySingleHistogramTableSet(axes, starts, ends, countsList,
     .empty()
     .append(
       $("<div></div>")
-      .css("margin", "0 250px 0 130px")
-      .append(
-        $("<table></table>")
-        .addClass("table table-striped table-hover")
-        .css("width", "auto")
-        .css("margin", "0 auto")
-        .append([
-        $("<thead></table>")
-          .append(
-            $("<tr></tr>")
-            .append(
-            start_labs.concat(
-                histograms.map(function (histogram, i) {
-                  return $("<th></th>")
-                    .text(histogram.measure + " Count");
-                })
-              )
-            )
-        ),
-        $("<tbody></tbody>")
-          .append(
-            countsList[0].map(function (count, i) {
-              return $("<tr></tr>")
+        .css("margin", "0 250px 0 130px")
+        .append(
+          $("<table></table>")
+            .addClass("table table-striped table-hover")
+            .css("width", "auto")
+            .css("margin", "0 auto")
+            .append([
+              $("<thead></table>")
                 .append(
-                  get_labels(i).concat(
-                    countsList.map(function (counts, j) {
-                      var percentage = Math.round(10000 * counts[i] /
-                        histograms[j].count) / 100;
-                      return $("<td></td>")
-                        .text(formatNumber(counts[i]) + " (" + percentage +
-                          "%)");
-                    })
-                  )
-                )
-            })
-        ),
-      ])
-      )
+                  $("<tr></tr>")
+                    .append(
+                      start_labs.concat(
+                        histograms.map(function (histogram, i) {
+                          return $("<th></th>")
+                            .text(histogram.measure + " Count");
+                        })
+                      )
+                    )
+                ),
+              $("<tbody></tbody>")
+                .append(
+                  countsList[0].map(function (count, i) {
+                    return $("<tr></tr>")
+                      .append(
+                        get_labels(i).concat(
+                          countsList.map(function (counts, j) {
+                            var percentage = Math.round(10000 * counts[i] /
+                              histograms[j].count) / 100;
+                            return $("<td></td>")
+                              .text(formatNumber(counts[i]) + " (" + percentage +
+                                "%)");
+                          })
+                        )
+                      )
+                  })
+                ),
+            ])
+        )
     );
 }
 
@@ -1653,7 +1652,7 @@ function saveStateToUrlAndCookie() {
     end_date: moment(picker.endDate)
       .format("YYYY-MM-DD"),
     include_spill: $("input[name=include-spill-toggle]")
-    .is(":checked") ? 1 : 0
+      .is(":checked") ? 1 : 0
   };
 
   // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards
@@ -1668,11 +1667,11 @@ function saveStateToUrlAndCookie() {
   }
   var selected = [$("#selected-key1")
     .val(), $("#selected-key2")
-    .val(), $("#selected-key3")
-    .val(), $("#selected-key4")
-    .val()].filter(function (value) {
-    return value !== "";
-  });
+      .val(), $("#selected-key3")
+        .val(), $("#selected-key4")
+          .val()].filter(function (value) {
+            return value !== "";
+          });
   if (selected.length > 0) {
     gInitialPageState.keys = selected;
   }
@@ -1782,16 +1781,16 @@ function saveStateToUrlAndCookie() {
         histograms.map(function (histogram) {
           return histogram.measure;
         })
-        .join(",\t") + "\n" +
+          .join(",\t") + "\n" +
         histograms[0].map(
           function (count, start, end, i) {
             return start + ",\t" + countsList.map(function (counts) {
-                return counts[i];
-              })
+              return counts[i];
+            })
               .join(",\t");
           }
         )
-        .join("\n");
+          .join("\n");
     } else {
       // keyed histogram: need to output keyed on key
       var shownKeys = gAxesSelectors.map(jqMulti => jqMulti.val());
@@ -1817,7 +1816,7 @@ function saveStateToUrlAndCookie() {
       var titles = [
         'key',
         'start',
-        ];
+      ];
       histograms.forEach(hist => titles.push(hist.measure));
       outputArr.push(titles);
       gCurrentHistogramsList
@@ -1839,8 +1838,8 @@ function saveStateToUrlAndCookie() {
     gPreviousCSVBlobUrl = URL.createObjectURL(new Blob([csvValue]));
     gPreviousJSONBlobUrl = URL.createObjectURL(new Blob([jsonValue]));
     var name = histograms.map(function (histogram) {
-        return histogram.measure;
-      })
+      return histogram.measure;
+    })
       .join(", ");
     $("#export-csv")
       .attr("href", gPreviousCSVBlobUrl)
@@ -1885,12 +1884,11 @@ function isHistogramsListKeyed(histogramsList) {
   return histogramsList.some(entry => entry.title !== "");
 }
 
-function makenewHistogramListCopy(histogramlist) {
- return histogramlist.map((item) => {
+function makenewHistogramListCopy(histogramList) {
+  return histogramList.map((item) => {
     return {
-      title: item.title,
+      ...item,
       histograms: item.histograms.map((histogram) => {
-        // Creating a new deep Copy of histogram to keep original data unchanged
         const newHistCopy = Object.create(histogram);
         newHistCopy.buckets = histogram.buckets.slice(0);
         newHistCopy.count = histogram.count;
@@ -1901,7 +1899,7 @@ function makenewHistogramListCopy(histogramlist) {
         newHistCopy.sum = histogram.sum;
         newHistCopy.values = histogram.values.slice(0);
         return newHistCopy;
-      })
-    }
+      }),
+    };
   });
 }
