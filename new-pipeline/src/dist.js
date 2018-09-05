@@ -794,14 +794,13 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
 function displayHistograms(histogramsList, dates, useTable, cumulative, trim, includeSpill) {
   cumulative = cumulative === undefined ? false : cumulative;
   trim = trim === undefined ? true : trim;
-
-  if(!includeSpill)// Hide the 'spill' related data
-  {
-    const spillindex = histogramsList[0].histograms[0].buckets.indexOf("spill");
+  // Hide the 'spill' bucket if present
+  if(!includeSpill) {
+    const spillIndex = histogramsList[0].histograms[0].buckets.indexOf("spill");
     histogramsList[0].histograms[0].buckets = histogramsList[0].histograms[0].buckets
-                                            .filter((value, index) => index !== spillindex);
+                                            .filter((value, index) => index !== spillIndex);
     histogramsList[0].histograms[0].values = histogramsList[0].histograms[0].values
-                                            .filter((value, index) => index !== spillindex);
+                                            .filter((value, index) => index !== spillIndex);
   }
 
   var minTrimLeft = 0,
@@ -1885,12 +1884,11 @@ function isHistogramsListKeyed(histogramsList) {
   return histogramsList.some(entry => entry.title !== "");
 }
 
-function makenewHistogramListCopy(histogramlist) {
- return histogramlist.map((item) => {
+function makenewHistogramListCopy(histogramList) {
+ return histogramList.map((item) => {
     return {
-      title: item.title,
+      ...item,
       histograms: item.histograms.map((histogram) => {
-        // Creating a new deep Copy of histogram to keep original data unchanged
         const newHistCopy = Object.create(histogram);
         newHistCopy.buckets = histogram.buckets.slice(0);
         newHistCopy.count = histogram.count;
@@ -1901,7 +1899,7 @@ function makenewHistogramListCopy(histogramlist) {
         newHistCopy.sum = histogram.sum;
         newHistCopy.values = histogram.values.slice(0);
         return newHistCopy;
-      })
-    }
+      }),
+    };
   });
 }
