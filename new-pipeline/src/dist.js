@@ -251,7 +251,7 @@ $(function () {
                 }[$("#sort-keys")
                   .val()];
                 if (getAggregate === undefined) {
-                    throw "Could not obtain aggregate function"
+                  throw "Could not obtain aggregate function"
                 };
                 gCurrentHistogramsList = Object.keys(
                     histogramsMap)
