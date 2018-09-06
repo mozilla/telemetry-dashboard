@@ -251,7 +251,7 @@ $(function () {
                 }[$("#sort-keys")
                   .val()];
                 if (getAggregate === undefined) {
-                  throw "Could not obtain aggregate function"
+                    throw "Could not obtain aggregate function"
                 };
                 gCurrentHistogramsList = Object.keys(
                     histogramsMap)
@@ -795,7 +795,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim, in
   cumulative = cumulative === undefined ? false : cumulative;
   trim = trim === undefined ? true : trim;
   // Hide the 'spill' bucket if present
-  if(!includeSpill) {
+  if (!includeSpill) {
     const spillIndex = histogramsList[0].histograms[0].buckets.indexOf("spill");
     histogramsList[0].histograms[0].buckets = histogramsList[0].histograms[0].buckets
                                             .filter((value, index) => index !== spillIndex);
@@ -1652,7 +1652,7 @@ function saveStateToUrlAndCookie() {
     end_date: moment(picker.endDate)
       .format("YYYY-MM-DD"),
     include_spill: $("input[name=include-spill-toggle]")
-    .is(":checked") ? 1 : 0
+      .is(":checked") ? 1 : 0
   };
 
   // Save a few unused properties that are used in the evolution dashboard, since state is shared between the two dashboards

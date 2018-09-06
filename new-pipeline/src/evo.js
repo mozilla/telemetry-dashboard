@@ -402,7 +402,9 @@ function updateAggregates(kind, buckets) {
   if (kind === "enumerated" || kind === "categorical") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
     // Hide spill Option from Aggregates based on advanced settings
-    if(!IncludeSpill) newAggregates = newAggregates.filter(([key,value]) => value !== "spill");
+    if (!IncludeSpill) {
+      newAggregates = newAggregates.filter(([key,value]) => value !== "spill");
+    }
     multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
   } else if (kind === "boolean" || kind === "flag") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
@@ -950,7 +952,7 @@ function saveStateToUrlAndCookie() {
       .is(":checked") ? 1 : 0,
     sanitize: $("input[name=sanitize-toggle]")
       .is(":checked") ? 1 : 0,
-      include_spill: $("input[name=include-spill-toggle]")
+    include_spill: $("input[name=include-spill-toggle]")
       .is(":checked") ? 1 : 0
   };
 
