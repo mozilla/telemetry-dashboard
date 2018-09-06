@@ -109,6 +109,9 @@ $(function () {
     $("input[name=sanitize-toggle]")
       .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
+    $("input[name=include-spill-toggle]")
+      .prop("checked", gInitialPageState.include_spill > 0)
+      .trigger("change");  
 
     // If advanced settings are not at their defaults, expand the settings pane on load
     if (gInitialPageState.use_submission_date !== 0 ||
@@ -245,7 +248,7 @@ $(function () {
           });
         });
       $(
-          "#measure, input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-process-type"
+          "#measure, input[name=build-time-toggle], input[name=sanitize-toggle], #aggregates, #filter-product, #filter-os, #filter-arch, #filter-process-type, input[name=include-spill-toggle]"
         )
         .change(function (e) {
           var $this = $(this);
@@ -394,8 +397,14 @@ var gLoadedAggregatesFromState = false;
 function updateAggregates(kind, buckets) {
   gCurrentKind = kind;
   let newAggregates;
+  const IncludeSpill = $("input[name=include-spill-toggle]").is(":checked");
+
   if (kind === "enumerated" || kind === "categorical") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
+    // Hide spill Option from Aggregates based on advanced settings
+    if (!IncludeSpill) {
+      newAggregates = newAggregates.filter(([key,value]) => value !== "spill");
+    }
     multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
   } else if (kind === "boolean" || kind === "flag") {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
@@ -407,7 +416,6 @@ function updateAggregates(kind, buckets) {
       .multiselect("updateButtonText");
   } else { // `kind` is another histogram kind, or null because we didn't have any data
     newAggregates = gDefaultAggregates.map(entry => [entry[0], entry[1]]);
-
     multiselectSetOptions($("#aggregates"), newAggregates, kDefaultSelectedAggregates);
   }
 
@@ -944,6 +952,8 @@ function saveStateToUrlAndCookie() {
       .is(":checked") ? 1 : 0,
     sanitize: $("input[name=sanitize-toggle]")
       .is(":checked") ? 1 : 0,
+    include_spill: $("input[name=include-spill-toggle]")
+      .is(":checked") ? 1 : 0
   };
 
   // Save a few unused properties that are used in the distribution dashboard, since state is shared between the two dashboards
