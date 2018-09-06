@@ -253,6 +253,7 @@ $(function () {
                 if (getAggregate === undefined) {
                   throw "Could not obtain aggregate function"
                 };
+                
                 gCurrentHistogramsList = Object.keys(
                     histogramsMap)
                   .map(function (label) {
