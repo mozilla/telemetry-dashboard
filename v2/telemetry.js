@@ -365,6 +365,11 @@
             .getTime();
         } else { // Result was invalid, remove the current request from the cache
           delete Telemetry.CACHE[url];
+          if (this.status === 401) { // Authorization failure. Notify listener.
+            if (typeof Telemetry.AuthorizationFailed === "function") {
+              Telemetry.AuthorizationFailed();
+            }
+          }
         }
         callback(null, this.status);
       } else { // Request was successful
@@ -380,6 +385,10 @@
       callback(null, this.status);
     };
     xhr.open("get", url, true);
+    if (Telemetry.AuthorizationToken) {
+      // Cannot currently set this header as aggregates.tmo's CORS settings forbids this header
+      // xhr.setRequestHeader("Authorization", "Bearer " + Telemetry.AuthorizationToken);
+    }
     xhr.send();
   }
 
