@@ -9,7 +9,7 @@
   }
 
   var Telemetry = {
-    BASE_URL: 'https://aggregates.telemetry.mozilla.org/',
+    BASE_URL: 'https://mozaggregator.stage.mozaws.net/',
     CHANNEL_VERSION_DATES: null,
     CHANNEL_VERSION_BUILDIDS: null,
     CACHE: {},
@@ -386,8 +386,7 @@
     };
     xhr.open("get", url, true);
     if (Telemetry.AuthorizationToken) {
-      // Cannot currently set this header as aggregates.tmo's CORS settings forbids this header
-      // xhr.setRequestHeader("Authorization", "Bearer " + Telemetry.AuthorizationToken);
+      xhr.setRequestHeader("Authorization", "Bearer " + Telemetry.AuthorizationToken);
     }
     xhr.send();
   }
