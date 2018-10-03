@@ -36,6 +36,19 @@ $(function () {
   ]
     gInitialPageState = loadStateFromUrlAndCookie();
 
+    // If we don't have release versions and the page state is for release,
+    // trigger an authorization failure flow
+    let maxIsRelease = gInitialPageState.max_channel_version &&
+                       gInitialPageState.max_channel_version.startsWith("release/");
+    if (maxIsRelease &&
+        typeof Telemetry.AuthorizationFailed === "function" &&
+        !Telemetry.getVersions().filter(cv => cv.startsWith("release/")).length
+    ) {
+      // Persist state to cookie so it can survive the auth flow.
+      saveStateStringToCookie(buildStateString(gInitialPageState));
+      Telemetry.AuthorizationFailed();
+    }
+
     // Set up settings selectors
     multiselectSetOptions($("#channel-version"),
       getHumanReadableOptions("channelVersion", Telemetry.getVersions())

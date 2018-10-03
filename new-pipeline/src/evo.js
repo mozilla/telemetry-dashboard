@@ -62,6 +62,21 @@ $(function () {
       getHumanReadableOptions("channelVersion", Telemetry.getVersions())
     );
 
+    // If we don't have release versions and the page state is for release,
+    // trigger an authorization failure flow
+    let minIsRelease = gInitialPageState.min_channel_version &&
+                       gInitialPageState.min_channel_version.startsWith("release/");
+    let maxIsRelease = gInitialPageState.max_channel_version &&
+                       gInitialPageState.max_channel_version.startsWith("release/");
+    if ((minIsRelease || maxIsRelease) &&
+        typeof Telemetry.AuthorizationFailed === "function" &&
+        !Telemetry.getVersions().filter(cv => cv.startsWith("release/")).length
+    ) {
+      // Persist state to cookie so it can survive the auth flow.
+      saveStateStringToCookie(buildStateString(gInitialPageState));
+      Telemetry.AuthorizationFailed();
+    }
+
     // Select previously selected channel versions, or the latest nightlies if not possible
     var nightlyVersions = Telemetry.getVersions()
       .filter(function (channelVersion) {
