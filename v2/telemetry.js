@@ -600,6 +600,9 @@
     assert((fromVersion === undefined && toVersion === undefined) || (
         typeof fromVersion === "string" && typeof toVersion === "string"),
       "`fromVersion` and `toVersion` must be strings");
+    if (fromVersion && fromVersion.split("/")[0] !== toVersion.split("/")[0]) {
+      return [];
+    }
     var versions = [];
     for (var channel in Telemetry.CHANNEL_VERSION_DATES) {
       for (var version in Telemetry.CHANNEL_VERSION_DATES[channel]) {
