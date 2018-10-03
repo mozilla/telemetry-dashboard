@@ -53,9 +53,9 @@ function constructLoginUrl() {
 
 function constructLogoutUrl() {
   let currentUrl = new URL(window.location.href);
-  // Discard the hash in case there's an access_token in it. The dashboard
-  // will restore state from Cookie.
-  currentUrl.hash = "";
+  // Reset the hash to the default measurement on logout since we don't want
+  // lingering release-channel state to restart the login flow.
+  currentUrl.hash = "measure=GC_MS";
 
   let logoutUrl = new URL(AUTH0_ORIGIN + "v2/logout");
   logoutUrl.searchParams.append("returnTo", currentUrl.toString());
