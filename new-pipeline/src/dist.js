@@ -1703,37 +1703,9 @@ function saveStateToUrlAndCookie() {
     gInitialPageState.processType = selected;
   }
 
-  var stateString = Object.keys(gInitialPageState)
-    .sort()
-    .map(function (key) {
-      var value = gInitialPageState[key];
-      if ($.isArray(value)) {
-        value = value.join("!");
-      }
-      return encodeURIComponent(key) + "=" + encodeURIComponent(value);
-    })
-    .join("&");
-
-  // Save to the URL hash if it changed
-  var url = "";
-  var index = window.location.href.indexOf("#");
-  if (index > -1) {
-    url = decodeURI(window.location.href.substring(index + 1));
-  }
-  if (url[0] == "!") {
-    url = url.slice(1);
-  }
-  if (url !== stateString) {
-    window.location.replace(window.location.origin + window.location.pathname +
-      "#!" + encodeURI(stateString));
-    $(".permalink-control input")
-      .hide(); // Hide the permalink box again since the URL changed
-  }
-
-  // Save the state in a cookie that expires in 28 days
-  var expiry = new Date();
-  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
-  document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
+  var stateString = buildStateString(gInitialPageState);
+  saveStateStringToUrl(stateString);
+  saveStateStringToCookie(stateString);
 
   // Add link to switch to the evolution dashboard with the same settings
   var dashboardURL = window.location.origin + window.location.pathname.replace(

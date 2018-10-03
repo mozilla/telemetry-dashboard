@@ -1109,3 +1109,41 @@ function getUseCounterLink(metric, channel, description) {
   }).text(" View in use counter dashboard."));
   return useCounterLink;
 }
+
+function saveStateStringToUrl(stateString) {
+  // Save to the URL hash if it changed
+  var url = "";
+  var index = window.location.href.indexOf("#");
+  if (index > -1) {
+    url = decodeURI(window.location.href.substring(index + 1));
+  }
+  if (url[0] == "!") {
+    url = url.slice(1);
+  }
+  if (url !== stateString) {
+    window.location.replace(window.location.origin + window.location.pathname +
+      "#!" + encodeURI(stateString));
+    $(".permalink-control input")
+      .hide(); // Hide the permalink box again since the URL changed
+  }
+}
+
+function saveStateStringToCookie(stateString) {
+  // Save the state in a cookie that expires in 28 days
+  let expiry = new Date();
+  expiry.setTime(expiry.getTime() + (28 * 24 * 60 * 60 * 1000));
+  document.cookie = "stateFromUrl=" + stateString + "; expires=" + expiry.toGMTString();
+}
+
+function buildStateString(pageState) {
+  return Object.keys(pageState)
+    .sort()
+    .map(function (key) {
+      var value = pageState[key];
+      if ($.isArray(value)) {
+        value = value.join("!");
+      }
+      return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+    })
+    .join("&");
+}
