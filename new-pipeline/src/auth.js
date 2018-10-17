@@ -20,9 +20,9 @@ function randomString(length) {
   return result.join('');
 }
 
-const AUTH0_ORIGIN = "https://chutten.auth0.com/";
-const AGGREGATES_APP_CLIENT_ID = "v427CBip66hS4q2mtJeZJWiYK1aEvQTK";
-const AGGREGATES_API_AUDIENCE_ID = "aggregates.telemetry.mozilla.org";
+const AUTH0_ORIGIN = "https://auth.mozilla.com/";
+const AGGREGATES_APP_CLIENT_ID = "kj04FIzGyg9CjSGphdTelwezVHHV1HVc";
+const AGGREGATES_API_AUDIENCE_ID = "https://aggregates.telemetry.mozilla.org/";
 const AGGREGATES_API_SCOPE = "read:aggregates";
 function constructLoginUrl() {
 
