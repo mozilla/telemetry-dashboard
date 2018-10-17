@@ -365,7 +365,7 @@
             .getTime();
         } else { // Result was invalid, remove the current request from the cache
           delete Telemetry.CACHE[url];
-          if (this.status === 401) { // Authorization failure. Notify listener.
+          if (this.status === 403) { // Authorization failure. Notify listener.
             if (typeof Telemetry.AuthorizationFailed === "function") {
               Telemetry.AuthorizationFailed();
             }
