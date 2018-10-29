@@ -9,8 +9,7 @@
   }
 
   var Telemetry = {
-    // BASE_URL: 'https://mozaggregator.stage.mozaws.net/',
-    BASE_URL: 'https://aggregates.telemetry.mozilla.org/',
+    BASE_URL: 'https://mozaggregator.stage.mozaws.net/',
     CHANNEL_VERSION_DATES: null,
     CHANNEL_VERSION_BUILDIDS: null,
     CACHE: {},
