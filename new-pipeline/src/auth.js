@@ -21,7 +21,7 @@ function randomString(length) {
 }
 
 const AUTH0_ORIGIN = "https://auth.mozilla.com/";
-const AGGREGATES_APP_CLIENT_ID = "kj04FIzGyg9CjSGphdTelwezVHHV1HVc";
+const AGGREGATES_APP_CLIENT_ID = "pnnvs075UmZpkL0vzQJh2KiMwjUcQ7b6";
 const AGGREGATES_API_AUDIENCE_ID = "https://aggregates.telemetry.mozilla.org/";
 const AGGREGATES_API_SCOPE = "read:aggregates";
 function constructLoginUrl() {
