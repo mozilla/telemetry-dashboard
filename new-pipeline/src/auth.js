@@ -20,7 +20,7 @@ function randomString(length) {
   return result.join('');
 }
 
-const AUTH0_ORIGIN = "https://auth.mozilla.com/";
+const AUTH0_ORIGIN = "https://auth.mozilla.auth0.com/";
 const AGGREGATES_APP_CLIENT_ID = "pnnvs075UmZpkL0vzQJh2KiMwjUcQ7b6";
 const AGGREGATES_API_AUDIENCE_ID = "https://aggregates.telemetry.mozilla.org/";
 const AGGREGATES_API_SCOPE = "read:aggregates";
