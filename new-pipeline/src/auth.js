@@ -52,15 +52,9 @@ function constructLoginUrl() {
 }
 
 function constructLogoutUrl() {
-  let currentUrl = new URL(window.location.href);
-  // Reset the hash to the default measurement on logout since we don't want
-  // lingering release-channel state to restart the login flow.
-  currentUrl.hash = "measure=GC_MS";
-
-  let logoutUrl = new URL(AUTH0_ORIGIN + "v2/logout");
-  logoutUrl.searchParams.append("returnTo", currentUrl.toString());
-
-  return logoutUrl.toString();
+  // Reset to the default measure so we don't trigger re-authentication.
+  // Auth0 doesn't need to be told we've logged out.
+  return 'javascript:window.location.hash="measure=GC_MS";window.location.reload();';
 }
 
 function displayAuthButton(buttonText, buttonUrl) {
