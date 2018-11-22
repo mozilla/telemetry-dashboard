@@ -37,7 +37,9 @@ const CHECK_CODE_GENERAL_DETAILS = {
   "33": {code: "CHK_INVALID_USER_OVERRIDE_URL", desc: "An invalid URL was specified for the app.update.url user preference (no notification is shown)."},
   "34": {code: "CHK_INVALID_DEFAULT_OVERRIDE_URL", desc: "An invalid URL was specified for the app.update.url.override user preference (no notification is shown)."},
   "35": {code: "CHK_ELEVATION_DISABLED_FOR_VERSION", desc: "The threshold for update elevation failures and cancelations was reached for a particular version of an update (Mac OS X Only) (no notification is shown)."},
-  "36": {code: "CHK_ELEVATION_OPTOUT_FOR_VERSION", desc: "The user opted out of an elevated update for a particular version of an update (Mac OS X Only) (no notification is shown)."}};
+  "36": {code: "CHK_ELEVATION_OPTOUT_FOR_VERSION", desc: "The user opted out of an elevated update for a particular version of an update (Mac OS X Only) (no notification is shown)."},
+  "37": {code: "CHK_DISABLED_BY_POLICY", desc: "Application Update is disabled by policy (no notification is shown)."},
+  "38": {code: "CHK_ERR_WRITE_FAILURE", desc: "A file write error occured and will try again after an attempt is made to correct file permissions (no notification is shown)."}};
 
 // General check code extended error values, names, and descriptions.
 // These are a combination of http codes and Mozilla error codes.
@@ -68,7 +70,7 @@ const CHECK_EX_ERROR_GENERAL_DETAILS = {
   "2152398861": {code: "NS_ERROR_CONNECTION_REFUSED", desc: "The connection was refused."},
   "2152398862": {code: "NS_ERROR_NET_TIMEOUT", desc: "The connection has timed out."},
   "2152398868": {code: "NS_ERROR_NET_RESET", desc: "The connection was established, but no data was ever received."},
-  "2152398878": {code: "NS_ERROR_UNKNOWN_HOST", desc: "The lookup of the hostname failed. <a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1224955'>Bug 1224955</a> provides an example of what can cause this."},
+  "2152398878": {code: "NS_ERROR_UNKNOWN_HOST", desc: "The lookup of the hostname failed. <a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1224955'>Bug 1224955</a> provides one example of what can cause this."},
   "2152398890": {code: "NS_ERROR_UNKNOWN_PROXY_HOST", desc: "The lookup of the proxy hostname failed."},
   "2152398900": {code: "NS_ERROR_SOCKET_CREATE_FAILED", desc: "The specified socket type could not be created."},
   "2152398919": {code: "NS_ERROR_NET_INTERRUPT", desc: "The connection was established, but the data transfer was interrupted."},
@@ -131,8 +133,7 @@ const downloadCodeGeneralDetails = {
   "12": {code: "DWNLD_ERR_DOCUMENT_NOT_CACHED", desc: "The download request was aborted. As of Firefox 49 the download will be continued (<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1272585'>Bug 1272585</a>) and as of Firefox 57 the error should rarely occur if at all."},
   "13": {code: "DWNLD_ERR_VERIFY_NO_REQUEST", desc: "The download network request object no longer exists."},
   "14": {code: "DWNLD_ERR_VERIFY_PATCH_SIZE_NOT_EQUAL", desc: "The size of the downloaded update file does not equal the expected size."},
-  "15": {code: "DWNLD_ERR_VERIFY_NO_HASH_MATCH", desc: "The file hash does not equal the hash specified in the update xml file."},
-  "16": {code: "DWNLD_RESUME_FAILURE", desc: "The download in progress failed to resume."}};
+  "15": {code: "DWNLD_ERR_WRITE_FAILURE", desc: "A file write error occured and will try again after an attempt is made to correct file permissions."}};
 
 // Download codes, names, and descriptions specific to UPDATE_DOWNLOAD_CODE_COMPLETE and UPDATE_DOWNLOAD_CODE_PARTIAL.
 const DOWNLOAD_CODE_DETAILS = {
@@ -156,7 +157,9 @@ const STATE_CODE_GENERAL_DETAILS = {
   "9": {code: "STATE_APPLIED_SVC", desc: "The update is in the applied by the service state (should be startup only)."},
   "10": {code: "STATE_SUCCEEDED", desc: "The update was successfully applied (should be startup only)."},
   "11": {code: "STATE_DOWNLOAD_FAILED", desc: "The update download failed (should be startup only)."},
-  "12": {code: "STATE_FAILED", desc: "The update failed to apply."}};
+  "12": {code: "STATE_FAILED", desc: "The update failed to apply."},
+  "13": {code: "STATE_PENDING_ELEVATE", desc: "The user will be asked to opt-in to an elevation request (Mac OS X Only)."},
+  "14": {code: "STATE_WRITE_FAILURE", desc: "A file write error occured and will try again after an attempt is made to correct file permissions."}};
 
 // State codes, names, and descriptions specific to UPDATE_STATE_CODE_PARTIAL_STAGE and UPDATE_STATE_CODE_COMPLETE_STAGE.
 const STATE_CODE_STAGE_DETAILS = {
@@ -230,6 +233,7 @@ const stateFailureCodeGeneralDetails = {
   "55": {code: "SERVICE_INVALID_INSTALL_DIR_PATH_ERROR", desc: "The installation directory path passed to the maintenance service is invalid (Windows only)."},
   "56": {code: "SERVICE_INVALID_WORKING_DIR_PATH_ERROR", desc: "The working directory path passed to the maintenance service is invalid (Windows only)."},
   "57": {code: "SERVICE_INSTALL_DIR_REG_ERROR", desc: "The installation directory specified in the registry and checked by the maintenance service is invalid (Windows only)."},
+  "58": {code: "SERVICE_COULD_NOT_IMPERSONATE", desc: "The maintenance service was unable to impersonate the user token that launched the updater (Windows only)."},
   "61": {code: "WRITE_ERROR_FILE_COPY", desc: "Error copying a file."},
   "62": {code: "WRITE_ERROR_DELETE_FILE", desc: "Error deleting a file."},
   "63": {code: "WRITE_ERROR_OPEN_PATCH_FILE", desc: "Unable to create new file for patching."},
@@ -407,7 +411,7 @@ function getSearchLink(aSearchString, aSrchOpt) {
   } else {
     ext = "+ext%3Acpp";
   }
-  return [text, "https://dxr.mozilla.org/mozilla-esr45/search?q=" + searchString + path + ext + "&redirect=false"];
+  return [text, "https://dxr.mozilla.org/mozilla-esr60/search?q=" + searchString + path + ext + "&redirect=false"];
 }
 
 function updateDetailsRow(aTableID, aRowNum, aSubset, aTotal, aTitle, aDesc) {
@@ -845,9 +849,9 @@ function populateDashboard(event) {
     var NotMinReqsSlices = [];
     termLabel = "Up to date version previously reported";
     updateDetailsRow("not-min-reqs-details", 0, hasOutOfDateMaxVersionFalse, outOfDateExcludedTotal, termLabel,
-                     "the client has a previous telemetry ping for an up to date version. " +
-                     "This can be caused by downgrading to an earlier version or using " +
-                     "multiple installations with different versions with the same profile.");
+                     "the client has a previous telemetry ping for an up to date version. This " +
+                     "can be caused by downgrading to an earlier version or using the same " +
+                     "Firefox profile with multiple installations that have different versions.");
     if (hasOutOfDateMaxVersionFalse) {
       NotMinReqsSlices.push({"label": termLabel, "value": hasOutOfDateMaxVersionFalse, "color": "#0065D1"});
     }
@@ -925,7 +929,7 @@ function populateDashboard(event) {
                      "the client has only received no updates found when performing an " +
                      "update check using the same Firefox version. " +
                      "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1224955'>Bug 1224955</a> " +
-                     "provides an example of what can cause this.");
+                     "provides one example of what can cause this.");
     if (hasOnlyNoUpdateFoundTrue) {
       ofConcernSlices.push({"label": termLabel, "value": hasOnlyNoUpdateFoundTrue, "color": "#004949"});
     }
@@ -947,88 +951,146 @@ function populateDashboard(event) {
     displayD3Pie("of-concern-chart", "Out of date, of concern reason distribution",
                  ofConcernSlices, null);
 
-    var outOfDateDesc = document.getElementById("out-of-date-desc");
-    outOfDateDesc.textContent = "";
+    var summaryDistDesc = document.getElementById("summary-dist-desc");
+    summaryDistDesc.textContent = "";
     var textNode = document.createTextNode("Note: For this report, ");
-    outOfDateDesc.appendChild(textNode);
+    summaryDistDesc.appendChild(textNode);
     var b = document.createElement("b");
     b.textContent = "out of date";
-    outOfDateDesc.appendChild(b);
+    summaryDistDesc.appendChild(b);
     textNode = document.createTextNode(" refers to Firefox 42 (first version with opt-out telemetry " +
                                        "for 100% of the release population) through versions less than Firefox " +
                                        (latestVersion - upToDateReleases) + " (" +
                                        (upToDateReleases + 1) + " versions prior to the latest Firefox " +
                                        "version at the time this data was generated) on the release channel.");
-    outOfDateDesc.appendChild(textNode);
+    summaryDistDesc.appendChild(textNode);
 
     var ofConcernByVersion = data["ofConcernByVersion"];
     if (ofConcernByVersion) {
       // Color-blind-friendly palette taken from:
       // http://mkweb.bcgsc.ca/biovis2012/
-      var versionColors = ["#B66DFF",  // purple
+      var versionColors = [
+                           "#B66DFF",  // purple
                            "#92B600",  // green
                            "#B6DBFF",  // light blue
                            "#004949",  // dark green
-                           "#490092",  // dark purple
+                           "#FFFF6D",  // yellow
                            "#924900",  // brown
-                           "#009292",  // dark turquoise
-                           "#FFB677",  // orange
                            "#006D6D",  // darker turquoise
                            "#6DB6FF",  // blue
                            "#DBD100",  // dark yellow
                            "#FF6DB6",  // pink
-                           "#FFFF6D",  // yellow
+                           "#490092",  // dark purple
+                           "#009292",  // dark turquoise
+                           "#000000",  // black
                            "#24FF24",  // light green
-                           "#000000"]; // black
+                           "#FFB677",  // orange
+                          ];
       var detailRows = [];
       var versionSlices = [];
+      var majorVersions = {};
       for (var v in ofConcernByVersion) {
         var labelName = v;
-        var diff = (latestVersion - labelName.split(".")[0]) - 3;
-        var color = versionColors[Math.min(diff, versionColors.length - 1)];
+        var majorVersion = labelName.split(".")[0];
+        var color = versionColors[majorVersion - (versionColors.length * Math.floor(majorVersion / versionColors.length))];
         switch (labelName) {
+          case "43.0":
+            break;
           case "43.0.1":
-            labelName = labelName + " (SHA1 / SHA256 watershed)";
+            labelName = labelName + " (SHA256 watershed)";
             detailRows[0] = {"labelName": labelName, "subset": ofConcernByVersion[v],
-                             "desc": "a Windows only update watershed was required to change the binary " +
-                                     "signing certificate from SHA1 to SHA256 (see " +
+                             "desc": "Windows update watershed to change the binary signing certificate " +
+                                     "from SHA1 to SHA256 (see " +
                                      "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1079858'>Bug 1079858</a>)."};
             break;
           case "47.0.2":
-            labelName = labelName + " (Websense watershed)";
+            labelName = labelName + " (SSE2 watershed)";
             detailRows[1] = {"labelName": labelName, "subset": ofConcernByVersion[v],
-                             "desc": "a Windows only update watershed was required to add detection for the " +
-                                     "Websense application (see " +
-                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1305847'>Bug 1305847</a>)."};
+                             "desc": "Windows update watershed to add CPU Instruction Set detection (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1271755'>Bug 1271755</a>)."};
             break;
-          case "52.0.2":
-            labelName = labelName + " (XP / Vista EOL)";
+          case "50.1.0":
+            break;
+          case "56.0":
+            labelName = labelName + " (JAWS / LZMA watershed)";
             detailRows[2] = {"labelName": labelName, "subset": ofConcernByVersion[v],
-                             "desc": "Windows XP / Vista / 2003 are no longer supported as of Firefox 53. These " +
-                                     "clients are being migrated to ESR52 by Release Engineering (see " +
-                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1130266'>Bug 1130266</a>)."};
+                             "desc": "Windows update watershed to add detection for the JAWS application (see " +
+                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=617918'>Bug 617918</a>) " +
+                                     "and LZMA update compression support."};
             break;
-          case "56.0.2":
-            labelName = labelName + " (JAWS watershed)";
-            detailRows[3] = {"labelName": labelName, "subset": ofConcernByVersion[v],
-                             "desc": "a Windows only update watershed was required to add detection for the " +
-                                     "JAWS application (see " +
-                                     "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=617918'>Bug 617918</a>)."};
-            break;
-          case "57.0.2":
+          case "57.0.4":
             labelName = labelName + " (LZMA watershed)";
-            detailRows[4] = {"labelName": labelName, "subset": ofConcernByVersion[v],
-                             "desc": "an update watershed was added for LZMA update compression support (see " +
+            detailRows[3] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                             "desc": "OS X and Linux update watershed to add LZMA update compression support (see " +
                                      "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=641212'>Bug 641212</a>)."};
             break;
+          default:
+            // Store this version's information so it can be evaluated later to
+            // determine whether it should be combined with other versions for
+            // the major version.
+            if (majorVersions[majorVersion]) {
+              majorVersions[majorVersion].total += ofConcernByVersion[v];
+            } else {
+              majorVersions[majorVersion] = {};
+              majorVersions[majorVersion].total = ofConcernByVersion[v];
+              majorVersions[majorVersion].color = color;
+              majorVersions[majorVersion].completeVersions = {};
+            }
+            majorVersions[majorVersion].completeVersions[labelName] = ofConcernByVersion[v];
+            continue;
         }
-        versionSlices.push({"label": labelName, "value": ofConcernByVersion[v],
+
+        versionSlices.push({"label": labelName,
+                            "value": ofConcernByVersion[v],
                             "color": color});
+      }
+
+      // This number specifies the minimum average percent of the pie slices for
+      // all complete versions (47.0, 47.0.1, etc.) for a major version (42).
+      // When the average is less than or equal to this number then the complete
+      // versions will be combined into one pie slice with a label that starts
+      // with the lowest complete version followed by a separator followed by
+      // the highest complete version (47.0 - 47.0.1). When the average is
+      // greater than this number then the complete version will be added as its
+      // own pie slice.
+      var minAvgPercent = 2;
+      var separator = " - ";
+      for (var majorVersionNumber in majorVersions) {
+        var completeVersionNumber;
+        var majorVersion = majorVersions[majorVersionNumber];
+        var completeVersions = majorVersion.completeVersions;
+        if ((majorVersion.total / ofConcernTrue) * 100 <=
+            Object.keys(completeVersions).length * minAvgPercent) {
+          var minVersionNumber = ":";
+          var maxVersionNumber = "0";
+          for (completeVersionNumber in completeVersions) {
+            if (minVersionNumber > completeVersionNumber) {
+              minVersionNumber = completeVersionNumber;
+            }
+            if (maxVersionNumber < completeVersionNumber) {
+              maxVersionNumber = completeVersionNumber;
+            }
+          }
+          var combinedLabel = minVersionNumber + separator + maxVersionNumber;
+          if (minVersionNumber == maxVersionNumber) {
+            combinedLabel = minVersionNumber;
+          }
+          versionSlices.push({"label": combinedLabel,
+                              "value": majorVersion.total,
+                              "color": majorVersion.color});
+        } else {
+          for (var completeVersionNumber in completeVersions) {
+            versionSlices.push({"label": completeVersionNumber,
+                                "value": completeVersions[completeVersionNumber],
+                                "color": majorVersion.color});
+          }
+        }
       }
       displayD3Pie("version-dist-chart",
                    "Out of date, of concern client distribution across Firefox versions",
                    versionSlices, "label-asc");
-      for (var i = 0; i < 5; i++) {
+
+      for (var i = 0; i < 4; i++) {
         if (detailRows[i]) {
           updateDetailsRow("version-dist-details", i, detailRows[i].subset, ofConcernTrue, detailRows[i].labelName,
                            detailRows[i].desc);
@@ -1036,12 +1098,25 @@ function populateDashboard(event) {
       }
 
       var versionDetailsTable = document.getElementById("version-dist-details");
-      for (var i = 4; i > -1; i--) {
+      for (var i = 3; i > -1; i--) {
         if (!detailRows[i] && versionDetailsTable.rows[i]) {
           versionDetailsTable.deleteRow(i);
         }
       }
     }
+
+    var versionDistDesc = document.getElementById("version-dist-desc");
+    versionDistDesc.textContent = "";
+    textNode = document.createTextNode("Note: The version pie slices, except for the versions that " +
+                                       "have an update watershed, will be coalesced to improve the " +
+                                       "readability of the pie chart when the average for all of a " +
+                                       "major version's pie slices is " + minAvgPercent + "% or " +
+                                       "less of the entire pie chart. The coalesced version pie " +
+                                       "slices can be identified by their labels which will start " +
+                                       "with the lowest version number and end with the highest " +
+                                       "version number (e.g. 48.0 " + separator + " 48.0.2) for " +
+                                       "the versions that it represents.");
+    versionDistDesc.appendChild(textNode);
 
     var checkCodeNotifyOfConcern = data["checkCodeNotifyOfConcern"];
     var [checkCodeData, checkCodeTotal] = getBarData(checkCodeNotifyOfConcern);
@@ -1189,9 +1264,23 @@ function initDashboard() {
 
   // Reset checkboxes to checked since a refresh will keep the previous state.
   var sortCheckboxes = document.getElementsByClassName("sort-checkbox");
-  for (i = 0; i < sortCheckboxes.length; i++) {
+  for (var i = 0; i < sortCheckboxes.length; i++) {
     sortCheckboxes[i].checked = true;
   }
 
   populateDashboard();
+  if (document.location.hash) {
+    // Scroll to the ID in the url after the dashboard is populated so the
+    // positioning is correct. Instead of trying to figure out a way to detect
+    // when the page is ready just use a timeout.
+    window.setTimeout(scrollToID, 1000)
+  }
+}
+
+function scrollToID() {
+  var param = document.location.hash;
+  $('html, body').animate({
+    scrollTop: $(param).offset().top
+  }, 500);
+  return false;
 }

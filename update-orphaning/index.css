@@ -99,19 +99,14 @@ td:nth-child(3) {
   display: none;
 }
 .pie-chart {
-  height: 490px;
+  height: 510px;
   margin-top: 20px;
 }
-#version-dist-chart {
-  height: 530px;
-}
-#out-of-date-desc,
+#summary-dist-desc,
+#version-dist-desc,
 #not-min-reqs-desc {
   margin-top: 10px;
   margin-bottom: 10px;
-}
-#not-min-reqs-desc {
-  margin-bottom: 20px;
 }
 .bar-chart-details {
   font-size: .9em;
