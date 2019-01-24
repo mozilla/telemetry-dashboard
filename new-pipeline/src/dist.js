@@ -93,8 +93,11 @@ $(function () {
     $("input[name=sanitize-toggle]")
       .prop("checked", gInitialPageState.sanitize !== 0)
       .trigger("change");
-      $("input[name=include-spill-toggle]")
+    $("input[name=include-spill-toggle]")
       .prop("checked", gInitialPageState.include_spill > 0)
+      .trigger("change");
+    $("input[name=sort-by-value]")
+      .prop("checked", gInitialPageState.sort_by_value > 0)
       .trigger("change");
 
     updateOptions(function () {
@@ -351,7 +354,7 @@ $(function () {
         });
 
       $(
-          "#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle], input[name=include-spill-toggle]"
+          "#selected-key1, #selected-key2, #selected-key3, #selected-key4, input[name=table-toggle], input[name=cumulative-toggle], input[name=trim-toggle], input[name=include-spill-toggle], input[name=sort-by-value]"
         )
         .change(function (e) {
           if (gCurrentHistogramsList.length > 1) { // Keyed histogram with multiple keys, find the selected keys
@@ -381,7 +384,8 @@ $(function () {
             $("input[name=table-toggle]").is(':checked'),
             $("input[name=cumulative-toggle]").is(':checked'),
             $("input[name=trim-toggle]").is(':checked'),
-            $("input[name=include-spill-toggle]").is(':checked')
+            $("input[name=include-spill-toggle]").is(':checked'),
+            $("input[name=sort-by-value]").is(':checked')
           );
           saveStateToUrlAndCookie();
         });
@@ -805,7 +809,7 @@ function updateDateRange(callback, dates, updatedByUser, shouldUpdateRangebar) {
   }
 }
 
-function displayHistograms(histogramsList, dates, useTable, cumulative, trim, includeSpill) {
+function displayHistograms(histogramsList, dates, useTable, cumulative, trim, includeSpill, sortByValue) {
   cumulative = cumulative === undefined ? false : cumulative;
   trim = trim === undefined ? true : trim;
   // Hide the 'spill' bucket if present
@@ -914,6 +918,16 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim, in
     if (histogramsList.length === 1 && histogramsList[0].histograms.length ===
       1) { // Only show one set of axes
       var histogram = histogramsList[0].histograms[0];
+      if (histogram.kind == 'categorical' && sortByValue) {
+        let sorting = [];
+        for (let index = 0; index < histogram.buckets.length; index++) {
+          sorting.push([histogram.values[index], histogram.buckets[index]]);
+        }
+        sorting.sort((a, b) => b[0] - a[0] || a[1].localeCompare(b[1]));
+        histogram.values = sorting.map(x => x[0]);
+        histogram.buckets = sorting.map(x => x[1]);
+      }
+
       $("#prop-kind")
         .text(histogram.kind);
       $("#prop-dates")
@@ -1666,6 +1680,8 @@ function saveStateToUrlAndCookie() {
     end_date: moment(picker.endDate)
       .format("YYYY-MM-DD"),
     include_spill: $("input[name=include-spill-toggle]")
+      .is(":checked") ? 1 : 0,
+    sort_by_value: $("input[name=sort-by-value]")
       .is(":checked") ? 1 : 0
   };
 
