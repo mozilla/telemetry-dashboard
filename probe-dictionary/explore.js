@@ -943,9 +943,9 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
     ['high', 'detail-histogram-high', ['histogram']],
     ['n_buckets', 'detail-histogram-bucket-count', ['histogram']],
 
-    ['extra_keys', 'detail-event-methods', ['event']],
-    ['methods', 'detail-event-objects', ['event']],
-    ['objects', 'detail-event-extra-keys', ['event']],
+    ['methods', 'detail-event-methods', ['event']],
+    ['objects', 'detail-event-objects', ['event']],
+    ['extra_keys', 'detail-event-extra-keys', ['event']],
   ];
 
   var pretty = (prop) => {
