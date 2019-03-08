@@ -89,6 +89,22 @@
     "main_summary": "session_restored",
     "longitudinal": "session_restored"
   },
+  "simpleMeasurements/selectProfile": {
+    "main_summary": "select_profile",
+    "longitudinal": "select_profile"
+  },
+  "simpleMeasurements/delayedStartupStarted": {
+    "main_summary": "delayed_startup_started",
+    "longitudinal": "delayed_startup_started"
+  },
+  "simpleMeasurements/delayedStartupFinished": {
+    "main_summary": "delayed_startup_finished",
+    "longitudinal": "delayed_startup_finished"
+  },
+  "simpleMeasurements/blankWindowShown": {
+    "main_summary": "blank_window_shown",
+    "longitudinal": "blank_window_shown"
+  },
   "simpleMeasurements/totalTime": {
     "main_summary": "total_time",
     "longitudinal": "total_time"
