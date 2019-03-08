@@ -776,6 +776,90 @@
       ]
     }
   },
+  "simpleMeasurements/selectProfile": {
+    "name": "selectProfile",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'select profile' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/delayedStartupStarted": {
+    "name": "delayedStartupStarted",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'delayed startup started' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/delayedStartupFinished": {
+    "name": "delayedStartupFinished",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'delayed startup finished' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
+  "simpleMeasurements/blankWindowShown": {
+    "name": "blankWindowShown",
+    "type": "simpleMeasurements",
+    "history": {
+      "all": [
+        {
+          "description": "Timestamp of 'blank window shown' event.",
+          "bug_numbers": [],
+          "details": {
+            "kind": "number"
+          },
+          "expiry_version": "never",
+          "optout": true,
+          "revisions": {
+            "firstVersion": "42",
+            "last": "latest"
+          }
+        }
+      ]
+    }
+  },
   "simpleMeasurements/main": {
     "name": "main",
     "type": "simpleMeasurements",
