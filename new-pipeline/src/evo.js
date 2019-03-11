@@ -217,7 +217,7 @@ $(function () {
               var latestChannelVersion = Infinity;
               if (channel === "nightly") {
                 latestChannelVersion = latestNightlyVersion;
-              } else if (channel === "aurora") {
+              } else if (channel === "dev edition") {
                 latestChannelVersion = latestNightlyVersion - 1;
               } else if (channel === "beta") {
                 latestChannelVersion = latestNightlyVersion - 2;
@@ -907,6 +907,9 @@ var Line = (function () {
 
     this.measure = measure;
     this.channelVersion = channelVersion;
+    if (channelVersion === "aurora") {
+      this.channelVersion = "dev edition";
+    }
     this.aggregate = aggregate;
     this.values = values || [];
 
