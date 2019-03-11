@@ -946,6 +946,7 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
     ['methods', 'detail-event-methods', ['event']],
     ['objects', 'detail-event-objects', ['event']],
     ['extra_keys', 'detail-event-extra-keys', ['event']],
+    ['see_more', 'see-more', ['environment']],
   ];
 
   var pretty = (prop) => {
@@ -968,6 +969,15 @@ function showDetailViewForId(probeId, channel=$("#select_channel").val()) {
       $('#' + id).text("");
       document.getElementById(id).parentElement.classList.add("hidden");
     }
+  }
+
+  var seeMoreRow = document.getElementById("see-more-row");
+  if (probeId.includes("environment/addons.activeAddons")) {
+    $("#see-more").empty();
+    $("#see-more").append('<a href="https://telemetry.mozilla.org/probe-dictionary/?search=addons.activeAddons">All properties for addons.activeAddons</a>');
+    seeMoreRow.classList.remove("hidden");
+  } else {
+    seeMoreRow.classList.add("hidden"); 
   }
 
   document.getElementById("probe-detail-view").classList.remove("hidden");
