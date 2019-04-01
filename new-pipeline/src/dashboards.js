@@ -129,7 +129,11 @@ $(document)
     // Permalink control
     $(".permalink-text")
       .hide()
-      .focus(function () {
+      .on("copy", e => {
+        // Work around to force the clipboard to hold short URL from permalink button.
+        e.originalEvent.clipboardData.setData("text/plain", $(".permalink-text").val());
+        e.preventDefault();
+      }).focus(function () {
         // Workaround for broken selection: http://stackoverflow.com/questions/5797539
         var $this = $(this);
         $this.select()
@@ -164,11 +168,6 @@ $(document)
         });
         document.execCommand('copy');
       });
-    // Work around to force the clipboard to hold short URL from permalink button.
-    document.addEventListener("copy", e => {
-      e.clipboardData.setData("text/plain", $(".permalink-text").val());
-      e.preventDefault();
-    });
   }); // ends document.ready() block
 
 // Load the current state from the URL, or the cookie if the URL is not specified
