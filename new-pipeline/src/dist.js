@@ -813,7 +813,7 @@ function displayHistograms(histogramsList, dates, useTable, cumulative, trim, in
   cumulative = cumulative === undefined ? false : cumulative;
   trim = trim === undefined ? true : trim;
   // Hide the 'spill' bucket if present
-  if (!includeSpill) {
+  if (!includeSpill && histogramsList.length) {
     const spillIndex = histogramsList[0].histograms[0].buckets.indexOf("spill");
     histogramsList[0].histograms[0].buckets = histogramsList[0].histograms[0].buckets
                                             .filter((value, index) => index !== spillIndex);
