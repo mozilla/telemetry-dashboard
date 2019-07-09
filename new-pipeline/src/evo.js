@@ -425,10 +425,12 @@ function updateAggregates(kind, buckets) {
     newAggregates = getHumanReadableBucketOptions(kind, buckets);
     multiselectSetOptions($("#aggregates"), newAggregates, [newAggregates[0][0]]);
 
-    // Boolean histograms should always start off with all options selected
-    $("#aggregates")
-      .multiselect("selectAll", false)
-      .multiselect("updateButtonText");
+    if (!gLoadedAggregatesFromState) {
+      // Boolean histograms should always start off with all options selected
+      $("#aggregates")
+        .multiselect("selectAll", false)
+        .multiselect("updateButtonText");
+    }
   } else { // `kind` is another histogram kind, or null because we didn't have any data
     newAggregates = gDefaultAggregates.map(entry => [entry[0], entry[1]]);
     multiselectSetOptions($("#aggregates"), newAggregates, kDefaultSelectedAggregates);
@@ -441,7 +443,7 @@ function updateAggregates(kind, buckets) {
       aggregates.push(key);
     }
   }
-  
+
   if (!gLoadedAggregatesFromState && aggregates.length > 0) {
     gLoadedAggregatesFromState = true;
     $("#aggregates")
