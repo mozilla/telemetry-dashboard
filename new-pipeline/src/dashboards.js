@@ -700,13 +700,17 @@ function getHumanReadableOptions(filterName, options) {
     }
 
     return options.map(function (option) {
-      return option !== null ? [option, option.replace("aurora", "dev edition").replace("/", " ")] : null;
+      return option !== null ? [option, getHumanReadableChannelName(option)] : null;
     });
   }
 
   return options.map(function (option) {
     return [option, option];
   });
+}
+
+function getHumanReadableChannelName(channel) {
+  return channel ? channel.replace("aurora", "dev edition").replace("/", " ") : '';
 }
 
 function getHumanReadableBucketOptions(kind, buckets) {
