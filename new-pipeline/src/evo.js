@@ -568,14 +568,14 @@ function getHistogramEvolutionLines(channel, version, measure, aggregates,
   var filtersCount = 0;
   var lines = [];
   var finalEvolutionMap = {};
-  indicate("Updating evolution for " + channel + " " + version + "...");
+  indicate("Updating evolution for " + getHumanReadableChannelName(channel) + " " + version + "...");
 
   filterSets.forEach(function (filterSet) {
     Telemetry.getEvolution(channel, version, measure, filterSet,
       useSubmissionDate,
       function (evolutionMap) {
         filtersCount++;
-        indicate("Updating evolution for " + channel + " " + version +
+        indicate("Updating evolution for " + getHumanReadableChannelName(channel) + " " + version +
           "... ", 100 * filtersCount / filterSets.length);
 
         for (var key in evolutionMap) {
@@ -922,21 +922,19 @@ var Line = (function () {
   }
 
   Line.prototype.getVersionString = function Line_getVersionString() {
-    return this.channelVersion.replace("/", " ");
+    return getHumanReadableChannelName(this.channelVersion);
   };
   Line.prototype.getTitleString = function Line_getTitleString() {
-    return this.channelVersion.replace("/", " ") + " - " + this.aggregate;
+    return getHumanReadableChannelName(this.channelVersion) + " - " + this.aggregate;
   };
   Line.prototype.getDescriptionString = function Line_getTitleString() {
     if (this.aggregate === "submissions") {
-      return this.measure + " submissions for " + this.channelVersion.replace(
-        "/", " ");
+      return this.measure + " submissions for " + getHumanReadableChannelName(this.channelVersion);
     }
-    return this.aggregate + " " + this.measure + " for " + this.channelVersion
-      .replace("/", " ");
+    return this.aggregate + " " + this.measure + " for " + getHumanReadableChannelName(this.channelVersion);
   };
   Line.prototype.getStateString = function Line_getTitleString() {
-    return this.aggregate + "/" + this.measure + "/" + this.channelVersion;
+    return this.aggregate + "/" + this.measure + "/" + getHumanReadableChannelName(this.channelVersion).replace(' ', '-');
   };
 
   return Line;
