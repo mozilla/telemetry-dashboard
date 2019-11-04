@@ -913,12 +913,12 @@ var Line = (function () {
     this.values = values || [];
 
     // Assign a color to the line
-    var stateString = this.getStateString();
-    if (!lineColors.hasOwnProperty(stateString)) {
+    var colorId = this.getColorId();
+    if (!lineColors.hasOwnProperty(colorId)) {
       goodColorIndex = (goodColorIndex + 1) % goodColors.length;
-      lineColors[stateString] = goodColors[goodColorIndex];
+      lineColors[colorId] = goodColors[goodColorIndex];
     }
-    this.color = lineColors[stateString];
+    this.color = lineColors[colorId];
   }
 
   Line.prototype.getVersionString = function Line_getVersionString() {
@@ -933,7 +933,7 @@ var Line = (function () {
     }
     return this.aggregate + " " + this.measure + " for " + getHumanReadableChannelName(this.channelVersion);
   };
-  Line.prototype.getStateString = function Line_getTitleString() {
+  Line.prototype.getColorId = function Line_getColorId() {
     return this.aggregate + "/" + this.measure;
   };
 
