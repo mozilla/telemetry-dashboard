@@ -934,7 +934,7 @@ var Line = (function () {
     return this.aggregate + " " + this.measure + " for " + getHumanReadableChannelName(this.channelVersion);
   };
   Line.prototype.getStateString = function Line_getTitleString() {
-    return this.aggregate + "/" + this.measure + "/" + getHumanReadableChannelName(this.channelVersion).replace(' ', '-');
+    return this.aggregate + "/" + this.measure;
   };
 
   return Line;
