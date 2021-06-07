@@ -20,8 +20,6 @@
 <body>
     <div class="container-fluid">
         <header>
-            <form id="auth-form" class="navbar-form inline pull-right btn-group">
-            </form>
             <form class="navbar-form inline pull-right btn-group">
                 <a href="#" class="btn btn-default permalink-button" title="Get Shortlink"><i class="fa fa-link"></i> Get Shortlink</a>
                 <input type="text" class="permalink-text input btn btn-default">
@@ -30,13 +28,6 @@
                 <a href="./tutorial.html#HistogramDashboard" class="btn btn-default" id="tutorial" title="Usage tutorial for Telemetry dashboards"><i class="fa fa-question-circle"></i> Usage Tutorial</a>
             </form>
             <h1>Measurement Dashboard</h1>
-            <div class="error-msg">
-                <span style="font-weight: bold">Partial outage of release data from 2018-12-17 to present. </span>
-                We are experiencing issues in the underlying dataset that results in the Measurement Dashboards
-                showing no data after December 17 for release data only. We are sorry for
-                the inconvenience. Please watch
-                <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1517018">Bug 1517018</a> for updates.
-            </div>
         </header>
         <ul class="nav nav-tabs">
             <li class="active" ><a href="#"><i class="fa fa-bar-chart"></i><strong>  Distribution</strong></a></li>
@@ -241,7 +232,6 @@
     <script src="../v2/telemetry.js"></script>
     <script src="src/dashboards.js"></script>
     <script src="src/dist.js"></script>
-    <script src="src/auth.js"></script>
 
 </body>
 </html>
