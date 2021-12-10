@@ -1024,6 +1024,12 @@ function populateDashboard(event) {
                              "desc": "OS X and Linux update watershed to add LZMA update compression support (see " +
                                      "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=641212'>Bug 641212</a>)."};
             break;
+          case "72.0.2":
+            labelName = labelName + " (Password migration watershed)";
+            detailRows[4] = {"labelName": labelName, "subset": ofConcernByVersion[v],
+                              "desc": "Watershed for all platforms to support password migration (see " +
+                                      "<a href='https://bugzilla.mozilla.org/show_bug.cgi?id=1607798'>Bug 1607798</a>)."};
+            break;
           default:
             // Store this version's information so it can be evaluated later to
             // determine whether it should be combined with other versions for
@@ -1090,7 +1096,8 @@ function populateDashboard(event) {
                    "Out of date, of concern client distribution across Firefox versions",
                    versionSlices, "label-asc");
 
-      for (var i = 0; i < 4; i++) {
+      var detailCount = detailRows.length;
+      for (var i = 0; i < detailCount; i++) {
         if (detailRows[i]) {
           updateDetailsRow("version-dist-details", i, detailRows[i].subset, ofConcernTrue, detailRows[i].labelName,
                            detailRows[i].desc);

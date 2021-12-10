@@ -8,7 +8,6 @@
 <script type="text/javascript" src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://telemetry.mozilla.org/new-pipeline/lib/d3pie.min.js"></script>
 <script type="text/javascript" src="index.js" charset="utf-8"></script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-49796218-2"></script>
 </head>
 <body onload="initDashboard()">
 <div id="weekly-dropdown-div">
@@ -97,10 +96,10 @@ criteria are applied is the same order as they are listed above.</div>
 <div id="state-failure-code-startup-link" class="bar-chart-link"></div>
 </div><br/>
 <hr>
-This dashboard is maintained by <a href="mailto:rstrong@mozilla.com">:rstrong</a>.<br/>
-The Spark Notebook for this dashboard is scheduled to run on Monday and Tuesday every week since the longitudinal datasource isn't consistently available on Monday. The Spark Notebook can be found <a href="https://github.com/mozilla/mozilla-reports/tree/master/projects/app_update_out_of_date.kp/orig_src/app_update_out_of_date.ipynb">here</a>.
+This dashboard is maintained by the <a href="https://chat.mozilla.org/#/room/#install-update:mozilla.org">install/update team</a>.<br/>
+This content is updated every Monday, starting at 2:00 UTC. It takes about 30 mins to complete.
+The dataset is configured <a href="https://github.com/mozilla/telemetry-airflow/blob/master/jobs/update_orphaning_dashboard_etl.py">here</a>, and the scheduling logic is <a href="https://github.com/mozilla/telemetry-airflow/blob/master/dags/update_orphaning_dashboard_etl.py#L28-L29">here</a>.
 <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
-<script src="../analytics/analytics.js"></script>
 </div>
 </body>
 </html>
