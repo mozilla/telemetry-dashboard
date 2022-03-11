@@ -12,7 +12,7 @@ const addonMappingURI =
 
 // The AMO API endpoint used to request the top addons.
 const topAddonsURI =
-  'https://addons.mozilla.org/api/v3/addons/search/?q=&app=firefox&type=extension&sort=users';
+  'https://addons.mozilla.org/api/v4/addons/search/?q=&app=firefox&type=extension&sort=users';
 
 function setupAutocomplete() {
   var suggestions = []
