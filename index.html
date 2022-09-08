@@ -7,160 +7,192 @@
     <title>Telemetry portal</title>
 
     <!-- Bootstrap and supporting libraries -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="new-pipeline/style/dashboards.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="assets/dash.css">
 </head>
 <body>
-    <div class="container-fluid">
-        <header>
-            <form class="navbar-form inline pull-right">
-                <a href="https://github.com/mozilla/telemetry-dashboard/issues" class="btn" title="Report bugs in Telemetry dashboards"><i class="fa fa-bug"></i> Report bug</a>
-                <a href="https://github.com/mozilla/telemetry-dashboard/edit/gh-pages/index.html" class="btn" title="Edit this Index directly on GitHub"><i class="fa fa-pencil"></i> Edit Portal</a>
-                <a href="https://github.com/mozilla/telemetry-dashboard/" class="btn" title="Look at the source on GitHub"><i class="fa fa-link"></i> Portal Source</a>
-            </form>
-            <h2>Telemetry portal</h2>
-            <!-- <div class="error-msg">
-                The small, unrepresentative sample population of release users will soon stop being aggregated.
-                For context, please read <a href="https://medium.com/@georg.fritzsche/data-preference-changes-in-firefox-58-2d5df9c428b5">this blog post</a>.
-            </div> -->
-        </header>
-        <div class="row">
-            <div class="col-md-4">
-                <h3><i class="fa fa-bar-chart" aria-hidden="true"></i> Main tools</h3>
-                <div class="dashboard-list list-group" style="margin: 0">
-                    <a class="list-group-item" href="https://data.firefox.com/">
-                        Firefox Public Data Report
-                        <div class="dashboard-description">See the activity, behavior, and hardware configuration of Firefox users.</div>
-                    </a>
-                    <a class="list-group-item" href="new-pipeline/dist.html">
-                        Measurement Dashboard
-                        <div class="dashboard-description">View the measure distributions and evolutions over time. <i>a.k.a</i> TMO</div>
-                    </a>
-                    <a class="list-group-item" href="https://missioncontrol.telemetry.mozilla.org/">
-                      Mission Control <div class="dashboard-description">View key Firefox quality measures in near real-time.</div>
-                    </a>
-                    <a class="list-group-item" href="https://glam.telemetry.mozilla.org/">
-                        GLAM: Glean Aggregated Metrics Dashboard <span class="fa fa-lock"></span>
-                        <div class="dashboard-description">View the distribution and evolution of metrics in Mozilla projects over time.</div>
-                    </a>
-                    <a class="list-group-item" href="https://gud.telemetry.mozilla.org/">
-                        Growth &amp; Usage Dashboard <span class="fa fa-lock"></span>
-                        <div class="dashboard-description">Usage and retention metrics for Mozilla products. <i>a.k.a</i> GUD</div>
-                    </a>
-                    <a class="list-group-item" href="https://mozilla.cloud.looker.com/">
-                        Looker <span class="fa fa-lock"></span>
-                        <div class="dashboard-description">Explorable dashboards &amp; data visualizations.</div>
-                    </a>
-                    <a class="list-group-item" href="https://sql.telemetry.mozilla.org/">
-                        SQL Portal <span class="fa fa-lock"></span>
-                        <div class="dashboard-description">View dashboards &amp; run SQL queries. <i>a.k.a</i> STMO, Redash</div>
-                    </a>
-                    <a class="list-group-item" href="https://experimenter.services.mozilla.com/">
-                        Experimenter <span class="fa fa-lock"></span>
-                        <div class="dashboard-description">Create, monitor &amp; review Shield studies.</div>
-                    </a>
-                </div>
-                <h3><i class="fa fa-book" aria-hidden="true"></i> Documentation</h3>
-                <div class="dashboard-list list-group" style="margin: 0">
-                    <a class="list-group-item" href="https://probes.telemetry.mozilla.org/">
-                        Probe Dictionary <div class="dashboard-description">Find what probes are submitted from Firefox (using legacy non-Glean telemetry).</div>
-                    </a>
-                    <a class="list-group-item" href="https://dictionary.telemetry.mozilla.org/">
-                        Glean Dictionary <div class="dashboard-description">Next-generation data dictionary for Firefox for Android and other applications built using the Glean SDK.</div>
-                    </a>
-                    <a class="list-group-item" href="https://docs.telemetry.mozilla.org/">
-                        Data Docs <div class="dashboard-description">Find what data is available &amp; how to use it. <i>a.k.a</i> DTMO</div>
-                    </a>
-                    <a class="list-group-item" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/">
-                        Firefox Telemetry Docs <div class="dashboard-description">Learn how to record data &amp; what data gets sent.</div>
-                    </a>
-                    <a class="list-group-item" href="https://mana.mozilla.org/wiki/display/FIREFOX/Pref-Flip+and+Add-On+Experiments#Pref-FlipandAdd-OnExperiments-GettingStarted">
-                        Shield Study Docs <span class="fa fa-lock"></span>
-                        <div class="dashboard-description">Learn how to run add-on and pref-flip studies &amp; experiments</div>
-                    </a>
-                </div>
+    <header class="p-3 text-bg-dark" id="header">
+        <div class="d-flex">
+            <div class="p-2" href="/">
+                <img src="assets/moz-logo-bw-rgb.svg" id="logo" />
             </div>
-            <div class="col-md-4">
-                <h3><i class="fa fa-question-circle" aria-hidden="true"></i> Getting help</h3>
-                <div class="dashboard-list list-group">
-                    <a class="list-group-item" href="https://mail.mozilla.org/listinfo/fx-data-dev">
-                      Join the mailing list
-                      <div class="dashboard-description">Get help on data topics and upcoming changes.</div>
-                    </a>
-                    <a class="list-group-item" href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Data%20Platform%20and%20Tools&component=General">
-                      File a bug
-                      <div class="dashboard-description">File a bug with details on <i>bugzilla.mozilla.org</i>.</div>
-                    </a>
-                    <a class="list-group-item" href="https://chat.mozilla.org/#/room/#telemetry:mozilla.org">
-                      Chat on Matrix
-                      <div class="dashboard-description">Find us in <i>#telemetry</i> on <i>chat.mozilla.org</i>.</div>
-                    </a>
-                    <a class="list-group-item" href="https://mozilla.slack.com/messages/C4D5ZA91B/">
-                      Join us on Slack <span class="fa fa-lock"></span>
-                      <div class="dashboard-description">Find us in <i>#data-help</i> on Slack.</div>
-                    </a>
-                </div>
-                <h3><i class="fa fa-wrench" aria-hidden="true"></i> Other tools</h3>
+            <div class="p-2 flex-grow-1">
+                <a class="text-decoration-none text-white" href="/"><h1>data portal</h1>
+            </div>
 
-                <div class="dashboard-list list-group">
-                    <a class="list-group-item" href="https://mozilla.report/">
-                        Reports Portal
-                        <div class="dashboard-description">Explore data analyses &amp; reports.</div>
-                    </a>
-                    <a class="list-group-item" href="dashboard-generator/index.html">
-                      Dashboard Generator
-                      <div class="dashboard-description">Hand-craft your own dashboard with the push of a few buttons</div>
-                    </a>
-                    <a class="list-group-item" href="https://firefoxgraphics.github.io/telemetry/">
-                        Graphics Telemetry <div class="dashboard-description">View percentage breakdowns for various graphics features.</div>
-                    </a>
-                    <a class="list-group-item" href="https://mozilla.github.io/usecounters/index.html">
-                        Use Counters <div class="dashboard-description">View usage of web features relative to page loads.</div>
-                    </a>
-                    <a class="list-group-item" href="update-orphaning/">
-                        Update Orphaning <div class="dashboard-description">View percentage breakdowns of users who are up-to-date vs. out-of-date.</div>
-                    </a>
-                    <a class="list-group-item" href="histogram-simulator/">
-                        Histogram Simulator <div class="dashboard-description">Simulate histogram bucket widths</div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <h3>What's new</h3>
-                <!-- Twitter widget -->
-                <div>
-                    <a class="twitter-timeline"
-                        href="https://twitter.com/DataAtMozilla"
-                        data-tweet-limit="3"
-                        data-chrome="noheader nofooter noborders noscrollbar transparent"
-                        data-widget-id="410497663147053056">
-                        Loading updates on telemetry...
-                    </a></br>
-                    <a href="https://twitter.com/DataAtMozilla"
-                       class="twitter-follow-button"
-                       data-show-count="false"
-                       data-align="left"
-                       data-dnt="true"
-                       data-lang="en">
-                        Follow @DataAtMozilla
-                    </a>
-                </div>
-            </div>
+            <form class="p-2 pull-right">
+                <a href="https://github.com/mozilla/telemetry-dashboard/issues"
+                   class="btn" title="Report bugs in Telemetry dashboards">
+                    <i class="fa fa-bug"></i> Report bug</a>
+                <a href="https://github.com/mozilla/telemetry-dashboard/edit/gh-pages/index.html"
+                   class="btn" title="Edit this Index directly on GitHub">
+                    <i class="fas fa-pencil-alt"></i> Edit Portal</a>
+                <a href="https://github.com/mozilla/telemetry-dashboard/"
+                   class="btn" title="Look at the source on GitHub">
+                    <i class="fa fa-link"></i> Portal Source</a>
+            </form>
         </div>
-    </div>
-    <div><a href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a></div>
+    </header>
+
+    <main>
+
+        <div class="container px-4 py-5">
+            <a class="text-decoration-none text-black" href="#dashboarding" name="dashboarding">
+                <h2 class="pb-2 border-bottom">
+                    <i class="fas fa-chart-area"></i> Dashboarding, Querying, and Analysis
+                </h2>
+            </a>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-3">
+
+                <a class="tool col" href="https://mozilla.cloud.looker.com/">
+                    <img src="assets/looker.svg" />
+                    <div>
+                        <h3>Looker</h3>
+                        <p>Explorable dashboards &amp; data visualizations.</p>
+                    </div>
+                </a>
+
+
+                <a class="tool col" href="https://sql.telemetry.mozilla.org/">
+                    <img src="assets/redash.png" />
+                    <div>
+                        <h3>ReDash</h3>
+                        <p>View dashboards &amp; run SQL queries. <i>a.k.a.</i> &ldquo;STMO.&rdquo;</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://experimenter.services.mozilla.com/">
+                    <img src="assets/nimbus.svg" />
+                    <div>
+                        <h3>Nimbus Experiments</h3>
+                        <p>Create, monitor &amp; review A/B test results.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://console.cloud.google.com/bigquery?project=mozdata">
+                    <img src="assets/bigquery.svg" />
+                    <div>
+                        <h3>BigQuery Console</h3>
+                        <p>Powerful direct access to our data warehouse.</p>
+                    </div>
+                </a>
+
+            </div><!-- row -->
+
+            <a class="text-decoration-none text-black" href="#ops" name="ops">
+                <h2 class="pb-2 border-bottom">
+                    <i class="fas fa-cogs"></i> Operational Data and Tools
+                </h2>
+            </a>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-3">
+                <a class="tool col" href="https://earthangel-b40313e5.influxcloud.net/">
+                    <img src="assets/grafana.svg" />
+                    <div>
+                        <h3>Grafana</h3>
+                        <p>Operational dashboards, mostly pertaining to services.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://glam.telemetry.mozilla.org/">
+                    <img src="assets/glam.svg" />
+                    <div>
+                        <h3>GLAM</h3>
+                        <p><b>Gl</b>ean <b>A</b>ggregated <b>M</b>etrics - view the distribution and evolution of metrics in Mozilla projects over time.</p>
+                    </div>
+                </a>
+            </div><!-- row -->
+
+
+            <a class="text-decoration-none text-black" href="#docs" name="docs">
+                <h2 class="pb-2 border-bottom">
+                    <i class="fa fa-book"></i> Documentation
+                </h2>
+            </a>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-3">
+                <a class="tool col" href="https://docs.telemetry.mozilla.org/">
+                    <img src="assets/dtmo.svg" />
+                    <div>
+                        <h3>Data Docs</h3>
+                        <p><i>a.k.a.</i> &ldquo;DTMO&rdquo; &mdash; documentation on data tools, the ETL,
+                            and the data platform.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://probes.telemetry.mozilla.org/">
+                    <i class="fa fa-satellite"></i>
+                    <div>
+                        <h3>Probe Dictionary</h3>
+                        <p>Explore probes sent from Firefox desktop (excluding Glean metrics).</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://dictionary.telemetry.mozilla.org/">
+                    <img src="assets/glean.png" />
+                    <div>
+                        <h3>Glean Dictionary</h3>
+                        <p>Explore metrics sent from mobile apps, and newer Firefox Desktop metrics.</p>
+                    </div>
+                </a>
+            </div><!-- row -->
+
+
+            <a class="text-decoration-none text-black" href="#public" name="public">
+                <h2 class="pb-2 border-bottom">
+                    <i class="fas fa-bullhorn"></i> Public Data and Tools
+                </h2>
+            </a>
+
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-3">
+                <a class="tool col" href="https://data.firefox.com/">
+                    <img src="assets/firefox.svg" />
+                    <div>
+                        <h3>Firefox Public Data Report</h3>
+                        <p>See the activity, behavior, and hardware configuration of Firefox users.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://firefoxgraphics.github.io/telemetry/">
+                    <i class="fas fa-fill-drip"></i>
+                     <div>
+                         <h3>Graphics Telemetry</h3>
+                         <p>Aggregated breakdowns for Firefox graphics features.</p>
+                     </div>
+                </a>
+
+                <a class="tool col" href="histogram-simulator/">
+                    <i class="fas fa-chart-bar"></i>
+                    <div>
+                        <h3>Histogram Simulator</h3>
+                        <p>Simulate histogram bucket widths.</p>
+                    </div>
+                </a>
+            </div><!-- row -->
+
+
+            <!--
+                 <a class="tool col" href="">
+                     <img src="" />
+                     <div>
+                         <h3></h3>
+                         <p></p>
+                     </div>
+                 </a>
+            -->
+        </div><!-- container -->
+
+    </main>
+
+    <footer class="p-3 text-bg-dark">
+        <a class="text-white" href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a>
+    </footer>
 
     <!-- Bootstrap and supporting libraries -->
     <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
-    <script>
-    // Check for permalink - if there is a URL hash, the user probably clicked on a permalink to the old dashboard, so redirect them there with the same state to avoid breaking permalinks
-    if (window.location.hash.length > 1) {
-        window.location.href = window.location.origin + "/advanced/" + window.location.hash;
-    }
-    </script>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </body>
 </html>
