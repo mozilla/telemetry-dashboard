@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Telemetry portal</title>
+    <title>Mozilla Data Portal</title>
 
     <!-- Bootstrap and supporting libraries -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="assets/dash.css">
 </head>
 <body>
-    <header class="p-3 text-bg-dark" id="header">
+    <header class="p-0 text-bg-black" id="header">
         <div class="d-flex">
             <div class="p-2" href="/">
                 <img src="assets/moz-logo-bw-rgb.svg" id="logo" />
@@ -137,6 +137,14 @@
                         <p>Explore metrics sent from mobile apps, and newer Firefox Desktop metrics.</p>
                     </div>
                 </a>
+
+                <a class="tool col" href="https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/">
+                    <i class="fas fa-info"></i>
+                    <div>
+                        <h3>Firefox Legacy Telemetry Docs</h3>
+                        <p>Learn how to record data in Firefox legacy telemetry &amp; what data gets sent.</p>
+                    </div>
+                </a>
             </div><!-- row -->
 
 
@@ -170,18 +178,71 @@
                         <p>Simulate histogram bucket widths.</p>
                     </div>
                 </a>
+
+                <a class="tool col" href="new-pipeline/dist.html">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <h3>Measurement Dashboard</h3>
+                        <p>View the legacy measure distributions and evolutions over time.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="dashboard-generator/index.html">
+                    <i class="fas fa-columns"></i>
+                    <div>
+                        <h3>Dashboard Generator</h3>
+                        <p>Hand-craft your own dashboard with the push of a few buttons.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="https://mozilla.github.io/usecounters/index.html">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <h3>Use Counters</h3>
+                        <p>View usage of web features relative to page loads.</p>
+                    </div>
+                </a>
+
+                <a class="tool col" href="update-orphaning/">
+                    <i class="fas fa-cogs"></i>
+                    <div>
+                        <h3>Update Orphaning</h3>
+                        <p>View percentage breakdowns of users who are up-to-date vs. out-of-date.</p>
+                    </div>
+                </a>
             </div><!-- row -->
 
+            <a class="text-decoration-none text-black" href="#public" name="public">
+                <h2 class="pb-2 border-bottom">
+                    <i class="fas fa-question-circle"></i> Getting Help
+                </h2>
+            </a>
 
-            <!--
-                 <a class="tool col" href="">
-                     <img src="" />
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 py-3">
+                <a class="tool col" href="https://groups.google.com/a/mozilla.org/g/fx-data-dev">
+                    <i class="fas fa-envelope-open-text"></i>
                      <div>
-                         <h3></h3>
-                         <p></p>
+                         <h3>Join the mailing list</h3>
+                         <p>Get help on data topics and upcoming changes.</p>
                      </div>
-                 </a>
-            -->
+                </a>
+
+                <a class="tool col" href="https://chat.mozilla.org/#/room/#telemetry:mozilla.org">
+                    <i class="fas fa-comment-dots"></i>
+                     <div>
+                         <h3>Chat on Matrix</h3>
+                         <p>Find us in <i>#telemetry</i> on <i>chat.mozilla.org</i>.</p>
+                     </div>
+                </a>
+
+                <a class="tool col" href="https://mozilla.slack.com/messages/C4D5ZA91B/">
+                    <i class="fab fa-slack-hash"></i>
+                     <div>
+                         <h3>Join us on Slack</h3>
+                         <p>Find us in <i>#data-help</i> on Slack.</p>
+                     </div>
+                </a>
+            </div><!-- row -->
         </div><!-- container -->
 
     </main>
@@ -189,10 +250,6 @@
     <footer class="p-3 text-bg-dark">
         <a class="text-white" href="https://www.mozilla.org/en-US/privacy/websites/">Mozilla's Website Privacy Notice</a>
     </footer>
-
-    <!-- Bootstrap and supporting libraries -->
-    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
 </body>
 </html>
