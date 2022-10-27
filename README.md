@@ -12,7 +12,7 @@ This repository also contains the **source code for Telemetry.js**. The specific
 Deploying Telemetry Dashboard
 -----------------------------
 
-The [telemetry.mozilla.org](https://telemetry.mozilla.org) site is hosted in [Github Pages](https://pages.github.com/), so it may also be accessed via [mozilla.github.io/telemetry-dashboard](https://mozilla.github.io/telemetry-dashboard/). In front of Github Pages, there is also the CloudFront CDN (managed by :whd).
+The [telemetry.mozilla.org](https://telemetry.mozilla.org) site is hosted in [Github Pages](https://pages.github.com/), so it may also be accessed via [mozilla.github.io/telemetry-dashboard](https://mozilla.github.io/telemetry-dashboard/). In front of Github Pages, there is also a GCP CDN (managed by DSRE).
 
 Updates to the `gh-pages` branch (also the default branch) will be reflected on [telemetry.mozilla.org](https://telemetry.mozilla.org) after a few moments.
 
