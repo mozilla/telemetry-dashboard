@@ -5,14 +5,12 @@ This repository contains the **source code for [telemetry.mozilla.org](https://t
 
 The main dashboards on [telemetry.mozilla.org](https://telemetry.mozilla.org) consume data from Telemetry's backend using Telemetry.js.
 
-The dashboards that do not use Telemetry.js generally use [scheduled analysis jobs](https://analysis.telemetry.mozilla.org/) that regularly publish data on S3. The source code for these can be found in their respective repositories.
-
 This repository also contains the **source code for Telemetry.js**. The specific files can be found under the `v2/` directory.
 
 Deploying Telemetry Dashboard
 -----------------------------
 
-The [telemetry.mozilla.org](https://telemetry.mozilla.org) site is hosted in [Github Pages](https://pages.github.com/), so it may also be accessed via [mozilla.github.io/telemetry-dashboard](https://mozilla.github.io/telemetry-dashboard/). In front of Github Pages, there is also the CloudFront CDN (managed by :whd).
+The [telemetry.mozilla.org](https://telemetry.mozilla.org) site is hosted in [Github Pages](https://pages.github.com/), so it may also be accessed via [mozilla.github.io/telemetry-dashboard](https://mozilla.github.io/telemetry-dashboard/). In front of Github Pages, there is also a GCP CDN (managed by DSRE).
 
 Updates to the `gh-pages` branch (also the default branch) will be reflected on [telemetry.mozilla.org](https://telemetry.mozilla.org) after a few moments.
 

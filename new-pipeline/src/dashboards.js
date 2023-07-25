@@ -125,49 +125,6 @@ $(document)
           }
         });
     }
-
-    // Permalink control
-    $(".permalink-text")
-      .hide()
-      .on("copy", e => {
-        // Work around to force the clipboard to hold short URL from permalink button.
-        e.originalEvent.clipboardData.setData("text/plain", $(".permalink-text").val());
-        e.preventDefault();
-      }).focus(function () {
-        // Workaround for broken selection: http://stackoverflow.com/questions/5797539
-        var $this = $(this);
-        $this.select()
-          .mouseup(function () {
-            $this.unbind("mouseup");
-            return false;
-          });
-      });
-    $(".permalink-button")
-      .click(function () {
-        var $this = $(this);
-        $.ajax({
-          url: "https://api-ssl.bitly.com/v3/shorten",
-          dataType: "json",
-          data: {
-            longUrl: window.location.href,
-            access_token: "48ecf90304d70f30729abe82dfea1dd8a11c4584",
-            format: "json"
-          },
-          success: function (response) {
-            var shortUrl = response.data.url;
-            if (shortUrl.indexOf(":") === 4) {
-              shortUrl = "https" + shortUrl.substring(4);
-            }
-            $this.parents(".navbar-form")
-              .find("input")
-              .show()
-              .val(shortUrl)
-              .focus();
-          },
-          async:false
-        });
-        document.execCommand('copy');
-      });
   }); // ends document.ready() block
 
 // Load the current state from the URL, or the cookie if the URL is not specified
@@ -1124,8 +1081,6 @@ function saveStateStringToUrl(stateString) {
   if (url !== stateString) {
     window.location.replace(window.location.origin + window.location.pathname +
       "#!" + encodeURI(stateString));
-    $(".permalink-control input")
-      .hide(); // Hide the permalink box again since the URL changed
   }
 }
 
